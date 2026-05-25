@@ -1,0 +1,106 @@
+from sqlalchemy import (
+    Column, Integer, String, Boolean, Date, Numeric,
+    Text, BigInteger, ForeignKey, UniqueConstraint
+)
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.sql import func
+from db import Base
+
+
+class Universe(Base):
+    __tablename__ = "universe"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String(10), nullable=False, unique=True)
+    is_lq45 = Column(Boolean, default=True)
+    is_custom = Column(Boolean, default=False)
+    active = Column(Boolean, default=True)
+    created_at = Column(Date, server_default=func.now())
+
+
+class AgentScore(Base):
+    __tablename__ = "agent_scores"
+
+    id = Column(Integer, primary_key=True)
+    run_date = Column(Date, nullable=False)
+    ticker = Column(String(10), nullable=False)
+    fundamental_score = Column(Numeric(4, 2))
+    technical_score = Column(Numeric(4, 2))
+    bandarm_score = Column(Numeric(4, 2))
+    macro_signal = Column(String(20))
+    composite_score = Column(Numeric(4, 2))
+    weight_mode = Column(String(20))
+    weights_used = Column(JSONB)
+    created_at = Column(Date, server_default=func.now())
+
+
+class BrokerAccumulation(Base):
+    __tablename__ = "broker_accumulation"
+    __table_args__ = (
+        UniqueConstraint("ticker", "trade_date", "broker_code"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String(10), nullable=False)
+    trade_date = Column(Date, nullable=False)
+    broker_code = Column(String(10), nullable=False)
+    broker_name = Column(String(100))
+    buy_lot = Column(BigInteger, default=0)
+    buy_value = Column(BigInteger, default=0)
+    avg_price = Column(Numeric(12, 2))
+    sell_lot = Column(BigInteger, default=0)
+    sell_value = Column(BigInteger, default=0)
+    foreign_net = Column(BigInteger, default=0)
+    created_at = Column(Date, server_default=func.now())
+
+
+class DebateLog(Base):
+    __tablename__ = "debate_logs"
+
+    id = Column(Integer, primary_key=True)
+    run_date = Column(Date, nullable=False)
+    ticker = Column(String(10), nullable=False)
+    round = Column(Integer, nullable=False)
+    agent = Column(String(50), nullable=False)
+    argument = Column(Text)
+    vote = Column(String(10))
+    created_at = Column(Date, server_default=func.now())
+
+
+class Signal(Base):
+    __tablename__ = "signals"
+
+    id = Column(Integer, primary_key=True)
+    run_date = Column(Date, nullable=False)
+    ticker = Column(String(10), nullable=False)
+    rank = Column(Integer)
+    signal = Column(String(10))
+    entry_low = Column(Numeric(12, 2))
+    entry_high = Column(Numeric(12, 2))
+    max_entry = Column(Numeric(12, 2))
+    target_1 = Column(Numeric(12, 2))
+    target_2 = Column(Numeric(12, 2))
+    stop_loss = Column(Numeric(12, 2))
+    risk_reward = Column(Numeric(5, 2))
+    conviction = Column(String(10))
+    thesis = Column(Text)
+    entry_reasoning = Column(Text)
+    bandar_avg_7d = Column(Numeric(12, 2))
+    bandar_avg_1m = Column(Numeric(12, 2))
+    broker_utama = Column(String(100))
+    time_horizon = Column(String(50))
+    weight_mode = Column(String(20))
+    composite_score = Column(Numeric(4, 2))
+    created_at = Column(Date, server_default=func.now())
+
+
+class Performance(Base):
+    __tablename__ = "performance"
+
+    id = Column(Integer, primary_key=True)
+    signal_id = Column(Integer, ForeignKey("signals.id"))
+    check_date = Column(Date, nullable=False)
+    actual_price = Column(Numeric(12, 2))
+    result = Column(String(20))
+    return_pct = Column(Numeric(6, 2))
+    created_at = Column(Date, server_default=func.now())

@@ -1,0 +1,26 @@
+# Core
+python-dotenv==1.1.0
+httpx==0.28.1
+
+# LLM & Agent Framework
+langgraph==0.4.1
+langchain-google-genai==2.1.4
+langchain-anthropic==0.3.12
+langchain-core==0.3.55
+
+# Data
+yfinance==0.2.54
+pandas==2.2.3
+numpy==2.2.6
+
+# Database
+sqlalchemy==2.0.40
+psycopg2-binary==2.9.10
+alembic==1.15.2
+
+# UI
+streamlit==1.45.1
+plotly==6.1.2
+
+# Scheduler
+apscheduler==3.11.0
