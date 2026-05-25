@@ -11,6 +11,7 @@ from agents.fundamental import analyze as fund_analyze
 from agents.technical import analyze as tech_analyze
 from agents.bandarmologi import analyze as bandarm_analyze
 from agents.macro import analyze as macro_analyze
+from agents.investment_manager import synthesize as im_synthesize
 from graph.scoring import calculate_composite
 from config import get_universe
 
@@ -299,68 +300,9 @@ def run_debate(state: AgentState) -> dict:
 def run_investment_manager(state: AgentState) -> dict:
     """
     Phase 4: Investment Manager — select TOP 3 picks.
-    Placeholder: selects top 3 from finalists with entry zones.
-    Will be enhanced with Claude Sonnet LLM call.
+    Uses avg cost bandar sebagai acuan entry.
     """
-    finalists = state.get("finalists", [])
-    scores = state.get("scores", {})
-    composites = state.get("composites", {})
-    macro_data = state.get("macro_data", {})
-
-    if not finalists:
-        return {"top_picks": [], "final_report": {}}
-
-    from datetime import datetime
-
-    top_picks = []
-    for i, finalist in enumerate(finalists[:3]):
-        ticker = finalist["ticker"]
-        ticker_scores = scores.get(ticker, {})
-        bandarm = ticker_scores.get("bandarm", {})
-        tech = ticker_scores.get("technical", {})
-        composite = composites.get(ticker, {})
-
-        # Entry zone from bandarmologi
-        price_analysis = bandarm.get("price_analysis", {})
-        entry_zone = price_analysis.get("ideal_entry_zone", "N/A")
-        max_entry = price_analysis.get("max_entry", "N/A")
-
-        # Target & SL from technical
-        target = tech.get("target", "N/A")
-        stop_loss = tech.get("stop_loss", "N/A")
-
-        top_picks.append({
-            "rank": i + 1,
-            "ticker": ticker,
-            "composite_score": finalist["composite_score"],
-            "final_score": finalist["final_score"],
-            "conviction": "HIGH" if finalist["final_score"] >= 7.5 else "MEDIUM" if finalist["final_score"] >= 6 else "LOW",
-            "entry_zone": entry_zone,
-            "max_entry": max_entry,
-            "target_1": target,
-            "stop_loss": stop_loss,
-            "bandarm_signal": bandarm.get("signal", "N/A"),
-            "broker_to_watch": bandarm.get("broker_to_watch", []),
-            "weight_mode": finalist["weight_mode"],
-        })
-
-    # Market condition
-    ihsg_trend = macro_data.get("ihsg_trend", "UNKNOWN")
-    market_condition = f"{ihsg_trend} — IHSG {macro_data.get('ihsg_price', 'N/A')}"
-
-    final_report = {
-        "generated_at": datetime.now().isoformat(),
-        "market_condition": market_condition,
-        "top_picks": top_picks,
-        "watchlist": [f["ticker"] for f in finalists[3:5]],
-        "total_analyzed": len(composites),
-        "total_finalists": len(finalists),
-    }
-
-    return {
-        "top_picks": top_picks,
-        "final_report": final_report,
-    }
+    return im_synthesize(state)
 
 
 # === Build Workflow ===
