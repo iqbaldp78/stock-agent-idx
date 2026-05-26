@@ -2,10 +2,17 @@
 Stock Agent IDX — Streamlit Dashboard (Full)
 Phase 5: Top Picks, Bandarmologi Detail, Performance Tracker, On-demand trigger.
 """
+import os
+import sys
+
+app_root = os.getenv("APP_ROOT", "/app")
+if app_root not in sys.path:
+    # Ensure internal modules (graph, db, data, agents) resolve in containers.
+    sys.path.insert(0, app_root)
+
 import streamlit as st
 import psycopg2
 import psycopg2.extras
-import os
 import json
 import logging
 from datetime import date, datetime, timedelta

@@ -1,21 +1,27 @@
 """
-Data Fetcher — Stockbit (Mock)
-Mengambil data broker summary, OHLCV, dan fundamental saham.
-Saat ini menggunakan mock data yang deterministik (random.seed berdasarkan ticker+date).
+Data Fetcher — Stockbit
+Mengambil data broker summary (real API), OHLCV, dan fundamental saham.
 
 Menyediakan:
-  - get_ohlcv()       → OHLCV DataFrame
-  - get_stock_info()  → fundamental info dict
-  - Broker summary + avg price per broker
+    - get_ohlcv()       → OHLCV DataFrame (mock)
+    - get_stock_info()  → fundamental info dict (mock)
+    - Broker summary + avg price per broker (real API)
 
 Window:
-  - 7 hari  → timing signal (sedang aktif akumulasi?)
-  - 30 hari → true avg cost bandar
+    - 7 hari  → timing signal (sedang aktif akumulasi?)
+    - 30 hari → true avg cost bandar
 """
+import logging
+import os
 import random
+import time
+from datetime import datetime, timedelta
+
+import httpx
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 
 # Daftar broker IDX
@@ -31,6 +37,11 @@ BROKER_LIST = [
     ("CG", "CGS-CIMB"),
     ("LG", "Trimegah Sekuritas"),
 ]
+
+_BROKER_NAME_MAP = {code: name for code, name in BROKER_LIST}
+
+STOCKBIT_MARKETDETECTOR_URL = "https://exodus.stockbit.com/marketdetectors/{ticker}"
+STOCKBIT_ORDERBOOK_URL = "https://exodus.stockbit.com/company-price-feed/v2/orderbook/companies/{ticker}"
 
 # Market cap realistis per ticker (dalam IDR)
 _MARKET_CAPS = {
@@ -87,54 +98,198 @@ def _get_trading_days(days: int) -> list[str]:
     return result
 
 
-def _generate_mock_price(base_price: float) -> float:
-    """Generate harga acak di sekitar base price."""
-    return round(base_price * random.uniform(0.95, 1.05), 0)
+def _get_broker_name(code: str) -> str:
+    return _BROKER_NAME_MAP.get(code, "Unknown")
+
+
+def _parse_number(value) -> float:
+    if value is None:
+        return 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value))
+    except ValueError:
+        return 0.0
+
+
+def _format_idr_compact(value: float) -> str:
+    sign = "-" if value < 0 else ""
+    abs_value = abs(value)
+    if abs_value >= 1_000_000_000_000:
+        return f"{sign}{abs_value / 1_000_000_000_000:.2f}T"
+    if abs_value >= 1_000_000_000:
+        return f"{sign}{abs_value / 1_000_000_000:.2f}M"
+    return f"{sign}{abs_value:.0f}"
+
+
+def _int_no_decimal(value) -> int:
+    return int(round(_parse_number(value)))
+
+
+def _normalize_broker_buy(entry: dict) -> dict:
+    bval = _parse_number(entry.get("bval"))
+    return {
+        "broker_code": entry.get("netbs_broker_code"),
+        "blot": _int_no_decimal(entry.get("blot")),
+        "bval": bval,
+        "bval_fmt": _format_idr_compact(bval),
+        "netbs_buy_avg_price": _int_no_decimal(entry.get("netbs_buy_avg_price")),
+        "type": entry.get("type"),
+    }
+
+
+def _normalize_broker_sell(entry: dict) -> dict:
+    sval = _parse_number(entry.get("sval"))
+    return {
+        "broker_code": entry.get("netbs_broker_code"),
+        "slot": _int_no_decimal(entry.get("slot")),
+        "sval": sval,
+        "sval_fmt": _format_idr_compact(sval),
+        "netbs_sell_avg_price": _int_no_decimal(entry.get("netbs_sell_avg_price")),
+        "type": entry.get("type"),
+    }
+
+
+def _normalize_bandar_detector(raw: dict) -> dict:
+    if not raw:
+        return {}
+    avg = raw.get("avg", {}) or {}
+    top3 = raw.get("top3", {}) or {}
+    top5 = raw.get("top5", {}) or {}
+    return {
+        "broker_accdist": raw.get("broker_accdist"),
+        "avg_accdist": avg.get("accdist"),
+        "avg_amount": _parse_number(avg.get("amount")),
+        "top3_accdist": top3.get("accdist"),
+        "top3_amount": _parse_number(top3.get("amount")),
+        "top5_accdist": top5.get("accdist"),
+        "top5_amount": _parse_number(top5.get("amount")),
+        "value": _parse_number(raw.get("value")),
+        "volume": _parse_number(raw.get("volume")),
+    }
+
+
+def get_marketdetector_broker_summary(
+    ticker: str,
+    date_from: str,
+    date_to: str,
+    transaction_type: str = "TRANSACTION_TYPE_NET",
+    market_board: str = "MARKET_BOARD_REGULER",
+    investor_type: str = "INVESTOR_TYPE_ALL",
+    limit: int = 10,
+) -> dict:
+    api_key = os.getenv("STOCKBIT_API_KEY")
+    if not api_key:
+        raise ValueError("STOCKBIT_API_KEY is not set")
+
+    params = {
+        "from": date_from,
+        "to": date_to,
+        "transaction_type": transaction_type,
+        "market_board": market_board,
+        "investor_type": investor_type,
+        "limit": str(limit),
+    }
+
+    headers = {"Authorization": f"Bearer {api_key}"}
+    url = STOCKBIT_MARKETDETECTOR_URL.format(ticker=ticker)
+
+    with httpx.Client(timeout=30.0) as client:
+        for attempt in range(3):
+            try:
+                response = client.get(url, params=params, headers=headers)
+                response.raise_for_status()
+                payload = response.json()
+                break
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                if status in (429, 500, 502, 503, 504) and attempt < 2:
+                    time.sleep(1.5 * (2 ** attempt))
+                    continue
+                raise
+
+    data = payload.get("data", {})
+    broker_summary = data.get("broker_summary", {})
+    brokers_buy = broker_summary.get("brokers_buy", [])
+    brokers_sell = broker_summary.get("brokers_sell", [])
+    bandar_detector = _normalize_bandar_detector(data.get("bandar_detector", {}))
+
+    return {
+        "ticker": ticker,
+        "from": data.get("from", date_from),
+        "to": data.get("to", date_to),
+        "brokers_buy": [_normalize_broker_buy(item) for item in brokers_buy],
+        "brokers_sell": [_normalize_broker_sell(item) for item in brokers_sell],
+        "bandar_detector": bandar_detector,
+    }
+
+
+def get_current_price_stockbit(ticker: str) -> float:
+    api_key = os.getenv("STOCKBIT_API_KEY")
+    if not api_key:
+        raise ValueError("STOCKBIT_API_KEY is not set")
+
+    url = STOCKBIT_ORDERBOOK_URL.format(ticker=ticker.lower())
+    headers = {"Authorization": f"Bearer {api_key}"}
+
+    with httpx.Client(timeout=15.0) as client:
+        response = client.get(url, headers=headers)
+        response.raise_for_status()
+        payload = response.json()
+
+    if payload.get("message"):
+        logger.info("Stockbit orderbook: %s", payload.get("message"))
+
+    bid_list = payload.get("bid", []) or payload.get("data", {}).get("bid", [])
+    if not bid_list:
+        logger.warning("Stockbit orderbook: empty bid list for %s", ticker)
+        return 0.0
+    price = _parse_number(bid_list[0].get("price"))
+    logger.info("Stockbit orderbook: %s bid[0]=%s", ticker, price)
+    return price
 
 
 def get_broker_daily(ticker: str, date: str) -> dict:
     """
     Broker summary untuk 1 saham di 1 tanggal.
-    MOCK: Generate data random yang realistis.
+    Real data dari Stockbit marketdetector endpoint.
     """
-    random.seed(hash(f"{ticker}{date}") % 2**32)
-
-    base_price = _get_base_price(ticker)
-    num_buyers = random.randint(3, 7)
-    num_sellers = random.randint(3, 7)
-
-    buyers = random.sample(BROKER_LIST, num_buyers)
-    sellers = random.sample(BROKER_LIST, num_sellers)
+    api_data = get_marketdetector_broker_summary(
+        ticker=ticker,
+        date_from=date,
+        date_to=date,
+    )
 
     buy_entries = []
-    for broker_code, broker_name in buyers:
-        lot = random.randint(1000, 20000)
-        avg_price = _generate_mock_price(base_price)
-        value = int(lot * 100 * avg_price)
+    for entry in api_data.get("brokers_buy", []):
+        code = entry.get("broker_code")
+        bval = _parse_number(entry.get("bval"))
         buy_entries.append({
-            "broker": broker_code,
-            "broker_name": broker_name,
-            "lot": lot,
-            "value": value,
-            "avg_price": avg_price,
+            "broker": code,
+            "broker_name": _get_broker_name(code),
+            "lot": _int_no_decimal(entry.get("blot")),
+            "value": int(round(bval)),
+            "avg_price": _int_no_decimal(entry.get("netbs_buy_avg_price")),
+            "type": entry.get("type"),
         })
 
     sell_entries = []
-    for broker_code, broker_name in sellers:
-        lot = random.randint(1000, 15000)
-        avg_price = _generate_mock_price(base_price)
-        value = int(lot * 100 * avg_price)
+    for entry in api_data.get("brokers_sell", []):
+        code = entry.get("broker_code")
+        sval = _parse_number(entry.get("sval"))
         sell_entries.append({
-            "broker": broker_code,
-            "broker_name": broker_name,
-            "lot": lot,
-            "value": value,
-            "avg_price": avg_price,
+            "broker": code,
+            "broker_name": _get_broker_name(code),
+            "lot": _int_no_decimal(entry.get("slot")),
+            "value": int(round(sval)),
+            "avg_price": _int_no_decimal(entry.get("netbs_sell_avg_price")),
+            "type": entry.get("type"),
         })
 
-    total_buy = sum(e["value"] for e in buy_entries)
-    total_sell = sum(e["value"] for e in sell_entries)
-    foreign_net = int((total_buy - total_sell) * random.uniform(0.3, 0.7))
+    foreign_buy = sum(e["value"] for e in buy_entries if e.get("type") == "Asing")
+    foreign_sell = sum(e["value"] for e in sell_entries if e.get("type") == "Asing")
+    foreign_net = int(foreign_buy - foreign_sell)
 
     return {
         "ticker": ticker,
@@ -154,36 +309,76 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
     days=30 → true avg cost bandar
     """
     trading_days = _get_trading_days(days)
-    daily_data = {d: get_broker_daily(ticker, d) for d in trading_days}
+    date_from = trading_days[-1]
+    date_to = trading_days[0]
+
+    window_data = get_marketdetector_broker_summary(
+        ticker=ticker,
+        date_from=date_from,
+        date_to=date_to,
+        limit=10,
+    )
 
     broker_totals: dict = {}
-    for date, data in daily_data.items():
-        for entry in data["buy"]:
-            b = entry["broker"]
-            if b not in broker_totals:
-                broker_totals[b] = {
-                    "broker_name": entry["broker_name"],
-                    "total_buy_lot": 0,
-                    "total_buy_value": 0,
-                    "active_days": 0,
-                    "daily": {},
-                }
-            broker_totals[b]["total_buy_lot"] += entry["lot"]
-            broker_totals[b]["total_buy_value"] += entry["value"]
-            broker_totals[b]["active_days"] += 1
-            broker_totals[b]["daily"][date] = {
-                "lot": entry["lot"],
-                "avg_price": entry["avg_price"],
+    for entry in window_data.get("brokers_buy", []):
+        code = entry.get("broker_code")
+        if not code:
+            continue
+        broker_totals[code] = {
+            "broker_name": _get_broker_name(code),
+            "total_buy_lot": _int_no_decimal(entry.get("blot")),
+            "total_buy_value": int(round(_parse_number(entry.get("bval")))),
+            "active_days": 0,
+            "daily": {},
+            "avg_price": _int_no_decimal(entry.get("netbs_buy_avg_price")),
+        }
+
+    distribution_totals: dict = {}
+    for entry in window_data.get("brokers_sell", []):
+        code = entry.get("broker_code")
+        if not code:
+            continue
+        sval = abs(_parse_number(entry.get("sval")))
+        distribution_totals[code] = {
+            "broker_name": _get_broker_name(code),
+            "total_sell_lot": _int_no_decimal(entry.get("slot")),
+            "total_sell_value": int(round(sval)),
+            "active_days": 0,
+            "daily": {},
+            "avg_price": _int_no_decimal(entry.get("netbs_sell_avg_price")),
+            "type": entry.get("type"),
+        }
+
+    daily_data = {}
+    foreign_net = 0
+    for date in trading_days:
+        try:
+            day_data = get_broker_daily(ticker, date)
+        except httpx.HTTPStatusError:
+            continue
+
+        daily_data[date] = day_data
+        foreign_net += day_data.get("foreign_net", 0)
+
+        for entry in day_data.get("buy", []):
+            code = entry.get("broker")
+            if code not in broker_totals:
+                continue
+            broker_totals[code]["active_days"] += 1
+            broker_totals[code]["daily"][date] = {
+                "lot": entry.get("lot"),
+                "avg_price": entry.get("avg_price"),
             }
 
-    # Hitung weighted avg price per broker
-    for b, data in broker_totals.items():
-        if data["total_buy_lot"] > 0:
-            data["avg_price"] = round(
-                data["total_buy_value"] / (data["total_buy_lot"] * 100), 2
-            )
-        else:
-            data["avg_price"] = 0
+        for entry in day_data.get("sell", []):
+            code = entry.get("broker")
+            if code not in distribution_totals:
+                continue
+            distribution_totals[code]["active_days"] += 1
+            distribution_totals[code]["daily"][date] = {
+                "lot": entry.get("lot"),
+                "avg_price": entry.get("avg_price"),
+            }
 
     sorted_brokers = sorted(
         broker_totals.items(),
@@ -191,13 +386,22 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
         reverse=True,
     )
 
-    foreign_net = sum(d["foreign_net"] for d in daily_data.values())
+    sorted_distributors = sorted(
+        distribution_totals.items(),
+        key=lambda x: x[1]["total_sell_value"],
+        reverse=True,
+    )
+
+    top3_sell_total = sum(d[1]["total_sell_value"] for d in sorted_distributors[:3])
 
     return {
         "ticker": ticker,
         "window_days": days,
-        "period": f"{trading_days[-1]} s/d {trading_days[0]}",
+        "period": f"{date_from} s/d {date_to}",
         "top_accumulators": sorted_brokers[:5],
+        "top_distributors": sorted_distributors[:5],
+        "distribution_top3_value": top3_sell_total,
+        "bandar_detector": window_data.get("bandar_detector", {}),
         "daily_summary": daily_data,
         "foreign_net": foreign_net,
     }
@@ -291,7 +495,10 @@ def get_stock_info(ticker: str) -> dict:
     rev_growth = rng.uniform(-0.05, 0.30)
     earn_growth = rng.uniform(-0.10, 0.40)
 
-    current_price = base_price * rng.uniform(0.95, 1.05)
+    try:
+        current_price = get_current_price_stockbit(ticker)
+    except (httpx.HTTPError, ValueError):
+        current_price = base_price * rng.uniform(0.95, 1.05)
     high_52w = current_price * rng.uniform(1.10, 1.40)
     low_52w = current_price * rng.uniform(0.60, 0.90)
 

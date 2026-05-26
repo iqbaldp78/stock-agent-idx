@@ -56,6 +56,126 @@ def _format_broker_detail(broker_code: str, broker_data: dict,
     }
 
 
+def _format_distribution_detail(broker_code: str, broker_data: dict,
+                                window_days: int) -> dict:
+    consistency = broker_data["active_days"] / window_days if window_days else 0
+    if consistency >= 0.8:
+        status = "⚠️ DISTRIBUSI KONSISTEN"
+    elif consistency >= 0.6:
+        status = "⚠️ DISTRIBUSI AKTIF"
+    elif consistency >= 0.4:
+        status = "⚠️ DISTRIBUSI RINGAN"
+    else:
+        status = "ℹ️ DISTRIBUSI SESUAI" if broker_data["active_days"] > 0 else "ℹ️ DISTRIBUSI TIDAK KONSISTEN"
+
+    return {
+        "broker": broker_code,
+        "broker_name": broker_data["broker_name"],
+        "total_sell_lot": broker_data["total_sell_lot"],
+        "total_sell_value": broker_data["total_sell_value"],
+        "avg_price": broker_data["avg_price"],
+        "active_days": f"{broker_data['active_days']}/{window_days} hari",
+        "status": status,
+    }
+
+
+def _assess_distribution(window_data: dict) -> tuple[float, str, list[str]]:
+    detector = window_data.get("bandar_detector", {})
+    accdist = (detector.get("broker_accdist") or "").strip().upper()
+
+    score_adj = 0.0
+    signals = []
+
+    if accdist == "BIG DIST":
+        score_adj -= 2.0
+        signals.append("Big Dist")
+    elif accdist == "DIST":
+        score_adj -= 1.0
+        signals.append("Dist")
+    elif accdist == "BIG ACCUM":
+        score_adj += 1.0
+        signals.append("Big Accum")
+    elif accdist == "ACCUM":
+        score_adj += 0.5
+        signals.append("Accum")
+
+    top3_sell = window_data.get("distribution_top3_value", 0)
+    total_value = (window_data.get("bandar_detector", {}) or {}).get("value", 0)
+    if total_value:
+        ratio = top3_sell / total_value
+        if ratio >= 0.30:
+            score_adj -= 1.0
+            signals.append("Top3 sell >= 30% value")
+        elif ratio >= 0.15:
+            score_adj -= 0.5
+            signals.append("Top3 sell >= 15% value")
+
+    label = "DISTRIBUTION" if score_adj < 0 else "ACCUMULATION" if score_adj > 0 else "NEUTRAL"
+    return score_adj, label, signals
+
+
+def _assess_confidence(
+    signal_7d: str,
+    signal_30d: str,
+    foreign_7d: float,
+    foreign_30d: float,
+    w7: dict,
+    w30: dict,
+    price_analysis: dict,
+) -> str:
+    score = 0.0
+
+    # Signal alignment
+    if signal_7d == signal_30d:
+        score += 1.0
+
+    # Foreign flow alignment
+    if foreign_7d * foreign_30d > 0:
+        score += 1.0
+
+    # Active days consistency (top broker)
+    if w7.get("top_accumulators"):
+        top_7d = w7["top_accumulators"][0][1]
+        if top_7d.get("active_days", 0) / max(w7.get("window_days", 1), 1) >= 0.6:
+            score += 0.5
+    if w30.get("top_accumulators"):
+        top_30d = w30["top_accumulators"][0][1]
+        if top_30d.get("active_days", 0) / max(w30.get("window_days", 1), 1) >= 0.6:
+            score += 0.5
+
+    # Distribution penalty
+    dist_signal_7d = w7.get("distribution_signal")
+    dist_signal_30d = w30.get("distribution_signal")
+    if dist_signal_7d == "DISTRIBUTION" or dist_signal_30d == "DISTRIBUTION":
+        score -= 1.0
+
+    # Top3 sell penalty
+    top3_sell_7d = w7.get("distribution_top3_value", 0)
+    top3_sell_30d = w30.get("distribution_top3_value", 0)
+    if top3_sell_7d >= 1_000_000_000_000 or top3_sell_30d >= 1_000_000_000_000:
+        score -= 1.0
+    elif top3_sell_7d >= 500_000_000_000 or top3_sell_30d >= 500_000_000_000:
+        score -= 0.5
+
+    # Price distance to avg bandar
+    distance_1m = price_analysis.get("distance_from_1m")
+    if distance_1m:
+        try:
+            dist_1m_pct = float(str(distance_1m).replace("%", ""))
+            if dist_1m_pct <= 2.0:
+                score += 0.5
+            elif dist_1m_pct >= 5.0:
+                score -= 0.5
+        except ValueError:
+            pass
+
+    if score >= 2.0:
+        return "HIGH"
+    if score >= 0.5:
+        return "MEDIUM"
+    return "LOW"
+
+
 def analyze(ticker: str) -> dict:
     """
     Analisis bandarmologi lengkap:
@@ -95,6 +215,15 @@ def analyze(ticker: str) -> dict:
         score -= 1.0
         data_used.append(f"Foreign net sell 7H & 1M")
 
+    # === Distribution Signal ===
+    dist_adj_7d, dist_signal_7d, dist_notes_7d = _assess_distribution(w7)
+    dist_adj_30d, dist_signal_30d, dist_notes_30d = _assess_distribution(w30)
+    score += dist_adj_7d + dist_adj_30d
+    if dist_notes_7d:
+        data_used.append("Distribution 7H: " + ", ".join(dist_notes_7d))
+    if dist_notes_30d:
+        data_used.append("Distribution 1M: " + ", ".join(dist_notes_30d))
+
     # === Consistency Bonus ===
     if signal_7d == "STRONG_ACCUMULATION" and signal_30d in ("STRONG_ACCUMULATION", "MODERATE_ACCUMULATION"):
         score += 1.0  # Double confirmation
@@ -118,6 +247,11 @@ def analyze(ticker: str) -> dict:
     top_30d = [_format_broker_detail(code, data, BROKER_WATCH_LONG)
                for code, data in w30["top_accumulators"][:5]]
 
+    top_dist_7d = [_format_distribution_detail(code, data, BROKER_WATCH_SHORT)
+                   for code, data in w7.get("top_distributors", [])[:5]]
+    top_dist_30d = [_format_distribution_detail(code, data, BROKER_WATCH_LONG)
+                    for code, data in w30.get("top_distributors", [])[:5]]
+
     # === Entry Analysis ===
     bandar_avg_7d = w7["top_accumulators"][0][1]["avg_price"] if w7["top_accumulators"] else 0
     bandar_avg_1m = w30["top_accumulators"][0][1]["avg_price"] if w30["top_accumulators"] else 0
@@ -138,12 +272,15 @@ def analyze(ticker: str) -> dict:
         }
 
     # Confidence
-    if signal_7d == signal_30d and foreign_7d * foreign_30d > 0:
-        confidence = "HIGH"
-    elif w7["top_accumulators"] and w30["top_accumulators"]:
-        confidence = "MEDIUM"
-    else:
-        confidence = "LOW"
+    confidence = _assess_confidence(
+        signal_7d,
+        signal_30d,
+        foreign_7d,
+        foreign_30d,
+        w7,
+        w30,
+        price_analysis,
+    )
 
     # Broker to watch
     broker_to_watch = []
@@ -159,12 +296,16 @@ def analyze(ticker: str) -> dict:
             "period": w7["period"],
             "assessment": signal_7d.replace("_", " ").title(),
             "top_accumulators": top_7d,
+            "top_distributors": top_dist_7d,
+            "distribution_signal": dist_signal_7d,
             "foreign_net_7d": foreign_7d,
         },
         "window_1m": {
             "period": w30["period"],
             "assessment": signal_30d.replace("_", " ").title(),
             "top_accumulators": top_30d,
+            "top_distributors": top_dist_30d,
+            "distribution_signal": dist_signal_30d,
             "foreign_net_1m": foreign_30d,
         },
         "price_analysis": price_analysis,
