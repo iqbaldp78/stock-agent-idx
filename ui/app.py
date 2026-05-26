@@ -2,13 +2,8 @@
 Stock Agent IDX — Streamlit Dashboard (Full)
 Phase 5: Top Picks, Bandarmologi Detail, Performance Tracker, On-demand trigger.
 """
-import os
 import sys
-
-app_root = os.getenv("APP_ROOT", "/app")
-if app_root not in sys.path:
-    # Ensure internal modules (graph, db, data, agents) resolve in containers.
-    sys.path.insert(0, app_root)
+sys.path.insert(0, "/app")
 
 import streamlit as st
 import psycopg2
@@ -16,6 +11,8 @@ import psycopg2.extras
 import json
 import logging
 from datetime import date, datetime, timedelta
+
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -195,9 +192,11 @@ if page == "📈 Top Picks":
 
                     t1 = sig.get("target_1")
                     sl = sig.get("stop_loss")
+                    t1_str = f"{float(t1):,.0f}" if t1 else "N/A"
+                    sl_str = f"{float(sl):,.0f}" if sl else "N/A"
                     st.markdown(
-                        f"Target: **{t1:,.0f if t1 else 'N/A'}** | "
-                        f"SL: **{sl:,.0f if sl else 'N/A'}**"
+                        f"Target: **{t1_str}** | "
+                        f"SL: **{sl_str}**"
                     )
 
                 with col3:
@@ -247,7 +246,7 @@ elif page == "🔍 Bandarmologi":
                 cp = price_analysis.get("current_price")
                 st.metric("Current Price", f"{cp:,}" if cp else "N/A")
             with col4:
-                entry_status = price_analysis.get("entry_status_1m", "N/A")
+                entry_status = price_analysis.get("entry_status", "N/A")
                 st.metric("Entry Status", entry_status[:20] if entry_status else "N/A")
 
             st.divider()
@@ -258,24 +257,35 @@ elif page == "🔍 Bandarmologi":
 
                 if isinstance(w7, dict):
                     st.markdown(f"**Period:** {w7.get('period', 'N/A')}")
-                    st.markdown(f"**Assessment:** {w7.get('assessment', 'N/A')}")
+                    st.markdown(f"**Bandar Signal:** {w7.get('bandar_signal', 'N/A')} — {w7.get('assessment', 'N/A')}")
+                    net_lot = w7.get("net_lot", 0)
+                    net_val = w7.get("net_value", 0)
+                    st.markdown(f"**Net Lot:** {net_lot:,.0f} | **Net Value:** {net_val/1e9:,.1f}B")
+                    st.markdown(f"**Buyer/Seller:** {w7.get('total_buyer', 0)}/{w7.get('total_seller', 0)}")
 
-                    # Top accumulators
-                    accumulators = w7.get("top_accumulators", [])
-                    if accumulators:
-                        st.markdown("**Top Accumulators:**")
-                        for acc in accumulators[:5]:
-                            if isinstance(acc, dict):
-                                st.markdown(
-                                    f"- **{acc.get('broker', 'N/A')}** ({acc.get('broker_name', '')}) — "
-                                    f"Lot: {acc.get('total_buy_lot', 0):,} | "
-                                    f"Avg: {acc.get('avg_price', 0):,.0f} | "
-                                    f"Days: {acc.get('active_days', 'N/A')}"
-                                )
+                    # Top buyers
+                    buyers = w7.get("top_buyers", [])
+                    if buyers:
+                        st.markdown("**Top Buyers:**")
+                        for b in buyers[:5]:
+                            st.markdown(
+                                f"- **{b.get('broker', '')}** ({b.get('type', '')}) — "
+                                f"Net: {b.get('net_lot', '')} lot | "
+                                f"Value: {b.get('net_value_B', '')} | "
+                                f"Avg: {b.get('avg_price', '')}"
+                            )
 
-                    foreign = w7.get("foreign_net_7d", "N/A")
-                    if foreign:
-                        st.markdown(f"🌍 **Foreign Net 7D:** {foreign}")
+                    # Top sellers
+                    sellers = w7.get("top_sellers", [])
+                    if sellers:
+                        st.markdown("**Top Sellers:**")
+                        for s in sellers[:5]:
+                            st.markdown(
+                                f"- **{s.get('broker', '')}** ({s.get('type', '')}) — "
+                                f"Net: {s.get('net_lot', '')} lot | "
+                                f"Value: {s.get('net_value_B', '')} | "
+                                f"Avg: {s.get('avg_price', '')}"
+                            )
 
             with tab30:
                 st.subheader("📊 Window 1 Bulan")
@@ -283,22 +293,44 @@ elif page == "🔍 Bandarmologi":
 
                 if isinstance(w1m, dict):
                     st.markdown(f"**Period:** {w1m.get('period', 'N/A')}")
-                    st.markdown(f"**Assessment:** {w1m.get('assessment', 'N/A')}")
+                    st.markdown(f"**Bandar Signal:** {w1m.get('bandar_signal', 'N/A')} — {w1m.get('assessment', 'N/A')}")
+                    net_lot = w1m.get("net_lot", 0)
+                    net_val = w1m.get("net_value", 0)
+                    st.markdown(f"**Net Lot:** {net_lot:,.0f} | **Net Value:** {net_val/1e9:,.1f}B")
+                    st.markdown(f"**Buyer/Seller:** {w1m.get('total_buyer', 0)}/{w1m.get('total_seller', 0)}")
 
-                    accumulators = w1m.get("top_accumulators", [])
-                    if accumulators:
-                        st.markdown("**Top Accumulators:**")
-                        for acc in accumulators[:5]:
-                            if isinstance(acc, dict):
-                                st.markdown(
-                                    f"- **{acc.get('broker', 'N/A')}** ({acc.get('broker_name', '')}) — "
-                                    f"Avg: {acc.get('avg_price_1m', 0):,.0f} | "
-                                    f"Days: {acc.get('active_days', 'N/A')}"
-                                )
+                    buyers = w1m.get("top_buyers", [])
+                    if buyers:
+                        st.markdown("**Top Buyers:**")
+                        for b in buyers[:5]:
+                            st.markdown(
+                                f"- **{b.get('broker', '')}** ({b.get('type', '')}) — "
+                                f"Net: {b.get('net_lot', '')} lot | "
+                                f"Value: {b.get('net_value_B', '')} | "
+                                f"Avg: {b.get('avg_price', '')}"
+                            )
 
-                    foreign = w1m.get("foreign_net_1m", "N/A")
-                    if foreign:
-                        st.markdown(f"🌍 **Foreign Net 1M:** {foreign}")
+                    sellers = w1m.get("top_sellers", [])
+                    if sellers:
+                        st.markdown("**Top Sellers:**")
+                        for s in sellers[:5]:
+                            st.markdown(
+                                f"- **{s.get('broker', '')}** ({s.get('type', '')}) — "
+                                f"Net: {s.get('net_lot', '')} lot | "
+                                f"Value: {s.get('net_value_B', '')} | "
+                                f"Avg: {s.get('avg_price', '')}"
+                            )
+
+            # Floor Prices
+            st.divider()
+            st.subheader("🏢 Floor Price & Fase per Broker")
+            floor_prices = result.get("floor_prices", [])
+            if floor_prices:
+                import pandas as pd
+                df = pd.DataFrame(floor_prices)
+                df = df[["broker", "type", "floor_price", "net_lot", "net_value_B", "phase", "distance_from_current"]]
+                df.columns = ["Broker", "Type", "Floor Price", "Net Lot", "Value (B)", "Fase", "vs Current"]
+                st.dataframe(df, use_container_width=True, hide_index=True)
 
             # Price Analysis
             st.divider()
@@ -321,15 +353,17 @@ elif page == "🔍 Bandarmologi":
                 st.markdown(f"📏 Jarak dari avg 1M: **{pa.get('distance_from_1m', 'N/A')}**")
                 st.success(f"🎯 Entry Ideal: **{pa.get('ideal_entry_zone', 'N/A')}** | Max Entry: **{pa.get('max_entry', 'N/A')}**")
 
-                entry_status = pa.get("entry_status_1m", "")
+                entry_status = pa.get("entry_status", "")
+                entry_label = pa.get("entry_label", "")
+                display_text = f"{entry_status} {entry_label}" if entry_label else entry_status
                 if "IDEAL" in entry_status:
-                    st.success(entry_status)
+                    st.success(display_text)
                 elif "ACCEPTABLE" in entry_status:
-                    st.info(entry_status)
+                    st.info(display_text)
                 elif "CAUTION" in entry_status:
-                    st.warning(entry_status)
+                    st.warning(display_text)
                 elif "AVOID" in entry_status:
-                    st.error(entry_status)
+                    st.error(display_text)
 
 
 # === PAGE: Performance ===

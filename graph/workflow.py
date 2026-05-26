@@ -250,20 +250,15 @@ def run_debate(state: AgentState) -> dict:
                 "argument": argument, "vote": vote,
             })
 
-        # Foreign flow confirmation
-        if bandarm.get("window_7d", {}).get("foreign_net_7d", 0) > 0:
-            if isinstance(bandarm.get("window_7d", {}).get("foreign_net_7d"), (int, float)):
-                foreign_net = bandarm["window_7d"]["foreign_net_7d"]
-            else:
-                foreign_net = 0
-
-            if foreign_net > 0 and bandarm_score >= 6:
-                argument = f"{ticker}: foreign net buy konfirmasi akumulasi bandar"
-                round1_votes[ticker]["net_vote"] += 0.05
-                debate_log.append({
-                    "round": 2, "ticker": ticker, "agent": "bandarmologi",
-                    "argument": argument, "vote": "BUY",
-                })
+        # Foreign flow confirmation (using bandar detector net_value)
+        bd_7 = bandarm.get("window_7d", {}).get("net_value", 0)
+        if isinstance(bd_7, (int, float)) and bd_7 > 0 and bandarm_score >= 6:
+            argument = f"{ticker}: net value positif konfirmasi akumulasi bandar"
+            round1_votes[ticker]["net_vote"] += 0.05
+            debate_log.append({
+                "round": 2, "ticker": ticker, "agent": "bandarmologi",
+                "argument": argument, "vote": "BUY",
+            })
 
     # === SYNTHESIS: Weighted Vote → Finalists ===
     logger.info("[DEBATE] Synthesis — selecting finalists")

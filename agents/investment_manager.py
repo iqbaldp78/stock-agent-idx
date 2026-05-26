@@ -54,6 +54,16 @@ def synthesize(state: dict) -> dict:
         target_1 = tech.get("target")
         stop_loss = tech.get("stop_loss")
 
+        # Convert to float if string
+        try:
+            target_1 = float(target_1) if target_1 else None
+        except (ValueError, TypeError):
+            target_1 = None
+        try:
+            stop_loss = float(stop_loss) if stop_loss else None
+        except (ValueError, TypeError):
+            stop_loss = None
+
         # Calculate risk/reward
         risk_reward = _calc_risk_reward(current_price, target_1, stop_loss)
 
@@ -222,8 +232,6 @@ def _build_thesis(ticker: str, bandarm: dict, tech: dict, fund: dict,
 
 def _build_entry_reasoning(ticker: str, avg_7d, avg_1m, current, stop_loss) -> str:
     """Explain why entry zone is set at that level."""
-    avg_1m = _to_float(avg_1m)
-    stop_loss = _to_float(stop_loss)
     parts = []
 
     if avg_1m:
@@ -243,21 +251,8 @@ def _build_entry_reasoning(ticker: str, avg_7d, avg_1m, current, stop_loss) -> s
     return ". ".join(parts) if parts else "Entry berdasarkan analisis multi-agent"
 
 
-def _to_float(val) -> float | None:
-    """Safely convert value to float."""
-    if val is None:
-        return None
-    try:
-        return float(str(val).replace(",", ""))
-    except (ValueError, TypeError):
-        return None
-
-
 def _calc_risk_reward(current, target, stop_loss) -> str:
     """Calculate risk/reward ratio."""
-    current = _to_float(current)
-    target = _to_float(target)
-    stop_loss = _to_float(stop_loss)
     if not all([current, target, stop_loss]):
         return "N/A"
     try:

@@ -34,12 +34,9 @@ def apply_filter(universe: list[str]) -> list[str]:
                 logger.info(f"[SKIP] {ticker} — low volume ({avg_vol:,.0f} < {MIN_VOLUME:,})")
                 continue
 
-            # Cek market cap
+            # Cek market cap (skip jika data tidak tersedia — LQ45 sudah big cap)
             market_cap = info.get("market_cap")
-            if not market_cap:
-                logger.info(f"[SKIP] {ticker} — no market cap data")
-                continue
-            if market_cap < MIN_MARKET_CAP:
+            if market_cap is not None and market_cap < MIN_MARKET_CAP:
                 logger.info(
                     f"[SKIP] {ticker} — low market cap "
                     f"({market_cap/1e12:.2f}T < {MIN_MARKET_CAP/1e12:.0f}T)"
@@ -47,9 +44,9 @@ def apply_filter(universe: list[str]) -> list[str]:
                 continue
 
             candidates.append(ticker)
+            mcap_str = f"{market_cap/1e12:.2f}T" if market_cap else "N/A"
             logger.info(
-                f"[PASS] {ticker} — vol={avg_vol:,.0f}, "
-                f"mcap={market_cap/1e12:.2f}T"
+                f"[PASS] {ticker} — vol={avg_vol:,.0f}, mcap={mcap_str}"
             )
 
         except Exception as e:
