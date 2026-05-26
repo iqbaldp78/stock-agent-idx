@@ -188,9 +188,10 @@ if page == "📈 Top Picks":
 
                     t1 = sig.get("target_1")
                     sl = sig.get("stop_loss")
+                    t1_str = f"{t1:,.0f}" if t1 else "N/A"
+                    sl_str = f"{sl:,.0f}" if sl else "N/A"
                     st.markdown(
-                        f"Target: **{t1:,.0f if t1 else 'N/A'}** | "
-                        f"SL: **{sl:,.0f if sl else 'N/A'}**"
+                        f"Target: **{t1_str}** | SL: **{sl_str}**"
                     )
 
                 with col3:
