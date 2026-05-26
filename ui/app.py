@@ -2,6 +2,10 @@
 Stock Agent IDX — Streamlit Dashboard (Full)
 Phase 5: Top Picks, Bandarmologi Detail, Performance Tracker, On-demand trigger.
 """
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+
 import streamlit as st
 import psycopg2
 import psycopg2.extras
