@@ -3,7 +3,7 @@ Agent — Fundamental
 Analisis fundamental saham: valuasi, profitabilitas, growth.
 Rule-based scoring (tanpa LLM). Bisa ditambahkan LLM enhancement nanti.
 """
-from data.fetcher_yfinance import get_stock_info
+from data.fetcher_stockbit import get_stock_info
 
 
 def analyze(ticker: str) -> dict:

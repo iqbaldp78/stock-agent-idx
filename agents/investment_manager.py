@@ -222,6 +222,8 @@ def _build_thesis(ticker: str, bandarm: dict, tech: dict, fund: dict,
 
 def _build_entry_reasoning(ticker: str, avg_7d, avg_1m, current, stop_loss) -> str:
     """Explain why entry zone is set at that level."""
+    avg_1m = _to_float(avg_1m)
+    stop_loss = _to_float(stop_loss)
     parts = []
 
     if avg_1m:
@@ -241,8 +243,21 @@ def _build_entry_reasoning(ticker: str, avg_7d, avg_1m, current, stop_loss) -> s
     return ". ".join(parts) if parts else "Entry berdasarkan analisis multi-agent"
 
 
+def _to_float(val) -> float | None:
+    """Safely convert value to float."""
+    if val is None:
+        return None
+    try:
+        return float(str(val).replace(",", ""))
+    except (ValueError, TypeError):
+        return None
+
+
 def _calc_risk_reward(current, target, stop_loss) -> str:
     """Calculate risk/reward ratio."""
+    current = _to_float(current)
+    target = _to_float(target)
+    stop_loss = _to_float(stop_loss)
     if not all([current, target, stop_loss]):
         return "N/A"
     try:

@@ -6,7 +6,7 @@ from typing import TypedDict
 from langgraph.graph import StateGraph, END
 
 from data.filter import apply_filter
-from data.fetcher_yfinance import get_stock_info
+from data.fetcher_stockbit import get_stock_info
 from agents.fundamental import analyze as fund_analyze
 from agents.technical import analyze as tech_analyze
 from agents.bandarmologi import analyze as bandarm_analyze

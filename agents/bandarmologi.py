@@ -4,7 +4,7 @@ Analisis akumulasi/distribusi bandar berdasarkan broker summary.
 Core agent — penentu utama scoring di IDX market.
 """
 from data.fetcher_stockbit import get_full_bandarm_data
-from data.fetcher_yfinance import get_stock_info
+from data.fetcher_stockbit import get_stock_info
 from graph.scoring import assess_entry_vs_bandar
 from config import BROKER_WATCH_SHORT, BROKER_WATCH_LONG
 

@@ -43,7 +43,7 @@ def run_performance_check():
         from sqlalchemy.orm import Session
         from db import SessionLocal
         from db.models import Signal, Performance
-        from data.fetcher_yfinance import get_stock_info
+        from data.fetcher_stockbit import get_stock_info
 
         db: Session = SessionLocal()
         today = date.today()

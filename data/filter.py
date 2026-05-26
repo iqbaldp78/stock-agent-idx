@@ -4,7 +4,7 @@ Menyaring universe saham berdasarkan volume dan market cap minimum.
 Phase 1: ~55 saham → ~30 saham.
 """
 import logging
-from data.fetcher_yfinance import get_stock_info, get_ohlcv
+from data.fetcher_stockbit import get_stock_info, get_ohlcv
 from config import MIN_VOLUME, MIN_MARKET_CAP
 
 logger = logging.getLogger(__name__)

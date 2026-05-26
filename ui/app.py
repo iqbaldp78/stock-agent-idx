@@ -2,10 +2,6 @@
 Stock Agent IDX — Streamlit Dashboard (Full)
 Phase 5: Top Picks, Bandarmologi Detail, Performance Tracker, On-demand trigger.
 """
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-
 import streamlit as st
 import psycopg2
 import psycopg2.extras
@@ -192,10 +188,9 @@ if page == "📈 Top Picks":
 
                     t1 = sig.get("target_1")
                     sl = sig.get("stop_loss")
-                    t1_str = f"{t1:,.0f}" if t1 else "N/A"
-                    sl_str = f"{sl:,.0f}" if sl else "N/A"
                     st.markdown(
-                        f"Target: **{t1_str}** | SL: **{sl_str}**"
+                        f"Target: **{t1:,.0f if t1 else 'N/A'}** | "
+                        f"SL: **{sl:,.0f if sl else 'N/A'}**"
                     )
 
                 with col3:

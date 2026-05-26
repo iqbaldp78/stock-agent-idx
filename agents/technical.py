@@ -5,7 +5,7 @@ Rule-based scoring menggunakan indikator klasik.
 """
 import numpy as np
 import pandas as pd
-from data.fetcher_yfinance import get_ohlcv, get_stock_info
+from data.fetcher_stockbit import get_ohlcv, get_stock_info
 
 
 def _calculate_rsi(closes: pd.Series, period: int = 14) -> float | None:
