@@ -259,6 +259,35 @@ def analyze(ticker: str) -> dict:
     price_analysis = {}
     if current_price > 0 and bandar_avg_7d > 0 and bandar_avg_1m > 0:
         entry_assessment = assess_entry_vs_bandar(current_price, bandar_avg_7d, bandar_avg_1m)
+        # Net foreign status
+        def net_status(val):
+            if val > 0:
+                return f"net buy ({val:,.0f})"
+            elif val < 0:
+                return f"net sell ({val:,.0f})"
+            else:
+                return "netral"
+
+        # Anomali akumulasi/distribusi besar (top 5 broker)
+        def detect_anomali(top_brokers, key_value, key_lot):
+            if not top_brokers:
+                return None
+            values = [b[1][key_value] for b in top_brokers]
+            lots = [b[1][key_lot] for b in top_brokers]
+            avg_value = sum(values) / len(values) if values else 0
+            avg_lot = sum(lots) / len(lots) if lots else 0
+            for code, data in top_brokers:
+                if avg_value > 0 and data[key_value] >= 3 * avg_value:
+                    return f"{code} ({data['broker_name']}) value {data[key_value]:,.0f} (≥3x rata2 top 5)"
+                if avg_lot > 0 and data[key_lot] >= 3 * avg_lot:
+                    return f"{code} ({data['broker_name']}) lot {data[key_lot]:,.0f} (≥3x rata2 top 5)"
+            return None
+
+        anom_akum_7d = detect_anomali(w7["top_accumulators"][:5], "total_buy_value", "total_buy_lot")
+        anom_akum_1m = detect_anomali(w30["top_accumulators"][:5], "total_buy_value", "total_buy_lot")
+        anom_dist_7d = detect_anomali(w7.get("top_distributors", [])[:5], "total_sell_value", "total_sell_lot")
+        anom_dist_1m = detect_anomali(w30.get("top_distributors", [])[:5], "total_sell_value", "total_sell_lot")
+
         price_analysis = {
             "current_price": current_price,
             "bandar_avg_7d": bandar_avg_7d,
@@ -269,7 +298,51 @@ def analyze(ticker: str) -> dict:
             "max_entry": entry_assessment["max_entry"],
             "entry_status": entry_assessment["status"],
             "entry_label": entry_assessment["label"],
+            "net_foreign_7d": net_status(foreign_7d),
+            "net_foreign_1m": net_status(foreign_30d),
+            "anomali_akumulasi_7d": anom_akum_7d,
+            "anomali_akumulasi_1m": anom_akum_1m,
+            "anomali_distribusi_7d": anom_dist_7d,
+            "anomali_distribusi_1m": anom_dist_1m,
         }
+
+    # Pengaruh score dari anomali akumulasi/distribusi
+    anomali_score = 0.0
+    broker_to_watch = []
+    # Akumulasi 7d
+    if anom_akum_7d:
+        anomali_score += 1.0
+        # Ekstrak kode broker dari string anomali
+        code = anom_akum_7d.split()[0]
+        name = anom_akum_7d.split('(',1)[1].split(')',1)[0] if '(' in anom_akum_7d else code
+        broker_to_watch.append(f"{code} ({name}) [ANOMALI AKUMULASI]")
+    # Akumulasi 1m
+    if anom_akum_1m:
+        anomali_score += 1.0
+        code = anom_akum_1m.split()[0]
+        name = anom_akum_1m.split('(',1)[1].split(')',1)[0] if '(' in anom_akum_1m else code
+        broker_to_watch.append(f"{code} ({name}) [ANOMALI AKUMULASI]")
+    # Distribusi 7d
+    if anom_dist_7d:
+        anomali_score -= 1.0
+        code = anom_dist_7d.split()[0]
+        name = anom_dist_7d.split('(',1)[1].split(')',1)[0] if '(' in anom_dist_7d else code
+        broker_to_watch.append(f"{code} ({name}) [ANOMALI DISTRIBUSI]")
+    # Distribusi 1m
+    if anom_dist_1m:
+        anomali_score -= 1.0
+        code = anom_dist_1m.split()[0]
+        name = anom_dist_1m.split('(',1)[1].split(')',1)[0] if '(' in anom_dist_1m else code
+        broker_to_watch.append(f"{code} ({name}) [ANOMALI DISTRIBUSI]")
+
+    # Tambahkan broker top 2 akumulasi 7d (jika belum ada)
+    for code, data in w7["top_accumulators"][:2]:
+        label = f"{code} ({data['broker_name']})"
+        if label not in broker_to_watch:
+            broker_to_watch.append(label)
+
+    # Tambahkan score anomali ke score utama
+    score += anomali_score
 
     # Confidence
     confidence = _assess_confidence(
@@ -281,11 +354,6 @@ def analyze(ticker: str) -> dict:
         w30,
         price_analysis,
     )
-
-    # Broker to watch
-    broker_to_watch = []
-    for code, data in w7["top_accumulators"][:2]:
-        broker_to_watch.append(f"{code} ({data['broker_name']})")
 
     # === Retail Broker Penalty (XL, XC, YP) ===
     RETAIL_BROKERS = {"XL", "XC", "YP"}

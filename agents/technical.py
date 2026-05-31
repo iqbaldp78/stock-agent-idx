@@ -211,27 +211,35 @@ def analyze(ticker: str) -> dict:
         resistance_strong = None
         support_strong_strength = 0
         resistance_strong_strength = 0
-        if len(ohlcv) >= 20:
-            lows = ohlcv['Low'][-20:]
-            highs = ohlcv['High'][-20:]
-            possible_supports = lows[lows < current_price]
+        if len(ohlcv) >= 200:
+            lows = ohlcv['Low'][-200:]
+            closes_ = ohlcv['Close'][-200:]
+            support_data = pd.concat([lows, closes_]).sort_index()
+            highs = ohlcv['High'][-200:]
+            closes_ = ohlcv['Close'][-200:]
+            support_data = pd.concat([lows, closes_]).sort_index()
+            resistance_data = pd.concat([highs, closes_]).sort_index()
+            # Penentuan support dari gabungan Low dan Close
+            possible_supports = support_data[support_data < current_price]
             possible_supports = possible_supports[possible_supports > current_price * 0.9]
             if not possible_supports.empty:
                 support_near = possible_supports.max()
             else:
-                support_near = lows.min()
-            possible_resistances = highs[highs > current_price]
+                support_near = support_data.min()
+            support_strong = support_data.min()
+            # Penentuan resistance dari gabungan High dan Close
+            possible_resistances = resistance_data[resistance_data > current_price]
             possible_resistances = possible_resistances[possible_resistances < current_price * 1.1]
             if not possible_resistances.empty:
                 resistance_near = possible_resistances.min()
             else:
-                resistance_near = highs.max()
-            support_strong = lows.min()
-            resistance_strong = highs.max()
-            support_near_strength = (lows <= support_near * 1.01).sum()
-            resistance_near_strength = (highs >= resistance_near * 0.99).sum()
-            support_strong_strength = (lows <= support_strong * 1.01).sum()
-            resistance_strong_strength = (highs >= resistance_strong * 0.99).sum()
+                resistance_near = resistance_data.max()
+            resistance_strong = resistance_data.max()
+            # Hitung sentuh support/resistance dari gabungan
+            support_near_strength = ((support_data >= support_near) & (support_data <= support_near * 1.01)).sum()
+            resistance_near_strength = ((resistance_data >= resistance_near * 0.99) & (resistance_data <= resistance_near)).sum()
+            support_strong_strength = (support_data <= support_strong * 1.01).sum()
+            resistance_strong_strength = (resistance_data >= resistance_strong * 0.99).sum()
             if abs(current_price - support_near) / support_near < 0.03:
                 score += 0.7
                 setup_notes.append(f"Harga mendekati support terdekat di {support_near:.0f}")
