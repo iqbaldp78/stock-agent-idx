@@ -425,95 +425,301 @@ def _get_base_price(ticker: str) -> float:
 # OHLCV & Fundamental Data
 # ============================================================
 
+
+def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50) -> pd.DataFrame:
+    """
+    Ambil data OHLCV dari Stockbit API untuk rentang tanggal tertentu (YYYY-MM-DD), limit default 50.
+    """
+    api_key = os.getenv("STOCKBIT_API_KEY")
+    if not api_key:
+        raise ValueError("STOCKBIT_API_KEY is not set")
+    url = f"https://exodus.stockbit.com/company-price-feed/historical/summary/{ticker.upper()}"
+    params = {
+        "period": "HS_PERIOD_DAILY",
+        "start_date": start_date,
+        "end_date": end_date,
+        "limit": str(limit),
+        "page": "1",
+    }
+    headers = {"Authorization": f"Bearer {api_key}"}
+    all_data = []
+    page = 1
+    while True:
+        page_params = params.copy()
+        page_params["page"] = str(page)
+        response = httpx.get(url, params=page_params, headers=headers, timeout=30.0)
+        response.raise_for_status()
+        payload = response.json()
+        data = payload.get("data", {})
+        result = data.get("result", [])
+        if not result:
+            break
+        all_data.extend(result)
+        paginate = data.get("paginate", {})
+        next_page = paginate.get("next_page")
+        if not next_page:
+            break
+        page += 1
+    required_keys = ("date","open","high","low","close","volume")
+    sample = all_data[0] if all_data else {}
+    missing_keys = [k for k in required_keys if k not in sample]
+    if missing_keys:
+        raise ValueError(f"Stockbit OHLCV data missing keys: {missing_keys}. Sample: {sample}")
+    df = pd.DataFrame([
+        {
+            "Date": pd.to_datetime(item["date"]),
+            "Open": float(item["open"]),
+            "High": float(item["high"]),
+            "Low": float(item["low"]),
+            "Close": float(item["close"]),
+            "Volume": float(item["volume"]),
+        }
+        for item in all_data if all(k in item for k in required_keys)
+    ])
+    if "Date" not in df.columns:
+        raise ValueError(f"No 'Date' column in OHLCV DataFrame. Columns: {df.columns}. Sample: {sample}")
+    df.set_index("Date", inplace=True)
+    df = df.sort_index()
+    return df
+
 def get_ohlcv(ticker: str, period: str = "3mo") -> pd.DataFrame:
     """
-    Generate OHLCV data yang realistis untuk saham IDX.
-    Deterministic berdasarkan ticker (same ticker = same data).
+    Backward compatible: tetap bisa pakai period string, tapi gunakan get_ohlcv_range jika ingin window custom.
     """
-    base_price = _get_base_price(ticker)
-
-    # Determine number of trading days from period
     period_days = {"1mo": 22, "3mo": 66, "6mo": 132, "1y": 252}.get(period, 22)
-
-    # Generate trading days (exclude weekends)
-    dates = []
-    current = datetime.now()
-    while len(dates) < period_days:
-        current -= timedelta(days=1)
-        if current.weekday() < 5:
-            dates.append(current)
-    dates.reverse()
-
-    # Deterministic random walk for price
-    rng = random.Random(hash(f"{ticker}_ohlcv") % 2**32)
-    prices = []
-    price = base_price * rng.uniform(0.90, 0.98)  # start slightly below base
-
-    for _ in range(period_days):
-        # Daily return: slight upward bias with volatility
-        daily_return = rng.gauss(0.001, 0.02)  # mean 0.1%, std 2%
-        price *= (1 + daily_return)
-        price = max(price, base_price * 0.7)  # floor
-
-        high = price * rng.uniform(1.005, 1.03)
-        low = price * rng.uniform(0.97, 0.995)
-        open_p = rng.uniform(low, high)
-        close = rng.uniform(low, high)
-
-        # Volume based on market cap (bigger stock = more volume)
-        mcap = _MARKET_CAPS.get(ticker, 30_000_000_000_000)
-        base_vol = max(1_000_000, int(mcap / base_price / 500))
-        volume = int(base_vol * rng.uniform(0.5, 2.5))
-
-        prices.append({
-            "Open": round(open_p, 0),
-            "High": round(high, 0),
-            "Low": round(low, 0),
-            "Close": round(close, 0),
-            "Volume": volume,
-        })
-
-    df = pd.DataFrame(prices, index=pd.DatetimeIndex(dates))
-    df.index.name = "Date"
-    return df
+    end_date = datetime.now().date()
+    start_date = end_date
+    days_added = 0
+    while days_added < period_days:
+        start_date -= timedelta(days=1)
+        if start_date.weekday() < 5:
+            days_added += 1
+    start_date_str = start_date.strftime("%Y-%m-%d")
+    end_date_str = end_date.strftime("%Y-%m-%d")
+    return get_ohlcv_range(ticker, start_date_str, end_date_str)
 
 
 def get_stock_info(ticker: str) -> dict:
+    # ...existing code...
+    api_key = os.getenv("STOCKBIT_API_KEY")
+    if not api_key:
+        raise ValueError("STOCKBIT_API_KEY is not set")
+    url = f"https://exodus.stockbit.com/keystats/ratio/v1/{ticker.upper()}?year_limit=10"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    with httpx.Client(timeout=15.0) as client:
+        response = client.get(url, headers=headers)
+        response.raise_for_status()
+        payload = response.json()
+    data = payload.get("data", {})
+    # Extract dividend yield history from financial_year_parent
+    dividend_yield_history = []
+    fy_parent = data.get("financial_year_parent", {})
+    # Extract historical Net Income, EPS, Revenue from annualised_value if available
+    net_income_history = []
+    eps_history = []
+    revenue_history = []
+    for group in fy_parent.get("financial_year_groups", []):
+        # Dividend yield history (all groups)
+        for val in group.get("financial_year_values", []):
+            year = val.get("year")
+            dy = val.get("dividend_yield")
+            if dy is not None and year:
+                try:
+                    dy_val = float(str(dy).replace("%", "").replace(",", ""))
+                    dividend_yield_history.append({"year": year, "value": dy_val})
+                except Exception:
+                    continue
+        # Net Income: only from group with fitem_name == 'Net Income'
+        if group.get("fitem_name") == "Net Income":
+            for val in group.get("financial_year_values", []):
+                year = val.get("year")
+                net_income_ann = val.get("annualised_value")
+                if net_income_ann is not None and year:
+                    try:
+                        ni_val = float(str(net_income_ann).replace(",", "").replace(" B", ""))
+                        net_income_history.append({"year": year, "value": ni_val})
+                    except Exception:
+                        pass
+        # EPS: only from group with fitem_name == 'EPS'
+        if group.get("fitem_name") == "EPS":
+            for val in group.get("financial_year_values", []):
+                year = val.get("year")
+                eps_ann = val.get("annualised_value")
+                if eps_ann is not None and year:
+                    try:
+                        eps_val = float(str(eps_ann).replace(",", ""))
+                        eps_history.append({"year": year, "value": eps_val})
+                    except Exception:
+                        pass
+        # Revenue: only from group with fitem_name == 'Revenue'
+        if group.get("fitem_name") == "Revenue":
+            for val in group.get("financial_year_values", []):
+                year = val.get("year")
+                revenue_ann = val.get("annualised_value")
+                if revenue_ann is not None and year:
+                    try:
+                        rev_val = float(str(revenue_ann).replace(",", "").replace(" B", ""))
+                        revenue_history.append({"year": year, "value": rev_val})
+                    except Exception:
+                        pass
     """
     Generate fundamental info yang realistis per ticker.
     Deterministic: same ticker = same data.
     """
     rng = random.Random(hash(f"{ticker}_info") % 2**32)
     base_price = _get_base_price(ticker)
-    mcap = _MARKET_CAPS.get(ticker, 30_000_000_000_000)
+    mcap = None
+    def _find_fin_item_value(closure_fin_items_results, name):
+        if not isinstance(closure_fin_items_results, list):
+            return None
+        for group in closure_fin_items_results:
+            fin_name_results = group.get("fin_name_results", [])
+            for fin in fin_name_results:
+                fitem = fin.get("fitem", {})
+                if fitem.get("name", "").strip().lower() == name.strip().lower():
+                    val = fitem.get("value")
+                    # Remove commas and percent, convert to float if possible
+                    if isinstance(val, str):
+                        val = val.replace(",", "").replace("%", "")
+                    try:
+                        return float(val)
+                    except (TypeError, ValueError):
+                        return None
+        return None
 
-    # Generate realistic fundamentals based on sector heuristics
-    per = rng.uniform(8, 35)
-    pbv = rng.uniform(0.8, 5.0)
-    roe = rng.uniform(0.05, 0.25)
-    der = rng.uniform(0.2, 2.5)
-    rev_growth = rng.uniform(-0.05, 0.30)
-    earn_growth = rng.uniform(-0.10, 0.40)
-
+    api_key = os.getenv("STOCKBIT_API_KEY")
+    if not api_key:
+        raise ValueError("STOCKBIT_API_KEY is not set")
+    url = f"https://exodus.stockbit.com/keystats/ratio/v1/{ticker.upper()}?year_limit=10"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    with httpx.Client(timeout=15.0) as client:
+        response = client.get(url, headers=headers)
+        response.raise_for_status()
+        payload = response.json()
+    data = payload.get("data", {})
+    closure_fin_items_results = data.get("closure_fin_items_results", [])
+    # Ambil market cap dari data['stats']['market_cap']
+    stats = data.get("stats", {})
+    mcap_str = stats.get("market_cap")
+    if not mcap_str:
+        raise ValueError(f"Market cap tidak ditemukan untuk {ticker}")
     try:
-        current_price = get_current_price_stockbit(ticker)
-    except (httpx.HTTPError, ValueError):
-        current_price = base_price * rng.uniform(0.95, 1.05)
-    high_52w = current_price * rng.uniform(1.10, 1.40)
-    low_52w = current_price * rng.uniform(0.60, 0.90)
-
+        mcap = float(mcap_str.replace(",", "").replace("B", "")) * 1e9 if "B" in mcap_str else float(mcap_str.replace(",", ""))
+    except Exception:
+        raise ValueError(f"Market cap tidak valid untuk {ticker}: {mcap_str}")
+    # Ambil current price dari orderbook
+    current_price = get_current_price_stockbit(ticker)
+    # 52w high/low
+    high_52w = None
+    low_52w = None
+    for group in closure_fin_items_results:
+        fin_name_results = group.get("fin_name_results", [])
+        for fin in fin_name_results:
+            fitem = fin.get("fitem", {})
+            fname = fitem.get("name", "").strip().lower()
+            if fname == "52 week high":
+                try:
+                    high_52w = float(fitem.get("value", "").replace(",", ""))
+                except Exception:
+                    pass
+            if fname == "52 week low":
+                try:
+                    low_52w = float(fitem.get("value", "").replace(",", ""))
+                except Exception:
+                    pass
+    # Fundamental dari closure_fin_items_results
+    per = _find_fin_item_value(closure_fin_items_results, "Current PE Ratio (Annualised)")
+    pbv = _find_fin_item_value(closure_fin_items_results, "Current Price to Book Value")
+    roe = _find_fin_item_value(closure_fin_items_results, "Return on Equity (TTM)")
+    der = _find_fin_item_value(closure_fin_items_results, "Debt to Equity Ratio (Quarter)")
+    rev_growth = _find_fin_item_value(closure_fin_items_results, "Revenue (Quarter YoY Growth)")
+    earn_growth = _find_fin_item_value(closure_fin_items_results, "Net Income (Quarter YoY Growth)")
+    # === Dividend Data Extraction ===
+    dividend_yield = _find_fin_item_value(closure_fin_items_results, "Dividend Yield")
+    dividend_payout_ratio = _find_fin_item_value(closure_fin_items_results, "Dividend Payout Ratio")
+    dividend_per_share = _find_fin_item_value(closure_fin_items_results, "Dividend per Share")
+    # Extract 5-year historical data for all main metrics
+    historical = {
+        "per": [],
+        "pbv": [],
+        "roe": [],
+        "der": [],
+        "revenue_growth": [],
+        "earnings_growth": [],
+        "dividend_yield": [],
+        "net_income": net_income_history,
+        "eps": eps_history,
+        "revenue": revenue_history,
+    }
+    for group in closure_fin_items_results:
+        year = group.get("year") or group.get("period")
+        fin_name_results = group.get("fin_name_results", [])
+        values = {}
+        for fin in fin_name_results:
+            fitem = fin.get("fitem", {})
+            fname = fitem.get("name", "").strip().lower()
+            val = fitem.get("value")
+            if isinstance(val, str):
+                val = val.replace(",", "").replace("%", "")
+            try:
+                val = float(val)
+            except (TypeError, ValueError):
+                continue
+            values[fname] = val
+        # Map to historical keys if present
+        if year:
+            if "current pe ratio (annualised)" in values:
+                historical["per"].append({"year": year, "value": values["current pe ratio (annualised)"]})
+            if "current price to book value" in values:
+                historical["pbv"].append({"year": year, "value": values["current price to book value"]})
+            if "return on equity (ttm)" in values:
+                historical["roe"].append({"year": year, "value": values["return on equity (ttm)"]})
+            if "debt to equity ratio (quarter)" in values:
+                historical["der"].append({"year": year, "value": values["debt to equity ratio (quarter)"]})
+            if "revenue (quarter yoy growth)" in values:
+                historical["revenue_growth"].append({"year": year, "value": values["revenue (quarter yoy growth)"]})
+            if "net income (quarter yoy growth)" in values:
+                historical["earnings_growth"].append({"year": year, "value": values["net income (quarter yoy growth)"]})
+            if "dividend yield" in values:
+                historical["dividend_yield"].append({"year": year, "value": values["dividend yield"]})
+            if "net income" in values:
+                historical["net_income"].append({"year": year, "value": values["net income"]})
+            if "eps" in values:
+                historical["eps"].append({"year": year, "value": values["eps"]})
+            if "revenue" in values:
+                historical["revenue"].append({"year": year, "value": values["revenue"]})
+    # Raise error jika ada field penting yang None
+    if high_52w is None or low_52w is None:
+        raise ValueError(f"52w high/low tidak ditemukan untuk {ticker}")
+    if per is None:
+        raise ValueError(f"PER tidak ditemukan untuk {ticker}")
+    if pbv is None:
+        raise ValueError(f"PBV tidak ditemukan untuk {ticker}")
+    if roe is None:
+        raise ValueError(f"ROE tidak ditemukan untuk {ticker}")
+    # DER boleh None jika tidak ditemukan (misal bank)
+    # if der is None:
+    #     raise ValueError(f"DER tidak ditemukan untuk {ticker}")
+    if rev_growth is None:
+        raise ValueError(f"Revenue growth tidak ditemukan untuk {ticker}")
+    if earn_growth is None:
+        raise ValueError(f"Earnings growth tidak ditemukan untuk {ticker}")
     return {
         "ticker": ticker,
         "per": round(per, 2),
         "pbv": round(pbv, 2),
         "market_cap": mcap,
         "roe": round(roe, 4),
-        "der": round(der, 2),
+        "der": round(der, 2) if der is not None else None,
         "revenue_growth": round(rev_growth, 4),
         "earnings_growth": round(earn_growth, 4),
         "current_price": round(current_price, 0),
-        "52w_high": round(high_52w, 0),
-        "52w_low": round(low_52w, 0),
+        "52w_high": round(float(high_52w), 0),
+        "52w_low": round(float(low_52w), 0),
+        "dividend_yield": round(dividend_yield, 4) if dividend_yield is not None else None,
+        "dividend_payout_ratio": round(dividend_payout_ratio, 4) if dividend_payout_ratio is not None else None,
+        "dividend_per_share": round(dividend_per_share, 4) if dividend_per_share is not None else None,
+        "history": {**historical, "dividend_yield": dividend_yield_history},
     }
 
 

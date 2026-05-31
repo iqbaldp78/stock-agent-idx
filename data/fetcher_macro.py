@@ -59,22 +59,42 @@ def get_sector_outlook() -> dict:
         "property": "^JKPROP",
     }
 
+    import time
     outlook = {}
+    max_retries = 5
     for sector_name, idx_ticker in sectors.items():
-        try:
-            ticker = yf.Ticker(idx_ticker)
-            hist = ticker.history(period="1mo")
-            if not hist.empty and len(hist) >= 5:
-                change_5d = (hist["Close"].iloc[-1] - hist["Close"].iloc[-5]) / hist["Close"].iloc[-5] * 100
-                if change_5d > 2:
-                    outlook[sector_name] = "POSITIF"
-                elif change_5d < -2:
-                    outlook[sector_name] = "NEGATIF"
+        retries = 0
+        while retries < max_retries:
+            try:
+                ticker = yf.Ticker(idx_ticker)
+                hist = ticker.history(period="1mo")
+                print(f"[DEBUG] {sector_name} ({idx_ticker}) hist shape: {hist.shape}")
+                if not hist.empty and len(hist) >= 5:
+                    change_5d = (hist["Close"].iloc[-1] - hist["Close"].iloc[-5]) / hist["Close"].iloc[-5] * 100
+                    print(f"[DEBUG] {sector_name} change_5d: {change_5d:.2f}%")
+                    if change_5d > 2:
+                        outlook[sector_name] = "POSITIF"
+                    elif change_5d < -2:
+                        outlook[sector_name] = "NEGATIF"
+                    else:
+                        outlook[sector_name] = "NETRAL"
+                    break
+                else:
+                    print(f"[DEBUG] {sector_name} data empty or <5 rows")
+                    outlook[sector_name] = "NETRAL"
+                    break
+            except Exception as e:
+                err_str = str(e).lower()
+                print(f"[DEBUG] {sector_name} ERROR: {e}")
+                if "too many requests" in err_str or "rate limit" in err_str:
+                    wait_time = 2 ** retries
+                    print(f"[DEBUG] {sector_name} rate limited, retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                    retries += 1
                 else:
                     outlook[sector_name] = "NETRAL"
-            else:
-                outlook[sector_name] = "NETRAL"
-        except Exception:
+                    break
+        else:
             outlook[sector_name] = "NETRAL"
 
     return outlook

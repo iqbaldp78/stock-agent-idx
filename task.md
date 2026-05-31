@@ -558,14 +558,18 @@ def calculate_composite(scores: dict, ticker: str,
 **Output JSON:**
 ```json
 {
-  "ticker"    : "BBCA",
-  "score"     : 7.8,
-  "signal"    : "BUY",
-  "setup"     : "Breakout resistance, volume konfirmasi",
+  "ticker": "BBCA",
+  "score": 7.8,
+  "signal": "BUY",
+  "setup": "Breakout resistance, volume konfirmasi",
   "entry_zone": "9400-9500",
-  "target"    : "10200",
-  "stop_loss" : "9100",
-  "data_used" : ["RSI: 58", "MA20: 9350", "MACD: golden cross"],
+  "target": "10200",
+  "stop_loss": "9100",
+  "data_used": [
+    "RSI: 58",
+    "MA20: 9350",
+    "MACD: golden cross"
+  ],
   "confidence": "MEDIUM"
 }
 ```
@@ -1160,3 +1164,13 @@ docker compose down
 > 💡 **Key Insight:** Entry di dekat/bawah avg cost bandar = risk kecil karena bandar tidak akan biarkan harga turun jauh dari modal mereka.
 
 > 🐳 **Docker First:** Semua dev & testing lewat Docker agar environment konsisten.
+
+
+<!-- running agent technical -->
+docker compose exec app python -m agents.technical ANTM
+
+<!-- running fundamental agent -->
+docker compose exec app bash -c "export PYTHONPATH=/app && python agents/fundamental.py --ticker ANTM"
+
+<!-- running bandarmology agent -->
+docker compose exec app python -m agents.bandarmologi ANTM

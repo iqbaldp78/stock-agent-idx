@@ -27,7 +27,9 @@ def synthesize(state: dict) -> dict:
 
     logger.info(f"[INVESTMENT_MANAGER] Analyzing {len(finalists)} finalists")
 
+
     top_picks = []
+    llm_debate_results = []
     for i, finalist in enumerate(finalists[:3]):
         ticker = finalist["ticker"]
         ticker_scores = scores.get(ticker, {})
@@ -36,25 +38,43 @@ def synthesize(state: dict) -> dict:
         fund = ticker_scores.get("fundamental", {})
         composite = composites.get(ticker, {})
 
+        # Kumpulkan argumen agent
+        bandarm_arg = bandarm.get("argument", bandarm.get("signal", ""))
+        tech_arg = tech.get("argument", tech.get("setup", ""))
+        fund_arg = fund.get("argument", ", ".join(fund.get("key_points", [])))
+        macro_arg = macro_data.get("argument", "")
+
+        # Buat prompt debat LLM
+        llm_prompt = f"""
+        Debat multi-agent untuk ticker {ticker}:
+        - Bandarmologi: {bandarm_arg}
+        - Technical: {tech_arg}
+        - Fundamental: {fund_arg}
+        - Macro: {macro_arg}
+        Voting: Apakah saham ini layak direkomendasikan? Berikan ringkasan argumen pro/kontra dan keputusan akhir (buy/hold/sell/avoid).
+        """
+        # Simulasi LLM (ganti dengan call ke LLM jika ada)
+        llm_result = {
+            "ticker": ticker,
+            "llm_prompt": llm_prompt.strip(),
+            "llm_reasoning": "[LLM Reasoning Placeholder: Integrasi LLM di sini untuk voting dan ringkasan debat agent]",
+            "llm_decision": "[LLM Decision Placeholder: buy/hold/sell/avoid]"
+        }
+        llm_debate_results.append(llm_result)
+
+        # ...existing code untuk top_picks...
+        # (copy dari blok sebelumnya, tanpa perubahan)
         # Bandar context
         window_7d = bandarm.get("window_7d", {})
         window_1m = bandarm.get("window_1m", {})
         price_analysis = bandarm.get("price_analysis", {})
-
-        # Extract avg costs
         avg_cost_7d = price_analysis.get("bandar_avg_7d")
         avg_cost_1m = price_analysis.get("bandar_avg_1m")
         current_price = price_analysis.get("current_price")
-
-        # Entry zone based on bandar avg cost
         entry_low = price_analysis.get("ideal_entry_zone", "N/A")
         max_entry = price_analysis.get("max_entry", "N/A")
-
-        # Target & SL from technical
         target_1 = tech.get("target")
         stop_loss = tech.get("stop_loss")
-
-        # Convert to float if string
         try:
             target_1 = float(target_1) if target_1 else None
         except (ValueError, TypeError):
@@ -63,25 +83,15 @@ def synthesize(state: dict) -> dict:
             stop_loss = float(stop_loss) if stop_loss else None
         except (ValueError, TypeError):
             stop_loss = None
-
-        # Calculate risk/reward
         risk_reward = _calc_risk_reward(current_price, target_1, stop_loss)
-
-        # Distance from bandar cost
         distance = ""
         if avg_cost_1m and current_price:
             dist_pct = (current_price - avg_cost_1m) / avg_cost_1m * 100
             distance = f"+{dist_pct:.1f}%" if dist_pct > 0 else f"{dist_pct:.1f}%"
-
-        # Build thesis
         thesis = _build_thesis(ticker, bandarm, tech, fund, price_analysis)
-
-        # Entry reasoning
         entry_reasoning = _build_entry_reasoning(
             ticker, avg_cost_7d, avg_cost_1m, current_price, stop_loss
         )
-
-        # Conviction
         final_score = finalist.get("final_score", 0)
         if final_score >= 8.0:
             conviction = "HIGH"
@@ -89,8 +99,6 @@ def synthesize(state: dict) -> dict:
             conviction = "MEDIUM"
         else:
             conviction = "LOW"
-
-        # Agent score breakdown
         agent_scores = {
             "bandarm": {
                 "score": bandarm.get("score", 0),
@@ -122,11 +130,8 @@ def synthesize(state: dict) -> dict:
             },
             "composite": composite.get("composite_score", 0),
         }
-
-        # Broker to watch
         broker_to_watch = bandarm.get("broker_to_watch", [])
         broker_utama = broker_to_watch[0] if broker_to_watch else "N/A"
-
         pick = {
             "rank": i + 1,
             "ticker": ticker,
@@ -156,7 +161,6 @@ def synthesize(state: dict) -> dict:
             "final_score": final_score,
         }
         top_picks.append(pick)
-
         logger.info(
             f"  #{i+1} {ticker}: conviction={conviction}, "
             f"entry={entry_low}, score={final_score}"
@@ -180,6 +184,7 @@ def synthesize(state: dict) -> dict:
         "top_picks": top_picks,
         "watchlist": watchlist,
         "avoid": avoid,
+        "llm_debate": llm_debate_results,
         "total_analyzed": len(composites),
         "total_finalists": len(finalists),
     }
@@ -312,3 +317,51 @@ def _empty_report() -> dict:
         "total_analyzed": 0,
         "total_finalists": 0,
     }
+
+
+# Main block for CLI execution
+if __name__ == "__main__":
+    import sys, json
+    from agents.technical import analyze as analyze_technical
+    from agents.bandarmologi import analyze as analyze_bandarmologi
+    from agents.fundamental import analyze as analyze_fundamental
+    from agents.macro import analyze as analyze_macro
+
+    ticker = "ANTM"
+    # Jalankan semua agent
+    bandarm = analyze_bandarmologi(ticker)
+    tech = analyze_technical(ticker)
+    fund = analyze_fundamental(ticker)
+    macro_data = analyze_macro()
+
+    # Komposit sederhana
+    composite_score = (
+        bandarm.get("score", 0) * 0.4 +
+        tech.get("score", 0) * 0.25 +
+        fund.get("score", 0) * 0.2 +
+        macro_data.get("score", 0) * 0.15
+    )
+
+    scores = {
+        ticker: {
+            "bandarm": bandarm,
+            "technical": tech,
+            "fundamental": fund,
+        }
+    }
+    composites = {
+        ticker: {
+            "weights_used": {"bandarm": 0.4, "technical": 0.25, "fundamental": 0.2, "macro": 0.15},
+            "composite_score": composite_score,
+        }
+    }
+    finalists = [{"ticker": ticker, "final_score": composite_score, "weight_mode": "default"}]
+
+    state = {
+        "finalists": finalists,
+        "scores": scores,
+        "composites": composites,
+        "macro_data": macro_data,
+    }
+    result = synthesize(state)
+    print(json.dumps(result, indent=2, ensure_ascii=False))

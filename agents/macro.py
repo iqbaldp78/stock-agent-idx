@@ -88,3 +88,9 @@ def analyze() -> dict:
         "market_risk": market_risk,
         "data_used": data_used,
     }
+
+
+if __name__ == "__main__":
+    import sys, json
+    result = analyze()
+    print(json.dumps(result, indent=2, ensure_ascii=False))

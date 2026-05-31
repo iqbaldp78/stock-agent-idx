@@ -287,6 +287,26 @@ def analyze(ticker: str) -> dict:
     for code, data in w7["top_accumulators"][:2]:
         broker_to_watch.append(f"{code} ({data['broker_name']})")
 
+    # === Retail Broker Penalty (XL, XC, YP) ===
+    RETAIL_BROKERS = {"XL", "XC", "YP"}
+    retail_penalty = 0.0
+    # Cek top 3 broker akumulasi 7 hari
+    if w7["top_accumulators"]:
+        top_brokers = w7["top_accumulators"][:5]
+        values = [data["total_buy_value"] for code, data in top_brokers]
+        lots = [data["total_buy_lot"] for code, data in top_brokers]
+        avg_value = sum(values) / len(values) if values else 0
+        avg_lot = sum(lots) / len(lots) if lots else 0
+        for rank, (code, data) in enumerate(top_brokers[:3], 1):
+            if code in RETAIL_BROKERS:
+                # Anomali jika value/lot 2x lebih besar dari rata2 top 5
+                if (data["total_buy_value"] >= 2 * avg_value or data["total_buy_lot"] >= 2 * avg_lot):
+                    data_used.append(f"Anomali: Broker retail {code} akumulasi besar di rank {rank} (anomali, no penalty)")
+                else:
+                    retail_penalty -= 1.0
+                    data_used.append(f"Penalty: Broker retail {code} akumulasi di rank {rank} (score -1.0)")
+    score += retail_penalty
+
     return {
         "ticker": ticker,
         "score": round(score, 1),
@@ -313,3 +333,10 @@ def analyze(ticker: str) -> dict:
         "data_used": data_used,
         "confidence": confidence,
     }
+
+
+if __name__ == "__main__":
+    import sys, json
+    ticker = sys.argv[1] if len(sys.argv) > 1 else "ANTM"
+    result = analyze(ticker)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
