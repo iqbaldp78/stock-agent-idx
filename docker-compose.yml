@@ -29,6 +29,9 @@ services:
     env_file: .env
     environment:
       APP_ROOT: /app
+      PYTHONPATH: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,6 +50,9 @@ services:
     env_file: .env
     environment:
       APP_ROOT: /app
+      PYTHONPATH: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - postgres
       - app

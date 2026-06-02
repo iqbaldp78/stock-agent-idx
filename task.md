@@ -8,7 +8,7 @@
 **Tujuan:** Sistem multi-agent AI yang menganalisis saham IDX (LQ45 + custom watchlist), berdiskusi antar agent, dan menghasilkan **3 top pick** beserta rekomendasi entry presisi berdasarkan avg cost bandar.
 
 **Stack:**
-- 🧠 LLM: Gemini Flash (gratis) + Claude Sonnet (Phase 4 saja)
+- 🧠 LLM: **9Router** (OpenAI-compatible, `localhost:20128`) — Haiku debat + Sonnet IM
 - 🤖 Agent Framework: LangGraph
 - 📊 Data: yfinance, IDX API, Stockbit API
 - 🖥️ UI: Streamlit
@@ -717,6 +717,14 @@ def assess_entry_vs_bandar(current_price: float,
 
 > **Goal:** Agent berdebat menyaring 10–15 kandidat → 5–7 finalis.
 
+### 3.0 Provider LLM — 9Router
+
+- Base URL: `http://localhost:20128/v1` (WSL host) atau `http://host.docker.internal:20128/v1` (Docker)
+- API key: `NINEROUTER_API_KEY` dari dashboard 9Router
+- Model whitelist (15 model) — lihat `config.py` → `ALLOWED_LLM_MODELS`
+- Default: R1 `kr/claude-haiku-4.5-agentic`, R2 `kr/claude-haiku-4.5-thinking-agentic`, IM `kr/claude-sonnet-4.5-thinking`
+- Fallback rule-based jika `LLM_ENABLED=false` atau 9Router unreachable
+
 ### 3.1 Mekanisme Debate
 
 ```
@@ -754,9 +762,9 @@ class AgentState(TypedDict):
 
 workflow = StateGraph(AgentState)
 workflow.add_node("filter",   run_filter)
-workflow.add_node("scoring",  run_parallel_scoring)   # paralel, Gemini Flash
-workflow.add_node("debate",   run_debate)              # 2 rounds, Gemini Flash
-workflow.add_node("decision", run_investment_manager)  # 1 call, Claude Sonnet
+workflow.add_node("scoring",  run_parallel_scoring)   # rule-based (fakta untuk debat)
+workflow.add_node("debate",   run_debate)              # 2 rounds LLM via 9Router
+workflow.add_node("decision", run_investment_manager)  # 1 call LLM + merge angka rule-based
 
 workflow.set_entry_point("filter")
 workflow.add_edge("filter",   "scoring")
@@ -766,16 +774,18 @@ workflow.add_edge("decision", END)
 ```
 
 **Deliverable Phase 3:**
-- [ ] Debate 2 putaran berjalan
-- [ ] Weighted vote memprioritaskan sinyal bandarmologi
-- [ ] Log debat tersimpan ke PostgreSQL
-- [ ] Output: 5–7 finalis dengan reasoning
+- [x] Debate 2 putaran LLM (`agents/debate/`) + fallback rule-based
+- [x] Weighted vote memprioritaskan sinyal bandarmologi
+- [x] Log debat tersimpan ke PostgreSQL
+- [x] Output: 5–7 finalis dengan reasoning
+
+**Implementasi:** `agents/debate/orchestrator.py`, `agents/llm_client.py`, `graph/workflow.py` → `run_debate()`
 
 ---
 
 ## Phase 4 — Investment Manager & Final Decision
 
-> **Goal:** Claude Sonnet mensintesis semua input → TOP 3 PICK dengan entry presisi berdasarkan avg cost bandar.
+> **Goal:** LLM (9Router Sonnet) mensintesis debat → TOP 3; angka entry/SL/target dari rule-based (avg cost bandar).
 
 ### 4.1 Output Final Investment Manager
 
@@ -826,9 +836,11 @@ workflow.add_edge("decision", END)
 ```
 
 **Deliverable Phase 4:**
-- [ ] Investment Manager pakai avg cost bandar sebagai acuan entry
-- [ ] Entry reasoning menjelaskan relasi harga vs avg bandar
-- [ ] Output JSON lengkap tersimpan ke PostgreSQL
+- [x] Investment Manager pakai avg cost bandar sebagai acuan entry (rule-based merge)
+- [x] Entry reasoning / thesis dari LLM, angka dari `price_analysis`
+- [x] Output JSON lengkap tersimpan ke PostgreSQL
+
+**Env vars:** `LLM_ENABLED`, `LLM_BASE_URL`, `NINEROUTER_API_KEY`, `LLM_MODEL_*` — lihat `.env.example`
 
 ---
 
@@ -1174,3 +1186,6 @@ docker compose exec app bash -c "export PYTHONPATH=/app && python agents/fundame
 
 <!-- running bandarmology agent -->
 docker compose exec app python -m agents.bandarmologi ANTM
+
+# Uji cepat 2 saham
+docker exec stock_app python scripts/run_analysis.py ANTM MDKA

@@ -2,6 +2,8 @@
 Graph — LangGraph Workflow
 Orchestrasi full pipeline: Filter → Scoring → Debate → Decision
 """
+from __future__ import annotations
+
 from typing import TypedDict
 from langgraph.graph import StateGraph, END
 
@@ -12,8 +14,11 @@ from agents.technical import analyze as tech_analyze
 from agents.bandarmologi import analyze as bandarm_analyze
 from agents.macro import analyze as macro_analyze
 from agents.investment_manager import synthesize as im_synthesize
+from agents.debate import run_llm_debate
+from agents.debate.logging_utils import log_debate_turn, log_debate_section, log_finalists
+from agents.llm_client import health_check
 from graph.scoring import calculate_composite
-from config import get_universe
+from config import LLM_ENABLED, get_universe
 
 import logging
 
@@ -98,12 +103,9 @@ def run_parallel_scoring(state: AgentState) -> dict:
     }
 
 
-def run_debate(state: AgentState) -> dict:
+def run_debate_rule_based(state: AgentState) -> dict:
     """
-    Phase 3: Multi-agent debate — 2 rounds.
-    Round 1: Tiap agent present case (arguments for/against)
-    Round 2: Cross-examination & weighted vote
-    Output: 5-7 finalists
+    Phase 3 fallback: Rule-based debate — 2 rounds.
     """
     scores = state["scores"]
     composites = state["composites"]
@@ -112,20 +114,22 @@ def run_debate(state: AgentState) -> dict:
     if not composites:
         return {"debate_log": [], "finalists": []}
 
-    # Sort by composite score
     sorted_tickers = sorted(
         composites.items(),
         key=lambda x: x[1]["composite_score"],
         reverse=True,
     )
 
-    # Take top 10-15 for debate
     debate_candidates = sorted_tickers[:min(15, len(sorted_tickers))]
     debate_log = []
 
-    # === ROUND 1: Initial Arguments ===
-    logger.info("[DEBATE] Round 1 — Initial Arguments")
+    log_debate_section(f"DEBAT MULTI-AGENT (rule-based) — {len(debate_candidates)} ticker")
+    logger.info("[DEBATE] Round 1 — Initial Arguments (rule-based)")
     round1_votes = {}
+
+    def _log(entry: dict) -> None:
+        debate_log.append(entry)
+        log_debate_turn(entry, source="rule")
 
     for ticker, composite in debate_candidates:
         ticker_scores = scores.get(ticker, {})
@@ -136,7 +140,6 @@ def run_debate(state: AgentState) -> dict:
         votes_for = 0
         votes_against = 0
 
-        # Bandarmologi argument (weight 40%)
         bandarm_score = bandarm.get("score", 5)
         if bandarm_score >= 7:
             argument = f"{ticker}: {bandarm.get('signal', 'N/A')} — bandar aktif akumulasi"
@@ -150,12 +153,11 @@ def run_debate(state: AgentState) -> dict:
             argument = f"{ticker}: netral — tidak ada sinyal kuat dari bandar"
             vote = "HOLD"
 
-        debate_log.append({
+        _log({
             "round": 1, "ticker": ticker, "agent": "bandarmologi",
             "argument": argument, "vote": vote,
         })
 
-        # Technical argument (weight 25%)
         tech_score = tech.get("score", 5)
         if tech_score >= 7:
             argument = f"{ticker}: {tech.get('setup', 'setup bullish')}"
@@ -169,12 +171,11 @@ def run_debate(state: AgentState) -> dict:
             argument = f"{ticker}: chart netral, belum ada trigger"
             vote = "HOLD"
 
-        debate_log.append({
+        _log({
             "round": 1, "ticker": ticker, "agent": "technical",
             "argument": argument, "vote": vote,
         })
 
-        # Fundamental argument (weight 20%)
         fund_score = fund.get("score", 5)
         if fund_score >= 7:
             key_pts = "; ".join(fund.get("key_points", [])[:2])
@@ -190,12 +191,11 @@ def run_debate(state: AgentState) -> dict:
             argument = f"{ticker}: fundamental cukup, tidak outstanding"
             vote = "HOLD"
 
-        debate_log.append({
+        _log({
             "round": 1, "ticker": ticker, "agent": "fundamental",
             "argument": argument, "vote": vote,
         })
 
-        # Macro argument (weight 15%)
         macro_score = macro_data.get("score", 5)
         if macro_score >= 7:
             argument = f"Pasar bullish, mendukung {ticker}"
@@ -209,7 +209,7 @@ def run_debate(state: AgentState) -> dict:
             argument = f"Pasar netral, {ticker} tergantung micro"
             vote = "HOLD"
 
-        debate_log.append({
+        _log({
             "round": 1, "ticker": ticker, "agent": "macro",
             "argument": argument, "vote": vote,
         })
@@ -220,50 +220,45 @@ def run_debate(state: AgentState) -> dict:
             "net_vote": votes_for - votes_against,
         }
 
-    # === ROUND 2: Cross-Examination ===
-    logger.info("[DEBATE] Round 2 — Cross-Examination")
+    logger.info("[DEBATE] Round 2 — Cross-Examination (rule-based)")
 
     for ticker, composite in debate_candidates:
         ticker_scores = scores.get(ticker, {})
         bandarm = ticker_scores.get("bandarm", {})
         tech = ticker_scores.get("technical", {})
 
-        # Bandarmologi challenges technical if signals diverge
         bandarm_score = bandarm.get("score", 5)
         tech_score = tech.get("score", 5)
 
         if bandarm_score >= 7 and tech_score <= 5:
-            argument = f"Bandarm override: {ticker} bandar akumulasi kuat meski chart belum confirm — early signal"
-            vote = "BUY"
-            round1_votes[ticker]["net_vote"] += 0.10  # bonus
-            debate_log.append({
-                "round": 2, "ticker": ticker, "agent": "bandarmologi",
-                "argument": argument, "vote": vote,
-            })
-
-        elif bandarm_score <= 4 and tech_score >= 7:
-            argument = f"Bandarm warning: {ticker} chart oke tapi bandar distribusi — trap potential"
-            vote = "SELL"
-            round1_votes[ticker]["net_vote"] -= 0.15  # penalty
-            debate_log.append({
-                "round": 2, "ticker": ticker, "agent": "bandarmologi",
-                "argument": argument, "vote": vote,
-            })
-
-        # Foreign flow confirmation (using bandar detector net_value)
-        bd_7 = bandarm.get("window_7d", {}).get("net_value", 0)
-        if isinstance(bd_7, (int, float)) and bd_7 > 0 and bandarm_score >= 6:
-            argument = f"{ticker}: net value positif konfirmasi akumulasi bandar"
-            round1_votes[ticker]["net_vote"] += 0.05
-            debate_log.append({
+            argument = (
+                f"Bandarm override: {ticker} bandar akumulasi kuat meski chart belum confirm"
+            )
+            round1_votes[ticker]["net_vote"] += 0.10
+            _log({
                 "round": 2, "ticker": ticker, "agent": "bandarmologi",
                 "argument": argument, "vote": "BUY",
             })
 
-    # === SYNTHESIS: Weighted Vote → Finalists ===
+        elif bandarm_score <= 4 and tech_score >= 7:
+            argument = f"Bandarm warning: {ticker} chart oke tapi bandar distribusi — trap potential"
+            round1_votes[ticker]["net_vote"] -= 0.15
+            _log({
+                "round": 2, "ticker": ticker, "agent": "bandarmologi",
+                "argument": argument, "vote": "SELL",
+            })
+
+        bd_7 = bandarm.get("window_7d", {}).get("net_value", 0)
+        if isinstance(bd_7, (int, float)) and bd_7 > 0 and bandarm_score >= 6:
+            argument = f"{ticker}: net value positif konfirmasi akumulasi bandar"
+            round1_votes[ticker]["net_vote"] += 0.05
+            _log({
+                "round": 2, "ticker": ticker, "agent": "bandarmologi",
+                "argument": argument, "vote": "BUY",
+            })
+
     logger.info("[DEBATE] Synthesis — selecting finalists")
 
-    # Combine composite score + debate votes
     final_ranking = []
     for ticker, composite in debate_candidates:
         debate_bonus = round1_votes.get(ticker, {}).get("net_vote", 0)
@@ -272,7 +267,6 @@ def run_debate(state: AgentState) -> dict:
 
     final_ranking.sort(key=lambda x: x[1], reverse=True)
 
-    # Select top 5-7 finalists
     finalists = [
         {
             "ticker": ticker,
@@ -284,7 +278,7 @@ def run_debate(state: AgentState) -> dict:
         for ticker, score, comp in final_ranking[:7]
     ]
 
-    logger.info(f"[DEBATE] Finalists: {[f['ticker'] for f in finalists]}")
+    log_finalists(finalists)
 
     return {
         "debate_log": debate_log,
@@ -292,10 +286,23 @@ def run_debate(state: AgentState) -> dict:
     }
 
 
+def run_debate(state: AgentState) -> dict:
+    """
+    Phase 3: LLM multi-agent debate via 9Router, with rule-based fallback.
+    """
+    if LLM_ENABLED and health_check():
+        try:
+            return run_llm_debate(state)
+        except Exception as e:
+            logger.warning("LLM debate failed, fallback rule-based: %s", e)
+    elif LLM_ENABLED:
+        logger.warning("9Router health_check failed, using rule-based debate")
+    return run_debate_rule_based(state)
+
+
 def run_investment_manager(state: AgentState) -> dict:
     """
     Phase 4: Investment Manager — select TOP 3 picks.
-    Uses avg cost bandar sebagai acuan entry.
     """
     return im_synthesize(state)
 

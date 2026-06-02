@@ -76,6 +76,13 @@ if st.sidebar.button("▶️ Run Analysis Now", type="primary"):
             save_full_result(result)
             st.write("💾 Saved to database")
 
+            debate_log = result.get("debate_log", [])
+            if debate_log:
+                from agents.debate.logging_utils import format_debate_log_text
+                st.session_state["last_debate_log"] = debate_log
+                with st.expander(f"🗣️ Log debat ({len(debate_log)} entri)", expanded=True):
+                    st.text(format_debate_log_text(debate_log))
+
             # Store in session for immediate display
             st.session_state["last_result"] = result
             st.session_state["last_run"] = datetime.now()
@@ -113,6 +120,12 @@ if page == "📈 Top Picks":
         report = last_result.get("final_report", {})
         st.caption(f"Generated: {report.get('generated_at', 'N/A')}")
         st.info(f"🌐 Market: {report.get('market_condition', 'N/A')}")
+
+        debate_log = last_result.get("debate_log") or st.session_state.get("last_debate_log", [])
+        if debate_log:
+            from agents.debate.logging_utils import format_debate_log_text
+            with st.expander(f"🗣️ Log debat antar agent ({len(debate_log)} entri)", expanded=False):
+                st.text(format_debate_log_text(debate_log))
 
         for pick in top_picks_live:
             ticker = pick["ticker"]
@@ -470,14 +483,26 @@ elif page == "⚙️ Settings":
             st.metric("Database", "Disconnected ❌")
 
     with col2:
-        gemini_key = os.getenv("GEMINI_API_KEY", "")
-        has_gemini = gemini_key and gemini_key != "your_gemini_key_here"
-        st.metric("Gemini API", "Ready ✅" if has_gemini else "Not configured ⚠️")
+        try:
+            from agents.llm_client import get_status
+            llm_status = get_status()
+            healthy = llm_status.get("healthy", False)
+            key_ok = llm_status.get("api_key_configured", False)
+            if healthy and key_ok:
+                label = "Connected ✅"
+            elif key_ok:
+                label = "Key set, unreachable ⚠️"
+            else:
+                label = "Not configured ⚠️"
+            st.metric("9Router LLM", label)
+        except Exception:
+            st.metric("9Router LLM", "Error ⚠️")
 
     with col3:
-        anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
-        has_anthropic = anthropic_key and anthropic_key != "your_claude_key_here"
-        st.metric("Claude API", "Ready ✅" if has_anthropic else "Not configured ⚠️")
+        base_url = os.getenv("LLM_BASE_URL", "http://localhost:20128/v1")
+        llm_on = os.getenv("LLM_ENABLED", "true").lower() in ("true", "1", "yes")
+        st.metric("LLM Mode", "Enabled" if llm_on else "Rule-based only")
+        st.caption(base_url[:40] + ("…" if len(base_url) > 40 else ""))
 
     st.divider()
 
@@ -505,18 +530,47 @@ elif page == "⚙️ Settings":
     # Debate logs viewer
     st.divider()
     st.subheader("Recent Debate Logs")
-    debates = query_db("""
+    run_dates = query_db("SELECT DISTINCT run_date FROM debate_logs ORDER BY run_date DESC LIMIT 5")
+    selected_date = None
+    if run_dates:
+        selected_date = st.selectbox(
+            "Tanggal run",
+            [r["run_date"] for r in run_dates],
+            format_func=lambda d: str(d),
+        )
+    debates = query_db(
+        """
+        SELECT run_date, ticker, round, agent, argument, vote
+        FROM debate_logs
+        WHERE run_date = %s
+        ORDER BY ticker, round, agent
+        """,
+        (selected_date,) if selected_date else None,
+    ) if selected_date else query_db("""
         SELECT run_date, ticker, round, agent, argument, vote
         FROM debate_logs
         ORDER BY run_date DESC, ticker, round, agent
-        LIMIT 20
+        LIMIT 50
     """)
     if debates:
-        for d in debates:
-            vote_icon = "🟢" if d["vote"] == "BUY" else "🔴" if d["vote"] == "SELL" else "⚪"
-            st.markdown(
-                f"{vote_icon} R{d['round']} | **{d['agent']}** → {d['ticker']}: {d['argument']}"
-            )
+        from agents.debate.logging_utils import format_debate_log_text
+        entries = [
+            {
+                "round": d["round"],
+                "ticker": d["ticker"],
+                "agent": d["agent"],
+                "argument": d["argument"],
+                "vote": d["vote"],
+            }
+            for d in debates
+        ]
+        st.text(format_debate_log_text(entries))
+        with st.expander("Detail per baris"):
+            for d in debates:
+                vote_icon = "🟢" if d["vote"] == "BUY" else "🔴" if d["vote"] == "SELL" else "⚪"
+                st.markdown(
+                    f"{vote_icon} R{d['round']} | **{d['agent']}** → {d['ticker']}: {d['argument']}"
+                )
     else:
         st.caption("Belum ada log debate.")
 
