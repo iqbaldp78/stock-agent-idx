@@ -11,6 +11,7 @@ from datetime import datetime
 
 from agents.debate.personas import IM_SYSTEM_PROMPT
 from agents.llm_client import health_check, invoke_json_im
+from agents.price_predictor import predict_movement
 from config import (
     LLM_ENABLED,
     LLM_MODEL_IM_FALLBACK,
@@ -303,11 +304,20 @@ def _build_pick_rule_based(
     broker_to_watch = bandarm.get("broker_to_watch", [])
     broker_utama = broker_to_watch[0] if broker_to_watch else "N/A"
 
+    # Generate price prediction for TOP 3
+    price_prediction = predict_movement(
+        ticker=ticker,
+        scores=scores,
+        composites=composites,
+        macro_data=macro_data,
+    )
+
     return {
         "rank": rank,
         "ticker": ticker,
         "thesis": thesis,
         "time_horizon": "Positional (4-6 minggu)",
+        "price_prediction": price_prediction,
         "bandar_context": {
             "broker_utama": broker_utama,
             "avg_cost_7d": avg_cost_7d,

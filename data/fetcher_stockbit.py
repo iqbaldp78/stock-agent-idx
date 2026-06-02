@@ -16,12 +16,50 @@ import os
 import random
 import time
 from datetime import datetime, timedelta
+from functools import wraps
 
 import httpx
 import pandas as pd
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
+
+def _retry_on_rate_limit(max_attempts: int = 4, base_delay: float = 1.0):
+    """
+    Decorator untuk retry pada rate limit (429) dan server errors (500, 502, 503, 504).
+    Menggunakan exponential backoff.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(max_attempts):
+                try:
+                    return func(*args, **kwargs)
+                except httpx.HTTPStatusError as exc:
+                    status = exc.response.status_code
+                    last_exception = exc
+                    
+                    # Retry jika 429 (rate limit) atau 5xx errors
+                    if status in (429, 500, 502, 503, 504) and attempt < max_attempts - 1:
+                        wait_time = base_delay * (2 ** attempt)
+                        logger.warning(
+                            f"[{func.__name__}] HTTP {status} on attempt {attempt + 1}/{max_attempts}. "
+                            f"Retrying in {wait_time:.1f}s..."
+                        )
+                        time.sleep(wait_time)
+                        continue
+                    
+                    # Jika status code lain atau attempt terakhir, raise exception
+                    raise
+            
+            # Jika semua attempt gagal
+            if last_exception:
+                raise last_exception
+        
+        return wrapper
+    return decorator
 
 
 # Daftar broker IDX
@@ -225,6 +263,7 @@ def get_marketdetector_broker_summary(
     }
 
 
+@_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
 def get_current_price_stockbit(ticker: str) -> float:
     api_key = os.getenv("STOCKBIT_API_KEY")
     if not api_key:
@@ -426,6 +465,7 @@ def _get_base_price(ticker: str) -> float:
 # ============================================================
 
 
+@_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
 def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50) -> pd.DataFrame:
     """
     Ambil data OHLCV dari Stockbit API untuk rentang tanggal tertentu (YYYY-MM-DD), limit default 50.
@@ -499,6 +539,7 @@ def get_ohlcv(ticker: str, period: str = "3mo") -> pd.DataFrame:
     return get_ohlcv_range(ticker, start_date_str, end_date_str)
 
 
+@_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
 def get_stock_info(ticker: str) -> dict:
     # ...existing code...
     api_key = os.getenv("STOCKBIT_API_KEY")

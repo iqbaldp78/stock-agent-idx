@@ -69,6 +69,12 @@ if st.sidebar.button("▶️ Run Analysis Now", type="primary"):
             from config import get_universe
 
             st.write("🔄 Filtering universe...")
+            st.info(
+                "Filtering saham berdasarkan:\n"
+                "- Rata-rata volume 20 hari >= 1 juta\n"
+                "- Market cap >= 1 Triliun IDR\n"
+                "Universe awal diambil dari config (LQ45/IDX30/Bluechip)."
+            )
             result = run_full_analysis()
             st.write(f"✅ Analyzed {len(result.get('composites', {}))} tickers")
             st.write(f"🏆 {len(result.get('top_picks', []))} top picks selected")
@@ -78,10 +84,8 @@ if st.sidebar.button("▶️ Run Analysis Now", type="primary"):
 
             debate_log = result.get("debate_log", [])
             if debate_log:
-                from agents.debate.logging_utils import format_debate_log_text
                 st.session_state["last_debate_log"] = debate_log
-                with st.expander(f"🗣️ Log debat ({len(debate_log)} entri)", expanded=True):
-                    st.text(format_debate_log_text(debate_log))
+                st.write(f"🗣️ Log debat ({len(debate_log)} entri) dihasilkan")
 
             # Store in session for immediate display
             st.session_state["last_result"] = result
@@ -155,6 +159,97 @@ if page == "📈 Top Picks":
                     sl = pick.get("stop_loss", "N/A")
                     rr = pick.get("risk_reward", "N/A")
                     st.markdown(f"Target: **{t1}** | SL: **{sl}** | R/R: **{rr}**")
+
+                    # Price Prediction
+                    price_pred = pick.get("price_prediction", {})
+                    if price_pred:
+                        with st.expander("📊 **Price Prediction (1/3/5/7 hari ke depan)**", expanded=True):
+                            # Current price
+                            cp = price_pred.get('current_price', 'N/A')
+                            st.metric("💰 Harga Sekarang", f"Rp {cp:,.0f}" if isinstance(cp, (int, float)) else cp)
+                            
+                            # Predictions in columns
+                            predictions = price_pred.get("predictions", {})
+                            col_d1, col_d3, col_d5, col_d7 = st.columns(4)
+                            
+                            if "day_1" in predictions:
+                                pred = predictions["day_1"]
+                                pct = pred.get('pct_change', 'N/A')
+                                price = pred.get('price', 'N/A')
+                                pct_num = float(str(pct).replace('%', '').replace('+', '')) if isinstance(pct, str) else 0
+                                with col_d1:
+                                    st.metric(
+                                        "D+1", 
+                                        f"Rp {int(price):,.0f}" if isinstance(price, (int, float)) else price,
+                                        pct,
+                                        delta_color="normal" if pct_num >= 0 else "inverse"
+                                    )
+                            
+                            if "day_3" in predictions:
+                                pred = predictions["day_3"]
+                                pct = pred.get('pct_change', 'N/A')
+                                price = pred.get('price', 'N/A')
+                                pct_num = float(str(pct).replace('%', '').replace('+', '')) if isinstance(pct, str) else 0
+                                with col_d3:
+                                    st.metric(
+                                        "D+3", 
+                                        f"Rp {int(price):,.0f}" if isinstance(price, (int, float)) else price,
+                                        pct,
+                                        delta_color="normal" if pct_num >= 0 else "inverse"
+                                    )
+                            
+                            if "day_5" in predictions:
+                                pred = predictions["day_5"]
+                                pct = pred.get('pct_change', 'N/A')
+                                price = pred.get('price', 'N/A')
+                                pct_num = float(str(pct).replace('%', '').replace('+', '')) if isinstance(pct, str) else 0
+                                with col_d5:
+                                    st.metric(
+                                        "D+5", 
+                                        f"Rp {int(price):,.0f}" if isinstance(price, (int, float)) else price,
+                                        pct,
+                                        delta_color="normal" if pct_num >= 0 else "inverse"
+                                    )
+                            
+                            if "day_7" in predictions:
+                                pred = predictions["day_7"]
+                                pct = pred.get('pct_change', 'N/A')
+                                price = pred.get('price', 'N/A')
+                                pct_num = float(str(pct).replace('%', '').replace('+', '')) if isinstance(pct, str) else 0
+                                with col_d7:
+                                    st.metric(
+                                        "D+7", 
+                                        f"Rp {int(price):,.0f}" if isinstance(price, (int, float)) else price,
+                                        pct,
+                                        delta_color="normal" if pct_num >= 0 else "inverse"
+                                    )
+                            
+                            st.divider()
+                            
+                            # Reasoning section
+                            reasoning = price_pred.get("reasoning", "")
+                            if reasoning:
+                                st.markdown("### 📝 Reasoning")
+                                st.markdown(reasoning)
+                            
+                            # Confidence badge
+                            confidence = price_pred.get('confidence', 'N/A')
+                            conf_color = "🟢" if confidence == "HIGH" else "🟡" if confidence == "MEDIUM" else "🔴"
+                            st.markdown(f"{conf_color} **Confidence:** {confidence}")
+                            
+                            # Key drivers
+                            drivers = price_pred.get("key_drivers", [])
+                            if drivers:
+                                st.markdown("### 📈 Key Drivers:")
+                                for i, driver in enumerate(drivers, 1):
+                                    st.markdown(f"{i}. {driver}")
+                            
+                            # Risks
+                            risks = price_pred.get("risks", [])
+                            if risks:
+                                st.markdown("### ⚠️ Risks:")
+                                for i, risk in enumerate(risks, 1):
+                                    st.markdown(f"{i}. {risk}")
 
                 with col3:
                     # Bandar signal

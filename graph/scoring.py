@@ -28,17 +28,18 @@ def detect_mode(ticker: str, market_cap: float, is_volatile: bool) -> str:
 
 
 def calculate_composite(scores: dict, ticker: str,
-                        market_cap: float, is_volatile: bool) -> dict:
+                         market_cap: float, is_volatile: bool) -> dict:
     """
-    Hitung composite score dari 4 agent.
-    scores = {"bandarm": 8.5, "technical": 7.0, "fundamental": 8.0, "macro": 7.0}
+    Hitung composite score dari 5 agent (bandarm, technical, fundamental, macro, news).
+    scores = {"bandarm": 8.5, "technical": 7.0, "fundamental": 8.0, "macro": 7.0, "news": 6.5}
     """
     w = get_weights(ticker, market_cap, is_volatile)
     composite = (
         scores["bandarm"] * w["bandarm"] +
         scores["technical"] * w["technical"] +
         scores["fundamental"] * w["fundamental"] +
-        scores["macro"] * w["macro"]
+        scores["macro"] * w["macro"] +
+        scores.get("news", 5) * w.get("news", 0.12)
     )
     mode = detect_mode(ticker, market_cap, is_volatile)
 
@@ -56,6 +57,8 @@ def calculate_composite(scores: dict, ticker: str,
                             "contribution": round(scores["fundamental"] * w["fundamental"], 2)},
             "macro": {"score": scores["macro"], "weight": w["macro"],
                       "contribution": round(scores["macro"] * w["macro"], 2)},
+            "news": {"score": scores.get("news", 5), "weight": w.get("news", 0.12),
+                     "contribution": round(scores.get("news", 5) * w.get("news", 0.12), 2)},
         },
     }
 

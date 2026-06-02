@@ -13,6 +13,7 @@ from agents.fundamental import analyze as fund_analyze
 from agents.technical import analyze as tech_analyze
 from agents.bandarmologi import analyze as bandarm_analyze
 from agents.macro import analyze as macro_analyze
+from agents.news import analyze as news_analyze
 from agents.investment_manager import synthesize as im_synthesize
 from agents.debate import run_llm_debate
 from agents.debate.logging_utils import log_debate_turn, log_debate_section, log_finalists
@@ -68,6 +69,7 @@ def run_parallel_scoring(state: AgentState) -> dict:
             bandarm = bandarm_analyze(ticker)
             tech = tech_analyze(ticker)
             fund = fund_analyze(ticker)
+            news = news_analyze(ticker)
 
             # Get market cap for weight selection
             info = get_stock_info(ticker)
@@ -78,6 +80,7 @@ def run_parallel_scoring(state: AgentState) -> dict:
                 "bandarm": bandarm,
                 "technical": tech,
                 "fundamental": fund,
+                "news": news,
             }
 
             # Calculate composite
@@ -86,6 +89,7 @@ def run_parallel_scoring(state: AgentState) -> dict:
                 "technical": tech["score"],
                 "fundamental": fund["score"],
                 "macro": macro_data["score"],
+                "news": news["score"],
             }
             composite = calculate_composite(agent_scores, ticker, market_cap, is_volatile)
             composites[ticker] = composite
@@ -211,6 +215,26 @@ def run_debate_rule_based(state: AgentState) -> dict:
 
         _log({
             "round": 1, "ticker": ticker, "agent": "macro",
+            "argument": argument, "vote": vote,
+        })
+
+        # News agent contribution
+        news = ticker_scores.get("news", {})
+        news_score = news.get("score", 5)
+        if news_score >= 7:
+            argument = f"{ticker}: {news.get('summary', 'sentimen berita positif')}"
+            vote = "BUY"
+            votes_for += 0.12
+        elif news_score <= 4:
+            argument = f"{ticker}: berita negatif, hindari untuk sementara"
+            vote = "SELL"
+            votes_against += 0.12
+        else:
+            argument = f"{ticker}: berita netral, tidak ada sentimen kuat"
+            vote = "HOLD"
+
+        _log({
+            "round": 1, "ticker": ticker, "agent": "news",
             "argument": argument, "vote": vote,
         })
 

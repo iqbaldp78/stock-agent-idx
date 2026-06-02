@@ -3,17 +3,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Universe saham LQ45 (per Mei 2025)
+# Universe saham LQ45 (per Juni 2026)
 LQ45 = [
-    "ACES", "ADRO", "AKRA", "AMMN", "AMRT",
-    "ANTM", "ARTO", "ASII", "BBCA", "BBNI",
-    "BBRI", "BBTN", "BMRI", "BRPT", "BUKA",
-    "CPIN", "ESSA", "EXCL", "GOTO", "HRUM",
-    "ICBP", "INCO", "INDF", "INKP", "INTP",
-    "ISAT", "ITMG", "KLBF", "MAPI", "MDKA",
-    "MEDC", "MIKA", "PGAS", "PGEO", "PTBA",
-    "SIDO", "SMGR", "TBIG", "TINS", "TLKM",
-    "TOWR", "UNTR", "UNVR", "ESSA", "BYAN",
+    "AADI", "ADMR", "ADRO", "AKRA", "AMMN",
+    "AMRT", "ANTM", "ASII", "BBCA", "BBNI",
+    "BBRI", "BBTN", "BMRI", "BRPT", "BUMI",
+    "CPIN", "CUAN", "DEWA", "EMTK", "ESSA",
+    "EXCL", "GOTO", "HRTA", "ICBP", "INCO",
+    "INDF", "INKP", "ISAT", "ITMG", "JPFA",
+    "KLBF", "MAPI", "MBMA", "MDKA", "MEDC",
+    "PGAS", "PGEO", "PTBA", "SCMA", "SMGR",
+    "TLKM", "TOWR", "UNTR", "UNVR", "WIFI",
 ]
 
 CUSTOM_WATCHLIST: list[str] = []
@@ -48,12 +48,131 @@ ALLOWED_LLM_MODELS = frozenset({
     "gh/gpt-4o",
     "gh/gemini-2.5-pro",
     "gh/gpt-5.2-codex",
+    "gc/gemini-3-pro-preview",
+    "gemini/gemini-2.5-pro",
+    "gh/claude-opus-4.6",
+    "gh/claude-opus-4.7",
+    "gh/claude-sonnet-4",
+    "gh/claude-sonnet-4.5",
+    "gh/claude-sonnet-4.6",
+    "gh/gpt-5.4",
+    "gh/gemini-3-flash-preview",
+    "gh/gemini-3.1-pro-preview",
+    "gh/goldeneye-free-auto",
+    "gh/gpt-4o-mini",
+    "gh/gpt-4",
+    "gh/gpt-3.5-turbo",
+    "gh/gpt-5.3-codex",
+    "gh/gpt-5.4-mini",
+    "gh/gpt-5.2",
+    "gh/gpt-4.1",
+    "gh/grok-code-fast-1",
+    "gh/gpt-5-mini",
+    "gh/oswe-vscode-prime",
+    "kr/claude-haiku-4.5",
+    "kr/claude-sonnet-4.5",
+    "gc/gemini-3-flash-preview",
+    "gemini/gemini-2.0-flash",
+    "gemini/gemini-2.0-flash-lite",
+    "gemini/gemini-2.5-flash",
+    "gemini/gemini-3.1-flash-lite-preview",
+    "gemini/gemma-4-31b-it",
+    "gemini/gemini-3-flash-preview",
+    "gemini/gemini-2.5-flash-lite",
+    "gemini/gemini-3.1-pro-preview",
+    "ag/claude-opus-4-6-thinking",
+    "ag/claude-sonnet-4-6",
+    "ag/gemini-3-flash",
+    "ag/gemini-pro-agent",
+    "ag/gemini-3.1-pro-low",
+    "ag/gemini-3-flash-agent",
+    "ag/gemini-3.5-flash-extra-low",
+    "ag/gpt-oss-120b-medium",
+    "ag/gemini-3.5-flash-low",
+    "cx/gpt-5.3-codex",
+    "cx/gpt-5.3-codex-high",
+    "cx/gpt-5.3-codex-high-review",
+    "cx/gpt-5.3-codex-low",
+    "cx/gpt-5.3-codex-low-review",
+    "cx/gpt-5.3-codex-none",
+    "cx/gpt-5.3-codex-none-review",
+    "cx/gpt-5.3-codex-xhigh-review",
+    "cx/gpt-5.3-codex-xhigh",
+    "cx/gpt-5.3-codex-review",
+    "cx/gpt-5.3-codex-spark",
+    "cx/gpt-5.3-codex-spark-review",
+    "cx/gpt-5.4",
+    "cx/gpt-5.4-mini",
+    "cx/gpt-5.4-mini-review",
+    "cx/gpt-5.4-review",
+    "cx/gpt-5.5",
+    "cx/gpt-5.5-review",
+    "kc/anthropic/claude-opus-4-20250514",
+    "kc/anthropic/claude-sonnet-4-20250514",
+    "kc/deepseek/deepseek-reasoner",
+    "cl/anthropic/claude-opus-4.6",
+    "cl/anthropic/claude-opus-4.7",
+    "cl/anthropic/claude-sonnet-4.6",
+    "cl/openai/gpt-5.3-codex",
+    "cl/kwaipilot/kat-coder-pro",
+    "cl/openai/gpt-5.4",
+    "free",
+    "kc/google/gemini-2.5-flash",
+    "kc/deepseek/deepseek-chat",
+    "kc/google/gemini-2.5-pro",
+    "kc/openai/gpt-4.1",
+    "cl/google/gemini-3.1-flash-lite-preview",
+    "cl/google/gemini-3.1-pro-preview",
+    "qd/dfmodel",
+    "qd/dmodel",
+    "qd/gm51model",
+    "qd/kmodel",
+    "qd/mmodel",
+    "qd/auto",
+    "qd/efficient",
+    "qd/lite",
+    "qd/qmodel",
+    "nvidia/z-ai/glm4.7",
+    "nvidia/minimaxai/minimax-m2.7",
+    "ollama/glm-4.7-flash",
+    "ollama/glm-5",
+    "ollama/gpt-oss:120b",
+    "ollama/qwen3.5",
+    "ollama/kimi-k2.5",
+    "ollama/minimax-m2.5",
+    "ds/deepseek-chat",
+    "ds/deepseek-reasoner",
+    "ds/deepseek-v4-pro-max",
+    "ds/deepseek-v4-pro-none",
+    "ds/deepseek-v4-flash",
+    "ds/deepseek-v4-pro",
+    "groq/openai/gpt-oss-120b",
+    "groq/llama-3.3-70b-versatile",
+    "groq/meta-llama/llama-4-maverick-17b-128e-instruct",
+    "groq/qwen/qwen3-32b",
 })
 
 LLM_ENABLED = os.getenv("LLM_ENABLED", "true").lower() in ("true", "1", "yes")
 LLM_DEBATE_MAX_TICKERS = int(os.getenv("LLM_DEBATE_MAX_TICKERS", "12"))
 LLM_TEMPERATURE_DEBATE = float(os.getenv("LLM_TEMPERATURE_DEBATE", "0.3"))
 LLM_TEMPERATURE_IM = float(os.getenv("LLM_TEMPERATURE_IM", "0.2"))
+
+# Global round-robin mode (optional)
+_LLM_RR_MODELS_ENV = os.getenv("LLM_ROUND_ROBIN", "").strip()
+
+# Predefined model combos
+LLM_MODEL_COMBOS = {
+    "ALL": list(ALLOWED_LLM_MODELS),
+    "THINKING": [m for m in ALLOWED_LLM_MODELS if "thinking" in m],
+    "CLAUDE": [m for m in ALLOWED_LLM_MODELS if "claude" in m],
+}
+
+if _LLM_RR_MODELS_ENV in LLM_MODEL_COMBOS:
+    LLM_ROUND_ROBIN_MODELS = LLM_MODEL_COMBOS[_LLM_RR_MODELS_ENV]
+else:
+    LLM_ROUND_ROBIN_MODELS = [m.strip() for m in _LLM_RR_MODELS_ENV.split(",") if m.strip()]
+
+LLM_ROUND_ROBIN_INDEX = 0  # Global index for round-robin
 
 LLM_MODEL_DEBATE_R1 = os.getenv("LLM_MODEL_DEBATE_R1", "kr/claude-haiku-4.5-agentic")
 LLM_MODEL_DEBATE_R2 = os.getenv("LLM_MODEL_DEBATE_R2", "kr/claude-haiku-4.5-thinking-agentic")
@@ -111,6 +230,15 @@ def validate_llm_model(model: str) -> str:
 
 def get_model_for_agent(agent: str, round_num: int = 1) -> str:
     """Resolve LLM model for a debate agent and round."""
+    global LLM_ROUND_ROBIN_INDEX
+    
+    # If round-robin mode is enabled, use next model from the list
+    if LLM_ROUND_ROBIN_MODELS:
+        model = LLM_ROUND_ROBIN_MODELS[LLM_ROUND_ROBIN_INDEX % len(LLM_ROUND_ROBIN_MODELS)]
+        LLM_ROUND_ROBIN_INDEX += 1
+        return validate_llm_model(model)
+    
+    # Otherwise, use per-agent/per-round configuration
     if round_num >= 2:
         model = LLM_MODEL_AGENT_R2.get(agent) or LLM_MODEL_AGENT.get(agent, LLM_MODEL_DEBATE_R2)
     else:
@@ -152,10 +280,10 @@ TOP_BROKER_COUNT = 5     # tampilkan top 5 broker
 
 # Bobot agent (dinamis)
 WEIGHTS = {
-    "default": {"bandarm": 0.40, "technical": 0.25, "fundamental": 0.20, "macro": 0.15},
-    "big_cap": {"bandarm": 0.35, "technical": 0.25, "fundamental": 0.25, "macro": 0.15},
-    "small_cap": {"bandarm": 0.50, "technical": 0.30, "fundamental": 0.10, "macro": 0.10},
-    "volatile": {"bandarm": 0.35, "technical": 0.20, "fundamental": 0.15, "macro": 0.30},
+    "default": {"bandarm": 0.35, "technical": 0.22, "fundamental": 0.18, "macro": 0.13, "news": 0.12},
+    "big_cap": {"bandarm": 0.30, "technical": 0.22, "fundamental": 0.22, "macro": 0.13, "news": 0.13},
+    "small_cap": {"bandarm": 0.44, "technical": 0.27, "fundamental": 0.09, "macro": 0.09, "news": 0.11},
+    "volatile": {"bandarm": 0.30, "technical": 0.18, "fundamental": 0.13, "macro": 0.26, "news": 0.13},
 }
 
 BIG_CAP_TICKERS = ["BBCA", "BBRI", "BMRI", "TLKM", "ASII", "UNVR"]
