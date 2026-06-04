@@ -55,7 +55,7 @@ def query_db(sql, params=None):
 st.sidebar.title("🤖 Stock Agent IDX")
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "🔍 Bandarmologi", "📊 Performance", "⚙️ Settings"],
+    ["📈 Top Picks", "🔍 Bandarmologi", "📈 IHSG Predictor", "📊 Performance", "⚙️ Settings"],
 )
 
 st.sidebar.divider()
@@ -542,6 +542,122 @@ elif page == "📊 Performance":
     st.divider()
     st.subheader("Agent Accuracy")
     st.caption("Agent accuracy akan ditampilkan setelah ada cukup data performance.")
+
+
+# === PAGE: IHSG Predictor ===
+
+elif page == "📈 IHSG Predictor":
+    st.title("📈 IHSG PREDICTOR")
+
+    # Get latest IHSG prediction
+    ihsg_pred = query_db("""
+        SELECT * FROM ihsg_predictions
+        WHERE run_date = (SELECT MAX(run_date) FROM ihsg_predictions)
+        LIMIT 1
+    """)
+
+    if ihsg_pred:
+        pred = ihsg_pred[0]
+
+        # Header metrics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Current Level", f"{pred.get('current_price', 0):,.0f}")
+        with col2:
+            conf_icon = "🟢" if pred.get('confidence') == "HIGH" else "🟡" if pred.get('confidence') == "MEDIUM" else "🔴"
+            st.metric("Confidence", f"{conf_icon} {pred.get('confidence', 'N/A')}")
+        with col3:
+            st.metric("Direction", pred.get('direction', 'N/A'))
+        with col4:
+            st.metric("Volatility", pred.get('volatility_level', 'N/A'))
+
+        st.divider()
+
+        # Predictions (D1, D3, D5, D7)
+        st.subheader("📊 Price Predictions")
+        col_d1, col_d3, col_d5, col_d7 = st.columns(4)
+
+        with col_d1:
+            pct = pred.get('day_1_pct', 0)
+            color = "normal" if pct >= 0 else "inverse"
+            st.metric("D+1", f"{pred.get('day_1_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
+
+        with col_d3:
+            pct = pred.get('day_3_pct', 0)
+            color = "normal" if pct >= 0 else "inverse"
+            st.metric("D+3", f"{pred.get('day_3_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
+
+        with col_d5:
+            pct = pred.get('day_5_pct', 0)
+            color = "normal" if pct >= 0 else "inverse"
+            st.metric("D+5", f"{pred.get('day_5_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
+
+        with col_d7:
+            pct = pred.get('day_7_pct', 0)
+            color = "normal" if pct >= 0 else "inverse"
+            st.metric("D+7", f"{pred.get('day_7_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
+
+        st.divider()
+
+        # Component scores
+        st.subheader("⚙️ Component Scores")
+        comp = pred.get('component_scores') or {}
+        if isinstance(comp, str):
+            comp = json.loads(comp)
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Momentum", f"{comp.get('momentum', 0):.2f}")
+        with col2:
+            st.metric("Breadth", f"{comp.get('breadth', 0):.2f}")
+        with col3:
+            st.metric("Macro", f"{comp.get('macro', 0):.2f}")
+        with col4:
+            st.metric("Sectors", f"{comp.get('sectors', 0):.2f}")
+
+        st.divider()
+
+        # Analysis details
+        st.subheader("📝 Analysis")
+        with st.expander("Reasoning", expanded=True):
+            st.markdown(pred.get('reasoning', 'N/A'))
+
+        drivers = pred.get('key_drivers') or []
+        if isinstance(drivers, str):
+            drivers = json.loads(drivers)
+        with st.expander("Key Drivers"):
+            if drivers:
+                for i, driver in enumerate(drivers, 1):
+                    st.markdown(f"{i}. {driver}")
+            else:
+                st.info("No drivers identified")
+
+        risks = pred.get('risks') or []
+        if isinstance(risks, str):
+            risks = json.loads(risks)
+        with st.expander("Risk Factors"):
+            if risks:
+                for i, risk in enumerate(risks, 1):
+                    st.markdown(f"{i}. {risk}")
+            else:
+                st.info("No major risks identified")
+
+        st.divider()
+
+        # Historical predictions
+        st.subheader("📈 Historical Predictions")
+        hist = query_db("""
+            SELECT run_date, current_price, day_1_price, day_1_pct, direction, confidence
+            FROM ihsg_predictions
+            ORDER BY run_date DESC
+            LIMIT 20
+        """)
+        if hist:
+            import pandas as pd
+            df = pd.DataFrame(hist)
+            st.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        st.info("Belum ada IHSG prediction. Jalankan analysis terlebih dahulu.")
 
 
 # === PAGE: Settings ===

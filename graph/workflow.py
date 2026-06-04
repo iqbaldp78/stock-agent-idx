@@ -15,6 +15,7 @@ from agents.bandarmologi import analyze as bandarm_analyze
 from agents.macro import analyze as macro_analyze
 from agents.news import analyze as news_analyze
 from agents.investment_manager import synthesize as im_synthesize
+from agents.ihsg_predictor import predict_ihsg
 from agents.debate import run_llm_debate
 from agents.debate.logging_utils import log_debate_turn, log_debate_section, log_finalists
 from agents.llm_client import health_check
@@ -32,6 +33,7 @@ class AgentState(TypedDict):
     macro_data: dict
     scores: dict          # {ticker: {agent: result}}
     composites: dict      # {ticker: composite_result}
+    ihsg_prediction: dict # IHSG predictor output
     debate_log: list
     finalists: list
     top_picks: list
@@ -105,6 +107,17 @@ def run_parallel_scoring(state: AgentState) -> dict:
         "composites": composites,
         "macro_data": macro_data,
     }
+
+
+def run_ihsg_prediction(state: AgentState) -> dict:
+    """Phase 2.5: IHSG direction forecast (before debate)."""
+    try:
+        ihsg_pred = predict_ihsg()
+        logger.info(f"[IHSG] {ihsg_pred.get('direction')} ({ihsg_pred.get('confidence')})")
+        return {"ihsg_prediction": ihsg_pred}
+    except Exception as e:
+        logger.warning(f"[IHSG Prediction] Error: {e}")
+        return {"ihsg_prediction": {}}
 
 
 def run_debate_rule_based(state: AgentState) -> dict:
@@ -339,12 +352,14 @@ def build_workflow() -> StateGraph:
 
     workflow.add_node("filter", run_filter)
     workflow.add_node("scoring", run_parallel_scoring)
+    workflow.add_node("ihsg", run_ihsg_prediction)
     workflow.add_node("debate", run_debate)
     workflow.add_node("decision", run_investment_manager)
 
     workflow.set_entry_point("filter")
     workflow.add_edge("filter", "scoring")
-    workflow.add_edge("scoring", "debate")
+    workflow.add_edge("scoring", "ihsg")
+    workflow.add_edge("ihsg", "debate")
     workflow.add_edge("debate", "decision")
     workflow.add_edge("decision", END)
 

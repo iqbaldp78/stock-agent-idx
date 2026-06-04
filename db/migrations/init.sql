@@ -139,6 +139,33 @@ CREATE INDEX IF NOT EXISTS idx_signals_run_date   ON signals(run_date);
 CREATE INDEX IF NOT EXISTS idx_scores_run_date    ON agent_scores(run_date, ticker);
 CREATE INDEX IF NOT EXISTS idx_debate_run_date    ON debate_logs(run_date, ticker);
 
+-- IHSG Predictions
+CREATE TABLE IF NOT EXISTS ihsg_predictions (
+    id SERIAL PRIMARY KEY,
+    run_date DATE NOT NULL,
+    current_price NUMERIC(12,2) NOT NULL,
+    confidence VARCHAR(10),
+    direction VARCHAR(30),
+    volatility_level VARCHAR(20),
+    day_1_price NUMERIC(12,2),
+    day_1_pct NUMERIC(6,2),
+    day_3_price NUMERIC(12,2),
+    day_3_pct NUMERIC(6,2),
+    day_5_price NUMERIC(12,2),
+    day_5_pct NUMERIC(6,2),
+    day_7_price NUMERIC(12,2),
+    day_7_pct NUMERIC(6,2),
+    reasoning TEXT,
+    key_drivers JSONB,
+    risks JSONB,
+    component_scores JSONB,
+    ihsg_trend VARCHAR(30),
+    macro_signal VARCHAR(30),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ihsg_run_date ON ihsg_predictions(run_date DESC);
+
 -- Seed: Universe LQ45
 INSERT INTO universe (ticker, is_lq45, is_custom, active) VALUES
 ('ACES', TRUE, FALSE, TRUE),

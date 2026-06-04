@@ -129,6 +129,9 @@ def save_full_result(result: dict) -> None:
     if result.get("top_picks"):
         save_signals(today, result["top_picks"], result["scores"])
 
+    if result.get("ihsg_prediction"):
+        save_ihsg_prediction(today, result["ihsg_prediction"])
+
 
 def _parse_number(value) -> float | None:
     """Parse string number ke float."""
@@ -138,3 +141,51 @@ def _parse_number(value) -> float | None:
         return float(str(value).replace(",", "").replace(".", "").strip())
     except (ValueError, TypeError):
         return None
+
+
+def save_ihsg_prediction(run_date: date, ihsg_pred: dict) -> None:
+    """Simpan IHSG prediction ke tabel ihsg_predictions."""
+    if not ihsg_pred or not ihsg_pred.get("current_price"):
+        return
+
+    from sqlalchemy import text
+    db: Session = SessionLocal()
+    try:
+        sql = """
+            INSERT INTO ihsg_predictions
+            (run_date, current_price, confidence, direction, volatility_level,
+             day_1_price, day_1_pct, day_3_price, day_3_pct, day_5_price, day_5_pct,
+             day_7_price, day_7_pct, reasoning, key_drivers, risks, component_scores,
+             ihsg_trend, macro_signal)
+            VALUES (:run_date, :current_price, :confidence, :direction, :volatility_level,
+                    :day_1_price, :day_1_pct, :day_3_price, :day_3_pct, :day_5_price, :day_5_pct,
+                    :day_7_price, :day_7_pct, :reasoning, :key_drivers, :risks, :component_scores,
+                    :ihsg_trend, :macro_signal)
+        """
+        db.execute(text(sql), {
+            "run_date": run_date,
+            "current_price": ihsg_pred.get("current_price"),
+            "confidence": ihsg_pred.get("confidence"),
+            "direction": ihsg_pred.get("direction"),
+            "volatility_level": ihsg_pred.get("volatility_level"),
+            "day_1_price": ihsg_pred.get("day_1_price"),
+            "day_1_pct": ihsg_pred.get("day_1_pct"),
+            "day_3_price": ihsg_pred.get("day_3_price"),
+            "day_3_pct": ihsg_pred.get("day_3_pct"),
+            "day_5_price": ihsg_pred.get("day_5_price"),
+            "day_5_pct": ihsg_pred.get("day_5_pct"),
+            "day_7_price": ihsg_pred.get("day_7_price"),
+            "day_7_pct": ihsg_pred.get("day_7_pct"),
+            "reasoning": ihsg_pred.get("reasoning"),
+            "key_drivers": json.dumps(ihsg_pred.get("key_drivers", [])),
+            "risks": json.dumps(ihsg_pred.get("risks", [])),
+            "component_scores": json.dumps(ihsg_pred.get("component_scores", {})),
+            "ihsg_trend": ihsg_pred.get("ihsg_trend"),
+            "macro_signal": ihsg_pred.get("macro_signal"),
+        })
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
