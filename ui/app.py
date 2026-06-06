@@ -307,6 +307,51 @@ if page == "📈 Top Picks":
                         f"SL: **{sl_str}**"
                     )
 
+                    # Price Prediction from DB
+                    price_pred = sig.get("price_prediction") or {}
+                    if price_pred:
+                        with st.expander("📊 **Price Prediction (1/3/5/7 hari ke depan)**", expanded=True):
+                            cp = price_pred.get('current_price', 'N/A')
+                            st.metric("💰 Harga Sekarang", f"Rp {cp:,.0f}" if isinstance(cp, (int, float)) else cp)
+
+                            predictions = price_pred.get("predictions", {})
+                            col_d1, col_d3, col_d5, col_d7 = st.columns(4)
+                            for col, key in [(col_d1, "day_1"), (col_d3, "day_3"), (col_d5, "day_5"), (col_d7, "day_7")]:
+                                if key in predictions:
+                                    pred = predictions[key]
+                                    pct = pred.get('pct_change', 'N/A')
+                                    price = pred.get('price', 'N/A')
+                                    pct_num = float(str(pct).replace('%', '').replace('+', '')) if isinstance(pct, str) and pct not in ('N/A', '') else (pct if isinstance(pct, (int, float)) else 0)
+                                    with col:
+                                        st.metric(
+                                            key.replace('_', '+').upper(),
+                                            f"Rp {int(price):,.0f}" if isinstance(price, (int, float)) else price,
+                                            pct,
+                                            delta_color="normal" if pct_num >= 0 else "inverse"
+                                        )
+
+                            st.divider()
+                            reasoning = price_pred.get("reasoning", "")
+                            if reasoning:
+                                st.markdown("### 📝 Reasoning")
+                                st.markdown(reasoning)
+
+                            confidence = price_pred.get('confidence', 'N/A')
+                            conf_color = "🟢" if confidence == "HIGH" else "🟡" if confidence == "MEDIUM" else "🔴"
+                            st.markdown(f"{conf_color} **Confidence:** {confidence}")
+
+                            drivers = price_pred.get("key_drivers", [])
+                            if drivers:
+                                st.markdown("### 📈 Key Drivers:")
+                                for i, driver in enumerate(drivers, 1):
+                                    st.markdown(f"{i}. {driver}")
+
+                            risks = price_pred.get("risks", [])
+                            if risks:
+                                st.markdown("### ⚠️ Risks:")
+                                for i, risk in enumerate(risks, 1):
+                                    st.markdown(f"{i}. {risk}")
+
                 with col3:
                     st.markdown(f"⚡ Mode: **{sig.get('weight_mode', 'N/A')}**")
                     broker = sig.get("broker_utama", "")

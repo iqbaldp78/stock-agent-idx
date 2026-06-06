@@ -4,6 +4,14 @@ Mengambil data makro: IHSG, USD/IDR, volatilitas pasar.
 """
 import yfinance as yf
 import pandas as pd
+from datetime import date, datetime, timedelta
+
+from db.cache import (
+    get_cached_sector_ohlcv,
+    save_sector_ohlcv,
+    find_missing_dates,
+    group_into_ranges,
+)
 
 
 def _calculate_vs_ma(ticker_obj, period: int = 20) -> float | None:
@@ -49,8 +57,24 @@ def get_macro_data() -> dict:
     }
 
 
+_SECTOR_CACHE = {}
+_SECTOR_CACHE_TIME = None
+
 def get_sector_outlook() -> dict:
-    """Outlook per sektor berdasarkan indeks sektoral."""
+    """
+    Outlook per sektor berdasarkan indeks sektoral.
+    Cache-first: baca sector_ohlcv dari DB, fetch yfinance hanya untuk tanggal yang belum ada.
+    In-memory TTL 1 jam untuk menghindari DB query berulang dalam 1 sesi.
+    """
+    global _SECTOR_CACHE, _SECTOR_CACHE_TIME
+
+    # Return in-memory cache jika masih fresh (< 1 jam)
+    if _SECTOR_CACHE and _SECTOR_CACHE_TIME:
+        age = datetime.now() - _SECTOR_CACHE_TIME
+        if age < timedelta(hours=1):
+            print(f"[DEBUG] Returning in-memory sector outlook (age: {age.total_seconds():.0f}s)")
+            return _SECTOR_CACHE
+
     sectors = {
         "perbankan": "^JKFINA",
         "mining": "^JKMING",
@@ -59,42 +83,59 @@ def get_sector_outlook() -> dict:
         "property": "^JKPROP",
     }
 
-    import time
-    outlook = {}
-    max_retries = 5
+    today = date.today()
+    end_date_str = today.isoformat()
+    start_date_str = (today - timedelta(days=35)).isoformat()  # ~1 bulan + buffer
+
+    outlook = {name: "NETRAL" for name in sectors}
+
     for sector_name, idx_ticker in sectors.items():
-        retries = 0
-        while retries < max_retries:
-            try:
-                ticker = yf.Ticker(idx_ticker)
-                hist = ticker.history(period="1mo")
-                print(f"[DEBUG] {sector_name} ({idx_ticker}) hist shape: {hist.shape}")
-                if not hist.empty and len(hist) >= 5:
-                    change_5d = (hist["Close"].iloc[-1] - hist["Close"].iloc[-5]) / hist["Close"].iloc[-5] * 100
-                    print(f"[DEBUG] {sector_name} change_5d: {change_5d:.2f}%")
-                    if change_5d > 2:
-                        outlook[sector_name] = "POSITIF"
-                    elif change_5d < -2:
-                        outlook[sector_name] = "NEGATIF"
-                    else:
-                        outlook[sector_name] = "NETRAL"
-                    break
+        try:
+            # Cek DB dulu
+            cached = get_cached_sector_ohlcv(idx_ticker, start_date_str, end_date_str)
+            missing = find_missing_dates(cached, start_date_str, end_date_str)
+
+            # Fetch hanya tanggal yang belum ada
+            if missing:
+                for range_start, range_end in group_into_ranges(missing):
+                    try:
+                        df_new = yf.download(
+                            idx_ticker,
+                            start=range_start.isoformat(),
+                            end=(range_end + timedelta(days=1)).isoformat(),
+                            progress=False,
+                            auto_adjust=True,
+                        )
+                        if not df_new.empty:
+                            # Flatten MultiIndex jika ada
+                            if isinstance(df_new.columns, pd.MultiIndex):
+                                df_new.columns = df_new.columns.get_level_values(0)
+                            save_sector_ohlcv(idx_ticker, df_new, today)
+                            cached = pd.concat([cached, df_new]).sort_index()
+                            cached = cached[~cached.index.duplicated(keep="last")]
+                    except Exception as e:
+                        print(f"[DEBUG] {sector_name} fetch {range_start}..{range_end}: {e}")
+
+            if not cached.empty and len(cached) >= 5:
+                change_5d = (
+                    (cached["Close"].iloc[-1] - cached["Close"].iloc[-5])
+                    / cached["Close"].iloc[-5] * 100
+                )
+                print(f"[DEBUG] {sector_name} change_5d: {change_5d:.2f}%")
+                if change_5d > 2:
+                    outlook[sector_name] = "POSITIF"
+                elif change_5d < -2:
+                    outlook[sector_name] = "NEGATIF"
                 else:
-                    print(f"[DEBUG] {sector_name} data empty or <5 rows")
                     outlook[sector_name] = "NETRAL"
-                    break
-            except Exception as e:
-                err_str = str(e).lower()
-                print(f"[DEBUG] {sector_name} ERROR: {e}")
-                if "too many requests" in err_str or "rate limit" in err_str:
-                    wait_time = 2 ** retries
-                    print(f"[DEBUG] {sector_name} rate limited, retrying in {wait_time}s...")
-                    time.sleep(wait_time)
-                    retries += 1
-                else:
-                    outlook[sector_name] = "NETRAL"
-                    break
-        else:
-            outlook[sector_name] = "NETRAL"
+            else:
+                print(f"[DEBUG] {sector_name} data empty or <5 rows")
+
+        except Exception as e:
+            print(f"[DEBUG] {sector_name} error: {e}")
+
+    # Cache in-memory
+    _SECTOR_CACHE = outlook
+    _SECTOR_CACHE_TIME = datetime.now()
 
     return outlook

@@ -15,12 +15,27 @@ import logging
 import os
 import random
 import time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from functools import wraps
 
 import httpx
 import pandas as pd
 import numpy as np
+
+from db.cache import (
+    get_cached_ohlcv,
+    save_ohlcv,
+    find_missing_dates,
+    group_into_ranges,
+    get_cached_stock_info,
+    save_stock_info,
+    get_cached_broker_daily,
+    save_broker_daily,
+)
+from datetime import date as _date
+
+# shortcut agar tidak konflik dengan parameter bernama 'date' di get_broker_daily
+date_module_today = _date.today
 
 logger = logging.getLogger(__name__)
 
@@ -125,15 +140,17 @@ _BASE_PRICES = {
 }
 
 
-def _get_trading_days(days: int) -> list[str]:
+def _get_trading_days(days: int, include_today: bool = True) -> list[str]:
     """Hitung N hari trading ke belakang (skip weekend)."""
     result = []
-    current = datetime.now()
+    current = datetime.now().date()
+    if include_today and current.weekday() < 5:
+        result.append(current.strftime("%Y-%m-%d"))
     while len(result) < days:
         current -= timedelta(days=1)
         if current.weekday() < 5:  # Mon-Fri
             result.append(current.strftime("%Y-%m-%d"))
-    return result
+    return result[:days]
 
 
 def _get_broker_name(code: str) -> str:
@@ -289,10 +306,9 @@ def get_current_price_stockbit(ticker: str) -> float:
     return price
 
 
-def get_broker_daily(ticker: str, date: str) -> dict:
+def _fetch_broker_daily_api(ticker: str, date: str) -> dict:
     """
-    Broker summary untuk 1 saham di 1 tanggal.
-    Real data dari Stockbit marketdetector endpoint.
+    Broker summary untuk 1 saham di 1 tanggal langsung dari API (no cache).
     """
     api_data = get_marketdetector_broker_summary(
         ticker=ticker,
@@ -339,6 +355,27 @@ def get_broker_daily(ticker: str, date: str) -> dict:
     }
 
 
+def get_broker_daily(ticker: str, date: str) -> dict:
+    """
+    Broker summary dengan cache-first strategy.
+    - History (< today): ambil dari broker_accumulation jika sudah ada.
+    - Today: selalu fetch API terbaru lalu upsert.
+    - Jika tidak ada di cache, fetch dari API lalu simpan.
+    """
+    today_str = date_module_today().isoformat()
+    is_today = (date == today_str)
+
+    if not is_today:
+        cached = get_cached_broker_daily(ticker, date)
+        if cached is not None:
+            logger.info(f"[cache hit] broker_daily {ticker} {date}")
+            return cached
+
+    day_data = _fetch_broker_daily_api(ticker, date)
+    save_broker_daily(ticker, date, day_data)
+    return day_data
+
+
 def get_broker_accumulation(ticker: str, days: int) -> dict:
     """
     Agregasi broker summary untuk N hari trading ke belakang.
@@ -347,46 +384,13 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
     days=7  → timing signal (sedang aktif sekarang?)
     days=30 → true avg cost bandar
     """
-    trading_days = _get_trading_days(days)
+    trading_days = _get_trading_days(days, include_today=True)
     date_from = trading_days[-1]
     date_to = trading_days[0]
 
-    window_data = get_marketdetector_broker_summary(
-        ticker=ticker,
-        date_from=date_from,
-        date_to=date_to,
-        limit=10,
-    )
-
+    # Agregasi dari data harian (cache-first), sehingga history tidak perlu hit API berulang.
     broker_totals: dict = {}
-    for entry in window_data.get("brokers_buy", []):
-        code = entry.get("broker_code")
-        if not code:
-            continue
-        broker_totals[code] = {
-            "broker_name": _get_broker_name(code),
-            "total_buy_lot": _int_no_decimal(entry.get("blot")),
-            "total_buy_value": int(round(_parse_number(entry.get("bval")))),
-            "active_days": 0,
-            "daily": {},
-            "avg_price": _int_no_decimal(entry.get("netbs_buy_avg_price")),
-        }
-
     distribution_totals: dict = {}
-    for entry in window_data.get("brokers_sell", []):
-        code = entry.get("broker_code")
-        if not code:
-            continue
-        sval = abs(_parse_number(entry.get("sval")))
-        distribution_totals[code] = {
-            "broker_name": _get_broker_name(code),
-            "total_sell_lot": _int_no_decimal(entry.get("slot")),
-            "total_sell_value": int(round(sval)),
-            "active_days": 0,
-            "daily": {},
-            "avg_price": _int_no_decimal(entry.get("netbs_sell_avg_price")),
-            "type": entry.get("type"),
-        }
 
     daily_data = {}
     foreign_net = 0
@@ -401,23 +405,52 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
 
         for entry in day_data.get("buy", []):
             code = entry.get("broker")
-            if code not in broker_totals:
+            if not code:
                 continue
+            if code not in broker_totals:
+                broker_totals[code] = {
+                    "broker_name": entry.get("broker_name") or _get_broker_name(code),
+                    "total_buy_lot": 0,
+                    "total_buy_value": 0,
+                    "active_days": 0,
+                    "daily": {},
+                    "avg_price": 0,
+                }
+            broker_totals[code]["total_buy_lot"] += int(entry.get("lot") or 0)
+            broker_totals[code]["total_buy_value"] += int(entry.get("value") or 0)
             broker_totals[code]["active_days"] += 1
             broker_totals[code]["daily"][date] = {
                 "lot": entry.get("lot"),
                 "avg_price": entry.get("avg_price"),
             }
+            total_lot = broker_totals[code]["total_buy_lot"]
+            total_value = broker_totals[code]["total_buy_value"]
+            broker_totals[code]["avg_price"] = int(round(total_value / max(total_lot, 1)))
 
         for entry in day_data.get("sell", []):
             code = entry.get("broker")
-            if code not in distribution_totals:
+            if not code:
                 continue
+            if code not in distribution_totals:
+                distribution_totals[code] = {
+                    "broker_name": entry.get("broker_name") or _get_broker_name(code),
+                    "total_sell_lot": 0,
+                    "total_sell_value": 0,
+                    "active_days": 0,
+                    "daily": {},
+                    "avg_price": 0,
+                    "type": entry.get("type"),
+                }
+            distribution_totals[code]["total_sell_lot"] += int(entry.get("lot") or 0)
+            distribution_totals[code]["total_sell_value"] += int(entry.get("value") or 0)
             distribution_totals[code]["active_days"] += 1
             distribution_totals[code]["daily"][date] = {
                 "lot": entry.get("lot"),
                 "avg_price": entry.get("avg_price"),
             }
+            total_lot = distribution_totals[code]["total_sell_lot"]
+            total_value = distribution_totals[code]["total_sell_value"]
+            distribution_totals[code]["avg_price"] = int(round(total_value / max(total_lot, 1)))
 
     sorted_brokers = sorted(
         broker_totals.items(),
@@ -440,7 +473,7 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
         "top_accumulators": sorted_brokers[:5],
         "top_distributors": sorted_distributors[:5],
         "distribution_top3_value": top3_sell_total,
-        "bandar_detector": window_data.get("bandar_detector", {}),
+        "bandar_detector": {},
         "daily_summary": daily_data,
         "foreign_net": foreign_net,
     }
@@ -466,9 +499,9 @@ def _get_base_price(ticker: str) -> float:
 
 
 @_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
-def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50) -> pd.DataFrame:
+def _fetch_ohlcv_range_api(ticker: str, start_date: str, end_date: str, limit: int = 50) -> pd.DataFrame:
     """
-    Ambil data OHLCV dari Stockbit API untuk rentang tanggal tertentu (YYYY-MM-DD), limit default 50.
+    Ambil data OHLCV langsung dari Stockbit API (no cache).
     """
     api_key = os.getenv("STOCKBIT_API_KEY")
     if not api_key:
@@ -483,6 +516,7 @@ def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     all_data = []
+    required_keys = ("date", "open", "high", "low", "close", "volume")
     page = 1
     while True:
         page_params = params.copy()
@@ -494,17 +528,21 @@ def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50
         result = data.get("result", [])
         if not result:
             break
-        all_data.extend(result)
+        valid_items = [
+            item for item in result
+            if isinstance(item, dict) and all(k in item for k in required_keys)
+        ]
+        all_data.extend(valid_items)
         paginate = data.get("paginate", {})
         next_page = paginate.get("next_page")
         if not next_page:
             break
         page += 1
-    required_keys = ("date","open","high","low","close","volume")
-    sample = all_data[0] if all_data else {}
-    missing_keys = [k for k in required_keys if k not in sample]
-    if missing_keys:
-        raise ValueError(f"Stockbit OHLCV data missing keys: {missing_keys}. Sample: {sample}")
+
+    # Hari libur bursa / data tidak tersedia: kembalikan DataFrame kosong tanpa warning keras.
+    if not all_data:
+        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+
     df = pd.DataFrame([
         {
             "Date": pd.to_datetime(item["date"]),
@@ -516,15 +554,50 @@ def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50
         }
         for item in all_data if all(k in item for k in required_keys)
     ])
-    if "Date" not in df.columns:
-        raise ValueError(f"No 'Date' column in OHLCV DataFrame. Columns: {df.columns}. Sample: {sample}")
+    if df.empty or "Date" not in df.columns:
+        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
     df.set_index("Date", inplace=True)
     df = df.sort_index()
     return df
 
+
+def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50) -> pd.DataFrame:
+    """
+    Ambil OHLCV dengan cache-first strategy.
+    - History (< today): ambil dari DB, fetch API hanya untuk tanggal yang belum ada.
+    - Today: selalu di-upsert dari API.
+    """
+    today = date.today()
+    cached = get_cached_ohlcv(ticker, start_date, end_date)
+    missing = find_missing_dates(cached, start_date, end_date)
+
+    if not missing:
+        logger.info(f"[cache hit] OHLCV {ticker} {start_date}..{end_date}")
+        return cached
+
+    # Fetch hanya rentang yang belum ada
+    new_frames = [cached] if not cached.empty else []
+    for range_start, range_end in group_into_ranges(missing):
+        try:
+            df_new = _fetch_ohlcv_range_api(
+                ticker, range_start.isoformat(), range_end.isoformat(), limit
+            )
+            if not df_new.empty:
+                save_ohlcv(ticker, df_new, today)
+                new_frames.append(df_new)
+        except Exception as e:
+            logger.warning(f"[fetcher_stockbit] get_ohlcv_range {ticker} {range_start}..{range_end}: {e}")
+
+    if not new_frames:
+        return pd.DataFrame()
+    result = pd.concat(new_frames).sort_index()
+    result = result[~result.index.duplicated(keep="last")]
+    return result
+
+
 def get_ohlcv(ticker: str, period: str = "3mo") -> pd.DataFrame:
     """
-    Backward compatible: tetap bisa pakai period string, tapi gunakan get_ohlcv_range jika ingin window custom.
+    Backward compatible: tetap bisa pakai period string.
     """
     period_days = {"1mo": 22, "3mo": 66, "6mo": 132, "1y": 252}.get(period, 22)
     end_date = datetime.now().date()
@@ -534,14 +607,12 @@ def get_ohlcv(ticker: str, period: str = "3mo") -> pd.DataFrame:
         start_date -= timedelta(days=1)
         if start_date.weekday() < 5:
             days_added += 1
-    start_date_str = start_date.strftime("%Y-%m-%d")
-    end_date_str = end_date.strftime("%Y-%m-%d")
-    return get_ohlcv_range(ticker, start_date_str, end_date_str)
+    return get_ohlcv_range(ticker, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
 
 
 @_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
-def get_stock_info(ticker: str) -> dict:
-    # ...existing code...
+def _fetch_stock_info_api(ticker: str) -> dict:
+    """Ambil fundamental langsung dari Stockbit API (no cache)."""
     api_key = os.getenv("STOCKBIT_API_KEY")
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
@@ -762,6 +833,23 @@ def get_stock_info(ticker: str) -> dict:
         "dividend_per_share": round(dividend_per_share, 4) if dividend_per_share is not None else None,
         "history": {**historical, "dividend_yield": dividend_yield_history},
     }
+
+
+def get_stock_info(ticker: str) -> dict:
+    """
+    Ambil fundamental dengan cache-first strategy.
+    - Today: cek DB dulu, jika ada return dari cache (upsert saat save).
+    - Jika tidak ada di cache, fetch dari API lalu simpan.
+    """
+    today_str = date.today().isoformat()
+    cached = get_cached_stock_info(ticker, today_str)
+    if cached is not None:
+        logger.info(f"[cache hit] stock_info {ticker} {today_str}")
+        return cached
+
+    data = _fetch_stock_info_api(ticker)
+    save_stock_info(ticker, today_str, data)
+    return data
 
 
 def get_multiple_ohlcv(tickers: list[str], period: str = "3mo") -> dict[str, pd.DataFrame]:

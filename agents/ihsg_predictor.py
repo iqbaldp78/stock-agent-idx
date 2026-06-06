@@ -129,7 +129,12 @@ def _calculate_macro_score(macro_data: dict) -> float:
         score = 0.5
 
         # USD/IDR pressure (lower IDR = bullish for equities)
-        usdidr = macro_data.get("usdidr", 15800)
+        usdidr = macro_data.get("usdidr")
+        if usdidr is None:
+            usdidr = 15800.0
+        else:
+            usdidr = float(usdidr)
+
         if usdidr < 15500:
             score += 0.15  # Strong IDR
         elif usdidr > 16500:
@@ -139,7 +144,12 @@ def _calculate_macro_score(macro_data: dict) -> float:
             score += max(-0.15, min(0.15, usdidr_norm * 0.15))
 
         # IHSG vs MA20 (trend strength)
-        ihsg_vs_ma = macro_data.get("ihsg_vs_ma20", 0.0)
+        ihsg_vs_ma = macro_data.get("ihsg_vs_ma20")
+        if ihsg_vs_ma is None:
+            ihsg_vs_ma = 0.0
+        else:
+            ihsg_vs_ma = float(ihsg_vs_ma)
+
         if ihsg_vs_ma > 2.0:
             score += 0.15  # Strong uptrend
         elif ihsg_vs_ma < -2.0:
@@ -203,8 +213,8 @@ def _project_predictions(current_price: float, daily_pct_move: float, volatility
     for i, (day, damp) in enumerate(zip([1, 3, 5, 7], volatility_damping)):
         damped_move = daily_pct_move * damp
         projected_price = current_price * (1 + damped_move / 100)
-        predictions[f"day_{day}_price"] = round(projected_price, 0)
-        predictions[f"day_{day}_pct"] = round(damped_move, 2)
+        predictions[f"day_{day}_price"] = float(round(float(projected_price), 0))
+        predictions[f"day_{day}_pct"] = float(round(float(damped_move), 2))
 
     return predictions
 
@@ -242,6 +252,7 @@ def predict_ihsg() -> dict:
             macro_score * 0.20 +
             sector_score * 0.15
         )
+        combined_score = float(combined_score)
 
         # Direction determination
         if combined_score > 0.6:
@@ -261,8 +272,12 @@ def predict_ihsg() -> dict:
             confidence = "LOW"
 
         # Project predictions
-        daily_move_pct = (combined_score - 0.5) * 2 * 2.5  # ±2.5% range
+        daily_move_pct = float((combined_score - 0.5) * 2 * 2.5)  # ±2.5% range
         predictions = _project_predictions(current_price, daily_move_pct, 0.0)
+
+        usdidr_for_display = macro_data.get("usdidr")
+        if usdidr_for_display is None:
+            usdidr_for_display = 15800.0
 
         # Build result
         result = {
@@ -286,7 +301,7 @@ def predict_ihsg() -> dict:
                 f"IHSG: {current_price:,.0f}",
                 f"A/D Ratio: {breadth.get('advance_decline_ratio', 1.0):.2f}",
                 f"Participation: {breadth.get('participation_above_ma20', 50):.1f}%",
-                f"USD/IDR: {macro_data.get('usdidr', 15800):.0f}",
+                f"USD/IDR: {float(usdidr_for_display):.0f}",
                 f"Sector Leading: {sectors.get('leading_sector', 'N/A')}",
             ],
             "ihsg_trend": macro_data.get("ihsg_trend", "UNKNOWN"),

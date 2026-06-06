@@ -115,10 +115,11 @@ CREATE TABLE IF NOT EXISTS signals (
     entry_reasoning  TEXT,
     bandar_avg_7d    NUMERIC(12,2),
     bandar_avg_1m    NUMERIC(12,2),
-    broker_utama     VARCHAR(100),
+    broker_utama     TEXT,
     time_horizon     VARCHAR(50),
     weight_mode      VARCHAR(20),
     composite_score  NUMERIC(4,2),
+    price_prediction JSONB,
     created_at       TIMESTAMP DEFAULT NOW()
 );
 
@@ -165,6 +166,86 @@ CREATE TABLE IF NOT EXISTS ihsg_predictions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_ihsg_run_date ON ihsg_predictions(run_date DESC);
+
+-- ============================================================
+-- Raw Data Cache Tables
+-- ============================================================
+
+-- Cache: OHLCV harian per ticker (sumber: Stockbit / yfinance)
+CREATE TABLE IF NOT EXISTS ohlcv_prices (
+    id         SERIAL PRIMARY KEY,
+    ticker     VARCHAR(10) NOT NULL,
+    trade_date DATE NOT NULL,
+    open       NUMERIC(12,2),
+    high       NUMERIC(12,2),
+    low        NUMERIC(12,2),
+    close      NUMERIC(12,2),
+    volume     BIGINT,
+    source     VARCHAR(20) DEFAULT 'stockbit',
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(ticker, trade_date)
+);
+
+-- Cache: IHSG OHLCV harian (^JKSE, up to 8 tahun)
+CREATE TABLE IF NOT EXISTS ihsg_ohlcv (
+    id         SERIAL PRIMARY KEY,
+    trade_date DATE NOT NULL UNIQUE,
+    open       NUMERIC(12,2),
+    high       NUMERIC(12,2),
+    low        NUMERIC(12,2),
+    close      NUMERIC(12,2),
+    volume     BIGINT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Cache: Fundamental snapshot harian per ticker
+CREATE TABLE IF NOT EXISTS stock_info_snapshot (
+    id                    SERIAL PRIMARY KEY,
+    ticker                VARCHAR(10) NOT NULL,
+    snapshot_date         DATE NOT NULL,
+    per                   NUMERIC(10,4),
+    pbv                   NUMERIC(10,4),
+    roe                   NUMERIC(10,4),
+    der                   NUMERIC(10,4),
+    market_cap            NUMERIC(20,2),
+    current_price         NUMERIC(12,2),
+    revenue_growth        NUMERIC(10,4),
+    earnings_growth       NUMERIC(10,4),
+    high_52w              NUMERIC(12,2),
+    low_52w               NUMERIC(12,2),
+    dividend_yield        NUMERIC(10,4),
+    dividend_payout_ratio NUMERIC(10,4),
+    dividend_per_share    NUMERIC(12,4),
+    net_income_history    JSONB,
+    eps_history           JSONB,
+    revenue_history       JSONB,
+    extra_data            JSONB,
+    created_at            TIMESTAMP DEFAULT NOW(),
+    UNIQUE(ticker, snapshot_date)
+);
+
+-- Cache: Sektor indeks OHLCV harian (^JKFINA, ^JKMING, dst)
+CREATE TABLE IF NOT EXISTS sector_ohlcv (
+    id          SERIAL PRIMARY KEY,
+    sector_code VARCHAR(20) NOT NULL,
+    trade_date  DATE NOT NULL,
+    open        NUMERIC(12,4),
+    high        NUMERIC(12,4),
+    low         NUMERIC(12,4),
+    close       NUMERIC(12,4),
+    created_at  TIMESTAMP DEFAULT NOW(),
+    UNIQUE(sector_code, trade_date)
+);
+
+-- Extend broker_accumulation untuk support cache (broker_type & day_foreign_net)
+ALTER TABLE broker_accumulation ADD COLUMN IF NOT EXISTS broker_type    VARCHAR(10);
+ALTER TABLE broker_accumulation ADD COLUMN IF NOT EXISTS day_foreign_net BIGINT DEFAULT 0;
+
+-- Indexes untuk cache tables
+CREATE INDEX IF NOT EXISTS idx_ohlcv_ticker_date ON ohlcv_prices(ticker, trade_date);
+CREATE INDEX IF NOT EXISTS idx_ihsg_ohlcv_date   ON ihsg_ohlcv(trade_date);
+CREATE INDEX IF NOT EXISTS idx_stock_info_snap   ON stock_info_snapshot(ticker, snapshot_date);
+CREATE INDEX IF NOT EXISTS idx_sector_ohlcv_date ON sector_ohlcv(sector_code, trade_date);
 
 -- Seed: Universe LQ45
 INSERT INTO universe (ticker, is_lq45, is_custom, active) VALUES

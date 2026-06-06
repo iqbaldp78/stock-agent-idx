@@ -1,0 +1,437 @@
+{
+  "candidates": [
+    "ANTM"
+  ],
+  "universe": [
+    "ANTM"
+  ],
+  "scores": {
+    "ANTM": {
+      "bandarm": {
+        "ticker": "ANTM",
+        "score": 2.0,
+        "signal": "DISTRIBUTION",
+        "weight": "40%",
+        "window_7d": {
+          "period": "2026-05-28 s/d 2026-06-05",
+          "assessment": "Light Accumulation",
+          "top_accumulators": [
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_buy_lot": 722694,
+              "total_buy_value": 206250976000,
+              "avg_price": 2772,
+              "active_days": "4/7 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Unknown",
+              "total_buy_lot": 475745,
+              "total_buy_value": 146374328000,
+              "avg_price": 2853,
+              "active_days": "2/7 hari",
+              "status": "⚠️ TIDAK KONSISTEN"
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Unknown",
+              "total_buy_lot": 405430,
+              "total_buy_value": 113799526000,
+              "avg_price": 2792,
+              "active_days": "4/7 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Unknown",
+              "total_buy_lot": 299463,
+              "total_buy_value": 82979470000,
+              "avg_price": 2763,
+              "active_days": "2/7 hari",
+              "status": "⚠️ TIDAK KONSISTEN"
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "Unknown",
+              "total_buy_lot": 199814,
+              "total_buy_value": 56596928000,
+              "avg_price": 2803,
+              "active_days": "2/7 hari",
+              "status": "⚠️ TIDAK KONSISTEN"
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_sell_lot": -2096930,
+              "total_sell_value": 604594451000,
+              "avg_price": 2882,
+              "active_days": "2/7 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_sell_lot": -496058,
+              "total_sell_value": 141549097000,
+              "avg_price": 2855,
+              "active_days": "2/7 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Unknown",
+              "total_sell_lot": -369627,
+              "total_sell_value": 103903625000,
+              "avg_price": 2809,
+              "active_days": "3/7 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Unknown",
+              "total_sell_lot": -312820,
+              "total_sell_value": 83995170000,
+              "avg_price": 2709,
+              "active_days": "4/7 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "Unknown",
+              "total_sell_lot": -275638,
+              "total_sell_value": 74134060000,
+              "avg_price": 2696,
+              "active_days": "3/7 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_7d": 1979937113000
+        },
+        "window_1m": {
+          "period": "2026-04-27 s/d 2026-06-05",
+          "assessment": "Light Accumulation",
+          "top_accumulators": [
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_buy_lot": 1084639,
+              "total_buy_value": 313905612000,
+              "avg_price": 3150,
+              "active_days": "15/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Unknown",
+              "total_buy_lot": 975834,
+              "total_buy_value": 307025245000,
+              "avg_price": 3207,
+              "active_days": "14/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "Unknown",
+              "total_buy_lot": 641315,
+              "total_buy_value": 205349091000,
+              "avg_price": 3203,
+              "active_days": "11/30 hari",
+              "status": "⚠️ TIDAK KONSISTEN"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Unknown",
+              "total_buy_lot": 455013,
+              "total_buy_value": 145454719000,
+              "avg_price": 3167,
+              "active_days": "13/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "Unknown",
+              "total_buy_lot": 388940,
+              "total_buy_value": 137848448000,
+              "avg_price": 3301,
+              "active_days": "13/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_sell_lot": -2197280,
+              "total_sell_value": 626388547000,
+              "avg_price": 2977,
+              "active_days": "6/30 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Unknown",
+              "total_sell_lot": -1887889,
+              "total_sell_value": 592755945000,
+              "avg_price": 3222,
+              "active_days": "17/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_sell_lot": -1516264,
+              "total_sell_value": 458398477000,
+              "avg_price": 3136,
+              "active_days": "9/30 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_sell_lot": -832281,
+              "total_sell_value": 345352410000,
+              "avg_price": 3257,
+              "active_days": "15/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_sell_lot": -212682,
+              "total_sell_value": 88965888000,
+              "avg_price": 3310,
+              "active_days": "11/30 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_1m": 5525688119000
+        },
+        "price_analysis": {
+          "current_price": 2750.0,
+          "bandar_avg_7d": 2772,
+          "bandar_avg_1m": 3150,
+          "distance_from_7d": "-0.79%",
+          "distance_from_1m": "-12.70%",
+          "ideal_entry_zone": "3134–3166",
+          "max_entry": "2827",
+          "entry_status": "🟢 IDEAL",
+          "entry_label": "Harga 12.7% DI BAWAH true cost bandar — entry sangat menarik",
+          "net_foreign_7d": "net buy (1,979,937,113,000)",
+          "net_foreign_1m": "net buy (5,525,688,119,000)",
+          "anomali_akumulasi_7d": null,
+          "anomali_akumulasi_1m": null,
+          "anomali_distribusi_7d": null,
+          "anomali_distribusi_1m": null
+        },
+        "broker_to_watch": [
+          "CC (Mandiri Sekuritas)",
+          "ZP (Unknown)"
+        ],
+        "data_used": [
+          "Stockbit broker summary 7H & 1M",
+          "Foreign net buy 7H & 1M",
+          "Distribution 7H: Dist, Top3 sell >= 30% value",
+          "Distribution 1M: Dist, Top3 sell >= 30% value"
+        ],
+        "confidence": "MEDIUM"
+      },
+      "technical": {
+        "ticker": "ANTM",
+        "score": 4.2,
+        "signal": "SELL",
+        "trend": "bearish",
+        "setup": "Harga mendekati support terdekat di 2710; Harga mendekati resistance terdekat di 2760; RSI oversold; Harga di bawah MA20 (short-term bearish); Harga di bawah MA50 (mid-term bearish); Harga di bawah MA100 (intermediate-term bearish); Harga di bawah MA200 (long-term bearish); Death cross MA20/MA50; Death cross MA50/MA100 (mid-intermediate bearish); Golden cross MA100/MA200 (intermediate-long bullish); MACD bearish momentum; Volume naik signifikan; Dekat 52W low — potential reversal; Trend utama: bearish (semua MA major di atas harga)",
+        "entry_zone": "2710-2900",
+        "target": "2304",
+        "stop_loss": "5069",
+        "support_near": "2710",
+        "resistance_near": "2760",
+        "support_strong": "2450",
+        "resistance_strong": "4970",
+        "divergence": {
+          "rsi": "none",
+          "macd": "none"
+        },
+        "data_used": [
+          "Support terdekat: 2710 (sentuh 1x), Resistance terdekat: 2760 (sentuh 2x)",
+          "Support kuat: 2450 (sentuh 1x), Resistance kuat: 4970 (sentuh 1x)",
+          "RSI: 21.9",
+          "MA20: 3248",
+          "MA50: 3580",
+          "MA100: 3786",
+          "MA200: 3455",
+          "MACD: bearish",
+          "Vol ratio 5/20: 1.52",
+          "52W pos: 12%",
+          "Trend: bearish (-1.0)"
+        ],
+        "confidence": "HIGH"
+      },
+      "fundamental": {
+        "ticker": "ANTM",
+        "score": 10.0,
+        "signal": "BUY",
+        "key_points": [
+          "PER 4.8x — undervalued",
+          "PBV 1.70x — wajar",
+          "ROE 21.84% — sangat baik",
+          "DER 0.14x — leverage rendah",
+          "Earnings growth 59.9% — akseleratif",
+          "Net income konsisten naik 3 tahun terakhir",
+          "EPS konsisten naik 3 tahun terakhir",
+          "Revenue konsisten naik 3 tahun terakhir"
+        ],
+        "risks": [],
+        "data_used": [
+          "PER: 4.8x",
+          "PBV: 1.70x",
+          "ROE: 21.84%",
+          "DER: 0.14x",
+          "Revenue Growth: 12.1%",
+          "Earnings Growth: 59.9%",
+          "Rata-rata Net Income 3 tahun: 8,161",
+          "Rata-rata EPS 3 tahun: 339.61",
+          "Rata-rata Revenue 3 tahun: 90,376",
+          "Rata-rata Dividend Yield 5 tahun: 5.21%",
+          "CAGR Revenue: 28.07% (2017–2026)",
+          "CAGR Net Income: 66.71% (2017–2026)",
+          "CAGR Eps: 66.78% (2017–2026)"
+        ],
+        "confidence": "HIGH"
+      },
+      "news": {
+        "ticker": "ANTM",
+        "score": 5,
+        "summary": "Tidak ada berita relevan yang ditemukan.",
+        "articles": []
+      }
+    }
+  },
+  "composites": {
+    "ANTM": {
+      "ticker": "ANTM",
+      "composite_score": 4.67,
+      "weights_used": {
+        "bandarm": 0.35,
+        "technical": 0.22,
+        "fundamental": 0.18,
+        "macro": 0.13,
+        "news": 0.12
+      },
+      "weight_mode": "default",
+      "breakdown": {
+        "bandarm": {
+          "score": 2.0,
+          "weight": 0.35,
+          "contribution": 0.7
+        },
+        "technical": {
+          "score": 4.2,
+          "weight": 0.22,
+          "contribution": 0.92
+        },
+        "fundamental": {
+          "score": 10.0,
+          "weight": 0.18,
+          "contribution": 1.8
+        },
+        "macro": {
+          "score": 5.0,
+          "weight": 0.13,
+          "contribution": 0.65
+        },
+        "news": {
+          "score": 5,
+          "weight": 0.12,
+          "contribution": 0.6
+        }
+      }
+    }
+  },
+  "macro_data": {
+    "score": 5.0,
+    "ihsg_trend": "UNKNOWN",
+    "ihsg_price": null,
+    "ihsg_change_pct": 0,
+    "usdidr": null,
+    "usdidr_trend": "UNKNOWN",
+    "is_volatile": false,
+    "sector_outlook": {
+      "perbankan": "NETRAL",
+      "mining": "NETRAL",
+      "consumer": "NETRAL",
+      "infrastructure": "NETRAL",
+      "property": "NETRAL"
+    },
+    "market_risk": "MEDIUM",
+    "data_used": [
+      "Volatile: False"
+    ]
+  },
+  "debate_log": [
+    {
+      "round": 1,
+      "ticker": "MARKET",
+      "agent": "macro",
+      "argument": "Kondisi pasar saat ini menunjukkan tingkat volatilitas yang rendah dengan risiko pasar berada pada level moderat, meskipun tren IHSG dan nilai tukar USD/IDR belum terkonfirmasi secara jelas dalam data terbaru. Outlook sektoral yang netral di seluruh lini utama seperti perbankan dan pertambangan mengisyaratkan sikap antisipatif dari pelaku pasar global terhadap aset emerging markets. Tanpa adanya katalis makro yang kuat atau arah tren yang nyata, alokasi aset sebaiknya dipertahankan pada posisi netral (wait and see) sambil menunggu konfirmasi arah pergerakan indeks dan stabilitas nilai tukar untuk menentukan strategi risk-on yang lebih agresif.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "ANTM",
+      "agent": "fundamental",
+      "argument": "ANTM menyajikan profil fundamental yang sangat atraktif dengan valuasi PER hanya 4.8x, yang mengindikasikan kondisi undervalued secara signifikan dibandingkan potensi pertumbuhannya. Profitabilitas perusahaan sangat solid dengan ROE mencapai 21.84%, didukung oleh pertumbuhan laba bersih yang akseleratif sebesar 59.9%. Dari sisi risiko, struktur permodalan sangat konservatif dengan DER 0.14x, memberikan fleksibilitas finansial yang tinggi untuk ekspansi di sektor hilirisasi mineral. Tren kenaikan konsisten pada revenue, net income, dan EPS selama 3 tahun terakhir, ditambah proyeksi CAGR laba yang kuat, memperkuat keyakinan bahwa saham ini layak dikoleksi untuk jangka panjang.",
+      "vote": "BUY"
+    },
+    {
+      "round": 1,
+      "ticker": "ANTM",
+      "agent": "bandarmologi",
+      "argument": "Meskipun terdapat sinyal distribusi dari broker RX (Macquarie) dan KZ (Daewoo), data foreign flow menunjukkan anomali akumulasi yang sangat masif sebesar Rp5,5T dalam 1 bulan terakhir. Saat ini harga 2750 berada di bawah rata-rata harga bandar (CC/Mandiri Sekuritas) baik di timeframe 7 hari (2772) maupun 1 bulan (3150). Penurunan harga ke level 2750 merupakan peluang 'buy on weakness' karena harga sudah terdiskon 12,7% dari true cost bandar 1 bulan, sementara asing terus melakukan net buy dalam jumlah signifikan yang mengindikasikan adanya penyerapan (absorption) di harga bawah.",
+      "vote": "BUY"
+    },
+    {
+      "round": 1,
+      "ticker": "ANTM",
+      "agent": "technical",
+      "argument": "ANTM menunjukkan struktur bearish yang sangat kuat dengan harga berada di bawah seluruh Moving Average utama dan terkonfirmasi oleh Death Cross MA20/50 serta MA50/100. Meskipun RSI berada di level oversold ekstrim (21.9), kenaikan volume (rasio 1.52) saat harga turun mengonfirmasi dominasi tekanan jual. Belum ada tanda-tanda akumulasi atau pola pembalikan arah yang valid di dekat support 2710, sehingga risiko kelanjutan penurunan menuju support kuat 2450 masih sangat tinggi.",
+      "vote": "SELL"
+    },
+    {
+      "round": 2,
+      "ticker": "ANTM",
+      "agent": "bandarmologi",
+      "argument": "Saya melihat anomali signifikan yang membantah narasi 'Sell' dari sisi teknikal. Meskipun struktur harga bearish, data Foreign Flow menunjukkan akumulasi masif sebesar Rp1,97T dalam 7 hari dan Rp5,52T dalam 1 bulan terakhir. Terdapat 'Bullish Divergence' antara harga yang turun dengan volume net buy asing yang terus meningkat. Broker RX (Macquarie) memang melakukan distribusi besar, namun volume tersebut diserap sepenuhnya oleh asing lainnya. Saat ini, harga 2750 berada 12,7% di bawah average cost bandar 1 bulan (3150), yang berarti big money sedang 'nyangkut' atau sengaja melakukan markdown untuk akumulasi lebih murah. Fundamental yang sangat undervalued (PER 4.8x) menjadi katalis utama asing terus masuk. Ini adalah peluang buy on weakness sebelum reversal.",
+      "vote": "BUY"
+    },
+    {
+      "round": 2,
+      "ticker": "ANTM",
+      "agent": "technical",
+      "argument": "Saya membantah optimisme dari sisi fundamental dan bandarmologi karena secara teknikal ANTM sedang dalam fase 'falling knife'. Meskipun fundamental dianggap murah dan ada akumulasi asing masif, harga saat ini berada di bawah seluruh Moving Average utama (MA20, 50, 100, 200) dengan konfirmasi 'death cross' yang menunjukkan tren bearish kuat. Volume yang naik signifikan (rasio 1.52) saat harga turun mengindikasikan tekanan jual yang masih mendominasi, bukan sekadar akumulasi pasif. RSI 21.9 memang sudah oversold, namun tanpa adanya 'bullish divergence' atau kemampuan harga menembus resistance terdekat 2760, risiko penurunan menuju support kuat 2450 tetap tinggi. Membeli sekarang terlalu berisiko sebelum ada konfirmasi pembalikan arah.",
+      "vote": "SELL"
+    },
+    {
+      "round": 2,
+      "ticker": "ANTM",
+      "agent": "fundamental",
+      "argument": "Saya secara tegas membantah argumen teknikal yang menyarankan SELL. Fokus pada 'Death Cross' dan momentum bearish mengabaikan realitas fundamental di mana ANTM diperdagangkan pada PER 4.8x, yang sangat undervalued untuk perusahaan dengan ROE 21.84% dan pertumbuhan laba 59.9%. Saya mendukung temuan bandarmologi mengenai akumulasi asing masif senilai Rp5,5T; ini adalah indikasi jelas bahwa 'smart money' sedang melakukan absorpsi di tengah kepanikan teknikal. Dengan DER hanya 0.14x, ANTM memiliki struktur modal yang sangat sehat untuk menghadapi volatilitas pasar. Menjual di harga saat ini, ketika valuasi jauh di bawah rata-rata historis dan pertumbuhan CAGR laba bersih mencapai 66.71%, adalah keputusan yang tidak rasional secara investasi jangka panjang.",
+      "vote": "BUY"
+    }
+  ],
+  "finalists": [
+    {
+      "ticker": "ANTM",
+      "final_score": 5.37,
+      "composite_score": 4.67,
+      "weight_mode": "default",
+      "debate_bonus": 0.7
+    }
+  ]
+}

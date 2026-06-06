@@ -87,10 +87,11 @@ class Signal(Base):
     entry_reasoning = Column(Text)
     bandar_avg_7d = Column(Numeric(12, 2))
     bandar_avg_1m = Column(Numeric(12, 2))
-    broker_utama = Column(String(100))
+    broker_utama = Column(Text)
     time_horizon = Column(String(50))
     weight_mode = Column(String(20))
     composite_score = Column(Numeric(4, 2))
+    price_prediction = Column(JSONB)
     created_at = Column(Date, server_default=func.now())
 
 
@@ -103,4 +104,78 @@ class Performance(Base):
     actual_price = Column(Numeric(12, 2))
     result = Column(String(20))
     return_pct = Column(Numeric(6, 2))
+    created_at = Column(Date, server_default=func.now())
+
+
+# ============================================================
+# Raw Data Cache Models
+# ============================================================
+
+class OhlcvPrice(Base):
+    __tablename__ = "ohlcv_prices"
+    __table_args__ = (UniqueConstraint("ticker", "trade_date"),)
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String(10), nullable=False)
+    trade_date = Column(Date, nullable=False)
+    open = Column(Numeric(12, 2))
+    high = Column(Numeric(12, 2))
+    low = Column(Numeric(12, 2))
+    close = Column(Numeric(12, 2))
+    volume = Column(BigInteger)
+    source = Column(String(20), default="stockbit")
+    created_at = Column(Date, server_default=func.now())
+
+
+class IhsgOhlcv(Base):
+    __tablename__ = "ihsg_ohlcv"
+
+    id = Column(Integer, primary_key=True)
+    trade_date = Column(Date, nullable=False, unique=True)
+    open = Column(Numeric(12, 2))
+    high = Column(Numeric(12, 2))
+    low = Column(Numeric(12, 2))
+    close = Column(Numeric(12, 2))
+    volume = Column(BigInteger)
+    created_at = Column(Date, server_default=func.now())
+
+
+class StockInfoSnapshot(Base):
+    __tablename__ = "stock_info_snapshot"
+    __table_args__ = (UniqueConstraint("ticker", "snapshot_date"),)
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String(10), nullable=False)
+    snapshot_date = Column(Date, nullable=False)
+    per = Column(Numeric(10, 4))
+    pbv = Column(Numeric(10, 4))
+    roe = Column(Numeric(10, 4))
+    der = Column(Numeric(10, 4))
+    market_cap = Column(Numeric(20, 2))
+    current_price = Column(Numeric(12, 2))
+    revenue_growth = Column(Numeric(10, 4))
+    earnings_growth = Column(Numeric(10, 4))
+    high_52w = Column(Numeric(12, 2))
+    low_52w = Column(Numeric(12, 2))
+    dividend_yield = Column(Numeric(10, 4))
+    dividend_payout_ratio = Column(Numeric(10, 4))
+    dividend_per_share = Column(Numeric(12, 4))
+    net_income_history = Column(JSONB)
+    eps_history = Column(JSONB)
+    revenue_history = Column(JSONB)
+    extra_data = Column(JSONB)
+    created_at = Column(Date, server_default=func.now())
+
+
+class SectorOhlcv(Base):
+    __tablename__ = "sector_ohlcv"
+    __table_args__ = (UniqueConstraint("sector_code", "trade_date"),)
+
+    id = Column(Integer, primary_key=True)
+    sector_code = Column(String(20), nullable=False)
+    trade_date = Column(Date, nullable=False)
+    open = Column(Numeric(12, 4))
+    high = Column(Numeric(12, 4))
+    low = Column(Numeric(12, 4))
+    close = Column(Numeric(12, 4))
     created_at = Column(Date, server_default=func.now())

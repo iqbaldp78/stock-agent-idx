@@ -10,16 +10,21 @@ from functools import lru_cache
 from datetime import datetime, timedelta
 
 from config import get_universe, to_yahoo_ticker
+from data.fetcher_stockbit import get_ohlcv
+from db.cache import (
+    get_cached_ihsg_ohlcv,
+    save_ihsg_ohlcv,
+    find_missing_dates,
+    group_into_ranges,
+    _period_to_dates,
+)
 
 logger = logging.getLogger(__name__)
 
 # === OHLCV ===
 
-def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
-    """
-    Fetch IHSG OHLCV untuk 8 tahun (default).
-    Returns: DataFrame dengan Date index, OHLCV columns, atau None jika error.
-    """
+def _fetch_ihsg_ohlcv_api(period: str = "8y") -> pd.DataFrame | None:
+    """Fetch IHSG OHLCV langsung dari yfinance (no cache)."""
     try:
         ticker = yf.Ticker("^JKSE")
         hist = ticker.history(period=period)
@@ -27,10 +32,60 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
             logger.warning("[IHSG OHLCV] Empty history, return None")
             return None
         hist.index.name = "Date"
+        # Flatten MultiIndex jika ada
+        if isinstance(hist.columns, pd.MultiIndex):
+            hist.columns = hist.columns.get_level_values(0)
         return hist
     except Exception as e:
         logger.error(f"[IHSG OHLCV] Error: {e}")
         return None
+
+
+def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
+    """
+    Fetch IHSG OHLCV dengan cache-first strategy.
+    - History: ambil dari DB, fetch yfinance hanya untuk tanggal yang belum ada.
+    - Today: selalu di-upsert dari API.
+    Returns: DataFrame dengan Date index, OHLCV columns, atau None jika error.
+    """
+    from datetime import date as _date
+    today = _date.today()
+    start_date_str, end_date_str = _period_to_dates(period)
+
+    cached = get_cached_ihsg_ohlcv(start_date_str, end_date_str)
+    missing = find_missing_dates(cached, start_date_str, end_date_str)
+
+    if not missing:
+        logger.info(f"[cache hit] IHSG OHLCV {start_date_str}..{end_date_str}")
+        return cached if not cached.empty else None
+
+    # Fetch hanya rentang yang belum ada dari yfinance
+    new_frames = [cached] if not cached.empty else []
+    for range_start, range_end in group_into_ranges(missing):
+        try:
+            ticker = yf.Ticker("^JKSE")
+            hist = ticker.history(start=range_start.isoformat(), end=(range_end + timedelta(days=1)).isoformat())
+            if hist.empty:
+                continue
+            hist.index.name = "Date"
+            if isinstance(hist.columns, pd.MultiIndex):
+                hist.columns = hist.columns.get_level_values(0)
+            save_ihsg_ohlcv(hist, today)
+            new_frames.append(hist)
+        except Exception as e:
+            logger.warning(f"[fetcher_ihsg] IHSG fetch {range_start}..{range_end}: {e}")
+
+    if not new_frames:
+        # Fallback ke full fetch jika tidak ada data sama sekali
+        logger.info("[IHSG OHLCV] No cache, fetching full history from yfinance")
+        full = _fetch_ihsg_ohlcv_api(period)
+        if full is not None:
+            save_ihsg_ohlcv(full, today)
+        return full
+
+    result = pd.concat(new_frames).sort_index()
+    result = result[~result.index.duplicated(keep="last")]
+    return result
 
 
 # === MARKET BREADTH ===
@@ -62,10 +117,9 @@ def _get_lq45_ticker_data() -> dict[str, pd.DataFrame]:
 
 
 def _fetch_single_ohlcv(ticker: str, period: str = "3mo") -> pd.DataFrame | None:
-    """Fetch single ticker OHLCV."""
+    """Fetch single ticker OHLCV via cache-aware stockbit fetcher."""
     try:
-        yahoo_ticker = to_yahoo_ticker(ticker)
-        df = yf.download(yahoo_ticker, period=period, progress=False)
+        df = get_ohlcv(ticker, period=period)
         return df
     except Exception as e:
         logger.warning(f"[fetch_single {ticker}] {e}")

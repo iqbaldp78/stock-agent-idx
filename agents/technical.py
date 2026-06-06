@@ -172,11 +172,24 @@ def analyze(ticker: str) -> dict:
                 print(f"[ERROR] Kolom {col} tidak ada di OHLCV!")
                 return {"ticker": ticker, "error": f"Kolom {col} tidak ada di OHLCV", "trend": "unknown"}
 
+        # Normalisasi dtype numerik (cache DB bisa mengembalikan Decimal/object)
+        for col in ["Close", "Volume", "High", "Low", "Open"]:
+            if col in ohlcv.columns:
+                ohlcv[col] = pd.to_numeric(ohlcv[col], errors="coerce")
+        ohlcv = ohlcv.dropna(subset=["Close", "Volume", "High", "Low"])
+        if len(ohlcv) < 200:
+            print(f"[ERROR] Data OHLCV valid hanya {len(ohlcv)} baris setelah normalisasi!")
+            return {
+                "ticker": ticker,
+                "error": f"Data OHLCV valid hanya {len(ohlcv)} baris setelah normalisasi!",
+                "trend": "unknown",
+            }
+
         # ...existing code...
         # Gunakan seluruh data OHLCV yang sudah diambil (1 tahun)
         closes = ohlcv["Close"]
         volumes = ohlcv["Volume"]
-        current_price = closes.iloc[-1]
+        current_price = float(closes.iloc[-1])
         ma200_rolling = closes.rolling(200).mean()
 
         # === Divergence RSI & MACD ===

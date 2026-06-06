@@ -174,15 +174,15 @@ else:
 
 LLM_ROUND_ROBIN_INDEX = 0  # Global index for round-robin
 
-LLM_MODEL_DEBATE_R1 = os.getenv("LLM_MODEL_DEBATE_R1", "kr/claude-haiku-4.5-agentic")
-LLM_MODEL_DEBATE_R2 = os.getenv("LLM_MODEL_DEBATE_R2", "kr/claude-haiku-4.5-thinking-agentic")
+LLM_MODEL_DEBATE_R1 = os.getenv("LLM_MODEL_DEBATE_R1", "gh/gpt-4o-mini")
+LLM_MODEL_DEBATE_R2 = os.getenv("LLM_MODEL_DEBATE_R2", "gemini/gemini-2.5-flash")
 LLM_MODEL_INVESTMENT_MANAGER = os.getenv(
-    "LLM_MODEL_INVESTMENT_MANAGER", "kr/claude-sonnet-4.5-thinking"
+    "LLM_MODEL_INVESTMENT_MANAGER", "gh/gpt-4o"
 )
-LLM_MODEL_DEBATE_FALLBACK = os.getenv("LLM_MODEL_DEBATE_FALLBACK", "gh/claude-haiku-4.5")
-LLM_MODEL_IM_FALLBACK = os.getenv("LLM_MODEL_IM_FALLBACK", "gh/claude-opus-4.5")
+LLM_MODEL_DEBATE_FALLBACK = os.getenv("LLM_MODEL_DEBATE_FALLBACK", "gemini/gemini-2.0-flash-lite")
+LLM_MODEL_IM_FALLBACK = os.getenv("LLM_MODEL_IM_FALLBACK", "gemini/gemini-2.5-pro")
 LLM_MODEL_DEBATE_R2_FALLBACK = os.getenv(
-    "LLM_MODEL_DEBATE_R2_FALLBACK", "kr/claude-haiku-4.5-thinking"
+    "LLM_MODEL_DEBATE_R2_FALLBACK", "gemini/gemini-2.0-flash-lite"
 )
 
 # Per-agent models (different providers = more objective debate)

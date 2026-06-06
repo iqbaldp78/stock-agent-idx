@@ -105,6 +105,7 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
                 time_horizon="Positional (4-6 minggu)",
                 weight_mode=pick.get("weight_mode"),
                 composite_score=pick.get("composite_score"),
+                price_prediction=pick.get("price_prediction"),
             )
             db.add(record)
 
