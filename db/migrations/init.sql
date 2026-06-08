@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS signals (
     max_entry        NUMERIC(12,2),
     target_1         NUMERIC(12,2),
     target_2         NUMERIC(12,2),
+    target_3         NUMERIC(12,2),
     stop_loss        NUMERIC(12,2),
     risk_reward      NUMERIC(5,2),
     conviction       VARCHAR(10),

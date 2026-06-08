@@ -207,3 +207,19 @@ bmri: ## Quick test: all agents for BMRI
 
 # Default target
 .DEFAULT_GOAL := help
+
+# ============================================================
+# END-TO-END TESTING
+# ============================================================
+
+.PHONY: test-ticker
+test-ticker: ## Run end-to-end analysis for single ticker (usage: make test-ticker TICKER=BBCA)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make test-ticker TICKER=BBCA"; \
+		exit 1; \
+	fi
+	docker compose exec -T app python run_single_ticker.py $(TICKER)
+
+.PHONY: validate-schema
+validate-schema: ## Validate database schema and test data insertion
+	docker compose exec -T app python validate_schema.py

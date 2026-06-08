@@ -94,7 +94,17 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
                 entry_low=entry_low,
                 entry_high=entry_high,
                 max_entry=_parse_number(pick.get("max_entry")),
-                target_1=_parse_number(pick.get("target_1")),
+                target_1=_parse_number(pick.get("tp1")),
+                target_2=_parse_number(pick.get("tp2")),
+                target_3=_parse_number(pick.get("tp3")),
+                tp_position_sizing={
+                    "tp1_size": pick.get("tp1_size"),
+                    "tp2_size": pick.get("tp2_size"),
+                    "tp3_size": pick.get("tp3_size")
+                },
+                risk_reward_tp1=pick.get("risk_reward_tp1"),
+                risk_reward_tp2=pick.get("risk_reward_tp2"),
+                risk_reward_tp3=pick.get("risk_reward_tp3"),
                 stop_loss=_parse_number(pick.get("stop_loss")),
                 conviction=pick.get("conviction"),
                 thesis=f"{pick.get('bandarm_signal', '')} — composite {pick.get('composite_score', '')}",
