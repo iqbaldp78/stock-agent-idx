@@ -137,6 +137,77 @@ def _calculate_bollinger(closes: pd.Series, period: int = 20) -> dict | None:
     }
 
 
+def _calculate_tp_levels(
+    entry: float,
+    stop_loss: float,
+    resistance_near: float,
+    resistance_strong: float,
+) -> dict:
+    """
+    Calculate TP1, TP2, TP3 levels with R/R-based dynamic position sizing.
+
+    R/R Constraints:
+    - TP1: minimum 0.5:1
+    - TP2: minimum 1.0:1
+    - TP3: minimum 1.5:1
+
+    Returns dict with TP levels, position sizing, and R/R ratios.
+    """
+    risk = abs(entry - stop_loss)
+    if risk == 0:
+        return {"tp1": entry, "tp2": entry, "tp3": entry, "rr_constraints_met": False}
+
+    total_upside = max(resistance_strong or 0, (resistance_near or 0) * 1.05) - entry
+    if total_upside <= 0:
+        return {"tp1": entry, "tp2": entry, "tp3": entry, "rr_constraints_met": False}
+
+    # Base TP levels (33%, 67%, 100% of upside)
+    tp1_base = entry + (total_upside * 0.33)
+    tp2_base = entry + (total_upside * 0.67)
+    tp3_base = entry + (total_upside * 1.00)
+
+    # Calculate initial R/R
+    rr_tp1_base = (tp1_base - entry) / risk
+    rr_tp2_base = (tp2_base - entry) / risk
+    rr_tp3_base = (tp3_base - entry) / risk
+
+    # Apply R/R constraints
+    tp1 = tp1_base if rr_tp1_base >= 0.5 else entry + (risk * 0.5)
+    tp2 = tp2_base if rr_tp2_base >= 1.0 else entry + (risk * 1.0)
+    tp3 = tp3_base if rr_tp3_base >= 1.5 else entry + (risk * 1.5)
+
+    # Recalculate R/R after adjustment
+    rr_tp1 = (tp1 - entry) / risk
+    rr_tp2 = (tp2 - entry) / risk
+    rr_tp3 = (tp3 - entry) / risk
+
+    # Dynamic position sizing based on R/R confidence
+    tp1_size_base = 0.30 if rr_tp1 >= 2.0 else 0.20
+    tp2_size_base = 0.40 if rr_tp2 >= 1.5 else 0.25
+    tp3_size_base = 0.30 if rr_tp3 >= 3.0 else 0.20
+
+    # Normalize to 100%
+    total_size = tp1_size_base + tp2_size_base + tp3_size_base
+    tp1_size = round(tp1_size_base / total_size, 2)
+    tp2_size = round(tp2_size_base / total_size, 2)
+    tp3_size = round(1.0 - tp1_size - tp2_size, 2)  # Ensure exact 100%
+
+    constraints_met = rr_tp1 >= 0.5 and rr_tp2 >= 1.0 and rr_tp3 >= 1.5
+
+    return {
+        "tp1": round(tp1, 0),
+        "tp2": round(tp2, 0),
+        "tp3": round(tp3, 0),
+        "tp1_size": tp1_size,
+        "tp2_size": tp2_size,
+        "tp3_size": tp3_size,
+        "risk_reward_tp1": f"1:{rr_tp1:.1f}",
+        "risk_reward_tp2": f"1:{rr_tp2:.1f}",
+        "risk_reward_tp3": f"1:{rr_tp3:.1f}",
+        "rr_constraints_met": constraints_met,
+    }
+
+
 def analyze(ticker: str) -> dict:
     try:
         # Inisialisasi semua variabel output utama dengan default
@@ -540,6 +611,29 @@ def analyze(ticker: str) -> dict:
             setup_notes.append("Trend utama: sideways (harga di antara MA major)")
             data_used.append("Trend: sideways (0)")
         trend = trend if 'trend' in locals() else "unknown"
+
+        # === Calculate TP1/TP2/TP3 with R/R optimization ===
+        tp_data = {}
+        if signal == "BUY" and entry_low and stop_loss and resistance_strong:
+            tp_calc = _calculate_tp_levels(
+                entry=entry_low,
+                stop_loss=stop_loss,
+                resistance_near=resistance_near or entry_high,
+                resistance_strong=resistance_strong,
+            )
+            tp_data = {
+                "tp1": tp_calc.get("tp1"),
+                "tp2": tp_calc.get("tp2"),
+                "tp3": tp_calc.get("tp3"),
+                "tp1_size": tp_calc.get("tp1_size"),
+                "tp2_size": tp_calc.get("tp2_size"),
+                "tp3_size": tp_calc.get("tp3_size"),
+                "risk_reward_tp1": tp_calc.get("risk_reward_tp1"),
+                "risk_reward_tp2": tp_calc.get("risk_reward_tp2"),
+                "risk_reward_tp3": tp_calc.get("risk_reward_tp3"),
+                "tp_constraints_met": tp_calc.get("rr_constraints_met"),
+            }
+
         result = {
             "ticker": ticker,
             "score": round(score, 1),
@@ -557,6 +651,10 @@ def analyze(ticker: str) -> dict:
             "data_used": data_used,
             "confidence": confidence,
         }
+
+        # Add TP levels if calculated
+        if tp_data:
+            result.update(tp_data)
         return result
     except Exception as e:
         import traceback

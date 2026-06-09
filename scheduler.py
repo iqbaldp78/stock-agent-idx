@@ -68,7 +68,7 @@ def run_performance_check():
                 if not current_price:
                     continue
 
-                # Determine result
+                # Determine result - check TP levels sequentially (highest to lowest)
                 result = "OPEN"
                 return_pct = 0
 
@@ -78,10 +78,19 @@ def run_performance_check():
 
                 return_pct = (current_price - entry_price) / entry_price * 100
 
-                if signal.target_1 and current_price >= float(signal.target_1):
+                # Check new TP1/TP2/TP3 levels first (multi-level profit taking)
+                if signal.target_3 and current_price >= float(signal.target_3):
+                    result = "HIT_TP3"
+                elif signal.target_2 and current_price >= float(signal.target_2):
+                    result = "HIT_TP2"
+                elif signal.target_1 and current_price >= float(signal.target_1):
+                    result = "HIT_TP1"
+                # Fallback to legacy target levels if TP levels not available
+                elif signal.target_1 and current_price >= float(signal.target_1):
                     result = "HIT_TARGET_1"
                 elif signal.target_2 and current_price >= float(signal.target_2):
                     result = "HIT_TARGET_2"
+                # Check stop loss
                 elif signal.stop_loss and current_price <= float(signal.stop_loss):
                     result = "HIT_SL"
 

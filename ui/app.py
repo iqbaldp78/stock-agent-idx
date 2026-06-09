@@ -154,11 +154,35 @@ if page == "📈 Top Picks":
                     max_e = pick.get("max_entry", "N/A")
                     st.markdown(f"🎯 Entry Ideal: **{entry}** | Max: **{max_e}**")
 
-                    # Targets
-                    t1 = pick.get("target_1", "N/A")
+                    # Take-Profit Levels
+                    tp1 = pick.get("tp1", "N/A")
+                    tp2 = pick.get("tp2", "N/A")
+                    tp3 = pick.get("tp3", "N/A")
+                    tp1_size = pick.get("tp1_size", 0.30)
+                    tp2_size = pick.get("tp2_size", 0.40)
+                    tp3_size = pick.get("tp3_size", 0.30)
                     sl = pick.get("stop_loss", "N/A")
-                    rr = pick.get("risk_reward", "N/A")
-                    st.markdown(f"Target: **{t1}** | SL: **{sl}** | R/R: **{rr}**")
+
+                    # Display TP levels with position sizing
+                    if tp1 != "N/A" and tp2 != "N/A" and tp3 != "N/A":
+                        st.markdown("### 📊 Take-Profit Strategy")
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("🎯 TP1 (Exit 30%)", f"Rp {tp1:,.0f}" if isinstance(tp1, (int, float)) else tp1)
+                            st.caption(pick.get("risk_reward_tp1", "N/A"))
+                        with col2:
+                            st.metric("🎯 TP2 (Exit 40%)", f"Rp {tp2:,.0f}" if isinstance(tp2, (int, float)) else tp2)
+                            st.caption(pick.get("risk_reward_tp2", "N/A"))
+                        with col3:
+                            st.metric("🎯 TP3 (Exit 30%)", f"Rp {tp3:,.0f}" if isinstance(tp3, (int, float)) else tp3)
+                            st.caption(pick.get("risk_reward_tp3", "N/A"))
+                        st.metric("🛑 Stop Loss", f"Rp {sl:,.0f}" if isinstance(sl, (int, float)) else sl)
+                        st.info(f"Position Strategy: {pick.get('position_strategy', 'N/A')}")
+                    else:
+                        # Fallback to old target display if TP levels not available
+                        t1 = pick.get("target_1", "N/A")
+                        rr = pick.get("risk_reward", "N/A")
+                        st.markdown(f"Target: **{t1}** | SL: **{sl}** | R/R: **{rr}**")
 
                     # ML Day-1 Prediction
                     ml_pred = pick.get("ml_prediction", {})

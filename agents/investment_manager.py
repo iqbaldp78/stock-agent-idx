@@ -246,12 +246,33 @@ def _build_pick_rule_based(
     current_price = price_analysis.get("current_price")
     entry_low = price_analysis.get("ideal_entry_zone", "N/A")
     max_entry = price_analysis.get("max_entry", "N/A")
-    target_1 = tech.get("target")
-    stop_loss = tech.get("stop_loss")
+
+    # Extract TP1, TP2, TP3 with R/R metrics
+    tp1 = tech.get("tp1")
+    tp2 = tech.get("tp2")
+    tp3 = tech.get("tp3")
+    tp1_size = tech.get("tp1_size", 0.30)
+    tp2_size = tech.get("tp2_size", 0.40)
+    tp3_size = tech.get("tp3_size", 0.30)
+    risk_reward_tp1 = tech.get("risk_reward_tp1", "N/A")
+    risk_reward_tp2 = tech.get("risk_reward_tp2", "N/A")
+    risk_reward_tp3 = tech.get("risk_reward_tp3", "N/A")
+
+    # Parse TP values as float
     try:
-        target_1 = float(target_1) if target_1 else None
+        tp1 = float(tp1) if tp1 else None
     except (ValueError, TypeError):
-        target_1 = None
+        tp1 = None
+    try:
+        tp2 = float(tp2) if tp2 else None
+    except (ValueError, TypeError):
+        tp2 = None
+    try:
+        tp3 = float(tp3) if tp3 else None
+    except (ValueError, TypeError):
+        tp3 = None
+
+    stop_loss = tech.get("stop_loss")
     try:
         stop_loss = float(stop_loss) if stop_loss else None
     except (ValueError, TypeError):
@@ -343,10 +364,18 @@ def _build_pick_rule_based(
         },
         "entry_zone": entry_low,
         "max_entry": max_entry,
-        "target_1": target_1,
-        "target_2": _calc_target_2(target_1),
+        "tp1": tp1,
+        "tp2": tp2,
+        "tp3": tp3,
+        "tp1_size": tp1_size,
+        "tp2_size": tp2_size,
+        "tp3_size": tp3_size,
+        "risk_reward_tp1": risk_reward_tp1,
+        "risk_reward_tp2": risk_reward_tp2,
+        "risk_reward_tp3": risk_reward_tp3,
         "stop_loss": stop_loss,
         "risk_reward": risk_reward,
+        "position_strategy": f"Exit {tp1_size*100:.0f}% at TP1, {tp2_size*100:.0f}% at TP2, {tp3_size*100:.0f}% at TP3",
         "position_size": _position_size(conviction),
         "conviction": conviction,
         "entry_reasoning": entry_reasoning,

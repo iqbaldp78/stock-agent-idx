@@ -80,6 +80,7 @@ class Signal(Base):
     max_entry = Column(Numeric(12, 2))
     target_1 = Column(Numeric(12, 2))
     target_2 = Column(Numeric(12, 2))
+    target_3 = Column(Numeric(12, 2))
     stop_loss = Column(Numeric(12, 2))
     risk_reward = Column(Numeric(5, 2))
     conviction = Column(Text)
@@ -93,6 +94,10 @@ class Signal(Base):
     composite_score = Column(Numeric(4, 2))
     ml_prediction = Column(JSONB)
     price_prediction = Column(JSONB)
+    tp_position_sizing = Column(JSONB)
+    risk_reward_tp1 = Column(String(20))
+    risk_reward_tp2 = Column(String(20))
+    risk_reward_tp3 = Column(String(20))
     created_at = Column(Date, server_default=func.now())
 
 
