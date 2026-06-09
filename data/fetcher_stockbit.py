@@ -425,7 +425,8 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
             }
             total_lot = broker_totals[code]["total_buy_lot"]
             total_value = broker_totals[code]["total_buy_value"]
-            broker_totals[code]["avg_price"] = int(round(total_value / max(total_lot, 1)))
+            # IDX lots are 100 shares; convert lot-based average to per-share price.
+            broker_totals[code]["avg_price"] = int(round(total_value / max(total_lot, 1) / 100))
 
         for entry in day_data.get("sell", []):
             code = entry.get("broker")
@@ -450,7 +451,8 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
             }
             total_lot = distribution_totals[code]["total_sell_lot"]
             total_value = distribution_totals[code]["total_sell_value"]
-            distribution_totals[code]["avg_price"] = int(round(total_value / max(total_lot, 1)))
+            # IDX lots are 100 shares; convert lot-based average to per-share price.
+            distribution_totals[code]["avg_price"] = int(round(total_value / max(total_lot, 1) / 100))
 
     sorted_brokers = sorted(
         broker_totals.items(),

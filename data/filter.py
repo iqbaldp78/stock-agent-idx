@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def apply_filter(universe: list[str]) -> list[str]:
     """
     Filter saham berdasarkan:
-    - Average volume 20 hari >= MIN_VOLUME (1 juta)
+    - Average volume 20 hari >= MIN_VOLUME (300.000)
     - Market cap >= MIN_MARKET_CAP (1 Triliun IDR)
     """
     candidates = []

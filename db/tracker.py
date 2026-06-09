@@ -73,6 +73,8 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
             ticker_scores = scores.get(ticker, {})
             bandarm = ticker_scores.get("bandarm", {})
             price_analysis = bandarm.get("price_analysis", {})
+            decision_label = str(pick.get("decision_label") or "BUY").upper()
+            db_signal = "BUY" if decision_label in ("STRONG BUY", "BUY", "SPEC BUY") else decision_label
 
             # Parse entry zone
             entry_zone = pick.get("entry_zone", "")
@@ -81,8 +83,8 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
             if "–" in str(entry_zone):
                 parts = str(entry_zone).split("–")
                 try:
-                    entry_low = float(parts[0].replace(",", "").replace(".", ""))
-                    entry_high = float(parts[1].replace(",", "").replace(".", ""))
+                    entry_low = _parse_number(parts[0])
+                    entry_high = _parse_number(parts[1])
                 except (ValueError, IndexError):
                     pass
 
@@ -90,21 +92,27 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
                 run_date=run_date,
                 ticker=ticker,
                 rank=pick.get("rank"),
-                signal="BUY",
+                signal=db_signal,
                 entry_low=entry_low,
                 entry_high=entry_high,
                 max_entry=_parse_number(pick.get("max_entry")),
                 target_1=_parse_number(pick.get("target_1")),
+                target_2=_parse_number(pick.get("target_2")),
                 stop_loss=_parse_number(pick.get("stop_loss")),
+                risk_reward=_parse_risk_reward(pick.get("risk_reward")),
                 conviction=pick.get("conviction"),
-                thesis=f"{pick.get('bandarm_signal', '')} — composite {pick.get('composite_score', '')}",
-                entry_reasoning=f"Entry berdasarkan avg cost bandar",
+                thesis=pick.get("thesis") or (
+                    f"{pick.get('bandarm_signal', '')} — composite {pick.get('composite_score', '')}"
+                    f" — decision {decision_label} — pred {pick.get('pred_return', 0)}%"
+                ),
+                entry_reasoning=pick.get("entry_reasoning") or "Entry berdasarkan avg cost bandar",
                 bandar_avg_7d=price_analysis.get("bandar_avg_7d"),
                 bandar_avg_1m=price_analysis.get("bandar_avg_1m"),
                 broker_utama=", ".join(pick.get("broker_to_watch", [])),
-                time_horizon="Positional (4-6 minggu)",
+                time_horizon=pick.get("time_horizon") or "Positional (4-6 minggu)",
                 weight_mode=pick.get("weight_mode"),
                 composite_score=pick.get("composite_score"),
+                ml_prediction=pick.get("ml_prediction"),
                 price_prediction=pick.get("price_prediction"),
             )
             db.add(record)
@@ -134,12 +142,59 @@ def save_full_result(result: dict) -> None:
         save_ihsg_prediction(today, result["ihsg_prediction"])
 
 
-def _parse_number(value) -> float | None:
-    """Parse string number ke float."""
+def _truncate(value, max_len: int) -> str | None:
+    """Truncate string agar tidak overflow kolom VARCHAR."""
     if value is None:
         return None
+    return str(value)[:max_len]
+
+
+def _parse_risk_reward(value) -> float | None:
+    """Parse risk_reward dari format '1:X.X' atau float ke float ratio."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = str(value).strip()
+    if ":" in s:
+        parts = s.split(":")
+        try:
+            return float(parts[-1])
+        except (ValueError, IndexError):
+            return None
     try:
-        return float(str(value).replace(",", "").replace(".", "").strip())
+        return float(s)
+    except (ValueError, TypeError):
+        return None
+
+
+def _parse_number(value) -> float | None:
+    """Parse number ke float. Handles plain float/int dan string format Indonesia."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = str(value).strip()
+    # Format Indonesia: titik sebagai ribuan, koma sebagai desimal (e.g. "1.234,56")
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".")
+    elif "," in s:
+        # Koma bisa sebagai ribuan ("1,234") atau desimal ("1,5") — cek posisinya
+        comma_pos = s.rfind(",")
+        if len(s) - comma_pos - 1 <= 2:
+            s = s.replace(",", ".")
+        else:
+            s = s.replace(",", "")
+    # Titik saja: ribuan separator ("1.234") atau desimal ("1.5")
+    elif s.count(".") == 1:
+        dot_pos = s.rfind(".")
+        if len(s) - dot_pos - 1 == 3 and dot_pos > 0:
+            s = s.replace(".", "")
+        # else: titik adalah desimal, biarkan
+    else:
+        s = s.replace(".", "")
+    try:
+        return float(s)
     except (ValueError, TypeError):
         return None
 

@@ -16,6 +16,9 @@ from agents.macro import analyze as macro_analyze
 from agents.news import analyze as news_analyze
 from agents.investment_manager import synthesize as im_synthesize
 from agents.ihsg_predictor import predict_ihsg
+from models.day1_predictor import Day1Predictor
+from data.ml_features import extract_features
+from data.fetcher_stockbit import get_ohlcv
 from agents.debate import run_llm_debate
 from agents.debate.logging_utils import log_debate_turn, log_debate_section, log_finalists
 from agents.llm_client import health_check
@@ -33,6 +36,7 @@ class AgentState(TypedDict):
     macro_data: dict
     scores: dict          # {ticker: {agent: result}}
     composites: dict      # {ticker: composite_result}
+    ml_predictions: dict  # {ticker: ml_result}
     ihsg_prediction: dict # IHSG predictor output
     debate_log: list
     finalists: list
@@ -109,6 +113,48 @@ def run_parallel_scoring(state: AgentState) -> dict:
     }
 
 
+def run_ml_prediction(state: AgentState) -> dict:
+    """Phase 2.7: Machine Learning Day-1 Forecast."""
+    composites = state.get("composites", {})
+    scores = state.get("scores", {})
+    macro_data = state.get("macro_data", {})
+
+    if not composites:
+        return {"ml_predictions": {}}
+
+    logger.info(f"[ML] Running Day-1 forecast for {len(composites)} tickers")
+
+    predictor = Day1Predictor()
+    ml_results = {}
+
+    # Sort by composite score to only run ML on top candidates (performance optimization)
+    sorted_tickers = sorted(composites.keys(), key=lambda t: composites[t]["composite_score"], reverse=True)
+    top_candidates = sorted_tickers[:12] # Limit to top 12
+
+    for ticker in top_candidates:
+        try:
+            # 1. Fetch recent OHLCV for features
+            ohlcv = get_ohlcv(ticker, period="3mo")
+
+            # 2. Extract feature vector
+            feature_row = extract_features(ticker, scores, macro_data, ohlcv)
+
+            # 3. Predict
+            pred_return = predictor.predict(feature_row)
+            signal = predictor.get_signal(pred_return)
+
+            ml_results[ticker] = {
+                "pred_return": round(pred_return * 100, 2), # In percentage
+                "signal": signal,
+                "confidence": "MEDIUM" # Default for now
+            }
+            logger.info(f"  [{ticker}] ML Pred: {pred_return*100:+.2f}% -> {signal}")
+        except Exception as e:
+            logger.warning(f"  [{ticker}] ML Error: {e}")
+
+    return {"ml_predictions": ml_results}
+
+
 def run_ihsg_prediction(state: AgentState) -> dict:
     """Phase 2.5: IHSG direction forecast (before debate)."""
     try:
@@ -127,6 +173,7 @@ def run_debate_rule_based(state: AgentState) -> dict:
     scores = state["scores"]
     composites = state["composites"]
     macro_data = state["macro_data"]
+    ml_predictions = state.get("ml_predictions", {})
 
     if not composites:
         return {"debate_log": [], "finalists": []}
@@ -296,11 +343,27 @@ def run_debate_rule_based(state: AgentState) -> dict:
 
     logger.info("[DEBATE] Synthesis — selecting finalists")
 
+    def _ml_bonus(ml_pred: dict | None) -> float:
+        if not ml_pred:
+            return 0.0
+        pred_return = float(ml_pred.get("pred_return", 0.0))
+        signal = str(ml_pred.get("signal", "")).upper()
+        base = max(-0.8, min(0.8, pred_return * 0.30))
+        signal_boost = 0.0
+        if signal == "STRONG BUY":
+            signal_boost = 0.20
+        elif signal == "BUY":
+            signal_boost = 0.10
+        elif signal == "AVOID":
+            signal_boost = -0.20
+        return round(base + signal_boost, 3)
+
     final_ranking = []
     for ticker, composite in debate_candidates:
         debate_bonus = round1_votes.get(ticker, {}).get("net_vote", 0)
-        final_score = composite["composite_score"] + debate_bonus
-        final_ranking.append((ticker, final_score, composite))
+        ml_bonus = _ml_bonus(ml_predictions.get(ticker))
+        final_score = composite["composite_score"] + debate_bonus + ml_bonus
+        final_ranking.append((ticker, final_score, composite, ml_bonus))
 
     final_ranking.sort(key=lambda x: x[1], reverse=True)
 
@@ -310,9 +373,10 @@ def run_debate_rule_based(state: AgentState) -> dict:
             "final_score": round(score, 2),
             "composite_score": comp["composite_score"],
             "weight_mode": comp["weight_mode"],
-            "debate_bonus": round(score - comp["composite_score"], 2),
+            "debate_bonus": round(score - comp["composite_score"] - ml_bonus, 2),
+            "ml_bonus": round(ml_bonus, 2),
         }
-        for ticker, score, comp in final_ranking[:7]
+        for ticker, score, comp, ml_bonus in final_ranking[:7]
     ]
 
     log_finalists(finalists)
@@ -353,13 +417,15 @@ def build_workflow() -> StateGraph:
     workflow.add_node("filter", run_filter)
     workflow.add_node("scoring", run_parallel_scoring)
     workflow.add_node("ihsg", run_ihsg_prediction)
+    workflow.add_node("ml", run_ml_prediction)
     workflow.add_node("debate", run_debate)
     workflow.add_node("decision", run_investment_manager)
 
     workflow.set_entry_point("filter")
     workflow.add_edge("filter", "scoring")
     workflow.add_edge("scoring", "ihsg")
-    workflow.add_edge("ihsg", "debate")
+    workflow.add_edge("ihsg", "ml")
+    workflow.add_edge("ml", "debate")
     workflow.add_edge("debate", "decision")
     workflow.add_edge("decision", END)
 
@@ -375,6 +441,7 @@ def run_full_analysis(universe: list[str] | None = None) -> dict:
         "macro_data": {},
         "scores": {},
         "composites": {},
+        "ml_predictions": {},
         "debate_log": [],
         "finalists": [],
         "top_picks": [],

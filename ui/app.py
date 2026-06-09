@@ -71,7 +71,7 @@ if st.sidebar.button("▶️ Run Analysis Now", type="primary"):
             st.write("🔄 Filtering universe...")
             st.info(
                 "Filtering saham berdasarkan:\n"
-                "- Rata-rata volume 20 hari >= 1 juta\n"
+                "- Rata-rata volume 20 hari >= 300.000\n"
                 "- Market cap >= 1 Triliun IDR\n"
                 "Universe awal diambil dari config (LQ45/IDX30/Bluechip)."
             )
@@ -159,6 +159,25 @@ if page == "📈 Top Picks":
                     sl = pick.get("stop_loss", "N/A")
                     rr = pick.get("risk_reward", "N/A")
                     st.markdown(f"Target: **{t1}** | SL: **{sl}** | R/R: **{rr}**")
+
+                    # ML Day-1 Prediction
+                    ml_pred = pick.get("ml_prediction", {})
+                    if ml_pred:
+                        pred_return = ml_pred.get("pred_return", 0)
+                        ml_signal = ml_pred.get("signal", "N/A")
+                        ml_conf = ml_pred.get("confidence", "N/A")
+
+                        # Signal color
+                        if ml_signal == "STRONG BUY":
+                            signal_color = "🟢"
+                        elif ml_signal == "BUY":
+                            signal_color = "🟡"
+                        elif ml_signal == "AVOID":
+                            signal_color = "🔴"
+                        else:
+                            signal_color = "⚪"
+
+                        st.markdown(f"🤖 **ML Forecast (T+1):** {signal_color} **{ml_signal}** | Return: **{pred_return:+.2f}%** | Confidence: {ml_conf}")
 
                     # Price Prediction
                     price_pred = pick.get("price_prediction", {})
@@ -306,6 +325,27 @@ if page == "📈 Top Picks":
                         f"Target: **{t1_str}** | "
                         f"SL: **{sl_str}**"
                     )
+
+                    # ML Day-1 Prediction from DB
+                    ml_pred = sig.get("ml_prediction") or {}
+                    if ml_pred:
+                        pred_return = ml_pred.get("pred_return", 0)
+                        ml_signal = ml_pred.get("signal", "N/A")
+                        ml_conf = ml_pred.get("confidence", "N/A")
+
+                        if ml_signal == "STRONG BUY":
+                            signal_color = "🟢"
+                        elif ml_signal == "BUY":
+                            signal_color = "🟡"
+                        elif ml_signal == "AVOID":
+                            signal_color = "🔴"
+                        else:
+                            signal_color = "⚪"
+
+                        st.markdown(
+                            f"🤖 **ML Forecast (T+1):** {signal_color} **{ml_signal}** "
+                            f"| Return: **{float(pred_return):+.2f}%** | Confidence: {ml_conf}"
+                        )
 
                     # Price Prediction from DB
                     price_pred = sig.get("price_prediction") or {}

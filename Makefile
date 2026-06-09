@@ -164,7 +164,7 @@ db-migrate: ## Run database migrations
 .PHONY: db-reset
 db-reset: ## Reset database (WARNING: deletes all data)
 	docker compose exec postgres psql -U stockuser -d stockagent -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-	docker compose exec postgres psql -U stockuser -d stockagent -f /docker-entrypoint-initdb.d/init.sql
+	docker compose exec postgres psql -U stockuser -d stockagent -c "SET client_min_messages TO WARNING;" -f /docker-entrypoint-initdb.d/init.sql
 
 .PHONY: db-backup
 db-backup: ## Backup database to backup.sql

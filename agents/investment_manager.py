@@ -85,6 +85,7 @@ def _merge_llm_decision(state: dict, llm_raw: dict) -> dict:
     scores = state.get("scores", {})
     composites = state.get("composites", {})
     macro_data = state.get("macro_data", {})
+    ml_predictions = state.get("ml_predictions", {})
 
     ranked = llm_raw.get("ranked_tickers") or []
     if not isinstance(ranked, list):
@@ -120,6 +121,7 @@ def _merge_llm_decision(state: dict, llm_raw: dict) -> dict:
             scores=scores,
             composites=composites,
             macro_data=macro_data,
+            ml_predictions=ml_predictions,
         )
         meta = llm_meta.get(ticker, {})
         if meta.get("thesis"):
@@ -174,6 +176,7 @@ def synthesize_rule_based(state: dict) -> dict:
     scores = state.get("scores", {})
     composites = state.get("composites", {})
     macro_data = state.get("macro_data", {})
+    ml_predictions = state.get("ml_predictions", {})
 
     if not finalists:
         return {"top_picks": [], "final_report": _empty_report()}
@@ -190,6 +193,7 @@ def synthesize_rule_based(state: dict) -> dict:
             scores=scores,
             composites=composites,
             macro_data=macro_data,
+            ml_predictions=ml_predictions,
         )
         top_picks.append(pick)
         logger.info(
@@ -227,6 +231,7 @@ def _build_pick_rule_based(
     scores: dict,
     composites: dict,
     macro_data: dict,
+    ml_predictions: dict = None,
 ) -> dict:
     ticker_scores = scores.get(ticker, {})
     bandarm = ticker_scores.get("bandarm", {})
@@ -252,7 +257,6 @@ def _build_pick_rule_based(
     except (ValueError, TypeError):
         stop_loss = None
 
-    risk_reward = _calc_risk_reward(current_price, target_1, stop_loss)
     distance = ""
     if avg_cost_1m and current_price:
         dist_pct = (current_price - avg_cost_1m) / avg_cost_1m * 100
@@ -312,12 +316,24 @@ def _build_pick_rule_based(
         macro_data=macro_data,
     )
 
+    # Extract ML prediction if available
+    ml_prediction = None
+    if ml_predictions:
+        ml_prediction = ml_predictions.get(ticker)
+
+    pred_return = float(ml_prediction.get("pred_return", 0.0)) if ml_prediction else 0.0
+    decision_label = _decision_label(pred_return, tech, bandarm)
+    risk_reward = _calc_risk_reward(current_price, target_1, stop_loss, decision_label)
+
     return {
         "rank": rank,
         "ticker": ticker,
         "thesis": thesis,
         "time_horizon": "Positional (4-6 minggu)",
         "price_prediction": price_prediction,
+        "ml_prediction": ml_prediction,
+        "pred_return": pred_return,
+        "decision_label": decision_label,
         "bandar_context": {
             "broker_utama": broker_utama,
             "avg_cost_7d": avg_cost_7d,
@@ -341,6 +357,29 @@ def _build_pick_rule_based(
         "composite_score": composite.get("composite_score", 0),
         "final_score": final_score,
     }
+
+
+def _decision_label(pred_return_pct: float, tech: dict, bandarm: dict) -> str:
+    """
+    Map predicted return to decision label with special bandar-vs-technical conflict handling.
+    pred_return_pct is expected in percentage points (e.g., 0.8 for +0.8%).
+    """
+    tech_bearish = str(tech.get("trend", "")).lower() == "bearish"
+    bandar_accum_strong = (
+        bandarm.get("score", 0) >= 7.0
+        and "ACCUMULATION" in str(bandarm.get("signal", "")).upper()
+    )
+
+    if tech_bearish and bandar_accum_strong and pred_return_pct >= 0.3:
+        return "SPEC BUY"
+
+    if pred_return_pct > 1.0:
+        return "STRONG BUY"
+    if pred_return_pct >= 0.3:
+        return "BUY"
+    if pred_return_pct < -0.5:
+        return "AVOID"
+    return "HOLD"
 
 
 def _build_thesis(ticker: str, bandarm: dict, tech: dict, fund: dict,
@@ -385,13 +424,24 @@ def _build_entry_reasoning(ticker: str, avg_7d, avg_1m, current, stop_loss) -> s
     return ". ".join(parts) if parts else "Entry berdasarkan analisis multi-agent"
 
 
-def _calc_risk_reward(current, target, stop_loss) -> str:
+def _calc_risk_reward(current, target, stop_loss, decision_label: str | None = None) -> str:
     if not all([current, target, stop_loss]):
         return "N/A"
     try:
-        risk = abs(current - stop_loss)
-        reward = abs(target - current)
-        if risk == 0:
+        label = str(decision_label or "").upper()
+
+        # Direction-aware R/R: BUY-family uses long math, AVOID uses short math.
+        if label in ("STRONG BUY", "BUY", "SPEC BUY"):
+            risk = current - stop_loss
+            reward = target - current
+        elif label == "AVOID":
+            risk = stop_loss - current
+            reward = current - target
+        else:
+            risk = abs(current - stop_loss)
+            reward = abs(target - current)
+
+        if risk <= 0 or reward <= 0:
             return "N/A"
         rr = reward / risk
         return f"1:{rr:.1f}"

@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS signals (
     run_date         DATE NOT NULL,
     ticker           VARCHAR(10) NOT NULL,
     rank             INTEGER,
-    signal           VARCHAR(10),
+    signal           TEXT,
     entry_low        NUMERIC(12,2),
     entry_high       NUMERIC(12,2),
     max_entry        NUMERIC(12,2),
@@ -110,15 +110,16 @@ CREATE TABLE IF NOT EXISTS signals (
     target_2         NUMERIC(12,2),
     stop_loss        NUMERIC(12,2),
     risk_reward      NUMERIC(5,2),
-    conviction       VARCHAR(10),
+    conviction       TEXT,
     thesis           TEXT,
     entry_reasoning  TEXT,
     bandar_avg_7d    NUMERIC(12,2),
     bandar_avg_1m    NUMERIC(12,2),
     broker_utama     TEXT,
-    time_horizon     VARCHAR(50),
-    weight_mode      VARCHAR(20),
+    time_horizon     TEXT,
+    weight_mode      TEXT,
     composite_score  NUMERIC(4,2),
+    ml_prediction    JSONB,
     price_prediction JSONB,
     created_at       TIMESTAMP DEFAULT NOW()
 );
@@ -240,6 +241,20 @@ CREATE TABLE IF NOT EXISTS sector_ohlcv (
 -- Extend broker_accumulation untuk support cache (broker_type & day_foreign_net)
 ALTER TABLE broker_accumulation ADD COLUMN IF NOT EXISTS broker_type    VARCHAR(10);
 ALTER TABLE broker_accumulation ADD COLUMN IF NOT EXISTS day_foreign_net BIGINT DEFAULT 0;
+
+-- Extend signals untuk kolom yang ditambahkan setelah initial schema
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS price_prediction JSONB;
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS bandar_avg_7d    NUMERIC(12,2);
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS bandar_avg_1m    NUMERIC(12,2);
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS broker_utama     TEXT;
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS time_horizon     TEXT;
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS target_2         NUMERIC(12,2);
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS risk_reward      NUMERIC(5,2);
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS ml_prediction    JSONB;
+ALTER TABLE signals ALTER COLUMN signal TYPE TEXT;
+ALTER TABLE signals ALTER COLUMN conviction TYPE TEXT;
+ALTER TABLE signals ALTER COLUMN time_horizon TYPE TEXT;
+ALTER TABLE signals ALTER COLUMN weight_mode TYPE TEXT;
 
 -- Indexes untuk cache tables
 CREATE INDEX IF NOT EXISTS idx_ohlcv_ticker_date ON ohlcv_prices(ticker, trade_date);

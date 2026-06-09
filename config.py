@@ -28,7 +28,7 @@ def to_yahoo_ticker(code: str) -> str:
 
 
 # Filter thresholds
-MIN_VOLUME = 1_000_000
+MIN_VOLUME = 300_000
 MIN_MARKET_CAP = 1_000_000_000_000  # 1 Triliun IDR
 
 # LLM — 9Router (OpenAI-compatible)

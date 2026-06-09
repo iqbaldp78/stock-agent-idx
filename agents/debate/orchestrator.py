@@ -24,6 +24,7 @@ def run_llm_debate(state: dict) -> dict:
     scores = state.get("scores", {})
     composites = state.get("composites", {})
     macro_data = state.get("macro_data", {})
+    ml_predictions = state.get("ml_predictions", {})
 
     if not composites:
         return {"debate_log": [], "finalists": []}
@@ -79,6 +80,7 @@ def run_llm_debate(state: dict) -> dict:
         debate_candidates,
         round1_votes,
         round2_deltas,
+        ml_predictions,
     )
     for f in finalists:
         t = f["ticker"]
