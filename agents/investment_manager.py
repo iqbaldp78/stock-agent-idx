@@ -344,6 +344,8 @@ def _build_pick_rule_based(
 
     pred_return = float(ml_prediction.get("pred_return", 0.0)) if ml_prediction else 0.0
     decision_label = _decision_label(pred_return, tech, bandarm)
+    target_1 = tp1
+    target_2 = _calc_target_2(tp1)
     risk_reward = _calc_risk_reward(current_price, target_1, stop_loss, decision_label)
 
     return {
@@ -367,6 +369,8 @@ def _build_pick_rule_based(
         "tp1": tp1,
         "tp2": tp2,
         "tp3": tp3,
+        "target_1": target_1,
+        "target_2": target_2,
         "tp1_size": tp1_size,
         "tp2_size": tp2_size,
         "tp3_size": tp3_size,

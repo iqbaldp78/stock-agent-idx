@@ -122,6 +122,9 @@ CREATE TABLE IF NOT EXISTS signals (
     composite_score  NUMERIC(4,2),
     ml_prediction    JSONB,
     price_prediction JSONB,
+    risk_reward_tp1  VARCHAR(20),
+    risk_reward_tp2  VARCHAR(20),
+    risk_reward_tp3  VARCHAR(20),
     created_at       TIMESTAMP DEFAULT NOW()
 );
 
@@ -239,6 +242,16 @@ CREATE TABLE IF NOT EXISTS sector_ohlcv (
     UNIQUE(sector_code, trade_date)
 );
 
+-- Marker tanggal yang sudah dicoba fetch tapi memang tidak ada data (libur/suspensi)
+CREATE TABLE IF NOT EXISTS ohlcv_no_data (
+    id         SERIAL PRIMARY KEY,
+    ticker     VARCHAR(10) NOT NULL,
+    trade_date DATE NOT NULL,
+    source     VARCHAR(20) DEFAULT 'stockbit',
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(ticker, trade_date, source)
+);
+
 -- Extend broker_accumulation untuk support cache (broker_type & day_foreign_net)
 ALTER TABLE broker_accumulation ADD COLUMN IF NOT EXISTS broker_type    VARCHAR(10);
 ALTER TABLE broker_accumulation ADD COLUMN IF NOT EXISTS day_foreign_net BIGINT DEFAULT 0;
@@ -252,6 +265,9 @@ ALTER TABLE signals ADD COLUMN IF NOT EXISTS time_horizon     TEXT;
 ALTER TABLE signals ADD COLUMN IF NOT EXISTS target_2         NUMERIC(12,2);
 ALTER TABLE signals ADD COLUMN IF NOT EXISTS risk_reward      NUMERIC(5,2);
 ALTER TABLE signals ADD COLUMN IF NOT EXISTS ml_prediction    JSONB;
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS risk_reward_tp1  VARCHAR(20);
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS risk_reward_tp2  VARCHAR(20);
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS risk_reward_tp3  VARCHAR(20);
 ALTER TABLE signals ALTER COLUMN signal TYPE TEXT;
 ALTER TABLE signals ALTER COLUMN conviction TYPE TEXT;
 ALTER TABLE signals ALTER COLUMN time_horizon TYPE TEXT;
@@ -259,6 +275,7 @@ ALTER TABLE signals ALTER COLUMN weight_mode TYPE TEXT;
 
 -- Indexes untuk cache tables
 CREATE INDEX IF NOT EXISTS idx_ohlcv_ticker_date ON ohlcv_prices(ticker, trade_date);
+CREATE INDEX IF NOT EXISTS idx_ohlcv_no_data_ticker_date ON ohlcv_no_data(ticker, trade_date);
 CREATE INDEX IF NOT EXISTS idx_ihsg_ohlcv_date   ON ihsg_ohlcv(trade_date);
 CREATE INDEX IF NOT EXISTS idx_stock_info_snap   ON stock_info_snapshot(ticker, snapshot_date);
 CREATE INDEX IF NOT EXISTS idx_sector_ohlcv_date ON sector_ohlcv(sector_code, trade_date);

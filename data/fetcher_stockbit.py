@@ -27,6 +27,8 @@ from db.cache import (
     save_ohlcv,
     find_missing_dates,
     group_into_ranges,
+    get_ohlcv_no_data_dates,
+    save_ohlcv_no_data_dates,
     get_cached_stock_info,
     save_stock_info,
     get_cached_broker_daily,
@@ -573,6 +575,11 @@ def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50
     cached = get_cached_ohlcv(ticker, start_date, end_date)
     missing = find_missing_dates(cached, start_date, end_date)
 
+    # Skip tanggal historis yang sudah pernah dipastikan tidak punya data.
+    no_data_dates = get_ohlcv_no_data_dates(ticker, start_date, end_date)
+    if no_data_dates:
+        missing = [d for d in missing if d not in no_data_dates]
+
     if not missing:
         logger.info(f"[cache hit] OHLCV {ticker} {start_date}..{end_date}")
         return cached
@@ -584,9 +591,27 @@ def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50
             df_new = _fetch_ohlcv_range_api(
                 ticker, range_start.isoformat(), range_end.isoformat(), limit
             )
+
+            expected_dates = []
+            cur = range_start
+            while cur <= range_end:
+                if cur.weekday() < 5 and cur < today:
+                    expected_dates.append(cur)
+                cur += timedelta(days=1)
+
             if not df_new.empty:
                 save_ohlcv(ticker, df_new, today)
                 new_frames.append(df_new)
+
+                returned_dates = {
+                    idx.date() if hasattr(idx, "date") else idx
+                    for idx in df_new.index
+                }
+                unresolved_no_data = [d for d in expected_dates if d not in returned_dates]
+                if unresolved_no_data:
+                    save_ohlcv_no_data_dates(ticker, unresolved_no_data)
+            elif expected_dates:
+                save_ohlcv_no_data_dates(ticker, expected_dates)
         except Exception as e:
             logger.warning(f"[fetcher_stockbit] get_ohlcv_range {ticker} {range_start}..{range_end}: {e}")
 

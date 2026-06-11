@@ -176,6 +176,65 @@ def save_ohlcv(
         db.close()
 
 
+def get_ohlcv_no_data_dates(ticker: str, start_date: str, end_date: str, source: str = "stockbit") -> set[date]:
+    """Ambil tanggal no-data marker untuk ticker dalam rentang tertentu."""
+    db = SessionLocal()
+    try:
+        rows = db.execute(
+            text("""
+                SELECT trade_date
+                FROM ohlcv_no_data
+                WHERE ticker = :ticker
+                  AND source = :source
+                  AND trade_date BETWEEN :start AND :end
+            """),
+            {
+                "ticker": ticker,
+                "source": source,
+                "start": start_date,
+                "end": end_date,
+            },
+        ).fetchall()
+        return {row[0] for row in rows}
+    except Exception as e:
+        logger.warning(f"[cache] get_ohlcv_no_data_dates({ticker}) error: {e}")
+        return set()
+    finally:
+        db.close()
+
+
+def save_ohlcv_no_data_dates(
+    ticker: str,
+    dates: list[date],
+    source: str = "stockbit",
+) -> None:
+    """Simpan marker untuk tanggal yang dipastikan tidak memiliki data OHLCV."""
+    if not dates:
+        return
+
+    db = SessionLocal()
+    try:
+        for d in dates:
+            db.execute(
+                text("""
+                    INSERT INTO ohlcv_no_data (ticker, trade_date, source)
+                    VALUES (:ticker, :trade_date, :source)
+                    ON CONFLICT (ticker, trade_date, source) DO NOTHING
+                """),
+                {
+                    "ticker": ticker,
+                    "trade_date": d,
+                    "source": source,
+                },
+            )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"[cache] save_ohlcv_no_data_dates({ticker}) error: {e}")
+    finally:
+        db.close()
+
+
 # ─── IHSG OHLCV ────────────────────────────────────────────────────────────
 
 def get_cached_ihsg_ohlcv(start_date: str, end_date: str) -> pd.DataFrame:

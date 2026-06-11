@@ -255,7 +255,7 @@ def get_sector_rotation() -> dict:
             "mining": ["ANTM", "INCO"],
             "consumer": ["UNVR", "ICBP", "INDF"],
             "infrastructure": ["WIKA", "WSKT"],
-            "property": ["PPRO", "SMDC"],
+            "property": ["PPRO"],
         }
 
         sector_returns = {}
@@ -268,9 +268,9 @@ def get_sector_rotation() -> dict:
                 try:
                     df = _fetch_single_ohlcv(ticker, period="1mo")
                     if df is not None and len(df) >= 5:
-                        today = df.iloc[-1]["Close"]
-                        yesterday = df.iloc[-2]["Close"]
-                        five_days_ago = df.iloc[-5]["Close"]
+                        today = float(df.iloc[-1]["Close"])
+                        yesterday = float(df.iloc[-2]["Close"])
+                        five_days_ago = float(df.iloc[-5]["Close"])
 
                         return_1d = (today - yesterday) / yesterday * 100 if yesterday != 0 else 0
                         return_5d = (today - five_days_ago) / five_days_ago * 100 if five_days_ago != 0 else 0

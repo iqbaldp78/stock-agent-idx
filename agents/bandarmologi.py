@@ -257,6 +257,10 @@ def analyze(ticker: str) -> dict:
     bandar_avg_1m = w30["top_accumulators"][0][1]["avg_price"] if w30["top_accumulators"] else 0
 
     price_analysis = {}
+    anom_akum_7d = None
+    anom_akum_1m = None
+    anom_dist_7d = None
+    anom_dist_1m = None
     if current_price > 0 and bandar_avg_7d > 0 and bandar_avg_1m > 0:
         entry_assessment = assess_entry_vs_bandar(current_price, bandar_avg_7d, bandar_avg_1m)
         # Net foreign status
