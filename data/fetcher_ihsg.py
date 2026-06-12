@@ -70,6 +70,9 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
             hist.index.name = "Date"
             if isinstance(hist.columns, pd.MultiIndex):
                 hist.columns = hist.columns.get_level_values(0)
+            # Remove timezone before saving
+            if hist.index.tz is not None:
+                hist.index = hist.index.tz_localize(None)
             save_ihsg_ohlcv(hist, today)
             new_frames.append(hist)
         except Exception as e:
@@ -80,10 +83,21 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
         logger.info("[IHSG OHLCV] No cache, fetching full history from yfinance")
         full = _fetch_ihsg_ohlcv_api(period)
         if full is not None:
+            # Remove timezone before saving
+            if full.index.tz is not None:
+                full.index = full.index.tz_localize(None)
             save_ihsg_ohlcv(full, today)
         return full
 
-    result = pd.concat(new_frames).sort_index()
+    # Normalize timezone for all frames before concat
+    normalized_frames = []
+    for df in new_frames:
+        if df.index.tz is not None:
+            df = df.copy()
+            df.index = df.index.tz_localize(None)
+        normalized_frames.append(df)
+
+    result = pd.concat(normalized_frames).sort_index()
     result = result[~result.index.duplicated(keep="last")]
     return result
 

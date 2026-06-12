@@ -138,6 +138,34 @@ analysis-tickers: ## Run full analysis for specific tickers (usage: make analysi
 	docker compose exec app python scripts/run_analysis.py $(TICKERS)
 
 # ============================================================
+# BACKTEST & VALIDATION
+# ============================================================
+
+.PHONY: backtest
+backtest: ## Run historical backtest for all universe tickers
+	docker compose exec app python scripts/backtest_signals.py --all
+
+.PHONY: backtest-ticker
+backtest-ticker: ## Run historical backtest for one ticker (usage: make backtest-ticker TICKER=BBCA)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make backtest-ticker TICKER=BBCA"; \
+		exit 1; \
+	fi
+	docker compose exec app python scripts/backtest_signals.py --tickers $(TICKER)
+
+.PHONY: validate-ml
+validate-ml: ## Validate ML Day-1 accuracy for all universe tickers
+	docker compose exec app python scripts/validate_ml_accuracy.py --all
+
+.PHONY: validate-ml-ticker
+validate-ml-ticker: ## Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make validate-ml-ticker TICKER=BBCA"; \
+		exit 1; \
+	fi
+	docker compose exec app python scripts/validate_ml_accuracy.py --ticker $(TICKER)
+
+# ============================================================
 # TESTING & SMOKE TESTS
 # ============================================================
 

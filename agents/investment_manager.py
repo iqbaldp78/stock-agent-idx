@@ -344,6 +344,56 @@ def _build_pick_rule_based(
 
     pred_return = float(ml_prediction.get("pred_return", 0.0)) if ml_prediction else 0.0
     decision_label = _decision_label(pred_return, tech, bandarm)
+    fair_value = fund.get("fair_value", {})
+
+    def _broker_true_cost_rows(window: dict, limit: int = 5) -> list[dict]:
+        rows = []
+        for b in (window.get("top_accumulators") or [])[:limit]:
+            avg_price = b.get("avg_price") or 0
+            distance = None
+            if current_price and avg_price:
+                distance = (current_price - avg_price) / avg_price * 100
+            rows.append({
+                "broker": b.get("broker", ""),
+                "broker_name": b.get("broker_name", ""),
+                "true_cost": avg_price,
+                "total_buy_lot": b.get("total_buy_lot", 0),
+                "total_buy_value": b.get("total_buy_value", 0),
+                "active_days": b.get("active_days", ""),
+                "distance_pct": round(distance, 2) if distance is not None else None,
+                "status": b.get("status", ""),
+            })
+        return rows
+
+    def _broker_dist_rows(window: dict, limit: int = 5) -> list[dict]:
+        rows = []
+        for b in (window.get("top_distributors") or [])[:limit]:
+            avg_price = b.get("avg_price") or 0
+            distance = None
+            if current_price and avg_price:
+                distance = (current_price - avg_price) / avg_price * 100
+            rows.append({
+                "broker": b.get("broker", ""),
+                "broker_name": b.get("broker_name", ""),
+                "avg_sell": avg_price,
+                "total_sell_lot": b.get("total_sell_lot", 0),
+                "total_sell_value": b.get("total_sell_value", 0),
+                "active_days": b.get("active_days", ""),
+                "distance_pct": round(distance, 2) if distance is not None else None,
+                "status": b.get("status", ""),
+            })
+        return rows
+
+    broker_true_costs = {
+        "w7": _broker_true_cost_rows(bandarm.get("window_7d", {})),
+        "w1m": _broker_true_cost_rows(bandarm.get("window_1m", {})),
+    }
+
+    broker_distributors = {
+        "w7": _broker_dist_rows(bandarm.get("window_7d", {})),
+        "w1m": _broker_dist_rows(bandarm.get("window_1m", {})),
+    }
+
     target_1 = tp1
     target_2 = _calc_target_2(tp1)
     risk_reward = _calc_risk_reward(current_price, target_1, stop_loss, decision_label)
@@ -355,6 +405,7 @@ def _build_pick_rule_based(
         "time_horizon": "Positional (4-6 minggu)",
         "price_prediction": price_prediction,
         "ml_prediction": ml_prediction,
+        "fair_value": fair_value,
         "pred_return": pred_return,
         "decision_label": decision_label,
         "bandar_context": {
@@ -386,6 +437,8 @@ def _build_pick_rule_based(
         "agent_scores": agent_scores,
         "bandarm_signal": bandarm.get("signal", "N/A"),
         "broker_to_watch": broker_to_watch,
+        "broker_true_costs": broker_true_costs,
+        "broker_distributors": broker_distributors,
         "weight_mode": finalist.get("weight_mode", "default"),
         "composite_score": composite.get("composite_score", 0),
         "final_score": final_score,

@@ -11,6 +11,7 @@ Analisis fundamental saham: valuasi, profitabilitas, growth.
 Rule-based scoring (tanpa LLM). Bisa ditambahkan LLM enhancement nanti.
 """
 from data.fetcher_stockbit import get_stock_info
+from agents.valuation import calculate_fair_value, valuation_score_adjustment
 
 
 def analyze(ticker: str) -> dict:
@@ -385,6 +386,23 @@ def analyze(ticker: str) -> dict:
     if dividend_per_share is not None:
         data_used.append(f"Dividend per Share: {dividend_per_share}")
 
+    # === Fair Value / Valuation Analysis ===
+    fair_value = calculate_fair_value(info)
+    valuation_label = fair_value.get("valuation_label", "UNKNOWN")
+    valuation_adj = valuation_score_adjustment(valuation_label)
+    score += valuation_adj
+
+    fv_base = fair_value.get("fair_value_base")
+    upside = fair_value.get("upside_pct")
+    if fv_base:
+        data_used.append(f"Fair Value: {fv_base:,.0f} ({valuation_label})")
+        if upside is not None:
+            data_used.append(f"Upside to fair value: {upside:+.2f}%")
+    if valuation_label in ("DEEP_UNDERVALUED", "UNDERVALUED"):
+        key_points.append(f"Valuasi menarik: {valuation_label} (upside {upside:+.1f}%)")
+    elif valuation_label in ("OVERVALUED", "EXPENSIVE"):
+        risks.append(f"Valuasi mahal: {valuation_label} (upside {upside:+.1f}%)")
+
     # Clamp score 1-10
     score = max(1.0, min(10.0, score))
 
@@ -414,6 +432,7 @@ def analyze(ticker: str) -> dict:
         "key_points": key_points,
         "risks": risks,
         "data_used": data_used,
+        "fair_value": fair_value,
         "confidence": confidence,
     }
 

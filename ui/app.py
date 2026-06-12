@@ -184,6 +184,39 @@ if page == "📈 Top Picks":
                         rr = pick.get("risk_reward", "N/A")
                         st.markdown(f"Target: **{t1}** | SL: **{sl}** | R/R: **{rr}**")
 
+                    # Fundamental Fair Value
+                    fair_value = pick.get("fair_value", {})
+                    if fair_value:
+                        fv_base = fair_value.get("fair_value_base")
+                        fv_low = fair_value.get("fair_value_low")
+                        fv_high = fair_value.get("fair_value_high")
+                        upside = fair_value.get("upside_pct")
+                        label = fair_value.get("valuation_label", "N/A")
+                        confidence = fair_value.get("confidence", "N/A")
+
+                        if label in ("DEEP_UNDERVALUED", "UNDERVALUED"):
+                            fv_icon = "🟢"
+                        elif label in ("OVERVALUED", "EXPENSIVE"):
+                            fv_icon = "🔴"
+                        else:
+                            fv_icon = "🟡"
+
+                        fv_text = f"Rp {fv_base:,.0f}" if isinstance(fv_base, (int, float)) else "N/A"
+                        upside_text = f"{upside:+.2f}%" if isinstance(upside, (int, float)) else "N/A"
+                        st.markdown(f"💰 **Fair Value:** {fv_icon} **{fv_text}** | Upside: **{upside_text}** | {label} ({confidence})")
+
+                        with st.expander(f"📐 Detail Fair Value {ticker}", expanded=False):
+                            if fv_low and fv_high:
+                                st.markdown(f"**Range:** Rp {fv_low:,.0f} – Rp {fv_high:,.0f}")
+                            methods = fair_value.get("methods", {})
+                            for method_name, method_data in methods.items():
+                                if method_data.get("available"):
+                                    fv = method_data.get("fair_value")
+                                    st.markdown(f"- **{method_name}**: Rp {fv:,.0f}")
+                            notes = fair_value.get("notes", [])
+                            if notes:
+                                st.caption(" | ".join(notes[:3]))
+
                     # ML Day-1 Prediction
                     ml_pred = pick.get("ml_prediction", {})
                     if ml_pred:
@@ -302,6 +335,82 @@ if page == "📈 Top Picks":
                     if brokers:
                         st.caption(f"Broker: {', '.join(brokers[:2])}")
 
+                    broker_true_costs = pick.get("broker_true_costs", {})
+                    true_cost_rows = broker_true_costs.get("w1m") or broker_true_costs.get("w7") or []
+                    if true_cost_rows:
+                        with st.expander("🏦 True Cost Broker Akumulasi", expanded=False):
+                            import pandas as pd
+
+                            def format_value(val):
+                                if val >= 1e12: return f"{val/1e12:.2f}T"
+                                if val >= 1e9: return f"{val/1e9:.2f}M"
+                                if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                                return f"{val:,.0f}"
+
+                            def format_lot(lot):
+                                if lot >= 1000: return f"{lot/1000:.1f}K"
+                                return f"{lot:,.0f}"
+
+                            rows = []
+                            for b in true_cost_rows[:5]:
+                                dist = b.get("distance_pct")
+                                rows.append({
+                                    "Broker": b.get("broker", ""),
+                                    "True Cost": b.get("true_cost", 0),
+                                    "Total Buy Lot": format_lot(b.get("total_buy_lot", 0)),
+                                    "Total Buy Value": format_value(b.get("total_buy_value", 0)),
+                                    "Harga vs Cost": f"{dist:+.2f}%" if isinstance(dist, (int, float)) else "N/A",
+                                    "Active": b.get("active_days", ""),
+                                })
+                            st.dataframe(
+                                pd.DataFrame(rows),
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    "True Cost": st.column_config.NumberColumn(format="Rp %.0f"),
+                                },
+                            )
+                            if broker_true_costs.get("w1m") and broker_true_costs.get("w7"):
+                                st.caption("Menampilkan 1 bulan; 7 hari tersedia di halaman Bandarmologi.")
+
+                    broker_distributors = pick.get("broker_distributors", {})
+                    dist_rows = broker_distributors.get("w1m") or broker_distributors.get("w7") or []
+                    if dist_rows:
+                        with st.expander("📉 Avg Sell Distribusi", expanded=False):
+                            import pandas as pd
+
+                            def format_value(val):
+                                if val >= 1e12: return f"{val/1e12:.2f}T"
+                                if val >= 1e9: return f"{val/1e9:.2f}M"
+                                if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                                return f"{val:,.0f}"
+
+                            def format_lot(lot):
+                                if lot >= 1000: return f"{lot/1000:.1f}K"
+                                return f"{lot:,.0f}"
+
+                            rows_d = []
+                            for b in dist_rows[:5]:
+                                dist = b.get("distance_pct")
+                                rows_d.append({
+                                    "Broker": b.get("broker", ""),
+                                    "Avg Sell": b.get("avg_sell", 0),
+                                    "Total Sell Lot": format_lot(b.get("total_sell_lot", 0)),
+                                    "Total Sell Value": format_value(b.get("total_sell_value", 0)),
+                                    "Harga vs Avg Sell": f"{dist:+.2f}%" if isinstance(dist, (int, float)) else "N/A",
+                                    "Active": b.get("active_days", ""),
+                                })
+                            st.dataframe(
+                                pd.DataFrame(rows_d),
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    "Avg Sell": st.column_config.NumberColumn(format="Rp %.0f"),
+                                },
+                            )
+                            if broker_distributors.get("w1m") and broker_distributors.get("w7"):
+                                st.caption("Menampilkan 1 bulan; 7 hari tersedia di halaman Bandarmologi.")
+
                     # Thesis
                     thesis = pick.get("thesis", "")
                     if thesis:
@@ -416,6 +525,80 @@ if page == "📈 Top Picks":
                                 for i, risk in enumerate(risks, 1):
                                     st.markdown(f"{i}. {risk}")
 
+                    # Broker True Costs from DB
+                    broker_true_costs = sig.get("broker_true_costs") or {}
+                    true_cost_rows = broker_true_costs.get("w1m") or broker_true_costs.get("w7") or []
+                    if true_cost_rows:
+                        with st.expander("🏦 True Cost Broker Akumulasi", expanded=False):
+                            import pandas as pd
+
+                            def format_value(val):
+                                if val >= 1e12: return f"{val/1e12:.2f}T"
+                                if val >= 1e9: return f"{val/1e9:.2f}M"
+                                if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                                return f"{val:,.0f}"
+
+                            def format_lot(lot):
+                                if lot >= 1000: return f"{lot/1000:.1f}K"
+                                return f"{lot:,.0f}"
+
+                            rows = []
+                            for b in true_cost_rows[:5]:
+                                dist = b.get("distance_pct")
+                                rows.append({
+                                    "Broker": b.get("broker", ""),
+                                    "True Cost": b.get("true_cost", 0),
+                                    "Total Buy Lot": format_lot(b.get("total_buy_lot", 0)),
+                                    "Total Buy Value": format_value(b.get("total_buy_value", 0)),
+                                    "Harga vs Cost": f"{dist:+.2f}%" if isinstance(dist, (int, float)) else "N/A",
+                                    "Active": b.get("active_days", ""),
+                                })
+                            st.dataframe(
+                                pd.DataFrame(rows),
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    "True Cost": st.column_config.NumberColumn(format="Rp %.0f"),
+                                },
+                            )
+
+                    # Broker Distributors from DB
+                    broker_distributors = sig.get("broker_distributors") or {}
+                    dist_rows = broker_distributors.get("w1m") or broker_distributors.get("w7") or []
+                    if dist_rows:
+                        with st.expander("📉 Avg Sell Distribusi", expanded=False):
+                            import pandas as pd
+
+                            def format_value(val):
+                                if val >= 1e12: return f"{val/1e12:.2f}T"
+                                if val >= 1e9: return f"{val/1e9:.2f}M"
+                                if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                                return f"{val:,.0f}"
+
+                            def format_lot(lot):
+                                if lot >= 1000: return f"{lot/1000:.1f}K"
+                                return f"{lot:,.0f}"
+
+                            rows_d = []
+                            for b in dist_rows[:5]:
+                                dist = b.get("distance_pct")
+                                rows_d.append({
+                                    "Broker": b.get("broker", ""),
+                                    "Avg Sell": b.get("avg_sell", 0),
+                                    "Total Sell Lot": format_lot(b.get("total_sell_lot", 0)),
+                                    "Total Sell Value": format_value(b.get("total_sell_value", 0)),
+                                    "Harga vs Avg Sell": f"{dist:+.2f}%" if isinstance(dist, (int, float)) else "N/A",
+                                    "Active": b.get("active_days", ""),
+                                })
+                            st.dataframe(
+                                pd.DataFrame(rows_d),
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    "Avg Sell": st.column_config.NumberColumn(format="Rp %.0f"),
+                                },
+                            )
+
                 with col3:
                     st.markdown(f"⚡ Mode: **{sig.get('weight_mode', 'N/A')}**")
                     broker = sig.get("broker_utama", "")
@@ -480,7 +663,93 @@ elif page == "🔍 Bandarmologi":
                     st.markdown(f"**Net Lot:** {net_lot:,.0f} | **Net Value:** {net_val/1e9:,.1f}B")
                     st.markdown(f"**Buyer/Seller:** {w7.get('total_buyer', 0)}/{w7.get('total_seller', 0)}")
 
-                    # Top buyers
+                    # True cost bandar per broker
+                    top_accumulators = w7.get("top_accumulators", [])
+                    if top_accumulators:
+                        st.markdown("### 🏦 True Cost Bandar per Broker (7 Hari)")
+                        import pandas as pd
+
+                        def format_value(val):
+                            if val >= 1e12: return f"{val/1e12:.2f}T"
+                            if val >= 1e9: return f"{val/1e9:.2f}M"
+                            if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                            return f"{val:,.0f}"
+
+                        def format_lot(lot):
+                            if lot >= 1000: return f"{lot/1000:.1f}K"
+                            return f"{lot:,.0f}"
+
+                        rows = []
+                        current_price = result.get("price_analysis", {}).get("current_price")
+                        for b in top_accumulators[:10]:
+                            avg_price = b.get("avg_price") or 0
+                            distance = None
+                            if current_price and avg_price:
+                                distance = (current_price - avg_price) / avg_price * 100
+                            rows.append({
+                                "Broker": b.get("broker", ""),
+                                "Nama Broker": b.get("broker_name", ""),
+                                "True Cost / Avg": avg_price,
+                                "Total Buy Lot": format_lot(b.get("total_buy_lot", 0)),
+                                "Total Buy Value": format_value(b.get("total_buy_value", 0)),
+                                "Active Days": b.get("active_days", ""),
+                                "Harga vs Cost": f"{distance:+.2f}%" if distance is not None else "N/A",
+                                "Status": b.get("status", ""),
+                            })
+                        df_true_cost_7d = pd.DataFrame(rows)
+                        st.dataframe(
+                            df_true_cost_7d,
+                            use_container_width=True,
+                            hide_index=True,
+                            column_config={
+                                "True Cost / Avg": st.column_config.NumberColumn(format="Rp %.0f"),
+                            },
+                        )
+
+                    # True cost distribusi per broker
+                    top_distributors = w7.get("top_distributors", [])
+                    if top_distributors:
+                        st.markdown("### 📉 Avg Sell Distribusi per Broker (7 Hari)")
+                        import pandas as pd
+
+                        def format_value(val):
+                            if val >= 1e12: return f"{val/1e12:.2f}T"
+                            if val >= 1e9: return f"{val/1e9:.2f}M"
+                            if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                            return f"{val:,.0f}"
+
+                        def format_lot(lot):
+                            if lot >= 1000: return f"{lot/1000:.1f}K"
+                            return f"{lot:,.0f}"
+
+                        rows_dist = []
+                        current_price = result.get("price_analysis", {}).get("current_price")
+                        for b in top_distributors[:10]:
+                            avg_price = b.get("avg_price") or 0
+                            distance = None
+                            if current_price and avg_price:
+                                distance = (current_price - avg_price) / avg_price * 100
+                            rows_dist.append({
+                                "Broker": b.get("broker", ""),
+                                "Nama Broker": b.get("broker_name", ""),
+                                "Avg Sell": avg_price,
+                                "Total Sell Lot": format_lot(b.get("total_sell_lot", 0)),
+                                "Total Sell Value": format_value(b.get("total_sell_value", 0)),
+                                "Active Days": b.get("active_days", ""),
+                                "Harga vs Avg Sell": f"{distance:+.2f}%" if distance is not None else "N/A",
+                                "Status": b.get("status", ""),
+                            })
+                        df_dist_7d = pd.DataFrame(rows_dist)
+                        st.dataframe(
+                            df_dist_7d,
+                            use_container_width=True,
+                            hide_index=True,
+                            column_config={
+                                "Avg Sell": st.column_config.NumberColumn(format="Rp %.0f"),
+                            },
+                        )
+
+                    # Backward-compatible Top buyers display
                     buyers = w7.get("top_buyers", [])
                     if buyers:
                         st.markdown("**Top Buyers:**")
@@ -515,6 +784,92 @@ elif page == "🔍 Bandarmologi":
                     net_val = w1m.get("net_value", 0)
                     st.markdown(f"**Net Lot:** {net_lot:,.0f} | **Net Value:** {net_val/1e9:,.1f}B")
                     st.markdown(f"**Buyer/Seller:** {w1m.get('total_buyer', 0)}/{w1m.get('total_seller', 0)}")
+
+                    # True cost bandar per broker
+                    top_accumulators = w1m.get("top_accumulators", [])
+                    if top_accumulators:
+                        st.markdown("### 🏦 True Cost Bandar per Broker (1 Bulan)")
+                        import pandas as pd
+
+                        def format_value(val):
+                            if val >= 1e12: return f"{val/1e12:.2f}T"
+                            if val >= 1e9: return f"{val/1e9:.2f}M"
+                            if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                            return f"{val:,.0f}"
+
+                        def format_lot(lot):
+                            if lot >= 1000: return f"{lot/1000:.1f}K"
+                            return f"{lot:,.0f}"
+
+                        rows = []
+                        current_price = result.get("price_analysis", {}).get("current_price")
+                        for b in top_accumulators[:10]:
+                            avg_price = b.get("avg_price") or 0
+                            distance = None
+                            if current_price and avg_price:
+                                distance = (current_price - avg_price) / avg_price * 100
+                            rows.append({
+                                "Broker": b.get("broker", ""),
+                                "Nama Broker": b.get("broker_name", ""),
+                                "True Cost / Avg": avg_price,
+                                "Total Buy Lot": format_lot(b.get("total_buy_lot", 0)),
+                                "Total Buy Value": format_value(b.get("total_buy_value", 0)),
+                                "Active Days": b.get("active_days", ""),
+                                "Harga vs Cost": f"{distance:+.2f}%" if distance is not None else "N/A",
+                                "Status": b.get("status", ""),
+                            })
+                        df_true_cost_1m = pd.DataFrame(rows)
+                        st.dataframe(
+                            df_true_cost_1m,
+                            use_container_width=True,
+                            hide_index=True,
+                            column_config={
+                                "True Cost / Avg": st.column_config.NumberColumn(format="Rp %.0f"),
+                            },
+                        )
+
+                    # True cost distribusi per broker (1 Bulan)
+                    top_distributors = w1m.get("top_distributors", [])
+                    if top_distributors:
+                        st.markdown("### 📉 Avg Sell Distribusi per Broker (1 Bulan)")
+                        import pandas as pd
+
+                        def format_value(val):
+                            if val >= 1e12: return f"{val/1e12:.2f}T"
+                            if val >= 1e9: return f"{val/1e9:.2f}M"
+                            if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                            return f"{val:,.0f}"
+
+                        def format_lot(lot):
+                            if lot >= 1000: return f"{lot/1000:.1f}K"
+                            return f"{lot:,.0f}"
+
+                        rows_dist = []
+                        current_price = result.get("price_analysis", {}).get("current_price")
+                        for b in top_distributors[:10]:
+                            avg_price = b.get("avg_price") or 0
+                            distance = None
+                            if current_price and avg_price:
+                                distance = (current_price - avg_price) / avg_price * 100
+                            rows_dist.append({
+                                "Broker": b.get("broker", ""),
+                                "Nama Broker": b.get("broker_name", ""),
+                                "Avg Sell": avg_price,
+                                "Total Sell Lot": format_lot(b.get("total_sell_lot", 0)),
+                                "Total Sell Value": format_value(b.get("total_sell_value", 0)),
+                                "Active Days": b.get("active_days", ""),
+                                "Harga vs Avg Sell": f"{distance:+.2f}%" if distance is not None else "N/A",
+                                "Status": b.get("status", ""),
+                            })
+                        df_dist_1m = pd.DataFrame(rows_dist)
+                        st.dataframe(
+                            df_dist_1m,
+                            use_container_width=True,
+                            hide_index=True,
+                            column_config={
+                                "Avg Sell": st.column_config.NumberColumn(format="Rp %.0f"),
+                            },
+                        )
 
                     buyers = w1m.get("top_buyers", [])
                     if buyers:
@@ -600,7 +955,7 @@ elif page == "📊 Performance":
     if perf_data:
         # Summary stats
         total = len(perf_data)
-        hits = sum(1 for p in perf_data if (p.get("result") or "").startswith("HIT_TARGET"))
+        hits = sum(1 for p in perf_data if (p.get("result") or "").startswith("HIT_") and p.get("result") != "HIT_SL")
         losses = sum(1 for p in perf_data if p.get("result") == "HIT_SL")
         opens = sum(1 for p in perf_data if p.get("result") == "OPEN")
 
@@ -620,7 +975,7 @@ elif page == "📊 Performance":
         # Recent signals table
         st.subheader("Recent Signals")
         for p in perf_data[:20]:
-            result_icon = "✅" if "HIT_TARGET" in (p.get("result") or "") else "❌" if p.get("result") == "HIT_SL" else "🔄"
+            result_icon = "✅" if (p.get("result") or "").startswith("HIT_") and p.get("result") != "HIT_SL" else "❌" if p.get("result") == "HIT_SL" else "🔄"
             ret = p.get("return_pct", 0) or 0
             st.markdown(
                 f"{result_icon} **{p['ticker']}** — {p.get('result', 'OPEN')} "
@@ -650,7 +1005,116 @@ elif page == "📊 Performance":
     # Agent accuracy section
     st.divider()
     st.subheader("Agent Accuracy")
-    st.caption("Agent accuracy akan ditampilkan setelah ada cukup data performance.")
+
+    accuracy_tab, ml_tab = st.tabs(["📊 Signal Performance", "🤖 ML Validation"])
+
+    with accuracy_tab:
+        agent_perf = query_db("""
+            SELECT
+                s.ticker,
+                s.signal,
+                s.conviction,
+                DATE_TRUNC('month', p.check_date)::date AS month,
+                p.result,
+                p.return_pct
+            FROM performance p
+            JOIN signals s ON p.signal_id = s.id
+            ORDER BY p.check_date DESC
+            LIMIT 500
+        """)
+
+        if agent_perf:
+            import pandas as pd
+            df_perf = pd.DataFrame(agent_perf)
+            df_perf["return_pct"] = pd.to_numeric(df_perf["return_pct"], errors="coerce").fillna(0.0)
+            df_perf["is_hit"] = df_perf["result"].fillna("").apply(
+                lambda r: str(r).startswith("HIT_") and r != "HIT_SL"
+            )
+            df_perf["is_loss"] = df_perf["result"].fillna("").eq("HIT_SL")
+            df_closed = df_perf[df_perf["is_hit"] | df_perf["is_loss"]]
+
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                closed = len(df_closed)
+                win_rate = (df_closed["is_hit"].sum() / closed * 100) if closed else 0
+                st.metric("Closed Win Rate", f"{win_rate:.0f}%")
+            with c2:
+                avg_ret = df_perf["return_pct"].mean()
+                st.metric("Avg Return", f"{avg_ret:+.2f}%")
+            with c3:
+                st.metric("Tracked Rows", len(df_perf))
+            with c4:
+                open_count = (df_perf["result"].fillna("") == "OPEN").sum()
+                st.metric("Open Rows", int(open_count))
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.caption("Result Distribution")
+                result_counts = df_perf["result"].fillna("UNKNOWN").value_counts().reset_index()
+                result_counts.columns = ["result", "count"]
+                st.dataframe(result_counts, use_container_width=True, hide_index=True)
+            with col_b:
+                st.caption("Win Rate per Ticker (closed signals)")
+                if not df_closed.empty:
+                    ticker_stats = (
+                        df_closed.groupby("ticker")
+                        .agg(
+                            closed=("result", "count"),
+                            hits=("is_hit", "sum"),
+                            avg_return=("return_pct", "mean"),
+                        )
+                        .reset_index()
+                    )
+                    ticker_stats["win_rate"] = ticker_stats["hits"] / ticker_stats["closed"] * 100
+                    ticker_stats = ticker_stats.sort_values("win_rate", ascending=False)
+                    st.dataframe(
+                        ticker_stats[["ticker", "closed", "hits", "win_rate", "avg_return"]],
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+                else:
+                    st.info("Belum ada closed signal (HIT_TP/HIT_SL).")
+
+            st.caption("Monthly Win Rate")
+            if not df_closed.empty:
+                monthly = (
+                    df_closed.groupby("month")
+                    .agg(closed=("result", "count"), hits=("is_hit", "sum"))
+                    .reset_index()
+                )
+                monthly["win_rate"] = monthly["hits"] / monthly["closed"] * 100
+                st.bar_chart(monthly.set_index("month")[["win_rate"]])
+            else:
+                st.info("Monthly win rate akan muncul setelah ada closed signal.")
+        else:
+            st.info("Belum ada data performance untuk menghitung agent accuracy.")
+
+    with ml_tab:
+        st.caption("Menampilkan hasil dari `scripts/validate_ml_accuracy.py` jika file `validate_ml_result.json` tersedia.")
+        ml_result_path = "validate_ml_result.json"
+        if os.path.exists(ml_result_path):
+            try:
+                import pandas as pd
+                with open(ml_result_path, "r") as f:
+                    ml_result = json.load(f)
+                summary = ml_result.get("summary", [])
+                if summary:
+                    df_ml = pd.DataFrame(summary)
+                    c1, c2, c3 = st.columns(3)
+                    with c1:
+                        st.metric("Avg Directional Accuracy", f"{df_ml['dir_acc'].mean():.1f}%")
+                    with c2:
+                        st.metric("Avg MAE", f"{df_ml['mae_pct'].mean():.3f}%")
+                    with c3:
+                        st.metric("Tickers Validated", len(df_ml))
+                    st.dataframe(df_ml, use_container_width=True, hide_index=True)
+                    st.bar_chart(df_ml.set_index("ticker")[["dir_acc"]])
+                else:
+                    st.warning("File validate_ml_result.json ada, tapi summary kosong.")
+            except Exception as e:
+                st.error(f"Gagal membaca validate_ml_result.json: {e}")
+        else:
+            st.info("Belum ada hasil ML validation. Jalankan: `make validate-ml` atau `python scripts/validate_ml_accuracy.py --ticker BBCA`")
 
 
 # === PAGE: IHSG Predictor ===

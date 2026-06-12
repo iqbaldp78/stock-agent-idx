@@ -118,27 +118,3 @@ Saat selesai kerja:
 ```bash
 make down
 ```
-
-## Troubleshooting
-
-### Service tidak jalan
-
-1. Jalankan `make logs` untuk cek error.
-2. Jika image bermasalah, coba `make rebuild`.
-3. Pastikan port dan environment variable tidak bentrok.
-
-### Error "TICKER is required"
-
-Pastikan command menyertakan variable `TICKER`, contoh:
-
-```bash
-make agent-news TICKER=BBCA
-```
-
-### Error "TICKERS is required"
-
-Pastikan command menyertakan variable `TICKERS` dengan format string berisi ticker dipisah spasi, contoh:
-
-```bash
-make analysis-tickers TICKERS="BBCA BMRI"
-```

@@ -53,7 +53,11 @@ def run_performance_check():
             Signal.run_date <= today - timedelta(days=1),
             ~Signal.id.in_(
                 db.query(Performance.signal_id).filter(
-                    Performance.result.in_(["HIT_TARGET_1", "HIT_TARGET_2", "HIT_SL"])
+                    Performance.result.in_([
+                        "HIT_TARGET_1", "HIT_TARGET_2",
+                        "HIT_TP1", "HIT_TP2", "HIT_TP3",
+                        "HIT_SL",
+                    ])
                 )
             ),
         ).all()

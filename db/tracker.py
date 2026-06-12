@@ -114,6 +114,8 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
                 composite_score=pick.get("composite_score"),
                 ml_prediction=pick.get("ml_prediction"),
                 price_prediction=pick.get("price_prediction"),
+                broker_true_costs=pick.get("broker_true_costs"),
+                broker_distributors=pick.get("broker_distributors"),
             )
             db.add(record)
 
