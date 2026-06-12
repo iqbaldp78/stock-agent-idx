@@ -157,6 +157,18 @@ backtest-ticker: ## Run historical backtest for one ticker (usage: make backtest
 validate-ml: ## Validate ML Day-1 accuracy for all universe tickers
 	docker compose exec app python scripts/validate_ml_accuracy.py --all
 
+.PHONY: train-ml
+train-ml: ## Train ML Day-1 model for all universe tickers
+	docker compose exec app python scripts/train_day1_model.py --all
+
+.PHONY: train-ml-ticker
+train-ml-ticker: ## Train ML Day-1 model for one ticker (usage: make train-ml-ticker TICKER=BBCA)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make train-ml-ticker TICKER=BBCA"; \
+		exit 1; \
+	fi
+	docker compose exec app python scripts/train_day1_model.py --tickers $(TICKER)
+
 .PHONY: validate-ml-ticker
 validate-ml-ticker: ## Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
 	@if [ -z "$(TICKER)" ]; then \

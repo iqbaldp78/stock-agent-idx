@@ -86,8 +86,14 @@ Daftar command:
 - `make analysis-full`
 - `make analysis-tickers TICKERS="BBCA BMRI"`
 
+Catatan: `analysis-full` dan `analysis-tickers` akan mencoba auto-train model ML Day-1 sekali per hari sebelum analisis berjalan. Set `ML_AUTO_TRAIN=false` jika ingin skip training.
+
 ### 4) Smoke Test dan Debug
 
+- `make train-ml` - train model ML Day-1 untuk semua universe ticker
+- `make train-ml-ticker TICKER=BBCA` - train model ML Day-1 untuk satu ticker
+- `make validate-ml` - validasi akurasi model ML Day-1
+- `make validate-ml-ticker TICKER=BBCA` - validasi akurasi model ML Day-1 untuk satu ticker
 - `make smoke-llm` - cek koneksi LLM (9Router)
 - `make smoke-debate` - cek persona debate
 - `make print-debate-prompts` - print prompt debate untuk debug

@@ -11,6 +11,7 @@ import psycopg2.extras
 import json
 import logging
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 import os
 
@@ -50,12 +51,35 @@ def query_db(sql, params=None):
         return []
 
 
+def find_backtest_result_path():
+    candidates = [
+        Path("backtest_result.json"),
+        Path("/app/backtest_result.json"),
+        Path(__file__).resolve().parents[1] / "backtest_result.json",
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return candidates[0]
+
+
+def load_backtest_result(path=None):
+    result_path = Path(path) if path else find_backtest_result_path()
+    if not result_path.exists():
+        return None, result_path, f"File tidak ditemukan: {result_path}"
+    try:
+        with result_path.open("r") as f:
+            return json.load(f), result_path, None
+    except Exception as e:
+        return None, result_path, str(e)
+
+
 # === Sidebar ===
 
 st.sidebar.title("🤖 Stock Agent IDX")
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "🔍 Bandarmologi", "📈 IHSG Predictor", "📊 Performance", "⚙️ Settings"],
+    ["📈 Top Picks", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "⚙️ Settings"],
 )
 
 st.sidebar.divider()
@@ -1090,6 +1114,47 @@ elif page == "📊 Performance":
             st.info("Belum ada data performance untuk menghitung agent accuracy.")
 
     with ml_tab:
+        st.caption("Status training dan validasi model ML Day-1.")
+
+        model_path = "models/checkpoints/lgbm_day1.pkl"
+        meta_path = "models/checkpoints/lgbm_day1_meta.json"
+        if os.path.exists(model_path):
+            st.success(f"Model aktif ditemukan: `{model_path}`")
+        else:
+            st.warning("Model aktif belum ditemukan. Workflow akan memakai rule-based fallback.")
+            st.code("make train-ml", language="bash")
+
+        if os.path.exists(meta_path):
+            try:
+                with open(meta_path, "r") as f:
+                    meta = json.load(f)
+                metrics = meta.get("holdout_metrics", {})
+                rows = meta.get("rows", {})
+                run_date = meta.get("run_date", "N/A")
+                try:
+                    run_date = datetime.fromisoformat(run_date).strftime("%d %b %Y, %H:%M")
+                except Exception:
+                    pass
+
+                st.markdown(f"**Last training:** {run_date}")
+                c1, c2, c3, c4 = st.columns(4)
+                with c1:
+                    st.metric("Tickers Trained", rows.get("tickers_trained", 0))
+                with c2:
+                    st.metric("Final Rows", rows.get("final_train_rows", 0))
+                with c3:
+                    st.metric("Holdout DirAcc", f"{metrics.get('directional_accuracy', 0):.1f}%")
+                with c4:
+                    st.metric("Holdout MAE", f"{metrics.get('mae_pct', 0):.3f}%")
+
+                with st.expander("Training metadata", expanded=False):
+                    st.json(meta)
+            except Exception as e:
+                st.error(f"Gagal membaca metadata training: {e}")
+        else:
+            st.info("Belum ada metadata training. Jalankan `make train-ml`.")
+
+        st.divider()
         st.caption("Menampilkan hasil dari `scripts/validate_ml_accuracy.py` jika file `validate_ml_result.json` tersedia.")
         ml_result_path = "validate_ml_result.json"
         if os.path.exists(ml_result_path):
@@ -1231,6 +1296,172 @@ elif page == "📈 IHSG Predictor":
             st.dataframe(df, use_container_width=True, hide_index=True)
     else:
         st.info("Belum ada IHSG prediction. Jalankan analysis terlebih dahulu.")
+
+
+# === PAGE: Backtest ===
+
+elif page == "🧪 Backtest":
+    st.title("🧪 HISTORICAL BACKTEST")
+    st.caption("Menampilkan hasil dari `scripts/backtest_signals.py` jika file `backtest_result.json` tersedia.")
+
+    result, result_path, error = load_backtest_result()
+
+    if error:
+        st.warning(error)
+        st.code(
+            "make backtest\n"
+            "# atau\n"
+            "python scripts/backtest_signals.py --tickers BBCA BMRI --output backtest_result.json",
+            language="bash",
+        )
+    else:
+        import pandas as pd
+
+        config = result.get("config", {})
+        aggregate = result.get("aggregate", {})
+        tickers = result.get("tickers", {})
+
+        run_date = result.get("run_date", "N/A")
+        try:
+            run_date = datetime.fromisoformat(run_date).strftime("%d %b %Y, %H:%M")
+        except Exception:
+            pass
+
+        st.markdown(f"**Source:** `{result_path}`")
+        st.markdown(
+            f"**Run:** {run_date} | **Period:** `{config.get('period', 'N/A')}` | "
+            f"**Range:** `{config.get('start') or '-'} → {config.get('end') or '-'}` | "
+            f"**Holding:** `{config.get('holding_days', 'N/A')}` hari"
+        )
+
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Trades", aggregate.get("trades", 0))
+        with col2:
+            st.metric("Win Rate", f"{aggregate.get('win_rate', 0):.1f}%")
+        with col3:
+            st.metric("Avg Return", f"{aggregate.get('avg_return_pct', 0):+.2f}%")
+        with col4:
+            st.metric("Profit Factor", f"{aggregate.get('profit_factor', 0):.2f}")
+
+        col5, col6, col7, col8 = st.columns(4)
+        with col5:
+            st.metric("Max Drawdown", f"{aggregate.get('max_drawdown_pct', 0):+.2f}%")
+        with col6:
+            st.metric("Median Return", f"{aggregate.get('median_return_pct', 0):+.2f}%")
+        with col7:
+            st.metric("Best Trade", f"{aggregate.get('best_trade_pct', 0):+.2f}%")
+        with col8:
+            st.metric("Worst Trade", f"{aggregate.get('worst_trade_pct', 0):+.2f}%")
+
+        st.divider()
+
+        summary_rows = []
+        all_trades = []
+        errors = []
+        for ticker, ticker_result in tickers.items():
+            if ticker_result.get("error"):
+                errors.append({"ticker": ticker.upper(), "error": ticker_result.get("error")})
+                continue
+
+            summary = ticker_result.get("summary", {})
+            summary_rows.append({
+                "ticker": ticker_result.get("ticker", ticker).upper(),
+                "rows": ticker_result.get("rows", 0),
+                "trades": summary.get("trades", 0),
+                "win_rate": summary.get("win_rate", 0),
+                "avg_return_pct": summary.get("avg_return_pct", 0),
+                "median_return_pct": summary.get("median_return_pct", 0),
+                "profit_factor": summary.get("profit_factor", 0),
+                "max_drawdown_pct": summary.get("max_drawdown_pct", 0),
+                "best_trade_pct": summary.get("best_trade_pct", 0),
+                "worst_trade_pct": summary.get("worst_trade_pct", 0),
+            })
+
+            for trade in ticker_result.get("trades", []):
+                row = trade.copy()
+                row["ticker"] = row.get("ticker", ticker).upper()
+                all_trades.append(row)
+
+        tab_summary, tab_trades, tab_errors, tab_raw = st.tabs([
+            "📊 Summary per Ticker",
+            "📋 Trades",
+            "⚠️ Errors",
+            "🧾 Raw JSON",
+        ])
+
+        with tab_summary:
+            if summary_rows:
+                df_summary = pd.DataFrame(summary_rows).sort_values("avg_return_pct", ascending=False)
+                st.dataframe(
+                    df_summary,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "ticker": "Ticker",
+                        "rows": "Rows",
+                        "trades": "Trades",
+                        "win_rate": st.column_config.NumberColumn("Win Rate", format="%.1f%%"),
+                        "avg_return_pct": st.column_config.NumberColumn("Avg Return", format="%+.2f%%"),
+                        "median_return_pct": st.column_config.NumberColumn("Median Return", format="%+.2f%%"),
+                        "profit_factor": st.column_config.NumberColumn("Profit Factor", format="%.2f"),
+                        "max_drawdown_pct": st.column_config.NumberColumn("Max DD", format="%+.2f%%"),
+                        "best_trade_pct": st.column_config.NumberColumn("Best", format="%+.2f%%"),
+                        "worst_trade_pct": st.column_config.NumberColumn("Worst", format="%+.2f%%"),
+                    },
+                )
+
+                chart_df = df_summary.set_index("ticker")[["avg_return_pct", "win_rate"]]
+                st.bar_chart(chart_df)
+            else:
+                st.info("Belum ada summary ticker yang bisa ditampilkan.")
+
+        with tab_trades:
+            if all_trades:
+                df_trades = pd.DataFrame(all_trades)
+                ticker_options = ["ALL"] + sorted(df_trades["ticker"].dropna().unique().tolist())
+                selected_ticker = st.selectbox("Ticker", ticker_options)
+                result_options = ["ALL"] + sorted(df_trades["result"].dropna().unique().tolist())
+                selected_result = st.selectbox("Result", result_options)
+
+                filtered = df_trades.copy()
+                if selected_ticker != "ALL":
+                    filtered = filtered[filtered["ticker"] == selected_ticker]
+                if selected_result != "ALL":
+                    filtered = filtered[filtered["result"] == selected_result]
+
+                preferred_cols = [
+                    "ticker", "entry_date", "exit_date", "entry_price", "exit_price",
+                    "result", "return_pct", "holding_days", "rsi", "ma20", "ma50",
+                ]
+                visible_cols = [col for col in preferred_cols if col in filtered.columns]
+                st.dataframe(
+                    filtered[visible_cols].sort_values(["entry_date", "ticker"], ascending=[False, True]),
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "entry_price": st.column_config.NumberColumn("Entry", format="Rp %.0f"),
+                        "exit_price": st.column_config.NumberColumn("Exit", format="Rp %.0f"),
+                        "return_pct": st.column_config.NumberColumn("Return", format="%+.2f%%"),
+                        "rsi": st.column_config.NumberColumn("RSI", format="%.2f"),
+                        "ma20": st.column_config.NumberColumn("MA20", format="Rp %.0f"),
+                        "ma50": st.column_config.NumberColumn("MA50", format="Rp %.0f"),
+                    },
+                )
+
+                result_counts = filtered["result"].value_counts().rename_axis("result").reset_index(name="count")
+                st.bar_chart(result_counts.set_index("result"))
+            else:
+                st.info("Tidak ada trade yang ter-generate.")
+
+        with tab_errors:
+            if errors:
+                st.dataframe(pd.DataFrame(errors), use_container_width=True, hide_index=True)
+            else:
+                st.success("Tidak ada error ticker di hasil backtest.")
+
+        with tab_raw:
+            st.json(result)
 
 
 # === PAGE: Settings ===

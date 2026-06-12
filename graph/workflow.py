@@ -25,7 +25,13 @@ from agents.llm_client import health_check
 from graph.scoring import calculate_composite
 from config import LLM_ENABLED, get_universe
 
+import json
 import logging
+import os
+import subprocess
+import sys
+from datetime import date, datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -432,8 +438,78 @@ def build_workflow() -> StateGraph:
     return workflow.compile()
 
 
-def run_full_analysis(universe: list[str] | None = None) -> dict:
+def _bool_env(name: str, default: bool = True) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.lower() in ("1", "true", "yes", "y", "on")
+
+
+def _already_trained_today(meta_path: Path) -> bool:
+    if not meta_path.exists():
+        return False
+    try:
+        with meta_path.open("r") as f:
+            meta = json.load(f)
+        run_date = meta.get("run_date")
+        if not run_date:
+            return False
+        return datetime.fromisoformat(run_date).date() == date.today()
+    except Exception:
+        return False
+
+
+def maybe_train_ml_before_analysis(universe: list[str] | None = None) -> None:
+    """Train ML model once per day before full analysis, guarded by quality gate."""
+    if not _bool_env("ML_AUTO_TRAIN", True):
+        logger.info("[ML TRAIN] Auto training disabled via ML_AUTO_TRAIN")
+        return
+
+    meta_path = Path(os.getenv("ML_MODEL_META_PATH", "models/checkpoints/lgbm_day1_meta.json"))
+    if _already_trained_today(meta_path):
+        logger.info("[ML TRAIN] Skip: training already attempted today")
+        return
+
+    period = os.getenv("ML_AUTO_TRAIN_PERIOD", "1y")
+    min_rows = os.getenv("ML_AUTO_TRAIN_MIN_ROWS", "120")
+    min_dir_acc = os.getenv("ML_AUTO_TRAIN_MIN_DIR_ACC", "50.0")
+
+    cmd = [
+        sys.executable,
+        "scripts/train_day1_model.py",
+        "--period",
+        period,
+        "--min-rows",
+        min_rows,
+        "--min-dir-acc",
+        min_dir_acc,
+    ]
+    if _bool_env("ML_AUTO_TRAIN_FORCE_SAVE", False):
+        cmd.append("--force-save")
+    if universe:
+        cmd.append("--tickers")
+        cmd.extend([str(t).upper() for t in universe])
+    else:
+        cmd.append("--all")
+
+    logger.info("[ML TRAIN] Running before full analysis: %s", " ".join(cmd))
+    try:
+        result = subprocess.run(cmd, check=False, text=True, capture_output=True)
+        if result.stdout:
+            logger.info("[ML TRAIN]\n%s", result.stdout.strip())
+        if result.stderr:
+            logger.warning("[ML TRAIN STDERR]\n%s", result.stderr.strip())
+        if result.returncode != 0:
+            logger.warning("[ML TRAIN] Training command exited with code %s", result.returncode)
+    except Exception as e:
+        logger.warning("[ML TRAIN] Auto training failed: %s", e)
+
+
+def run_full_analysis(universe: list[str] | None = None, auto_train_ml: bool = True) -> dict:
     """Run the complete analysis pipeline."""
+    if auto_train_ml:
+        maybe_train_ml_before_analysis(universe=universe)
+
     app = build_workflow()
     initial_state = {
         "universe": universe or get_universe(),
