@@ -187,3 +187,66 @@ class SectorOhlcv(Base):
     low = Column(Numeric(12, 4))
     close = Column(Numeric(12, 4))
     created_at = Column(Date, server_default=func.now())
+
+
+# ============================================================
+# Portfolio Management Models
+# ============================================================
+
+class PortfolioHolding(Base):
+    __tablename__ = "portfolio_holdings"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String(10), nullable=False, unique=True)
+    avg_cost = Column(Numeric(12, 2), nullable=False)
+    total_shares = Column(Integer, nullable=False)
+    total_invested = Column(Numeric(15, 2))
+    current_price = Column(Numeric(12, 2))
+    current_value = Column(Numeric(15, 2))
+    unrealized_pnl = Column(Numeric(15, 2))
+    unrealized_pnl_pct = Column(Numeric(6, 2))
+    status = Column(String(20), default="ACTIVE")
+    notes = Column(Text)
+    created_at = Column(Date, server_default=func.now())
+    updated_at = Column(Date, server_default=func.now())
+
+
+class DcaTransaction(Base):
+    __tablename__ = "dca_transactions"
+
+    id = Column(Integer, primary_key=True)
+    holding_id = Column(Integer, ForeignKey("portfolio_holdings.id"))
+    ticker = Column(String(10), nullable=False)
+    transaction_type = Column(String(10), nullable=False)  # BUY, SELL
+    shares = Column(Integer, nullable=False)
+    price = Column(Numeric(12, 2), nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    broker_fee = Column(Numeric(10, 2), default=0)
+    transaction_date = Column(Date, nullable=False)
+    signal_id = Column(Integer, ForeignKey("signals.id"), nullable=True)
+    notes = Column(Text)
+    created_at = Column(Date, server_default=func.now())
+
+
+class DcaStrategy(Base):
+    __tablename__ = "dca_strategy"
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String(10), nullable=False)
+    holding_id = Column(Integer, ForeignKey("portfolio_holdings.id"), nullable=True)
+    total_budget = Column(Numeric(15, 2), nullable=False)
+    remaining_budget = Column(Numeric(15, 2))
+    dca_count = Column(Integer, default=3)
+    entry_low = Column(Numeric(12, 2))
+    entry_high = Column(Numeric(12, 2))
+    max_entry = Column(Numeric(12, 2))
+    next_buy_price = Column(Numeric(12, 2))
+    signal_id = Column(Integer, ForeignKey("signals.id"), nullable=True)
+    tp1 = Column(Numeric(12, 2))
+    tp2 = Column(Numeric(12, 2))
+    tp3 = Column(Numeric(12, 2))
+    stop_loss = Column(Numeric(12, 2))
+    status = Column(String(20), default="ACTIVE")
+    activated_at = Column(Date)
+    completed_at = Column(Date)
+    created_at = Column(Date, server_default=func.now())

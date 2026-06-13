@@ -79,7 +79,7 @@ def load_backtest_result(path=None):
 st.sidebar.title("🤖 Stock Agent IDX")
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "⚙️ Settings"],
+    ["📈 Top Picks", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "⚙️ Settings"],
 )
 
 st.sidebar.divider()
@@ -440,6 +440,21 @@ if page == "📈 Top Picks":
                     if thesis:
                         st.caption(thesis[:150])
 
+                # Action: Set DCA button
+                st.divider()
+                if st.button(f"💰 Set DCA for {ticker}", key=f"dca_{ticker}", use_container_width=True):
+                    # Store signal info in session state and navigate to Portfolio page
+                    st.session_state["dca_from_signal"] = {
+                        "ticker": ticker,
+                        "signal_id": pick.get("signal_id"),
+                        "entry_low": pick.get("entry_low"),
+                        "entry_high": pick.get("entry_high"),
+                        "max_entry": pick.get("max_entry"),
+                        "conviction": conviction,
+                    }
+                    st.info(f"Navigate to 💼 Portfolio → DCA Manager to complete DCA setup for {ticker}")
+                    st.rerun()
+
         # Watchlist & Avoid
         col_w, col_a = st.columns(2)
         with col_w:
@@ -631,6 +646,21 @@ if page == "📈 Top Picks":
                     thesis = sig.get("thesis", "")
                     if thesis:
                         st.caption(thesis[:120])
+
+                # Action: Set DCA button (DB signals)
+                st.divider()
+                sig_ticker = sig.get("ticker")
+                if st.button(f"💰 Set DCA for {sig_ticker}", key=f"dca_db_{sig['id']}", use_container_width=True):
+                    st.session_state["dca_from_signal"] = {
+                        "ticker": sig_ticker,
+                        "signal_id": sig.get("id"),
+                        "entry_low": float(sig.get("entry_low")) if sig.get("entry_low") else None,
+                        "entry_high": float(sig.get("entry_high")) if sig.get("entry_high") else None,
+                        "max_entry": float(sig.get("max_entry")) if sig.get("max_entry") else None,
+                        "conviction": sig.get("conviction"),
+                    }
+                    st.info(f"Navigate to 💼 Portfolio → DCA Manager to complete DCA setup for {sig_ticker}")
+                    st.rerun()
     else:
         st.info("Belum ada data. Klik **Run Analysis Now** di sidebar untuk memulai.")
 
@@ -1462,6 +1492,516 @@ elif page == "🧪 Backtest":
 
         with tab_raw:
             st.json(result)
+
+
+# === PAGE: Portfolio ===
+
+elif page == "💼 Portfolio":
+    st.title("💼 PORTFOLIO MANAGEMENT")
+
+    # Import portfolio modules
+    try:
+        from portfolio.manager import (
+            get_all_holdings, update_current_prices, get_portfolio_summary,
+            add_holding, record_buy, record_sell, get_transactions,
+            preview_avg_cost_after_buy
+        )
+        from portfolio.dca_strategy import (
+            get_active_strategies, create_dca_from_signal, create_dca_manual,
+            get_strategy_with_levels, recommend_dca_timing, deactivate_strategy
+        )
+    except ImportError as e:
+        st.error(f"Portfolio module not available: {e}")
+        st.stop()
+
+    # Tabs
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📊 Holdings Overview",
+        "💰 DCA Manager",
+        "📜 Transaction History",
+        "📈 Performance Report",
+        "🤖 AI Analysis"
+    ])
+
+    # === TAB 1: Holdings Overview ===
+    with tab1:
+        st.subheader("📊 Holdings Overview")
+
+        # Get holdings
+        holdings = get_all_holdings()
+
+        if holdings:
+            # Update prices
+            with st.spinner("Updating prices..."):
+                holdings = update_current_prices(holdings)
+
+            # Summary cards
+            summary = get_portfolio_summary(holdings)
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.metric(
+                    "Total Invested",
+                    f"Rp {summary['total_invested']:,.0f}",
+                )
+            with col2:
+                st.metric(
+                    "Current Value",
+                    f"Rp {summary['total_current_value']:,.0f}",
+                    delta=f"{summary['total_pnl']:,.0f}" if summary['total_current_value'] > 0 else None,
+                )
+            with col3:
+                pnl_pct = summary['total_pnl_pct']
+                st.metric(
+                    "Total P&L",
+                    f"{pnl_pct:+.2f}%",
+                    delta=f"Rp {summary['total_pnl']:,.0f}",
+                )
+            with col4:
+                best = summary.get('best_performer')
+                best_pct = summary.get('best_pnl_pct', 0)
+                st.metric(
+                    "Best Performer",
+                    best or "N/A",
+                    delta=f"{best_pct:+.2f}%" if best else None,
+                )
+
+            st.divider()
+
+            # Holdings table
+            st.markdown("### 📋 Holdings")
+
+            import pandas as pd
+            df_holdings = pd.DataFrame(holdings)
+            df_holdings['total_invested'] = df_holdings['avg_cost'] * df_holdings['total_shares']
+
+            display_cols = [
+                'ticker', 'total_lots', 'avg_cost', 'current_price',
+                'current_value', 'unrealized_pnl', 'unrealized_pnl_pct', 'status'
+            ]
+            df_display = df_holdings[[col for col in display_cols if col in df_holdings.columns]]
+
+            st.dataframe(
+                df_display,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "ticker": "Ticker",
+                    "total_lots": st.column_config.NumberColumn("Lot", format="%d"),
+                    "avg_cost": st.column_config.NumberColumn("Avg Cost", format="Rp %.0f"),
+                    "current_price": st.column_config.NumberColumn("Current", format="Rp %.0f"),
+                    "current_value": st.column_config.NumberColumn("Value", format="Rp %.0f"),
+                    "unrealized_pnl": st.column_config.NumberColumn("P&L (Rp)", format="Rp %+.0f"),
+                    "unrealized_pnl_pct": st.column_config.NumberColumn("P&L (%)", format="%+.2f%%"),
+                    "status": "Status",
+                },
+            )
+
+            st.divider()
+
+            # Add new holding form
+            with st.expander("➕ Add New Holding"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    new_ticker = st.text_input("Ticker", key="new_holding_ticker").upper()
+                with col2:
+                    new_lots = st.number_input("Lot", min_value=1, value=10, key="new_holding_lots")
+                with col3:
+                    new_avg = st.number_input("Avg Cost", min_value=1.0, value=1000.0, key="new_holding_avg")
+
+                if st.button("Add Holding"):
+                    if new_ticker:
+                        try:
+                            result = add_holding(new_ticker, new_lots * 100, new_avg)
+                            st.success(f"Added {new_ticker}: {new_lots} lot @ Rp {new_avg:,.0f}")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                    else:
+                        st.warning("Ticker harus diisi")
+
+            # Record transaction form
+            with st.expander("💵 Record Buy/Sell"):
+                txn_type = st.radio("Type", ["BUY", "SELL"], horizontal=True, key="txn_type")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    txn_ticker = st.selectbox("Ticker", [h['ticker'] for h in holdings], key="txn_ticker")
+                with col2:
+                    txn_lots = st.number_input("Lot", min_value=1, value=1, key="txn_lots")
+                with col3:
+                    txn_price = st.number_input("Price", min_value=1.0, value=1000.0, key="txn_price")
+
+                # Preview avg cost after buy
+                if txn_type == "BUY" and txn_ticker:
+                    preview = preview_avg_cost_after_buy(txn_ticker, txn_price, txn_lots)
+                    st.info(
+                        f"Preview: New avg cost = **Rp {preview['new_avg_cost']:,.0f}** "
+                        f"(total {preview['total_lots_after']} lot)"
+                    )
+
+                if st.button(f"Record {txn_type}"):
+                    try:
+                        if txn_type == "BUY":
+                            result = record_buy(txn_ticker, txn_lots, txn_price)
+                            st.success(f"BUY recorded: {txn_ticker} {txn_lots} lot @ Rp {txn_price:,.0f}")
+                        else:
+                            result = record_sell(txn_ticker, txn_lots, txn_price)
+                            st.success(f"SELL recorded: {txn_ticker} {txn_lots} lot @ Rp {txn_price:,.0f}")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+
+        else:
+            st.info("Belum ada holdings. Tambahkan holdings pertama di form di bawah.")
+
+            with st.form("first_holding"):
+                st.markdown("### ➕ Add First Holding")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    ticker = st.text_input("Ticker (e.g. TLKM)").upper()
+                with col2:
+                    lots = st.number_input("Lot", min_value=1, value=10)
+                with col3:
+                    avg_cost = st.number_input("Avg Cost", min_value=1.0, value=3000.0)
+
+                submitted = st.form_submit_button("Add Holding")
+                if submitted and ticker:
+                    try:
+                        result = add_holding(ticker, lots * 100, avg_cost)
+                        st.success(f"Added {ticker}: {lots} lot @ Rp {avg_cost:,.0f}")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+
+    # === TAB 2: DCA Manager ===
+    with tab2:
+        st.subheader("💰 DCA Manager")
+
+        # Section 1: Active Strategies
+        st.markdown("### 📋 Active DCA Strategies")
+        strategies = get_active_strategies()
+
+        if strategies:
+            import pandas as pd
+            df_strat = pd.DataFrame(strategies)
+            display_cols = [
+                'ticker', 'total_budget', 'used_budget', 'remaining_budget',
+                'used_budget_pct', 'dca_count', 'next_buy_price', 'status'
+            ]
+            df_display = df_strat[[col for col in display_cols if col in df_strat.columns]]
+
+            st.dataframe(
+                df_display,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "ticker": "Ticker",
+                    "total_budget": st.column_config.NumberColumn("Budget", format="Rp %.0f"),
+                    "used_budget": st.column_config.NumberColumn("Used", format="Rp %.0f"),
+                    "remaining_budget": st.column_config.NumberColumn("Remaining", format="Rp %.0f"),
+                    "used_budget_pct": st.column_config.ProgressColumn("Progress", format="%.1f%%", min_value=0, max_value=100),
+                    "dca_count": st.column_config.NumberColumn("Levels", format="%d"),
+                    "next_buy_price": st.column_config.NumberColumn("Next Buy", format="Rp %.0f"),
+                    "status": "Status",
+                },
+            )
+        else:
+            st.info("Belum ada DCA strategy aktif.")
+
+        st.divider()
+
+        # Section 2: Create New DCA
+        st.markdown("### ➕ Create New DCA Strategy")
+
+        dca_mode = st.radio("Mode", ["From TOP PICKS Signal", "Manual Input"], horizontal=True)
+
+        if dca_mode == "From TOP PICKS Signal":
+            # Get latest signals
+            signals = query_db("""
+                SELECT id, ticker, entry_low, entry_high, max_entry, conviction, thesis
+                FROM signals
+                WHERE run_date = (SELECT MAX(run_date) FROM signals)
+                ORDER BY rank
+                LIMIT 10
+            """)
+
+            if signals:
+                signal_options = {
+                    f"{s['ticker']} (Entry: {s['entry_low']}-{s['max_entry']}, {s['conviction']})": s['id']
+                    for s in signals
+                }
+                selected_label = st.selectbox("Select Signal", list(signal_options.keys()))
+                selected_signal_id = signal_options[selected_label]
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    dca_budget = st.number_input("Total Budget (Rp)", min_value=100000, value=2000000, step=100000)
+                with col2:
+                    dca_count = st.number_input("DCA Levels", min_value=2, max_value=5, value=3)
+
+                if st.button("Preview DCA Levels"):
+                    selected_signal = next(s for s in signals if s['id'] == selected_signal_id)
+                    from portfolio.manager import calculate_dca_levels
+                    levels_data = calculate_dca_levels(
+                        entry_low=float(selected_signal['entry_low']),
+                        entry_high=float(selected_signal['entry_high'] or selected_signal['entry_low']),
+                        max_entry=float(selected_signal['max_entry']),
+                        total_budget=dca_budget,
+                        dca_count=dca_count,
+                    )
+
+                    st.markdown("**Preview Levels:**")
+                    import pandas as pd
+                    df_levels = pd.DataFrame(levels_data['levels'])
+                    st.dataframe(
+                        df_levels,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            "level": "Level",
+                            "price": st.column_config.NumberColumn("Price", format="Rp %.0f"),
+                            "amount_budget": st.column_config.NumberColumn("Budget", format="Rp %.0f"),
+                            "actual_amount": st.column_config.NumberColumn("Actual", format="Rp %.0f"),
+                            "lots": st.column_config.NumberColumn("Lot", format="%d"),
+                            "shares": st.column_config.NumberColumn("Shares", format="%d"),
+                        },
+                    )
+
+                if st.button("✅ Activate DCA Strategy"):
+                    try:
+                        result = create_dca_from_signal(selected_signal_id, dca_budget, dca_count)
+                        st.success(f"DCA strategy created for {result['ticker']}")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+            else:
+                st.warning("Belum ada TOP PICKS signal. Run analysis dulu.")
+
+        else:
+            # Manual input
+            col1, col2 = st.columns(2)
+            with col1:
+                manual_ticker = st.text_input("Ticker").upper()
+                manual_entry_low = st.number_input("Entry Low", min_value=1.0, value=3000.0)
+                manual_entry_high = st.number_input("Entry High", min_value=1.0, value=3200.0)
+            with col2:
+                manual_max_entry = st.number_input("Max Entry", min_value=1.0, value=3400.0)
+                manual_budget = st.number_input("Total Budget", min_value=100000, value=2000000, step=100000)
+                manual_dca_count = st.number_input("Levels", min_value=2, max_value=5, value=3)
+
+            if st.button("✅ Create Manual DCA"):
+                if manual_ticker:
+                    try:
+                        result = create_dca_manual(
+                            ticker=manual_ticker,
+                            total_budget=manual_budget,
+                            entry_low=manual_entry_low,
+                            entry_high=manual_entry_high,
+                            max_entry=manual_max_entry,
+                            dca_count=manual_dca_count,
+                        )
+                        st.success(f"Manual DCA strategy created for {manual_ticker}")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+                else:
+                    st.warning("Ticker harus diisi")
+
+        st.divider()
+
+        # Section 3: DCA Timing Recommendation
+        st.markdown("### 🕐 DCA Timing Recommendation")
+
+        holdings = get_all_holdings()
+        if holdings:
+            timing_ticker = st.selectbox(
+                "Select Ticker",
+                [h['ticker'] for h in holdings],
+                key="timing_ticker"
+            )
+
+            if st.button("Check Timing"):
+                try:
+                    timing = recommend_dca_timing(timing_ticker)
+
+                    status = timing['status']
+                    if status == "IDEAL":
+                        status_badge = "🟢 IDEAL"
+                        status_color = "green"
+                    elif status == "ACCEPTABLE":
+                        status_badge = "🟡 ACCEPTABLE"
+                        status_color = "orange"
+                    elif status == "CAUTION":
+                        status_badge = "🟠 CAUTION"
+                        status_color = "orange"
+                    elif status == "AVOID":
+                        status_badge = "🔴 AVOID"
+                        status_color = "red"
+                    else:
+                        status_badge = "⚪ NO DATA"
+                        status_color = "gray"
+
+                    st.markdown(f"### {status_badge}")
+
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Current Price", f"Rp {timing['current_price']:,.0f}" if timing['current_price'] else "N/A")
+                    with col2:
+                        st.metric("True Cost 1M", f"Rp {timing['true_cost_1m']:,.0f}" if timing['true_cost_1m'] else "N/A")
+                    with col3:
+                        dist = timing['distance_pct']
+                        st.metric("Distance", f"{dist:+.2f}%" if dist is not None else "N/A")
+
+                    st.info(timing['reason'])
+
+                    if timing['recommended_buy']:
+                        st.success(f"💡 Recommended buy price: **Rp {timing['recommended_buy']:,.0f}**")
+
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        else:
+            st.info("Belum ada holdings untuk cek timing.")
+
+    # === TAB 3: Transaction History ===
+    with tab3:
+        st.subheader("📜 Transaction History")
+
+        transactions = get_transactions()
+
+        if transactions:
+            import pandas as pd
+            df_txn = pd.DataFrame(transactions)
+
+            # Filters
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                ticker_filter = st.selectbox("Ticker", ["ALL"] + sorted(df_txn['ticker'].unique().tolist()))
+            with col2:
+                type_filter = st.selectbox("Type", ["ALL", "BUY", "SELL"])
+            with col3:
+                st.write("")  # spacing
+
+            filtered = df_txn.copy()
+            if ticker_filter != "ALL":
+                filtered = filtered[filtered['ticker'] == ticker_filter]
+            if type_filter != "ALL":
+                filtered = filtered[filtered['transaction_type'] == type_filter]
+
+            display_cols = [
+                'transaction_date', 'ticker', 'transaction_type', 'lots', 'price', 'amount', 'signal_id', 'notes'
+            ]
+            df_display = filtered[[col for col in display_cols if col in filtered.columns]]
+
+            st.dataframe(
+                df_display.sort_values('transaction_date', ascending=False),
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "transaction_date": "Date",
+                    "ticker": "Ticker",
+                    "transaction_type": "Type",
+                    "lots": st.column_config.NumberColumn("Lot", format="%d"),
+                    "price": st.column_config.NumberColumn("Price", format="Rp %.0f"),
+                    "amount": st.column_config.NumberColumn("Amount", format="Rp %.0f"),
+                    "signal_id": "Signal ID",
+                    "notes": "Notes",
+                },
+            )
+
+            # Export
+            if st.button("📥 Export to CSV"):
+                csv = df_display.to_csv(index=False)
+                st.download_button(
+                    label="Download CSV",
+                    data=csv,
+                    file_name=f"transactions_{date.today()}.csv",
+                    mime="text/csv",
+                )
+        else:
+            st.info("Belum ada transaksi.")
+
+    # === TAB 4: Performance Report ===
+    with tab4:
+        st.subheader("📈 Performance Report")
+
+        transactions = get_transactions()
+        holdings = get_all_holdings()
+
+        if transactions:
+            import pandas as pd
+            df_txn = pd.DataFrame(transactions)
+
+            # Monthly P&L (simplified)
+            df_txn['month'] = pd.to_datetime(df_txn['transaction_date']).dt.to_period('M').astype(str)
+            monthly = df_txn.groupby('month').agg({
+                'amount': lambda x: (
+                    df_txn.loc[x.index][df_txn.loc[x.index]['transaction_type'] == 'SELL']['amount'].sum() -
+                    df_txn.loc[x.index][df_txn.loc[x.index]['transaction_type'] == 'BUY']['amount'].sum()
+                )
+            }).rename(columns={'amount': 'net_flow'})
+
+            st.markdown("### 📊 Monthly Transaction Flow")
+            st.bar_chart(monthly)
+
+            st.divider()
+
+            # Per-ticker stats
+            st.markdown("### 📋 Per-Ticker Transaction Summary")
+            ticker_stats = df_txn.groupby('ticker').agg({
+                'amount': 'sum',
+                'lots': 'sum',
+                'transaction_type': 'count'
+            }).rename(columns={'transaction_type': 'count'})
+
+            st.dataframe(
+                ticker_stats,
+                use_container_width=True,
+                column_config={
+                    "amount": st.column_config.NumberColumn("Total Amount", format="Rp %.0f"),
+                    "lots": st.column_config.NumberColumn("Total Lot", format="%d"),
+                    "count": "Transactions",
+                },
+            )
+        else:
+            st.info("Belum ada transaksi untuk ditampilkan.")
+
+        # Current holdings performance
+        if holdings:
+            st.divider()
+            st.markdown("### 💼 Current Holdings P&L")
+
+            import pandas as pd
+            df_h = pd.DataFrame(holdings)
+            df_h = df_h[df_h['unrealized_pnl'].notna()].sort_values('unrealized_pnl_pct', ascending=False)
+
+            if not df_h.empty:
+                st.dataframe(
+                    df_h[['ticker', 'unrealized_pnl', 'unrealized_pnl_pct']],
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "ticker": "Ticker",
+                        "unrealized_pnl": st.column_config.NumberColumn("P&L (Rp)", format="Rp %+.0f"),
+                        "unrealized_pnl_pct": st.column_config.NumberColumn("P&L (%)", format="%+.2f%%"),
+                    },
+                )
+
+    # === TAB 5: AI Analysis ===
+    with tab5:
+        st.subheader("🤖 AI Portfolio Analysis")
+
+        st.info("AI Portfolio Agent belum diimplementasi. Coming soon!")
+
+        st.markdown("""
+        **Fitur yang akan tersedia:**
+        - 🔄 Rebalancing recommendations
+        - 💰 DCA priority ranking dengan budget allocation
+        - ⚠️ Risk analysis (sector concentration, diversification)
+        - 📊 Performance attribution
+        """)
+
+        if st.button("🤖 Get AI Analysis (Preview)"):
+            st.warning("Feature under development. Agent will be available in next phase.")
 
 
 # === PAGE: Settings ===
