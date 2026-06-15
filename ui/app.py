@@ -367,8 +367,8 @@ if page == "📈 Top Picks":
 
                             def format_value(val):
                                 if val >= 1e12: return f"{val/1e12:.2f}T"
-                                if val >= 1e9: return f"{val/1e9:.2f}M"
-                                if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                                if val >= 1e9: return f"{val/1e9:.2f}B"
+                                if val >= 1e6: return f"{val/1e6:.2f}M"
                                 return f"{val:,.0f}"
 
                             def format_lot(lot):
@@ -405,8 +405,8 @@ if page == "📈 Top Picks":
 
                             def format_value(val):
                                 if val >= 1e12: return f"{val/1e12:.2f}T"
-                                if val >= 1e9: return f"{val/1e9:.2f}M"
-                                if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                                if val >= 1e9: return f"{val/1e9:.2f}B"
+                                if val >= 1e6: return f"{val/1e6:.2f}M"
                                 return f"{val:,.0f}"
 
                             def format_lot(lot):
@@ -573,8 +573,8 @@ if page == "📈 Top Picks":
 
                             def format_value(val):
                                 if val >= 1e12: return f"{val/1e12:.2f}T"
-                                if val >= 1e9: return f"{val/1e9:.2f}M"
-                                if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                                if val >= 1e9: return f"{val/1e9:.2f}B"
+                                if val >= 1e6: return f"{val/1e6:.2f}M"
                                 return f"{val:,.0f}"
 
                             def format_lot(lot):
@@ -610,8 +610,8 @@ if page == "📈 Top Picks":
 
                             def format_value(val):
                                 if val >= 1e12: return f"{val/1e12:.2f}T"
-                                if val >= 1e9: return f"{val/1e9:.2f}M"
-                                if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                                if val >= 1e9: return f"{val/1e9:.2f}B"
+                                if val >= 1e6: return f"{val/1e6:.2f}M"
                                 return f"{val:,.0f}"
 
                             def format_lot(lot):
@@ -725,8 +725,8 @@ elif page == "🔍 Bandarmologi":
 
                         def format_value(val):
                             if val >= 1e12: return f"{val/1e12:.2f}T"
-                            if val >= 1e9: return f"{val/1e9:.2f}M"
-                            if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                            if val >= 1e9: return f"{val/1e9:.2f}B"
+                            if val >= 1e6: return f"{val/1e6:.2f}M"
                             return f"{val:,.0f}"
 
                         def format_lot(lot):
@@ -768,8 +768,8 @@ elif page == "🔍 Bandarmologi":
 
                         def format_value(val):
                             if val >= 1e12: return f"{val/1e12:.2f}T"
-                            if val >= 1e9: return f"{val/1e9:.2f}M"
-                            if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                            if val >= 1e9: return f"{val/1e9:.2f}B"
+                            if val >= 1e6: return f"{val/1e6:.2f}M"
                             return f"{val:,.0f}"
 
                         def format_lot(lot):
@@ -847,8 +847,8 @@ elif page == "🔍 Bandarmologi":
 
                         def format_value(val):
                             if val >= 1e12: return f"{val/1e12:.2f}T"
-                            if val >= 1e9: return f"{val/1e9:.2f}M"
-                            if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                            if val >= 1e9: return f"{val/1e9:.2f}B"
+                            if val >= 1e6: return f"{val/1e6:.2f}M"
                             return f"{val:,.0f}"
 
                         def format_lot(lot):
@@ -890,8 +890,8 @@ elif page == "🔍 Bandarmologi":
 
                         def format_value(val):
                             if val >= 1e12: return f"{val/1e12:.2f}T"
-                            if val >= 1e9: return f"{val/1e9:.2f}M"
-                            if val >= 1e6: return f"{val/1e6:.2f}Jt"
+                            if val >= 1e9: return f"{val/1e9:.2f}B"
+                            if val >= 1e6: return f"{val/1e6:.2f}M"
                             return f"{val:,.0f}"
 
                         def format_lot(lot):
@@ -1626,16 +1626,43 @@ elif page == "💼 Portfolio":
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     txn_ticker = st.selectbox("Ticker", [h['ticker'] for h in holdings], key="txn_ticker")
+
+                # Get current price for default value
+                selected_holding = next((h for h in holdings if h['ticker'] == txn_ticker), None)
+                current_price_default = selected_holding.get('current_price') if selected_holding else 1000.0
+                if not current_price_default or current_price_default <= 0:
+                    current_price_default = 1000.0
+
                 with col2:
                     txn_lots = st.number_input("Lot", min_value=1, value=1, key="txn_lots")
                 with col3:
-                    txn_price = st.number_input("Price", min_value=1.0, value=1000.0, key="txn_price")
+                    txn_price = st.number_input("Price", min_value=1.0, value=float(current_price_default), key="txn_price")
+
+                # Calculate total amount
+                total_shares = txn_lots * 100
+                total_amount = txn_price * total_shares
+                st.caption(f"💰 Total: **Rp {total_amount:,.0f}** ({txn_lots} lot × {total_shares} shares × Rp {txn_price:,.0f})")
 
                 # Preview avg cost after buy
                 if txn_type == "BUY" and txn_ticker:
                     preview = preview_avg_cost_after_buy(txn_ticker, txn_price, txn_lots)
+                    current_avg = preview['current_avg']
+                    new_avg = preview['new_avg_cost']
+                    current_pnl_pct = selected_holding.get('unrealized_pnl_pct') if selected_holding else None
+
+                    # Calculate percentage change in avg cost
+                    if current_avg and current_avg > 0:
+                        avg_change_pct = ((new_avg - current_avg) / current_avg) * 100
+                        change_text = f" ({avg_change_pct:+.2f}%"
+                        # Add current P&L if available
+                        if current_pnl_pct is not None:
+                            change_text += f" of current P&L {current_pnl_pct:+.2f}%"
+                        change_text += ")"
+                    else:
+                        change_text = " (new position)"
+
                     st.info(
-                        f"Preview: New avg cost = **Rp {preview['new_avg_cost']:,.0f}** "
+                        f"Preview: New avg cost = **Rp {new_avg:,.0f}**{change_text} "
                         f"(total {preview['total_lots_after']} lot)"
                     )
 
@@ -1989,19 +2016,219 @@ elif page == "💼 Portfolio":
     # === TAB 5: AI Analysis ===
     with tab5:
         st.subheader("🤖 AI Portfolio Analysis")
+        st.caption("All-in-one analisis portfolio: rebalancing, DCA priority, risk analysis, performance attribution.")
 
-        st.info("AI Portfolio Agent belum diimplementasi. Coming soon!")
+        # Monthly budget config
+        col_budget, col_btn = st.columns([2, 1])
+        with col_budget:
+            monthly_budget = st.number_input(
+                "Monthly DCA Budget (Rp)",
+                min_value=100_000,
+                max_value=100_000_000,
+                value=2_000_000,
+                step=500_000,
+                key="ai_monthly_budget",
+            )
+        with col_btn:
+            st.write("")
+            st.write("")
+            run_ai = st.button("🤖 Get AI Portfolio Analysis", type="primary", use_container_width=True)
 
-        st.markdown("""
-        **Fitur yang akan tersedia:**
-        - 🔄 Rebalancing recommendations
-        - 💰 DCA priority ranking dengan budget allocation
-        - ⚠️ Risk analysis (sector concentration, diversification)
-        - 📊 Performance attribution
-        """)
+        # Show cached result if available
+        cached = st.session_state.get("portfolio_ai_result")
 
-        if st.button("🤖 Get AI Analysis (Preview)"):
-            st.warning("Feature under development. Agent will be available in next phase.")
+        if run_ai:
+            with st.spinner("AI sedang menganalisis portfolio... (bisa 30-60 detik)"):
+                try:
+                    from agents.portfolio_advisor import analyze_portfolio
+                    from portfolio.manager import get_all_holdings, update_current_prices, get_transactions
+                    from portfolio.dca_strategy import get_active_strategies
+                    from datetime import timedelta
+
+                    # Gather data
+                    h_list = get_all_holdings()
+                    h_list = update_current_prices(h_list)
+                    strats = get_active_strategies()
+                    txns = get_transactions(start_date=date.today() - timedelta(days=30))
+
+                    # Don't use TOP PICKS - focus on existing holdings only
+                    top_picks = []
+
+                    ai_result = analyze_portfolio(
+                        holdings=h_list,
+                        active_strategies=strats,
+                        top_picks=top_picks,
+                        monthly_budget=monthly_budget,
+                        transactions=txns,
+                    )
+                    st.session_state["portfolio_ai_result"] = ai_result
+                    cached = ai_result
+                    st.success("Analisis selesai!")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+                    cached = None
+
+        if cached:
+            ai = cached
+            generated_at = ai.get("generated_at", "")
+            if generated_at:
+                st.caption(f"Generated: {generated_at[:19].replace('T', ' ')} WIB")
+
+            # Error banner
+            if ai.get("error"):
+                st.error(f"AI Error: {ai['error']}")
+
+            # Summary
+            summary = ai.get("summary", "")
+            if summary:
+                st.info(f"📋 **Summary:** {summary}")
+
+            st.divider()
+
+            # === Section 1: Rebalancing ===
+            rebal = ai.get("rebalancing", {})
+            with st.expander("⚖️ Rebalancing Recommendations", expanded=True):
+                needed = rebal.get("needed", False)
+                if needed:
+                    st.warning("⚠️ Rebalancing diperlukan")
+                else:
+                    st.success("✅ Portfolio sudah seimbang")
+
+                overweight = rebal.get("overweight", [])
+                underweight = rebal.get("underweight", [])
+
+                col_ow, col_uw = st.columns(2)
+                with col_ow:
+                    st.markdown("**Overweight:**")
+                    if overweight:
+                        for t in overweight:
+                            st.markdown(f"- 🔴 {t}")
+                    else:
+                        st.caption("Tidak ada")
+                with col_uw:
+                    st.markdown("**Underweight:**")
+                    if underweight:
+                        for t in underweight:
+                            st.markdown(f"- 🟡 {t}")
+                    else:
+                        st.caption("Tidak ada")
+
+                actions = rebal.get("actions", [])
+                if actions:
+                    st.markdown("**Action Plan:**")
+                    import pandas as pd
+                    df_act = pd.DataFrame(actions)
+                    action_icon = {"REDUCE": "🔻", "INCREASE": "🔺", "HOLD": "⏸️"}
+                    df_act["action"] = df_act["action"].apply(
+                        lambda x: f"{action_icon.get(x, '')} {x}"
+                    )
+                    st.dataframe(df_act, use_container_width=True, hide_index=True)
+
+            # === Section 2: DCA Priority ===
+            dca_prio = ai.get("dca_priority", [])
+            with st.expander(f"💰 DCA Priority This Month (Budget: Rp {monthly_budget:,.0f})", expanded=True):
+                if dca_prio:
+                    for p in dca_prio:
+                        rank = p.get("rank", "")
+                        ticker = p.get("ticker", "")
+                        alloc = p.get("allocation", 0)
+                        timing = p.get("timing_status", "N/A")
+                        conv = p.get("conviction", "N/A")
+                        reason = p.get("reasoning", "")
+
+                        # Timing color
+                        timing_icon = {"IDEAL": "🟢", "ACCEPTABLE": "🟡", "CAUTION": "🟠", "AVOID": "🔴"}.get(timing, "⚪")
+                        conv_icon = "✅" if conv == "HIGH" else "⚠️" if conv == "MEDIUM" else "❓"
+
+                        with st.container(border=True):
+                            c1, c2, c3 = st.columns([1, 2, 3])
+                            with c1:
+                                st.markdown(f"### #{rank}")
+                                st.markdown(f"**{ticker}**")
+                            with c2:
+                                st.metric("Alokasi", f"Rp {alloc:,.0f}")
+                                st.caption(f"{timing_icon} {timing} | {conv_icon} {conv}")
+                            with c3:
+                                st.caption(reason)
+                else:
+                    st.info("Tidak ada DCA priority dari AI saat ini.")
+
+            # === Section 3: Risk Analysis ===
+            risk = ai.get("risk_analysis", {})
+            with st.expander("⚠️ Risk Analysis", expanded=False):
+                risk_level = risk.get("risk_level", "N/A")
+                div_score = risk.get("diversification_score", 0)
+                recs = risk.get("recommendations", [])
+                sector_conc = risk.get("sector_concentration", {})
+
+                risk_color = {"LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🔴"}.get(risk_level, "⚪")
+
+                col_r1, col_r2 = st.columns(2)
+                with col_r1:
+                    st.metric("Risk Level", f"{risk_color} {risk_level}")
+                with col_r2:
+                    st.metric("Diversification Score", f"{div_score}/10")
+
+                if sector_conc:
+                    st.markdown("**Sector Concentration:**")
+                    import pandas as pd
+                    df_sec = pd.DataFrame([
+                        {"Sector": k, "Weight (%)": v}
+                        for k, v in sector_conc.items()
+                    ]).sort_values("Weight (%)", ascending=False)
+                    st.dataframe(df_sec, use_container_width=True, hide_index=True)
+
+                if recs:
+                    st.markdown("**Recommendations:**")
+                    for r in recs:
+                        st.markdown(f"- {r}")
+
+            # === Section 4: Performance Attribution ===
+            perf = ai.get("performance_attribution", {})
+            with st.expander("📊 Performance Attribution", expanded=False):
+                best = perf.get("best_performer")
+                worst = perf.get("worst_performer")
+                sig_quality = perf.get("signal_quality", "N/A")
+
+                col_b, col_w = st.columns(2)
+                with col_b:
+                    st.markdown("**🏆 Best Performer:**")
+                    if best and isinstance(best, dict):
+                        st.metric(
+                            best.get("ticker", "N/A"),
+                            f"{best.get('return_pct', 0):+.2f}%",
+                        )
+                        st.caption(best.get("reason", ""))
+                    elif isinstance(best, str):
+                        st.write(best)
+                    else:
+                        st.caption("N/A")
+
+                with col_w:
+                    st.markdown("**📉 Worst Performer:**")
+                    if worst and isinstance(worst, dict):
+                        st.metric(
+                            worst.get("ticker", "N/A"),
+                            f"{worst.get('return_pct', 0):+.2f}%",
+                        )
+                        st.caption(worst.get("reason", ""))
+                    elif isinstance(worst, str):
+                        st.write(worst)
+                    else:
+                        st.caption("N/A")
+
+                st.markdown(f"**Signal Quality:** {sig_quality}")
+
+        else:
+            st.markdown("""
+            **Fitur AI Portfolio Analysis:**
+            - ⚖️ Rebalancing recommendations (overweight/underweight detection)
+            - 💰 DCA priority ranking dengan budget allocation per ticker
+            - ⚠️ Risk analysis (sector concentration, diversification score)
+            - 📊 Performance attribution (best/worst performers, signal quality)
+
+            Klik **Get AI Portfolio Analysis** untuk mulai.
+            """)
 
 
 # === PAGE: Settings ===

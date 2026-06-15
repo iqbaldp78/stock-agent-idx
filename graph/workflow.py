@@ -16,7 +16,7 @@ from agents.macro import analyze as macro_analyze
 from agents.news import analyze as news_analyze
 from agents.investment_manager import synthesize as im_synthesize
 from agents.ihsg_predictor import predict_ihsg
-from models.day1_predictor import Day1Predictor
+from models.multiday_predictor import MultiDayPredictor
 from data.ml_features import extract_features
 from data.fetcher_stockbit import get_ohlcv
 from agents.debate import run_llm_debate
@@ -128,9 +128,9 @@ def run_ml_prediction(state: AgentState) -> dict:
     if not composites:
         return {"ml_predictions": {}}
 
-    logger.info(f"[ML] Running Day-1 forecast for {len(composites)} tickers")
+    logger.info(f"[ML] Running Multi-Day forecast for {len(composites)} tickers")
 
-    predictor = Day1Predictor()
+    predictor = MultiDayPredictor()
     ml_results = {}
 
     # Sort by composite score to only run ML on top candidates (performance optimization)
@@ -145,16 +145,27 @@ def run_ml_prediction(state: AgentState) -> dict:
             # 2. Extract feature vector
             feature_row = extract_features(ticker, scores, macro_data, ohlcv)
 
-            # 3. Predict
-            pred_return = predictor.predict(feature_row)
-            signal = predictor.get_signal(pred_return)
+            # 3. Predict Multi-Day
+            preds = predictor.predict(feature_row)
+
+            # Format predictions to percentages
+            pred_pcts = {h: round(val * 100, 2) for h, val in preds.items()}
+
+            # Use 1d prediction for the main signal/direction
+            signal = predictor.get_signal(preds.get('1d', 0.0))
 
             ml_results[ticker] = {
-                "pred_return": round(pred_return * 100, 2), # In percentage
+                "pred_return": pred_pcts.get('1d', 0.0), # Main 1d return
+                "predictions_multiday": pred_pcts,       # 1d, 3d, 5d, 7d
                 "signal": signal,
                 "confidence": "MEDIUM" # Default for now
             }
-            logger.info(f"  [{ticker}] ML Pred: {pred_return*100:+.2f}% -> {signal}")
+
+            # Inject to composites so downstream agents (like Price Predictor) can access it easily
+            if ticker in composites:
+                composites[ticker]["ml_prediction"] = ml_results[ticker]
+
+            logger.info(f"  [{ticker}] ML Pred (1d/3d/5d/7d): {pred_pcts.get('1d',0):+.2f}% / {pred_pcts.get('3d',0):+.2f}% / {pred_pcts.get('5d',0):+.2f}% / {pred_pcts.get('7d',0):+.2f}% -> {signal}")
         except Exception as e:
             logger.warning(f"  [{ticker}] ML Error: {e}")
 
@@ -465,24 +476,21 @@ def maybe_train_ml_before_analysis(universe: list[str] | None = None) -> None:
         logger.info("[ML TRAIN] Auto training disabled via ML_AUTO_TRAIN")
         return
 
-    meta_path = Path(os.getenv("ML_MODEL_META_PATH", "models/checkpoints/lgbm_day1_meta.json"))
+    meta_path = Path(os.getenv("ML_MODEL_META_PATH", "models/checkpoints/lgbm_multiday_meta.json"))
     if _already_trained_today(meta_path):
         logger.info("[ML TRAIN] Skip: training already attempted today")
         return
 
     period = os.getenv("ML_AUTO_TRAIN_PERIOD", "1y")
     min_rows = os.getenv("ML_AUTO_TRAIN_MIN_ROWS", "120")
-    min_dir_acc = os.getenv("ML_AUTO_TRAIN_MIN_DIR_ACC", "50.0")
 
     cmd = [
         sys.executable,
-        "scripts/train_day1_model.py",
+        "scripts/train_multiday_model.py",
         "--period",
         period,
         "--min-rows",
         min_rows,
-        "--min-dir-acc",
-        min_dir_acc,
     ]
     if _bool_env("ML_AUTO_TRAIN_FORCE_SAVE", False):
         cmd.append("--force-save")

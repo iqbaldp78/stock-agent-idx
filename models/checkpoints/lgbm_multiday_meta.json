@@ -1,0 +1,56 @@
+{
+  "run_date": "2026-06-14T16:18:07.162084",
+  "checkpoints_dir": "models/checkpoints",
+  "config": {
+    "period": "all",
+    "min_rows": 120,
+    "test_size": 0.2
+  },
+  "rows": {
+    "tickers_requested": 1,
+    "tickers_trained": 1,
+    "holdout_train_rows": 1511,
+    "holdout_test_rows": 378,
+    "final_train_rows": 1889
+  },
+  "holdout_metrics": {
+    "1d": {
+      "test_rows": 378,
+      "directional_accuracy": 50.26,
+      "mae_pct": 2.0543,
+      "buy_precision": 34.65,
+      "buy_recall": 29.93
+    },
+    "3d": {
+      "test_rows": 378,
+      "directional_accuracy": 55.03,
+      "mae_pct": 3.6826,
+      "buy_precision": 47.53,
+      "buy_recall": 48.73
+    },
+    "5d": {
+      "test_rows": 378,
+      "directional_accuracy": 60.58,
+      "mae_pct": 4.3537,
+      "buy_precision": 45.64,
+      "buy_recall": 49.28
+    },
+    "7d": {
+      "test_rows": 378,
+      "directional_accuracy": 51.59,
+      "mae_pct": 5.2787,
+      "buy_precision": 37.74,
+      "buy_recall": 41.96
+    }
+  },
+  "tickers": [
+    {
+      "ticker": "BRIS",
+      "ohlcv_rows": 1945,
+      "training_rows": 1889,
+      "train_rows": 1511,
+      "test_rows": 378
+    }
+  ],
+  "errors": []
+}

@@ -55,15 +55,10 @@ def get_universe_tickers() -> list[str]:
 def fetch_ohlcv(ticker: str, period: str) -> pd.DataFrame:
     """Ambil OHLCV historis panjang dari Stockbit range, fallback ke yfinance."""
     try:
-        from data.fetcher_stockbit import get_ohlcv, get_ohlcv_range
+        from data.fetcher_stockbit import get_ohlcv
 
-        if period in {"1mo", "3mo", "6mo", "1y"}:
-            df = get_ohlcv(ticker, period=period)
-        else:
-            from db.cache import _period_to_dates
-
-            start_date, end_date = _period_to_dates(period)
-            df = get_ohlcv_range(ticker, start_date, end_date)
+        # Langsung panggil get_ohlcv karena sekarang sudah support 5y, 10y, max, all
+        df = get_ohlcv(ticker, period=period)
         if df is not None and not df.empty:
             return df
     except Exception as e:
@@ -243,7 +238,7 @@ def main():
     grp = parser.add_mutually_exclusive_group(required=True)
     grp.add_argument("--tickers", nargs="+", help="Ticker(s), e.g. BBCA BMRI")
     grp.add_argument("--all", action="store_true", help="Semua ticker di universe")
-    parser.add_argument("--period", default="1y", help="Periode OHLCV historis (default: 1y)")
+    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "1y"), help="Periode OHLCV historis (default: dari env atau 1y)")
     parser.add_argument("--min-rows", type=int, default=120, help="Minimum training rows per ticker")
     parser.add_argument("--test-size", type=float, default=0.2, help="Holdout ratio per ticker (default: 0.2)")
     parser.add_argument("--model-path", default="models/checkpoints/lgbm_day1.pkl", help="Output model path")

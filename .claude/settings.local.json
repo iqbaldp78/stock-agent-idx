@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose *)",
+      "Bash(python -m py_compile data/fetcher_stockbit.py)"
+    ]
+  }
+}

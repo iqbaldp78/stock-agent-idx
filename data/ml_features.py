@@ -181,15 +181,18 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
     row = pd.DataFrame([all_features])[FEATURE_COLUMNS]
     return row.fillna(0.0)
 
-def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Generate historical features and targets from OHLCV for training.
-    This is for on-the-fly training per stock.
+    Returns (features_df, targets_df) where targets_df contains columns for 1d, 3d, 5d, and 7d horizons.
     """
     df = ohlcv.copy()
 
-    # Target: Tomorrow's return
-    df['target'] = df['Close'].shift(-1) / df['Close'] - 1
+    # Targets: Future returns for 1d, 3d, 5d, 7d
+    df['target_1d'] = df['Close'].shift(-1) / df['Close'] - 1
+    df['target_3d'] = df['Close'].shift(-3) / df['Close'] - 1
+    df['target_5d'] = df['Close'].shift(-5) / df['Close'] - 1
+    df['target_7d'] = df['Close'].shift(-7) / df['Close'] - 1
 
     # Simple Technical Features for History
     df['ret_1d'] = df['Close'].pct_change()
@@ -216,4 +219,5 @@ def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]
         if col not in df.columns:
             df[col] = 0.0
 
-    return df[FEATURE_COLUMNS], df['target']
+    targets = df[['target_1d', 'target_3d', 'target_5d', 'target_7d']]
+    return df[FEATURE_COLUMNS], targets

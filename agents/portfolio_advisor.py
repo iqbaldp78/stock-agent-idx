@@ -7,8 +7,8 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from agents.llm_client import get_chat_model
-from config import LLM_MODEL_AGENT
+from agents.llm_client import invoke_json
+from config import LLM_MODEL_IM_FALLBACK
 
 logger = logging.getLogger(__name__)
 
@@ -104,26 +104,23 @@ Output strictly in JSON format matching the schema provided.
 """
 
     try:
-        llm = get_chat_model(LLM_MODEL_AGENT, temperature=0.3, json_mode=True)
+        result = invoke_json(
+            model=LLM_MODEL_IM_FALLBACK,
+            system=system_prompt,
+            user=user_prompt,
+            temperature=0.3,
+            max_tokens=4096,
+            agent="portfolio_advisor",
+        )
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ]
+        if result is None:
+            logger.error("[Portfolio AI] invoke_json returned None")
+            return _error_response("LLM returned no valid JSON response")
 
-        response = llm.invoke(messages)
-        content = response.content.strip()
-
-        # Parse JSON
-        result = json.loads(content)
         result["generated_at"] = datetime.now().isoformat()
-
         logger.info(f"[Portfolio AI] Analysis completed: {result.get('summary', '')[:100]}")
         return result
 
-    except json.JSONDecodeError as e:
-        logger.error(f"[Portfolio AI] JSON parse error: {e}")
-        return _error_response(f"Failed to parse AI response: {e}")
     except Exception as e:
         logger.error(f"[Portfolio AI] Error: {e}")
         return _error_response(str(e))

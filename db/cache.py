@@ -581,12 +581,12 @@ def get_cached_broker_daily(ticker: str, trade_date: str) -> Optional[dict]:
                 "avg_price": int(avg_price or 0),
                 "type": broker_type or "",
             })
-        if sell_lot and sell_lot > 0:
+        if sell_lot and sell_lot != 0:
             sell.append({
                 "broker": broker_code,
                 "broker_name": broker_name or "",
-                "lot": int(sell_lot),
-                "value": int(sell_value or 0),
+                "lot": abs(int(sell_lot)),
+                "value": abs(int(sell_value or 0)),
                 "avg_price": int(avg_price or 0),
                 "type": broker_type or "",
             })

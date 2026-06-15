@@ -176,7 +176,9 @@ def _format_idr_compact(value: float) -> str:
     if abs_value >= 1_000_000_000_000:
         return f"{sign}{abs_value / 1_000_000_000_000:.2f}T"
     if abs_value >= 1_000_000_000:
-        return f"{sign}{abs_value / 1_000_000_000:.2f}M"
+        return f"{sign}{abs_value / 1_000_000_000:.2f}B"
+    if abs_value >= 1_000_000:
+        return f"{sign}{abs_value / 1_000_000:.2f}M"
     return f"{sign}{abs_value:.0f}"
 
 
@@ -380,81 +382,106 @@ def get_broker_daily(ticker: str, date: str) -> dict:
 
 def get_broker_accumulation(ticker: str, days: int) -> dict:
     """
-    Agregasi broker summary untuk N hari trading ke belakang.
+    Agregasi broker summary untuk N hari trading ke belakang menggunakan NET data.
     Hitung avg price tiap broker = true cost mereka.
 
     days=7  → timing signal (sedang aktif sekarang?)
     days=30 → true avg cost bandar
+
+    NOTE: Menggunakan Market Detector API dengan TRANSACTION_TYPE_NET untuk full period,
+    bukan agregasi harian GROSS.
     """
     trading_days = _get_trading_days(days, include_today=True)
     date_from = trading_days[-1]
     date_to = trading_days[0]
 
-    # Agregasi dari data harian (cache-first), sehingga history tidak perlu hit API berulang.
-    broker_totals: dict = {}
-    distribution_totals: dict = {}
-
-    daily_data = {}
-    foreign_net = 0
-    for date in trading_days:
+    # Hitung keaktifan per broker secara harian (menggunakan cache-first get_broker_daily)
+    # Ini sangat cepat jika data historis sudah ada di DB cache.
+    broker_active_buy = {}
+    broker_active_sell = {}
+    for d in trading_days:
         try:
-            day_data = get_broker_daily(ticker, date)
-        except httpx.HTTPStatusError:
+            day_data = get_broker_daily(ticker, d)
+            for entry in day_data.get("buy", []):
+                code = entry.get("broker")
+                if code:
+                    broker_active_buy[code] = broker_active_buy.get(code, 0) + 1
+            for entry in day_data.get("sell", []):
+                code = entry.get("broker")
+                if code:
+                    broker_active_sell[code] = broker_active_sell.get(code, 0) + 1
+        except Exception as e:
+            logger.warning(f"Failed to fetch daily broker data for active days calc on {d}: {e}")
+
+    # Single API call untuk NET data full period
+    try:
+        api_data = get_marketdetector_broker_summary(
+            ticker=ticker,
+            date_from=date_from,
+            date_to=date_to,
+            transaction_type="TRANSACTION_TYPE_NET",
+        )
+    except httpx.HTTPStatusError as e:
+        logger.warning(f"Failed to fetch broker accumulation for {ticker}: {e}")
+        return {
+            "ticker": ticker,
+            "window_days": days,
+            "period": f"{date_from} s/d {date_to}",
+            "top_accumulators": [],
+            "top_distributors": [],
+            "distribution_top3_value": 0,
+            "bandar_detector": {},
+            "daily_summary": {},
+            "foreign_net": 0,
+        }
+
+    # Parse brokers_buy (NET buyers)
+    broker_totals = {}
+    for entry in api_data.get("brokers_buy", []):
+        code = entry.get("broker_code")
+        if not code:
             continue
 
-        daily_data[date] = day_data
-        foreign_net += day_data.get("foreign_net", 0)
+        blot = _parse_number(entry.get("blot"))  # NET buy lot
+        bval = _parse_number(entry.get("bval"))  # NET buy value
+        avg_price = _int_no_decimal(entry.get("netbs_buy_avg_price"))
 
-        for entry in day_data.get("buy", []):
-            code = entry.get("broker")
-            if not code:
-                continue
-            if code not in broker_totals:
-                broker_totals[code] = {
-                    "broker_name": entry.get("broker_name") or _get_broker_name(code),
-                    "total_buy_lot": 0,
-                    "total_buy_value": 0,
-                    "active_days": 0,
-                    "daily": {},
-                    "avg_price": 0,
-                }
-            broker_totals[code]["total_buy_lot"] += int(entry.get("lot") or 0)
-            broker_totals[code]["total_buy_value"] += int(entry.get("value") or 0)
-            broker_totals[code]["active_days"] += 1
-            broker_totals[code]["daily"][date] = {
-                "lot": entry.get("lot"),
-                "avg_price": entry.get("avg_price"),
-            }
-            total_lot = broker_totals[code]["total_buy_lot"]
-            total_value = broker_totals[code]["total_buy_value"]
-            # IDX lots are 100 shares; convert lot-based average to per-share price.
-            broker_totals[code]["avg_price"] = int(round(total_value / max(total_lot, 1) / 100))
+        # Ambil hari aktif riil dari perhitungan harian, minimal 1 jika masuk top accumulator tapi data harian kosong
+        active_cnt = broker_active_buy.get(code, 1)
 
-        for entry in day_data.get("sell", []):
-            code = entry.get("broker")
-            if not code:
-                continue
-            if code not in distribution_totals:
-                distribution_totals[code] = {
-                    "broker_name": entry.get("broker_name") or _get_broker_name(code),
-                    "total_sell_lot": 0,
-                    "total_sell_value": 0,
-                    "active_days": 0,
-                    "daily": {},
-                    "avg_price": 0,
-                    "type": entry.get("type"),
-                }
-            distribution_totals[code]["total_sell_lot"] += int(entry.get("lot") or 0)
-            distribution_totals[code]["total_sell_value"] += int(entry.get("value") or 0)
-            distribution_totals[code]["active_days"] += 1
-            distribution_totals[code]["daily"][date] = {
-                "lot": entry.get("lot"),
-                "avg_price": entry.get("avg_price"),
-            }
-            total_lot = distribution_totals[code]["total_sell_lot"]
-            total_value = distribution_totals[code]["total_sell_value"]
-            # IDX lots are 100 shares; convert lot-based average to per-share price.
-            distribution_totals[code]["avg_price"] = int(round(total_value / max(total_lot, 1) / 100))
+        broker_totals[code] = {
+            "broker_name": _get_broker_name(code),
+            "total_buy_lot": int(blot) if blot else 0,
+            "total_buy_value": int(bval) if bval else 0,
+            "active_days": active_cnt,
+            "daily": {},  # Not available in aggregated NET data
+            "avg_price": avg_price if avg_price else 0,
+        }
+
+    # Parse brokers_sell (NET sellers)
+    distribution_totals = {}
+    for entry in api_data.get("brokers_sell", []):
+        code = entry.get("broker_code")
+        if not code:
+            continue
+
+        slot = _parse_number(entry.get("slot"))  # NET sell lot (negative)
+        sval = _parse_number(entry.get("sval"))  # NET sell value (negative)
+        avg_price = _int_no_decimal(entry.get("netbs_sell_avg_price"))
+
+        # Ambil hari aktif riil dari perhitungan harian, minimal 1 jika masuk top distributor tapi data harian kosong
+        active_cnt = broker_active_sell.get(code, 1)
+
+        # Convert negative values to positive for consistency
+        distribution_totals[code] = {
+            "broker_name": _get_broker_name(code),
+            "total_sell_lot": abs(int(slot)) if slot else 0,
+            "total_sell_value": abs(int(sval)) if sval else 0,
+            "active_days": active_cnt,
+            "daily": {},  # Not available in aggregated NET data
+            "avg_price": avg_price if avg_price else 0,
+            "type": entry.get("type"),
+        }
 
     sorted_brokers = sorted(
         broker_totals.items(),
@@ -470,6 +497,15 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
 
     top3_sell_total = sum(d[1]["total_sell_value"] for d in sorted_distributors[:3])
 
+    # Calculate foreign net from bandar_detector if available
+    bandar_detector = api_data.get("bandar_detector", {})
+    foreign_net = 0
+    if bandar_detector:
+        # Foreign net might be in bandar_detector data
+        foreign_buy = _parse_number(bandar_detector.get("foreign_buy", 0))
+        foreign_sell = _parse_number(bandar_detector.get("foreign_sell", 0))
+        foreign_net = int(foreign_buy - foreign_sell) if foreign_buy or foreign_sell else 0
+
     return {
         "ticker": ticker,
         "window_days": days,
@@ -477,8 +513,8 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
         "top_accumulators": sorted_brokers[:5],
         "top_distributors": sorted_distributors[:5],
         "distribution_top3_value": top3_sell_total,
-        "bandar_detector": {},
-        "daily_summary": daily_data,
+        "bandar_detector": bandar_detector,
+        "daily_summary": {},  # Not available in NET aggregate mode
         "foreign_net": foreign_net,
     }
 
@@ -586,7 +622,17 @@ def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50
 
     # Fetch hanya rentang yang belum ada
     new_frames = [cached] if not cached.empty else []
+
+    # Pecah range panjang menjadi sub-ranges maksimal 90 hari agar tidak ditolak Stockbit
+    chunked_ranges = []
     for range_start, range_end in group_into_ranges(missing):
+        cur_start = range_start
+        while cur_start <= range_end:
+            cur_end = min(range_end, cur_start + timedelta(days=90))
+            chunked_ranges.append((cur_start, cur_end))
+            cur_start = cur_end + timedelta(days=1)
+
+    for range_start, range_end in chunked_ranges:
         try:
             df_new = _fetch_ohlcv_range_api(
                 ticker, range_start.isoformat(), range_end.isoformat(), limit
@@ -625,15 +671,37 @@ def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50
 def get_ohlcv(ticker: str, period: str = "3mo") -> pd.DataFrame:
     """
     Backward compatible: tetap bisa pakai period string.
+    Support custom periods like 1y, 3y, 5y, 10y, or max/all.
     """
-    period_days = {"1mo": 22, "3mo": 66, "6mo": 132, "1y": 252}.get(period, 22)
     end_date = datetime.now().date()
+
+    if period.lower() in ["max", "all"]:
+        # Ambil data sejak IHSG aktif panjang, misal tahun 2005 (sudah cukup untuk ML)
+        start_date = date(2005, 1, 1)
+        return get_ohlcv_range(ticker, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
+
+    # Manual parsing for "Xy" or "Xmo"
+    import re
+    y_match = re.match(r"^(\d+)y$", period.lower())
+    mo_match = re.match(r"^(\d+)mo$", period.lower())
+
+    if y_match:
+        years = int(y_match.group(1))
+        period_days = years * 252
+    elif mo_match:
+        months = int(mo_match.group(1))
+        period_days = months * 22
+    else:
+        # Default fallback
+        period_days = {"1mo": 22, "3mo": 66, "6mo": 132, "1y": 252}.get(period, 22)
+
     start_date = end_date
     days_added = 0
     while days_added < period_days:
         start_date -= timedelta(days=1)
         if start_date.weekday() < 5:
             days_added += 1
+
     return get_ohlcv_range(ticker, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
 
 

@@ -134,6 +134,7 @@ def calculate_base_prediction(
     scores: dict,
     composites: dict,
     macro_data: dict,
+    ml_prediction: dict = None,
 ) -> dict:
     """
     Calculate rule-based price movement prediction.
@@ -173,15 +174,30 @@ def calculate_base_prediction(
     
     # Generate predictions for each day
     predictions = {}
+
+    # If we have real Multi-Day ML predictions from workflow, use them instead of linear fallback!
+    multiday_pcts = {}
+    if ml_prediction and "predictions_multiday" in ml_prediction:
+        multiday_pcts = ml_prediction["predictions_multiday"]
+
     for day, factor in COMPOUND_FACTORS.items():
-        day_pct = base_daily_pct * factor
+        if f"{day}d" in multiday_pcts:
+            # Real ML Prediction
+            day_pct = multiday_pcts[f"{day}d"]
+        else:
+            # Fallback to legacy linear rule-based if ML not provided
+            day_pct = base_daily_pct * factor
+
         predicted_price = current_price * (1 + day_pct / 100)
-        price_range_low = predicted_price * 0.97  # ±3% range
-        price_range_high = predicted_price * 1.03
-        
+
+        # Ranges get wider as horizon increases
+        range_padding = 0.02 + (0.01 * float(day))
+        price_range_low = predicted_price * (1 - range_padding)
+        price_range_high = predicted_price * (1 + range_padding)
+
         predictions[f"day_{day}"] = {
             "price": round(predicted_price, 0),
-            "pct_change": f"{day_pct:+.1f}%",
+            "pct_change": f"{day_pct:+.2f}%",
             "price_range": [round(price_range_low, 0), round(price_range_high, 0)],
         }
     
@@ -338,8 +354,13 @@ def predict_movement(
     Main entry point: predict daily price movement for a ticker.
     Returns complete prediction with LLM enhancement if available.
     """
-    # Calculate base prediction
-    base_pred = calculate_base_prediction(ticker, scores, composites, macro_data)
+    # Get ML prediction if available in composites
+    ml_pred = composites.get(ticker, {}).get("ml_prediction", {})
+
+    # Calculate base prediction (now powered by multi-day ML)
+    base_pred = calculate_base_prediction(
+        ticker, scores, composites, macro_data, ml_pred
+    )
     
     if not base_pred:
         return {

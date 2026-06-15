@@ -14,6 +14,7 @@ LQ45 = [
     "KLBF", "MAPI", "MBMA", "MDKA", "MEDC",
     "PGAS", "PGEO", "PTBA", "SCMA", "SMGR",
     "TLKM", "TOWR", "UNTR", "UNVR", "WIFI",
+    "BRIS",
 ]
 
 CUSTOM_WATCHLIST: list[str] = []
@@ -28,7 +29,7 @@ def to_yahoo_ticker(code: str) -> str:
 
 
 # Filter thresholds
-MIN_VOLUME = 300_000
+MIN_VOLUME = 100_000
 MIN_MARKET_CAP = 1_000_000_000_000  # 1 Triliun IDR
 
 # LLM — 9Router (OpenAI-compatible)

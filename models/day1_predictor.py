@@ -25,7 +25,7 @@ class Day1Predictor:
             except Exception as e:
                 logger.warning(f"Failed to load model: {e}")
 
-    def train_incremental(self, X: pd.DataFrame, y: pd.Series):
+    def train_incremental(self, X: pd.DataFrame, y):
         """
         Train or update model with new data.
         Currently uses simple LGBM Regressor.
@@ -33,6 +33,21 @@ class Day1Predictor:
         if len(X) < 10:
             logger.warning("Not enough data to train.")
             return
+
+        # If y is a DataFrame from new ml_features, take the first column (target_1d)
+        if isinstance(y, pd.DataFrame):
+            if 'target_1d' in y.columns:
+                y = y['target_1d']
+            else:
+                y = y.iloc[:, 0]
+
+        # Drop NaNs
+        valid_idx = ~y.isna()
+        if not valid_idx.any():
+            return
+
+        X_aligned = self._align_feature_frame(X)[valid_idx]
+        y_valid = y[valid_idx]
 
         params = {
             'objective': 'regression',
@@ -46,8 +61,7 @@ class Day1Predictor:
             'bagging_freq': 5
         }
 
-        X_aligned = self._align_feature_frame(X)
-        dtrain = lgb.Dataset(X_aligned, label=y)
+        dtrain = lgb.Dataset(X_aligned, label=y_valid)
         self.model = lgb.train(params, dtrain, num_boost_round=300)
 
         # Save model
