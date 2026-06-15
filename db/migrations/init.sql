@@ -122,6 +122,9 @@ CREATE TABLE IF NOT EXISTS signals (
     composite_score  NUMERIC(4,2),
     ml_prediction    JSONB,
     price_prediction JSONB,
+    tp_position_sizing JSONB,
+    broker_true_costs JSONB,
+    broker_distributors JSONB,
     risk_reward_tp1  VARCHAR(20),
     risk_reward_tp2  VARCHAR(20),
     risk_reward_tp3  VARCHAR(20),
@@ -258,6 +261,9 @@ ALTER TABLE broker_accumulation ADD COLUMN IF NOT EXISTS day_foreign_net BIGINT 
 
 -- Extend signals untuk kolom yang ditambahkan setelah initial schema
 ALTER TABLE signals ADD COLUMN IF NOT EXISTS price_prediction JSONB;
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS tp_position_sizing JSONB;
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS broker_true_costs JSONB;
+ALTER TABLE signals ADD COLUMN IF NOT EXISTS broker_distributors JSONB;
 ALTER TABLE signals ADD COLUMN IF NOT EXISTS bandar_avg_7d    NUMERIC(12,2);
 ALTER TABLE signals ADD COLUMN IF NOT EXISTS bandar_avg_1m    NUMERIC(12,2);
 ALTER TABLE signals ADD COLUMN IF NOT EXISTS broker_utama     TEXT;
