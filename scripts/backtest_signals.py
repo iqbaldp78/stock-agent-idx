@@ -164,8 +164,11 @@ def summarize_trades(trades: list[dict]) -> dict:
             "trades": 0,
             "win_rate": 0.0,
             "avg_return_pct": 0.0,
+            "median_return_pct": 0.0,
             "profit_factor": 0.0,
             "max_drawdown_pct": 0.0,
+            "best_trade_pct": 0.0,
+            "worst_trade_pct": 0.0,
         }
 
     returns = [float(t["return_pct"]) for t in trades]

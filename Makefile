@@ -141,17 +141,19 @@ analysis-tickers: ## Run full analysis for specific tickers (usage: make analysi
 # BACKTEST & VALIDATION
 # ============================================================
 
+PERIOD ?= 1y
+
 .PHONY: backtest
 backtest: ## Run historical backtest for all universe tickers
-	docker compose exec app python scripts/backtest_signals.py --all
+	docker compose exec app python scripts/backtest_signals.py --all --period $(PERIOD)
 
 .PHONY: backtest-ticker
-backtest-ticker: ## Run historical backtest for one ticker (usage: make backtest-ticker TICKER=BBCA)
+backtest-ticker: ## Run historical backtest for one ticker (usage: make backtest-ticker TICKER=BBCA PERIOD=1y)
 	@if [ -z "$(TICKER)" ]; then \
 		echo "Error: TICKER is required. Usage: make backtest-ticker TICKER=BBCA"; \
 		exit 1; \
 	fi
-	docker compose exec app python scripts/backtest_signals.py --tickers $(TICKER)
+	docker compose exec app python scripts/backtest_signals.py --tickers $(TICKER) --period $(PERIOD)
 
 .PHONY: validate-ml
 validate-ml: ## Validate ML Day-1 accuracy for all universe tickers

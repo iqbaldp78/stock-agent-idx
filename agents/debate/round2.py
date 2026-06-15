@@ -20,7 +20,13 @@ def _analysis_for_agent(ticker_scores: dict, agent: str) -> dict:
         "technical": "technical",
         "fundamental": "fundamental",
     }
-    return ticker_scores.get(key_map.get(agent, ""), {})
+    analysis = ticker_scores.get(key_map.get(agent, ""), {})
+    if agent != "fundamental":
+        fund_score = ticker_scores.get("fundamental", {})
+        fair_value = fund_score.get("fair_value", {})
+        if fair_value and isinstance(analysis, dict):
+            analysis = {**analysis, "fair_value": fair_value}
+    return analysis
 
 
 def cross_examine(

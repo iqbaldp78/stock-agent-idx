@@ -63,14 +63,20 @@ def present_all(
     macro_data: dict,
 ) -> list[dict]:
     ticker_scores = scores.get(ticker, {})
+    fund_score = ticker_scores.get("fundamental", {})
+    fair_value = fund_score.get("fair_value", {})
 
     def run_agent(agent: str) -> tuple[str, dict | None]:
         if agent == "fundamental":
-            analysis = ticker_scores.get("fundamental", {})
+            analysis = fund_score
         elif agent == "technical":
             analysis = ticker_scores.get("technical", {})
+            if fair_value and isinstance(analysis, dict):
+                analysis = {**analysis, "fair_value": fair_value}
         elif agent == "bandarmologi":
             analysis = ticker_scores.get("bandarm", {})
+            if fair_value and isinstance(analysis, dict):
+                analysis = {**analysis, "fair_value": fair_value}
         else:
             return agent, None
         entry = _present_one(ticker, agent, analysis, macro_data)
