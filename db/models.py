@@ -51,6 +51,8 @@ class BrokerAccumulation(Base):
     sell_lot = Column(BigInteger, default=0)
     sell_value = Column(BigInteger, default=0)
     foreign_net = Column(BigInteger, default=0)
+    broker_type = Column(String(10))
+    day_foreign_net = Column(BigInteger, default=0)
     created_at = Column(Date, server_default=func.now())
 
 

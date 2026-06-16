@@ -101,6 +101,11 @@ def walk_forward_validate(
 
     try:
         X_all, y_all = prepare_training_data(ohlcv)
+        if isinstance(y_all, pd.DataFrame):
+            if 'target_1d' in y_all.columns:
+                y_all = y_all['target_1d']
+            else:
+                y_all = y_all.iloc[:, 0]
     except Exception as e:
         return {"error": f"prepare_training_data failed: {e}"}
 
@@ -231,6 +236,20 @@ def fetch_ohlcv(ticker: str, period: str = "1y") -> pd.DataFrame:
     return pd.DataFrame()
 
 
+def normalize_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
+    if df is None or df.empty:
+        return pd.DataFrame()
+    out = df.copy()
+    out.columns = [str(c).title() for c in out.columns]
+    required = ["Open", "High", "Low", "Close", "Volume"]
+    for col in required:
+        if col not in out.columns:
+            return pd.DataFrame()
+        out[col] = pd.to_numeric(out[col], errors="coerce")
+    out = out.dropna(subset=required).sort_index()
+    return out
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -255,7 +274,8 @@ def main():
 
     for ticker in tickers:
         logger.info(f"📊 {ticker} — Fetching OHLCV ({args.period})...")
-        ohlcv = fetch_ohlcv(ticker, period=args.period)
+        raw = fetch_ohlcv(ticker, period=args.period)
+        ohlcv = normalize_ohlcv(raw)
 
         if ohlcv.empty:
             logger.warning(f"  ⚠️  {ticker}: No OHLCV data, skip")

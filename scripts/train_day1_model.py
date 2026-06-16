@@ -133,14 +133,9 @@ def build_dataset(
     tickers: list[str],
     period: str,
     min_rows: int,
-    test_size: float,
-) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, list[dict], list[dict]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, list[dict], list[dict]]:
     from data.ml_features import prepare_training_data
 
-    train_x_parts = []
-    train_y_parts = []
-    test_x_parts = []
-    test_y_parts = []
     all_x_parts = []
     all_y_parts = []
     summaries = []
@@ -167,18 +162,6 @@ def build_dataset(
             logger.warning(f"  {ticker}: rows too small ({len(X)} < {min_rows})")
             continue
 
-        split_i = int(len(X) * (1 - test_size))
-        split_i = max(1, min(split_i, len(X) - 1))
-
-        X_train = X.iloc[:split_i].copy()
-        y_train = y.iloc[:split_i].copy()
-        X_test = X.iloc[split_i:].copy()
-        y_test = y.iloc[split_i:].copy()
-
-        train_x_parts.append(X_train)
-        train_y_parts.append(y_train)
-        test_x_parts.append(X_test)
-        test_y_parts.append(y_test)
         all_x_parts.append(X)
         all_y_parts.append(y)
 
@@ -186,29 +169,25 @@ def build_dataset(
             "ticker": ticker,
             "ohlcv_rows": len(ohlcv),
             "training_rows": len(X),
-            "train_rows": len(X_train),
-            "test_rows": len(X_test),
         })
-        logger.info(f"  rows={len(X)} train={len(X_train)} test={len(X_test)}")
 
     if not all_x_parts:
         empty_x = pd.DataFrame()
-        empty_y = pd.Series(dtype=float)
-        return empty_x, empty_y, empty_x, empty_y, empty_x, empty_y, summaries, errors
+        empty_y = pd.DataFrame()
+        return empty_x, empty_y, summaries, errors
 
-    return (
-        pd.concat(train_x_parts, ignore_index=True),
-        pd.concat(train_y_parts, ignore_index=True),
-        pd.concat(test_x_parts, ignore_index=True),
-        pd.concat(test_y_parts, ignore_index=True),
-        pd.concat(all_x_parts, ignore_index=True),
-        pd.concat(all_y_parts, ignore_index=True),
-        summaries,
-        errors,
-    )
+    X_all_df = pd.concat(all_x_parts, ignore_index=False)
+    y_all_df = pd.concat(all_y_parts, ignore_index=False)
+    
+    # Sort chronologically
+    sort_idx = np.argsort(X_all_df.index)
+    X_all_df = X_all_df.iloc[sort_idx].reset_index(drop=True)
+    y_all_df = y_all_df.iloc[sort_idx].reset_index(drop=True)
+
+    return X_all_df, y_all_df, summaries, errors
 
 
-def evaluate_model(model, X_test: pd.DataFrame, y_test: pd.Series, feature_cols: list[str]) -> dict:
+def evaluate_model(model, X_test: pd.DataFrame, y_test, feature_cols: list[str]) -> dict:
     if model is None or X_test.empty:
         return {
             "test_rows": 0,
@@ -218,12 +197,21 @@ def evaluate_model(model, X_test: pd.DataFrame, y_test: pd.Series, feature_cols:
             "buy_recall": 0.0,
         }
 
+    # Extract target_1d if DataFrame
+    if isinstance(y_test, pd.DataFrame):
+        if 'target_1d' in y_test.columns:
+            y_test_series = y_test['target_1d']
+        else:
+            y_test_series = y_test.iloc[:, 0]
+    else:
+        y_test_series = y_test
+
     preds = model.predict(X_test[feature_cols].fillna(0.0))
-    actuals = y_test.values
+    actuals = y_test_series.values
     buy_prec, buy_rec = precision_recall_buy(actuals, preds)
 
     return {
-        "test_rows": int(len(y_test)),
+        "test_rows": int(len(y_test_series)),
         "directional_accuracy": round(directional_accuracy(actuals, preds) * 100, 2),
         "mae_pct": round(mae(actuals, preds) * 100, 4),
         "buy_precision": round(buy_prec * 100, 2),
@@ -267,54 +255,62 @@ def main():
     tickers = get_universe_tickers() if args.all else [t.upper() for t in args.tickers]
     logger.info(f"Training universe: {len(tickers)} ticker(s): {', '.join(tickers)}")
 
-    X_train, y_train, X_test, y_test, X_all, y_all, ticker_summaries, errors = build_dataset(
+    X_all, y_all, ticker_summaries, errors = build_dataset(
         tickers=tickers,
         period=args.period,
         min_rows=args.min_rows,
-        test_size=args.test_size,
     )
 
-    if X_train.empty or X_all.empty:
+    if X_all.empty:
         raise SystemExit("Tidak ada data training yang valid.")
 
     from models.day1_predictor import Day1Predictor
+    from sklearn.model_selection import TimeSeriesSplit
 
-    logger.info(f"Training holdout model: train_rows={len(X_train)} test_rows={len(X_test)}")
-    holdout_model_path = "/tmp/lgbm_day1_train_holdout.pkl"
-    holdout_predictor = Day1Predictor(model_path=holdout_model_path)
-    holdout_predictor.model = None
-    holdout_predictor.train_incremental(X_train, y_train)
-    holdout_metrics = evaluate_model(
-        holdout_predictor.model,
-        X_test,
-        y_test,
-        holdout_predictor.feature_cols,
-    )
+    logger.info(f"Running Walk-Forward Validation (3 splits) over {len(X_all)} rows...")
+    tscv = TimeSeriesSplit(n_splits=3)
+    
+    metrics_list = []
+    fold = 1
+    for train_idx, test_idx in tscv.split(X_all):
+        X_train_cv, X_test_cv = X_all.iloc[train_idx], X_all.iloc[test_idx]
+        y_train_cv, y_test_cv = y_all.iloc[train_idx], y_all.iloc[test_idx]
+        
+        fold_predictor = Day1Predictor(model_path="/tmp/lgbm_day1_fold.pkl")
+        fold_predictor.model = None
+        fold_predictor.train_incremental(X_train_cv, y_train_cv)
+        
+        fold_metrics = evaluate_model(fold_predictor.model, X_test_cv, y_test_cv, fold_predictor.feature_cols)
+        metrics_list.append(fold_metrics)
+        logger.info(f"Fold {fold} Acc: {fold_metrics['directional_accuracy']}%")
+        fold += 1
 
-    model_passed_gate = holdout_metrics["directional_accuracy"] >= args.min_dir_acc
+    holdout_metrics = {
+        "test_rows": int(np.mean([m["test_rows"] for m in metrics_list])),
+        "directional_accuracy": round(np.mean([m["directional_accuracy"] for m in metrics_list]), 2),
+        "mae_pct": round(np.mean([m["mae_pct"] for m in metrics_list]), 4),
+        "buy_precision": round(np.mean([m["buy_precision"] for m in metrics_list]), 2),
+        "buy_recall": round(np.mean([m["buy_recall"] for m in metrics_list]), 2),
+        "avg_pred_return_pct": round(np.mean([m["avg_pred_return_pct"] for m in metrics_list]), 4),
+        "avg_actual_return_pct": round(np.mean([m["avg_actual_return_pct"] for m in metrics_list]), 4),
+    }
+
+    model_passed_gate = bool(holdout_metrics["directional_accuracy"] >= args.min_dir_acc)
     model_saved = False
-    final_train_rows = 0
+    final_train_rows = len(X_all)
 
     if not model_passed_gate and not args.force_save:
         logger.warning(
-            "Model tidak disimpan: holdout directional accuracy %.2f%% < %.2f%%. "
+            "Model tidak disimpan: walk-forward directional accuracy %.2f%% < %.2f%%. "
             "Gunakan --force-save jika tetap ingin menyimpan.",
             holdout_metrics["directional_accuracy"],
             args.min_dir_acc,
         )
-    elif args.save_holdout_model:
-        logger.info(f"Saving holdout-trained model to {args.model_path}")
-        final_predictor = Day1Predictor(model_path=args.model_path)
-        final_predictor.model = None
-        final_predictor.train_incremental(X_train, y_train)
-        final_train_rows = len(X_train)
-        model_saved = True
     else:
         logger.info(f"Training final model with all rows: rows={len(X_all)}")
         final_predictor = Day1Predictor(model_path=args.model_path)
         final_predictor.model = None
         final_predictor.train_incremental(X_all, y_all)
-        final_train_rows = len(X_all)
         model_saved = True
 
     metadata = {
@@ -325,16 +321,12 @@ def main():
         "config": {
             "period": args.period,
             "min_rows": args.min_rows,
-            "test_size": args.test_size,
             "min_dir_acc": args.min_dir_acc,
             "force_save": args.force_save,
-            "save_holdout_model": args.save_holdout_model,
         },
         "rows": {
             "tickers_requested": len(tickers),
             "tickers_trained": len(ticker_summaries),
-            "holdout_train_rows": len(X_train),
-            "holdout_test_rows": len(X_test),
             "final_train_rows": final_train_rows,
         },
         "holdout_metrics": holdout_metrics,
@@ -348,7 +340,7 @@ def main():
 
     print()
     print("=" * 72)
-    print("  ML DAY-1 TRAINING SUMMARY")
+    print("  ML DAY-1 TRAINING SUMMARY (WALK-FORWARD)")
     print("=" * 72)
     print(f"Tickers trained : {len(ticker_summaries)} / {len(tickers)}")
     print(f"Final rows      : {final_train_rows}")
@@ -356,11 +348,11 @@ def main():
     print(f"Model path      : {args.model_path}")
     print(f"Metadata        : {args.metadata_output}")
     print("-" * 72)
-    print(f"Holdout rows    : {holdout_metrics['test_rows']}")
-    print(f"Dir Accuracy    : {holdout_metrics['directional_accuracy']:.2f}%")
-    print(f"MAE             : {holdout_metrics['mae_pct']:.4f}%")
-    print(f"Buy Precision   : {holdout_metrics['buy_precision']:.2f}%")
-    print(f"Buy Recall      : {holdout_metrics['buy_recall']:.2f}%")
+    print(f"Avg Test Rows   : {holdout_metrics['test_rows']} per fold")
+    print(f"Avg Dir Accuracy: {holdout_metrics['directional_accuracy']:.2f}%")
+    print(f"Avg MAE         : {holdout_metrics['mae_pct']:.4f}%")
+    print(f"Avg Buy Prec    : {holdout_metrics['buy_precision']:.2f}%")
+    print(f"Avg Buy Recall  : {holdout_metrics['buy_recall']:.2f}%")
     print("=" * 72)
 
 

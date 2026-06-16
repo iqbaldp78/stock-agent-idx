@@ -69,7 +69,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     return out.dropna()
 
 
-def generate_signal(row: pd.Series) -> str:
+def generate_signal(row: pd.Series, broker_records: list = None) -> str:
     """
     Rule-based BUY signal.
     Conservative supaya backtest tidak overtrade.
@@ -79,10 +79,29 @@ def generate_signal(row: pd.Series) -> str:
     healthy_rsi = 45 <= row["rsi"] <= 72
     momentum_ok = row["ret_5d"] > -0.03
     volume_ok = 0.7 <= row.get("volume_ratio", 1.0) <= 3.0
+    technical_ok = bullish_trend and healthy_rsi and momentum_ok and volume_ok
 
-    if bullish_trend and healthy_rsi and momentum_ok and volume_ok:
-        return "BUY"
-    return "HOLD"
+    if not technical_ok:
+        return "HOLD"
+
+    # Hybrid Bandarmologi Confirmation
+    if broker_records:
+        foreign_net = getattr(broker_records[0], "day_foreign_net", 0) or 0
+        
+        buyers = [r for r in broker_records if (r.buy_lot or 0) > 0]
+        sellers = [r for r in broker_records if (r.sell_lot or 0) != 0]
+        
+        top3_buy = sum(r.buy_lot for r in sorted(buyers, key=lambda x: x.buy_lot, reverse=True)[:3])
+        top3_sell = sum(abs(r.sell_lot) for r in sorted(sellers, key=lambda x: abs(x.sell_lot), reverse=True)[:3])
+        
+        top_3_accumulation_ok = top3_buy > top3_sell
+        
+        if foreign_net > 0 or top_3_accumulation_ok:
+            return "BUY"
+        else:
+            return "HOLD"
+
+    return "BUY"
 
 
 def simulate_trade(
@@ -239,10 +258,31 @@ def backtest_ticker(
     df = add_indicators(df)
     trades = []
 
+    # Fetch and cache broker accumulation data in bulk for hybrid confirmation
+    broker_cache = {}
+    try:
+        from db import SessionLocal
+        from db.models import BrokerAccumulation
+        db = SessionLocal()
+        records = db.query(BrokerAccumulation).filter(
+            BrokerAccumulation.ticker == ticker
+        ).all()
+        db.close()
+        
+        for r in records:
+            date_str = str(r.trade_date)
+            if date_str not in broker_cache:
+                broker_cache[date_str] = []
+            broker_cache[date_str].append(r)
+    except Exception as e:
+        logger.warning(f"Failed to load broker accumulation data for {ticker}: {e}")
+
     # Leave room for holding_days at the end.
     for i in range(0, len(df) - holding_days - 1):
         row = df.iloc[i]
-        signal = generate_signal(row)
+        date_str = str(df.index[i].date() if hasattr(df.index[i], "date") else df.index[i])
+        broker_records = broker_cache.get(date_str)
+        signal = generate_signal(row, broker_records)
         if signal != "BUY":
             continue
 

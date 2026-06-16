@@ -1,6 +1,7 @@
 # Core
 python-dotenv==1.1.0
 httpx==0.28.1
+playwright==1.42.0
 
 # LLM & Agent Framework
 langgraph==0.4.1

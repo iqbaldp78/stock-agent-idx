@@ -37,6 +37,31 @@ FEATURE_COLUMNS = [
     "range_pct",
 ]
 
+# Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
+ML_TRAIN_FEATURES = [
+    "rsi",
+    "is_bullish_trend",
+    "vol_ratio",
+    "ret_1d",
+    "ret_3d",
+    "ret_5d",
+    "volatility_20d",
+    "gap_open",
+    "ma_dist_20",
+    "ma_dist_50",
+    "volume_spike",
+    "range_pct",
+]
+
+
+def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    delta = series.diff()
+    gain = (delta.where(delta > 0, 0)).ewm(alpha=1/period, adjust=False).mean()
+    loss = (-delta.where(delta < 0, 0)).ewm(alpha=1/period, adjust=False).mean()
+    rs = gain / loss
+    return 100 - (100 / (1 + rs))
+
+
 
 def _parse_number(val: object, default: float = 0.0) -> float:
     if isinstance(val, (int, float, np.number)):
@@ -205,9 +230,17 @@ def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
     df['ma50'] = df['Close'].rolling(50).mean()
     df['ma_dist_20'] = df['Close'] / df['ma20'] - 1
     df['ma_dist_50'] = df['Close'] / df['ma50'] - 1
-
+    
+    # Calculate RSI and Trend historically
+    df['rsi'] = _compute_rsi(df['Close'], 14)
+    df['is_bullish_trend'] = (df['ma20'] > df['ma50']).astype(float)
+    
+    # Volume Ratio historical
+    vol_ma20 = df['Volume'].rolling(20).mean()
+    df['vol_ratio'] = df['Volume'] / vol_ma20
+    
     # Additional OHLCV-derived features for Day-1 parity
-    df['volume_spike'] = df['Volume'] / df['Volume'].rolling(20).mean()
+    df['volume_spike'] = df['Volume'] / vol_ma20
     df['range_pct'] = (df['High'] - df['Low']) / df['Close']
     df['gap_open'] = df['Open'] / df['Close'].shift(1) - 1
 
@@ -215,9 +248,13 @@ def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
     df = df.dropna()
 
     # Keep the existing model schema: non-OHLCV features are placeholders for historical training.
+    # Note: ML Model will only use ML_TRAIN_FEATURES
     for col in FEATURE_COLUMNS:
         if col not in df.columns:
             df[col] = 0.0
 
     targets = df[['target_1d', 'target_3d', 'target_5d', 'target_7d']]
+    # We return the full FEATURE_COLUMNS for backward compatibility, but models/day1_predictor 
+    # will only select ML_TRAIN_FEATURES.
     return df[FEATURE_COLUMNS], targets
+

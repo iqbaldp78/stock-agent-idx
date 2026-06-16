@@ -8,7 +8,8 @@ import numpy as np
 import logging
 import joblib
 import os
-from data.ml_features import FEATURE_COLUMNS
+from data.ml_features import ML_TRAIN_FEATURES
+from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ class Day1Predictor:
     def __init__(self, model_path: str = "models/checkpoints/lgbm_day1.pkl"):
         self.model_path = model_path
         self.model = None
-        self.feature_cols = FEATURE_COLUMNS
+        self.feature_cols = ML_TRAIN_FEATURES
 
         if os.path.exists(self.model_path):
             try:
@@ -49,20 +50,27 @@ class Day1Predictor:
         X_aligned = self._align_feature_frame(X)[valid_idx]
         y_valid = y[valid_idx]
 
-        params = {
-            'objective': 'regression',
-            'metric': 'rmse',
-            'verbosity': -1,
-            'boosting_type': 'gbdt',
-            'learning_rate': 0.05,
-            'num_leaves': 64,
-            'feature_fraction': 0.8,
-            'bagging_fraction': 0.8,
-            'bagging_freq': 5
+        estimator = lgb.LGBMRegressor(objective='regression', metric='rmse', verbosity=-1)
+        
+        param_dist = {
+            'learning_rate': [0.01, 0.05, 0.1],
+            'num_leaves': [31, 64, 127],
+            'bagging_fraction': [0.7, 0.8, 0.9],
+            'feature_fraction': [0.7, 0.8, 0.9],
         }
 
-        dtrain = lgb.Dataset(X_aligned, label=y_valid)
-        self.model = lgb.train(params, dtrain, num_boost_round=300)
+        tscv = TimeSeriesSplit(n_splits=3)
+        random_search = RandomizedSearchCV(
+            estimator, param_distributions=param_dist,
+            n_iter=5, cv=tscv, scoring='neg_root_mean_squared_error',
+            random_state=42, n_jobs=-1
+        )
+        
+        logger.info("Starting hyperparameter tuning via RandomizedSearchCV...")
+        random_search.fit(X_aligned, y_valid)
+        self.model = random_search.best_estimator_
+        
+        logger.info(f"Best params: {random_search.best_params_}")
 
         # Save model
         os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
@@ -71,27 +79,22 @@ class Day1Predictor:
 
     def predict(self, feature_row: pd.DataFrame) -> float:
         """
-        Predict return for tomorrow.
+        Predict return for tomorrow using ML + Agent Score Ensemble.
         """
-        if self.model is None:
-            # Fallback: simple weighted score if no ML model yet
-            logger.warning("No ML model found, using rule-based fallback prediction.")
-            return self._rule_based_prediction(feature_row)
-
-        try:
-            model_cols = self.model.feature_name() if hasattr(self.model, "feature_name") else []
-            if model_cols:
+        ml_pred = 0.0
+        if self.model is not None:
+            try:
+                model_cols = self.model.feature_name_ if hasattr(self.model, "feature_name_") else self.feature_cols
                 aligned = feature_row.copy()
                 for col in model_cols:
                     if col not in aligned.columns:
                         aligned[col] = 0.0
                 pred = self.model.predict(aligned[model_cols])
-            else:
-                pred = self.model.predict(self._align_feature_frame(feature_row))
-        except Exception as e:
-            logger.warning("Model predict failed (%s), fallback to rule-based.", e)
-            return self._rule_based_prediction(feature_row)
-        return float(pred[0])
+                ml_pred = float(pred[0])
+            except Exception as e:
+                logger.warning("Model predict failed (%s), fallback to 0.0.", e)
+        
+        return self._ensemble_prediction(feature_row, ml_pred)
 
     def _align_feature_frame(self, frame: pd.DataFrame) -> pd.DataFrame:
         aligned = frame.copy()
@@ -100,18 +103,19 @@ class Day1Predictor:
                 aligned[col] = 0.0
         return aligned[self.feature_cols].fillna(0.0)
 
-    def _rule_based_prediction(self, feature_row: pd.DataFrame) -> float:
+    def _ensemble_prediction(self, feature_row: pd.DataFrame, ml_pred: float) -> float:
         """
-        Emergency fallback prediction.
+        Combine ML prediction with agent Bandarmologi and Technical scores.
         """
-        score = (
-            feature_row['bandarm_score'].iloc[0] * 0.4 +
-            feature_row['technical_score'].iloc[0] * 0.3 +
-            (1.0 if feature_row['is_bullish_trend'].iloc[0] > 0.5 else -0.5) * 0.2 +
-            feature_row['macro_score'].iloc[0] * 0.1
-        )
-        # Map 1-10 score to roughly -2% to +2% return
-        return (score - 5.5) / 100.0
+        bandarm_score = feature_row.get('bandarm_score', pd.Series([5.0])).iloc[0]
+        tech_score = feature_row.get('technical_score', pd.Series([5.0])).iloc[0]
+        
+        # 1 pt above neutral (5.0) contributes +0.2% return
+        bandarm_effect = (bandarm_score - 5.0) * 0.002
+        tech_effect = (tech_score - 5.0) * 0.001
+        
+        final_pred = ml_pred * 0.7 + bandarm_effect + tech_effect
+        return final_pred
 
     def get_signal(self, pred_return: float) -> str:
         """

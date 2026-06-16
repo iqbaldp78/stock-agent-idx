@@ -1,0 +1,5 @@
+{
+  "run_date": "2026-06-15T23:44:04.072662",
+  "model_path": "models/checkpoints/lgbm_day1.pkl",
+  "model_saved": false,
+  "model_passed_gate": 

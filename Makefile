@@ -144,11 +144,15 @@ analysis-tickers: ## Run full analysis for specific tickers (usage: make analysi
 PERIOD ?= 1y
 
 .PHONY: backtest
-backtest: ## Run historical backtest for all universe tickers
+backtest: ## Run historical backtest for all universe tickers (usage: make backtest PERIOD=max)
 	docker compose exec app python scripts/backtest_signals.py --all --period $(PERIOD)
 
+.PHONY: backtest-max
+backtest-max: ## Run historical backtest for all universe tickers with max period
+	@make backtest PERIOD=max
+
 .PHONY: backtest-ticker
-backtest-ticker: ## Run historical backtest for one ticker (usage: make backtest-ticker TICKER=BBCA PERIOD=1y)
+backtest-ticker: ## Run historical backtest for one ticker (usage: make backtest-ticker TICKER=BBCA PERIOD=5y)
 	@if [ -z "$(TICKER)" ]; then \
 		echo "Error: TICKER is required. Usage: make backtest-ticker TICKER=BBCA"; \
 		exit 1; \

@@ -301,6 +301,8 @@ INSERT INTO universe (ticker, is_lq45, is_custom, active) VALUES
 ('BBRI', TRUE, FALSE, TRUE),
 ('BBTN', TRUE, FALSE, TRUE),
 ('BMRI', TRUE, FALSE, TRUE),
+('BRIS', TRUE, FALSE, TRUE),
+('ADMR', TRUE, FALSE, TRUE),
 ('BRPT', TRUE, FALSE, TRUE),
 ('BUKA', TRUE, FALSE, TRUE),
 ('BYAN', TRUE, FALSE, TRUE),

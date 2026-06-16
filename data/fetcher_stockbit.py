@@ -21,6 +21,7 @@ from functools import wraps
 import httpx
 import pandas as pd
 import numpy as np
+import dotenv
 
 from db.cache import (
     get_cached_ohlcv,
@@ -42,6 +43,70 @@ date_module_today = _date.today
 logger = logging.getLogger(__name__)
 
 
+def refresh_stockbit_token() -> str:
+    """
+    Melakukan login otomatis menggunakan STOCKBIT_USERNAME dan STOCKBIT_PASSWORD 
+    menggunakan endpoint Mobile API v6 untuk menghindari ReCAPTCHA dan New Device OTP.
+    """
+    username = os.getenv("STOCKBIT_USERNAME")
+    password = os.getenv("STOCKBIT_PASSWORD")
+    
+    if not username or not password:
+        raise ValueError("STOCKBIT_USERNAME or STOCKBIT_PASSWORD is not set in .env")
+
+    import httpx
+    
+    url = "https://exodus.stockbit.com/login/v6/username"
+    
+    # Payload mengikuti format mobile API v6 tanpa ReCAPTCHA!
+    payload = {
+        "user": username,
+        "password": password,
+        "player_id": os.getenv("STOCKBIT_PLAYER_ID", "c260c141-f3e3-4470-af3a-02ca57204d50")
+    }
+    
+    # Sangat penting menggunakan User-Agent Android resmi agar Stockbit tidak meminta Captcha
+    headers = {
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)",
+        "Content-Type": "application/json"
+    }
+    
+    logger.info("Mencoba login via API Mobile v6...")
+    with httpx.Client(timeout=15.0) as client:
+        response = client.post(url, json=payload, headers=headers)
+        
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Gagal login API: {e.response.text}")
+            raise
+            
+        data = response.json()
+        
+    # JSON Path: data -> data -> login -> token_data -> access -> token
+    token = data.get("data", {}).get("login", {}).get("token_data", {}).get("access", {}).get("token")
+    
+    if not token:
+        # Fallback format jika terjadi perubahan struktur JSON
+        token = data.get("data", {}).get("access_token")
+        
+    if not token:
+        raise ValueError(f"Gagal mendapatkan access_token dari response login: {data}")
+        
+    # Update current environment
+    os.environ["STOCKBIT_API_KEY"] = token
+    
+    # Update .env file permanently
+    env_file = dotenv.find_dotenv()
+    if env_file:
+        dotenv.set_key(env_file, "STOCKBIT_API_KEY", token)
+        logger.info("Stockbit token berhasil direfresh via Mobile API dan disimpan ke .env")
+    else:
+        logger.warning("File .env tidak ditemukan, token hanya diupdate di memori")
+        
+    return token
+
+
 def _retry_on_rate_limit(max_attempts: int = 4, base_delay: float = 1.0):
     """
     Decorator untuk retry pada rate limit (429) dan server errors (500, 502, 503, 504).
@@ -58,6 +123,17 @@ def _retry_on_rate_limit(max_attempts: int = 4, base_delay: float = 1.0):
                     status = exc.response.status_code
                     last_exception = exc
                     
+                    if status == 401 and attempt < max_attempts - 1:
+                        logger.warning(f"[{func.__name__}] HTTP 401 Unauthorized. Attempting to refresh token...")
+                        try:
+                            refresh_stockbit_token()
+                            logger.info("Token refreshed successfully. Retrying request...")
+                            time.sleep(1.0)
+                            continue
+                        except Exception as e:
+                            logger.error(f"Failed to refresh Stockbit token: {e}")
+                            raise
+
                     # Retry jika 429 (rate limit) atau 5xx errors
                     if status in (429, 500, 502, 503, 504) and attempt < max_attempts - 1:
                         wait_time = base_delay * (2 ** attempt)

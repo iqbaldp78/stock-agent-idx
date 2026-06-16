@@ -19,6 +19,11 @@ Backtest akan:
 - menampilkan ringkasan performa di terminal
 - menyimpan hasil lengkap ke file JSON
 
+## Sumber Data (Bukan Data Acak)
+
+> [!IMPORTANT]
+> **Data yang digunakan dalam backtest ini 100% merupakan data harga pasar nyata (riil) historis** yang ditarik dari Bursa Efek Indonesia (IDX) menggunakan Stockbit API dengan fallback ke `yfinance` (^JKSE, BBCA.JK, dll). Data ini **bukan data buatan (dummy) atau acak (random)**. Setiap transaksi disimulasikan secara deterministik berdasarkan kondisi pasar riil pada tanggal tersebut.
+
 ## Strategy
 
 Strategi default sengaja dibuat konservatif supaya tidak terlalu sering menghasilkan trade.
@@ -58,23 +63,29 @@ Jalankan command dari root project.
 
 ### Via Makefile
 
+Secara default, jika parameter `PERIOD` tidak diisi, Makefile akan menggunakan periode 1 tahun (`1y`). Anda bisa menyesuaikan periode data (misalnya `max`, `5y`, `3y`, `6mo`) dengan mengoperasikan variabel `PERIOD`.
+
 Backtest semua ticker universe:
 
 ```bash
 make backtest
+# Menggunakan periode maksimal data historis
+make backtest PERIOD=max
 ```
 
 Backtest satu ticker:
 
 ```bash
 make backtest-ticker TICKER=BBCA
+# Menggunakan periode 5 tahun ke belakang
+make backtest-ticker TICKER=BBCA PERIOD=5y
 ```
 
 Command Makefile menjalankan script di dalam container `app`:
 
 ```bash
-docker compose exec app python scripts/backtest_signals.py --all
-docker compose exec app python scripts/backtest_signals.py --tickers BBCA
+docker compose exec app python scripts/backtest_signals.py --all --period $(PERIOD)
+docker compose exec app python scripts/backtest_signals.py --tickers BBCA --period $(PERIOD)
 ```
 
 ### Via Python Langsung
