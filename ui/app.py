@@ -24,6 +24,70 @@ st.set_page_config(
     layout="wide",
 )
 
+# === Premium UI Injection ===
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+html, body, [class*="css"]  {
+    font-family: 'Outfit', sans-serif !important;
+}
+
+/* Glassmorphism containers */
+div[data-testid="stContainer"] {
+    background: rgba(30, 32, 45, 0.4) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+div[data-testid="stContainer"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Custom Buttons */
+div.stButton > button {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1rem !important;
+    transition: all 0.2s ease;
+}
+div.stButton > button:hover {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
+}
+
+/* Metrics Styling */
+[data-testid="stMetricValue"] {
+    font-weight: 700 !important;
+    background: -webkit-linear-gradient(45deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background: rgba(20, 22, 35, 0.95) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Expander styling */
+[data-testid="stExpander"] {
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    background: rgba(30, 32, 45, 0.3) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 # === Database Helper ===
 

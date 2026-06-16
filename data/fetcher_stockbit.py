@@ -123,16 +123,9 @@ def _retry_on_rate_limit(max_attempts: int = 4, base_delay: float = 1.0):
                     status = exc.response.status_code
                     last_exception = exc
                     
-                    if status == 401 and attempt < max_attempts - 1:
-                        logger.warning(f"[{func.__name__}] HTTP 401 Unauthorized. Attempting to refresh token...")
-                        try:
-                            refresh_stockbit_token()
-                            logger.info("Token refreshed successfully. Retrying request...")
-                            time.sleep(1.0)
-                            continue
-                        except Exception as e:
-                            logger.error(f"Failed to refresh Stockbit token: {e}")
-                            raise
+                    if status == 401:
+                        logger.error(f"[{func.__name__}] HTTP 401 Unauthorized. Token Stockbit kedaluwarsa. Silakan perbarui STOCKBIT_API_KEY di .env secara manual.")
+                        raise
 
                     # Retry jika 429 (rate limit) atau 5xx errors
                     if status in (429, 500, 502, 503, 504) and attempt < max_attempts - 1:
@@ -305,6 +298,7 @@ def _normalize_bandar_detector(raw: dict) -> dict:
     }
 
 
+@_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
 def get_marketdetector_broker_summary(
     ticker: str,
     date_from: str,

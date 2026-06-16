@@ -91,9 +91,15 @@ def get_sector_outlook() -> dict:
 
     for sector_name, idx_ticker in sectors.items():
         try:
+            from db.cache import get_ohlcv_no_data_dates, save_ohlcv_no_data_dates
+            
             # Cek DB dulu
             cached = get_cached_sector_ohlcv(idx_ticker, start_date_str, end_date_str)
             missing = find_missing_dates(cached, start_date_str, end_date_str)
+
+            no_data_dates = get_ohlcv_no_data_dates(idx_ticker, start_date_str, end_date_str, source="yfinance")
+            if no_data_dates:
+                missing = [d for d in missing if d not in no_data_dates]
 
             # Fetch hanya tanggal yang belum ada
             if missing:
@@ -106,6 +112,14 @@ def get_sector_outlook() -> dict:
                             progress=False,
                             auto_adjust=True,
                         )
+                        
+                        expected_dates = []
+                        cur = range_start
+                        while cur <= range_end:
+                            if cur.weekday() < 5 and cur < today:
+                                expected_dates.append(cur)
+                            cur += timedelta(days=1)
+                        
                         if not df_new.empty:
                             # Flatten MultiIndex jika ada
                             if isinstance(df_new.columns, pd.MultiIndex):
@@ -113,6 +127,13 @@ def get_sector_outlook() -> dict:
                             save_sector_ohlcv(idx_ticker, df_new, today)
                             cached = pd.concat([cached, df_new]).sort_index()
                             cached = cached[~cached.index.duplicated(keep="last")]
+                            
+                            returned_dates = {idx.date() if hasattr(idx, "date") else idx for idx in df_new.index}
+                            unresolved_no_data = [d for d in expected_dates if d not in returned_dates]
+                            if unresolved_no_data:
+                                save_ohlcv_no_data_dates(idx_ticker, unresolved_no_data, source="yfinance")
+                        elif expected_dates:
+                            save_ohlcv_no_data_dates(idx_ticker, expected_dates, source="yfinance")
                     except Exception as e:
                         print(f"[DEBUG] {sector_name} fetch {range_start}..{range_end}: {e}")
 

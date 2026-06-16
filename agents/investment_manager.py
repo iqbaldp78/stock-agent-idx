@@ -48,6 +48,7 @@ def synthesize_with_llm(state: dict) -> dict | None:
     composites = state.get("composites", {})
     macro_data = state.get("macro_data", {})
     debate_log = state.get("debate_log", [])
+    ml_predictions = state.get("ml_predictions", {})
 
     finalist_tickers = [f["ticker"] for f in finalists[:7]]
     debate_summary = [
@@ -61,6 +62,7 @@ def synthesize_with_llm(state: dict) -> dict | None:
         "composites": {t: composites.get(t) for t in finalist_tickers if t in composites},
         "macro_data": macro_data,
         "debate_log": debate_summary,
+        "ml_predictions": {t: ml_predictions.get(t) for t in finalist_tickers if t in ml_predictions},
     }
     user = (
         "Pilih TOP 3 dari finalis berikut. Rank 1 = conviction tertinggi.\n\n"
