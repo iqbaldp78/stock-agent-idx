@@ -150,6 +150,49 @@ def create_dca_manual(
         db.close()
 
 
+def get_quick_ai_entry(ticker: str) -> Optional[dict]:
+    """
+    Kalkulasi cepat untuk Support 1, Support 2, dan Harga saat ini
+    guna memberikan rekomendasi entry_low, entry_high, dan max_entry pada DCA manual.
+    """
+    try:
+        from data.fetcher_stockbit import get_ohlcv
+        import pandas as pd
+        
+        df = get_ohlcv(ticker, period="3mo")
+        if df is None or df.empty:
+            return None
+            
+        current_price = float(df.iloc[-1]["Close"])
+        
+        # Support 1: Lowest low in last 20 days
+        if len(df) >= 20:
+            s1 = float(df["Low"].tail(20).min())
+        else:
+            s1 = float(df["Low"].min())
+            
+        # Support 2: Lowest low in last 60 days
+        if len(df) >= 60:
+            s2 = float(df["Low"].tail(60).min())
+        else:
+            s2 = float(df["Low"].min())
+            
+        # Jika harga S1 dan S2 berdekatan atau harga saat ini mendekati S1
+        if s1 >= current_price * 0.98:
+            s1 = current_price * 0.95
+        if s2 >= s1 * 0.98:
+            s2 = s1 * 0.95
+            
+        return {
+            "entry_high": round(current_price, 0),
+            "entry_low": round(s1, 0),
+            "max_entry": round(s2, 0)
+        }
+    except Exception as e:
+        logger.error(f"[DCA] get_quick_ai_entry error: {e}")
+        return None
+
+
 # ============================================================
 # Get / List Strategies
 # ============================================================

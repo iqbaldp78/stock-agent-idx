@@ -187,7 +187,7 @@ def build_dataset(
     return X_all_df, y_all_df, summaries, errors
 
 
-def evaluate_model(model, X_test: pd.DataFrame, y_test, feature_cols: list[str]) -> dict:
+def evaluate_model(model, X_test: pd.DataFrame, y_test, feature_cols: list[str], target_col: str = "target_5d") -> dict:
     if model is None or X_test.empty:
         return {
             "test_rows": 0,
@@ -197,10 +197,10 @@ def evaluate_model(model, X_test: pd.DataFrame, y_test, feature_cols: list[str])
             "buy_recall": 0.0,
         }
 
-    # Extract target_1d if DataFrame
+    # Extract specified target if DataFrame
     if isinstance(y_test, pd.DataFrame):
-        if 'target_1d' in y_test.columns:
-            y_test_series = y_test['target_1d']
+        if target_col in y_test.columns:
+            y_test_series = y_test[target_col]
         else:
             y_test_series = y_test.iloc[:, 0]
     else:
@@ -226,7 +226,8 @@ def main():
     grp = parser.add_mutually_exclusive_group(required=True)
     grp.add_argument("--tickers", nargs="+", help="Ticker(s), e.g. BBCA BMRI")
     grp.add_argument("--all", action="store_true", help="Semua ticker di universe")
-    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "1y"), help="Periode OHLCV historis (default: dari env atau 1y)")
+    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "max"), help="Periode OHLCV historis (default: dari env atau max)")
+    parser.add_argument("--target", default="target_5d", help="Target horizon model (default: target_5d)")
     parser.add_argument("--min-rows", type=int, default=120, help="Minimum training rows per ticker")
     parser.add_argument("--test-size", type=float, default=0.2, help="Holdout ratio per ticker (default: 0.2)")
     parser.add_argument("--model-path", default="models/checkpoints/lgbm_day1.pkl", help="Output model path")
@@ -276,11 +277,11 @@ def main():
         X_train_cv, X_test_cv = X_all.iloc[train_idx], X_all.iloc[test_idx]
         y_train_cv, y_test_cv = y_all.iloc[train_idx], y_all.iloc[test_idx]
         
-        fold_predictor = Day1Predictor(model_path="/tmp/lgbm_day1_fold.pkl")
+        fold_predictor = Day1Predictor(model_path="/tmp/lgbm_day1_fold.pkl", target_col=args.target)
         fold_predictor.model = None
         fold_predictor.train_incremental(X_train_cv, y_train_cv)
         
-        fold_metrics = evaluate_model(fold_predictor.model, X_test_cv, y_test_cv, fold_predictor.feature_cols)
+        fold_metrics = evaluate_model(fold_predictor.model, X_test_cv, y_test_cv, fold_predictor.feature_cols, args.target)
         metrics_list.append(fold_metrics)
         logger.info(f"Fold {fold} Acc: {fold_metrics['directional_accuracy']}%")
         fold += 1
@@ -308,7 +309,7 @@ def main():
         )
     else:
         logger.info(f"Training final model with all rows: rows={len(X_all)}")
-        final_predictor = Day1Predictor(model_path=args.model_path)
+        final_predictor = Day1Predictor(model_path=args.model_path, target_col=args.target)
         final_predictor.model = None
         final_predictor.train_incremental(X_all, y_all)
         model_saved = True

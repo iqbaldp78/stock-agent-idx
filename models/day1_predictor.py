@@ -14,8 +14,9 @@ from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 logger = logging.getLogger(__name__)
 
 class Day1Predictor:
-    def __init__(self, model_path: str = "models/checkpoints/lgbm_day1.pkl"):
+    def __init__(self, model_path: str = "models/checkpoints/lgbm_day1.pkl", target_col: str = "target_5d"):
         self.model_path = model_path
+        self.target_col = target_col
         self.model = None
         self.feature_cols = ML_TRAIN_FEATURES
 
@@ -35,10 +36,10 @@ class Day1Predictor:
             logger.warning("Not enough data to train.")
             return
 
-        # If y is a DataFrame from new ml_features, take the first column (target_1d)
+        # If y is a DataFrame from new ml_features, take the specified target column
         if isinstance(y, pd.DataFrame):
-            if 'target_1d' in y.columns:
-                y = y['target_1d']
+            if self.target_col in y.columns:
+                y = y[self.target_col]
             else:
                 y = y.iloc[:, 0]
 
@@ -54,15 +55,16 @@ class Day1Predictor:
         
         param_dist = {
             'learning_rate': [0.01, 0.05, 0.1],
-            'num_leaves': [31, 64, 127],
-            'bagging_fraction': [0.7, 0.8, 0.9],
-            'feature_fraction': [0.7, 0.8, 0.9],
+            'num_leaves': [15, 31, 64, 127],
+            'bagging_fraction': [0.6, 0.7, 0.8, 0.9],
+            'feature_fraction': [0.6, 0.7, 0.8, 0.9],
+            'n_estimators': [100, 200, 300]
         }
 
         tscv = TimeSeriesSplit(n_splits=3)
         random_search = RandomizedSearchCV(
             estimator, param_distributions=param_dist,
-            n_iter=5, cv=tscv, scoring='neg_root_mean_squared_error',
+            n_iter=20, cv=tscv, scoring='neg_root_mean_squared_error',
             random_state=42, n_jobs=-1
         )
         
@@ -110,18 +112,18 @@ class Day1Predictor:
         bandarm_score = feature_row.get('bandarm_score', pd.Series([5.0])).iloc[0]
         tech_score = feature_row.get('technical_score', pd.Series([5.0])).iloc[0]
         
-        # 1 pt above neutral (5.0) contributes +0.2% return
-        bandarm_effect = (bandarm_score - 5.0) * 0.002
-        tech_effect = (tech_score - 5.0) * 0.001
+        # 1 pt above neutral (5.0) contributes +0.5% return (scaled for 5 days)
+        bandarm_effect = (bandarm_score - 5.0) * 0.005
+        tech_effect = (tech_score - 5.0) * 0.002
         
         final_pred = ml_pred * 0.7 + bandarm_effect + tech_effect
         return final_pred
 
     def get_signal(self, pred_return: float) -> str:
         """
-        Convert predicted return to signal string.
+        Convert predicted 5-day return to signal string.
         """
-        if pred_return >= 0.01: return "STRONG BUY"
-        if pred_return >= 0.003: return "BUY"
-        if pred_return <= -0.005: return "AVOID"
+        if pred_return >= 0.02: return "STRONG BUY"
+        if pred_return >= 0.005: return "BUY"
+        if pred_return <= -0.01: return "AVOID"
         return "HOLD"

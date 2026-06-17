@@ -502,10 +502,12 @@ def calculate_dca_levels(
         step = (max_entry - entry_low) / (dca_count - 1)
         prices = [round(entry_low + step * i, 0) for i in range(dca_count)]
 
-    amount_per_level = total_budget / dca_count
+    total_weight = sum(range(1, dca_count + 1))
     levels = []
     for i, price in enumerate(prices):
-        shares = int(amount_per_level / price)
+        weight = i + 1
+        amount_budget = (weight / total_weight) * total_budget
+        shares = int(amount_budget / price)
         # Round down ke kelipatan 100 (1 lot)
         shares = (shares // 100) * 100
         lots = shares // 100
@@ -513,7 +515,7 @@ def calculate_dca_levels(
         levels.append({
             "level": i + 1,
             "price": round(price, 0),
-            "amount_budget": round(amount_per_level, 0),
+            "amount_budget": round(amount_budget, 0),
             "actual_amount": round(actual_amount, 0),
             "lots": lots,
             "shares": shares,
@@ -521,7 +523,7 @@ def calculate_dca_levels(
 
     return {
         "levels": levels,
-        "amount_per_level": round(amount_per_level, 0),
+        "amount_per_level": round(total_budget / dca_count, 0) if dca_count > 0 else 0,
         "total_budget": total_budget,
         "entry_low": entry_low,
         "entry_high": entry_high,

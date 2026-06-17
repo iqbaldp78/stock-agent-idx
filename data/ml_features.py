@@ -35,6 +35,13 @@ FEATURE_COLUMNS = [
     "support_proximity",
     "resistance_proximity",
     "range_pct",
+    "macd",
+    "macd_hist",
+    "bb_upper_dist",
+    "bb_lower_dist",
+    "stoch_k",
+    "stoch_d",
+    "atr",
 ]
 
 # Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
@@ -51,6 +58,13 @@ ML_TRAIN_FEATURES = [
     "ma_dist_50",
     "volume_spike",
     "range_pct",
+    "macd",
+    "macd_hist",
+    "bb_upper_dist",
+    "bb_lower_dist",
+    "stoch_k",
+    "stoch_d",
+    "atr",
 ]
 
 
@@ -61,6 +75,35 @@ def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     rs = gain / loss
     return 100 - (100 / (1 + rs))
 
+def _compute_macd(series: pd.Series, fast=12, slow=26, signal=9) -> tuple[pd.Series, pd.Series]:
+    ema_fast = series.ewm(span=fast, adjust=False).mean()
+    ema_slow = series.ewm(span=slow, adjust=False).mean()
+    macd = ema_fast - ema_slow
+    macd_signal = macd.ewm(span=signal, adjust=False).mean()
+    macd_hist = macd - macd_signal
+    return macd, macd_hist
+
+def _compute_bb(series: pd.Series, window=20, num_std=2) -> tuple[pd.Series, pd.Series]:
+    rolling_mean = series.rolling(window=window).mean()
+    rolling_std = series.rolling(window=window).std()
+    upper = rolling_mean + (rolling_std * num_std)
+    lower = rolling_mean - (rolling_std * num_std)
+    return upper, lower
+
+def _compute_stoch(high: pd.Series, low: pd.Series, close: pd.Series, k_window=14, d_window=3) -> tuple[pd.Series, pd.Series]:
+    min_low = low.rolling(window=k_window).min()
+    max_high = high.rolling(window=k_window).max()
+    k = 100 * (close - min_low) / (max_high - min_low)
+    d = k.rolling(window=d_window).mean()
+    return k, d
+
+def _compute_atr(high: pd.Series, low: pd.Series, close: pd.Series, window=14) -> pd.Series:
+    tr1 = high - low
+    tr2 = (high - close.shift()).abs()
+    tr3 = (low - close.shift()).abs()
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+    atr = tr.rolling(window=window).mean()
+    return atr
 
 
 def _parse_number(val: object, default: float = 0.0) -> float:
@@ -173,6 +216,12 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             latest_low = float(lows.dropna().iloc[-1])
             range_pct = (latest_high - latest_low) / current_price
 
+        # Advanced Indicators
+        macd, macd_hist = _compute_macd(closes)
+        bb_upper, bb_lower = _compute_bb(closes)
+        stoch_k, stoch_d = _compute_stoch(highs, lows, closes) if highs is not None and lows is not None else (closes*0, closes*0)
+        atr = _compute_atr(highs, lows, closes) if highs is not None and lows is not None else closes*0
+
         price_features = {
             "ret_1d": returns.iloc[-1] if len(returns) > 1 else 0.0,
             "ret_3d": (closes.iloc[-1] / closes.iloc[-4] - 1) if len(closes) > 4 else 0.0,
@@ -185,6 +234,13 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "support_proximity": _proximity(current_price, support_near),
             "resistance_proximity": _proximity(current_price, resistance_near),
             "range_pct": range_pct,
+            "macd": float(macd.iloc[-1]) if len(macd.dropna()) > 0 else 0.0,
+            "macd_hist": float(macd_hist.iloc[-1]) if len(macd_hist.dropna()) > 0 else 0.0,
+            "bb_upper_dist": float(current_price / bb_upper.iloc[-1] - 1) if len(bb_upper.dropna()) > 0 else 0.0,
+            "bb_lower_dist": float(current_price / bb_lower.iloc[-1] - 1) if len(bb_lower.dropna()) > 0 else 0.0,
+            "stoch_k": float(stoch_k.iloc[-1]) if len(stoch_k.dropna()) > 0 else 0.0,
+            "stoch_d": float(stoch_d.iloc[-1]) if len(stoch_d.dropna()) > 0 else 0.0,
+            "atr": float(atr.iloc[-1] / current_price) if len(atr.dropna()) > 0 and current_price > 0 else 0.0,
         }
     else:
         price_features = {f"ret_{i}d": 0.0 for i in [1, 3, 5]}
@@ -197,6 +253,13 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "support_proximity": 0.0,
             "resistance_proximity": 0.0,
             "range_pct": 0.0,
+            "macd": 0.0,
+            "macd_hist": 0.0,
+            "bb_upper_dist": 0.0,
+            "bb_lower_dist": 0.0,
+            "stoch_k": 0.0,
+            "stoch_d": 0.0,
+            "atr": 0.0,
         })
 
     # Combine all
@@ -244,6 +307,20 @@ def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
     df['range_pct'] = (df['High'] - df['Low']) / df['Close']
     df['gap_open'] = df['Open'] / df['Close'].shift(1) - 1
 
+    # Advanced Indicators
+    macd, macd_hist = _compute_macd(df['Close'])
+    bb_upper, bb_lower = _compute_bb(df['Close'])
+    stoch_k, stoch_d = _compute_stoch(df['High'], df['Low'], df['Close'])
+    atr = _compute_atr(df['High'], df['Low'], df['Close'])
+
+    df['macd'] = macd
+    df['macd_hist'] = macd_hist
+    df['bb_upper_dist'] = df['Close'] / bb_upper - 1
+    df['bb_lower_dist'] = df['Close'] / bb_lower - 1
+    df['stoch_k'] = stoch_k
+    df['stoch_d'] = stoch_d
+    df['atr'] = atr / df['Close']
+
     # Drop rows with NaN (from rolling/shifting)
     df = df.dropna()
 
@@ -257,4 +334,3 @@ def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
     # We return the full FEATURE_COLUMNS for backward compatibility, but models/day1_predictor 
     # will only select ML_TRAIN_FEATURES.
     return df[FEATURE_COLUMNS], targets
-

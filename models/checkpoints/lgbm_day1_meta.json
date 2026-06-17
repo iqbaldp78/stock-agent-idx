@@ -1,5 +1,34 @@
 {
-  "run_date": "2026-06-15T23:44:04.072662",
+  "run_date": "2026-06-16T23:36:53.901901",
   "model_path": "models/checkpoints/lgbm_day1.pkl",
-  "model_saved": false,
-  "model_passed_gate": 
+  "model_saved": true,
+  "model_passed_gate": true,
+  "config": {
+    "period": "all",
+    "min_rows": 120,
+    "min_dir_acc": 50.0,
+    "force_save": false
+  },
+  "rows": {
+    "tickers_requested": 1,
+    "tickers_trained": 1,
+    "final_train_rows": 5141
+  },
+  "holdout_metrics": {
+    "test_rows": 1285,
+    "directional_accuracy": 51.34,
+    "mae_pct": 2.3993,
+    "buy_precision": 51.84,
+    "buy_recall": 70.41,
+    "avg_pred_return_pct": 0.7714,
+    "avg_actual_return_pct": 0.2516
+  },
+  "tickers": [
+    {
+      "ticker": "BBCA",
+      "ohlcv_rows": 5197,
+      "training_rows": 5141
+    }
+  ],
+  "errors": []
+}

@@ -43,10 +43,11 @@ date_module_today = _date.today
 logger = logging.getLogger(__name__)
 
 
-def refresh_stockbit_token() -> str:
+def login_stockbit_with_password() -> str:
     """
     Melakukan login otomatis menggunakan STOCKBIT_USERNAME dan STOCKBIT_PASSWORD 
     menggunakan endpoint Mobile API v6 untuk menghindari ReCAPTCHA dan New Device OTP.
+    Fungsi ini merupakan fallback atau fungsi manual karena refresh token menjadi metode utama.
     """
     username = os.getenv("STOCKBIT_USERNAME")
     password = os.getenv("STOCKBIT_PASSWORD")
@@ -107,6 +108,73 @@ def refresh_stockbit_token() -> str:
     return token
 
 
+def refresh_stockbit_token() -> str:
+    """
+    Mendapatkan access_token baru menggunakan STOCKBIT_REFRESH_TOKEN.
+    Fungsi ini menggantikan flow login password secara otomatis.
+    """
+    refresh_token = os.getenv("STOCKBIT_REFRESH_TOKEN")
+    if not refresh_token:
+        raise ValueError("STOCKBIT_REFRESH_TOKEN is not set in .env")
+
+    import httpx
+    import json
+    
+    url = "https://exodus.stockbit.com/login/refresh"
+    headers = {
+        "Authorization": f"Bearer {refresh_token}",
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)",
+        "Content-Type": "application/json"
+    }
+    
+    logger.info("Mencoba mendapatkan access_token dari refresh_token...")
+    with httpx.Client(timeout=15.0) as client:
+        response = client.post(url, headers=headers, json={})
+        
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Gagal refresh token API: {e.response.text}")
+            raise
+            
+        data = response.json()
+        
+    # Extract access token
+    token = data.get("data", {}).get("access", {}).get("token")
+    if not token:
+        token = data.get("data", {}).get("access_token")
+    if not token:
+        token = data.get("data", {}).get("login", {}).get("token_data", {}).get("access", {}).get("token")
+        
+    if not token:
+        logger.error(f"Response JSON structure: {json.dumps(data, indent=2)}")
+        raise ValueError(f"Gagal mendapatkan access_token dari response refresh: {data}")
+        
+    # Optional: Extract new refresh token if stockbit rotates it
+    new_refresh_token = data.get("data", {}).get("refresh", {}).get("token")
+    if not new_refresh_token:
+        new_refresh_token = data.get("data", {}).get("refresh_token")
+    if not new_refresh_token:
+        new_refresh_token = data.get("data", {}).get("login", {}).get("token_data", {}).get("refresh", {}).get("token")
+        
+    # Update current environment
+    os.environ["STOCKBIT_API_KEY"] = token
+    if new_refresh_token:
+        os.environ["STOCKBIT_REFRESH_TOKEN"] = new_refresh_token
+    
+    # Update .env file permanently
+    env_file = dotenv.find_dotenv()
+    if env_file:
+        dotenv.set_key(env_file, "STOCKBIT_API_KEY", token)
+        if new_refresh_token:
+            dotenv.set_key(env_file, "STOCKBIT_REFRESH_TOKEN", new_refresh_token)
+        logger.info("Stockbit access token berhasil direfresh dan disimpan ke .env")
+    else:
+        logger.warning("File .env tidak ditemukan, token hanya diupdate di memori")
+        
+    return token
+
+
 def _retry_on_rate_limit(max_attempts: int = 4, base_delay: float = 1.0):
     """
     Decorator untuk retry pada rate limit (429) dan server errors (500, 502, 503, 504).
@@ -124,8 +192,17 @@ def _retry_on_rate_limit(max_attempts: int = 4, base_delay: float = 1.0):
                     last_exception = exc
                     
                     if status == 401:
-                        logger.error(f"[{func.__name__}] HTTP 401 Unauthorized. Token Stockbit kedaluwarsa. Silakan perbarui STOCKBIT_API_KEY di .env secara manual.")
-                        raise
+                        logger.warning(f"[{func.__name__}] HTTP 401 Unauthorized. Mencoba auto-refresh token...")
+                        try:
+                            # Auto-refresh token jika expired
+                            refresh_stockbit_token()
+                            logger.info(f"[{func.__name__}] Auto-refresh berhasil, melanjutkan retry...")
+                            # Jeda sedikit sebelum retry
+                            time.sleep(1.0)
+                            continue
+                        except Exception as refresh_exc:
+                            logger.error(f"Auto-refresh gagal: {refresh_exc}. Silakan perbarui STOCKBIT_REFRESH_TOKEN di .env secara manual.")
+                            raise last_exception
 
                     # Retry jika 429 (rate limit) atau 5xx errors
                     if status in (429, 500, 502, 503, 504) and attempt < max_attempts - 1:

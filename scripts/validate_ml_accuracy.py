@@ -86,6 +86,7 @@ def walk_forward_validate(
     ohlcv: pd.DataFrame,
     n_folds: int = 5,
     min_train_rows: int = 60,
+    target_col: str = "target_5d",
 ) -> dict:
     """
     Time-series walk-forward cross-validation.
@@ -102,8 +103,8 @@ def walk_forward_validate(
     try:
         X_all, y_all = prepare_training_data(ohlcv)
         if isinstance(y_all, pd.DataFrame):
-            if 'target_1d' in y_all.columns:
-                y_all = y_all['target_1d']
+            if target_col in y_all.columns:
+                y_all = y_all[target_col]
             else:
                 y_all = y_all.iloc[:, 0]
     except Exception as e:
@@ -136,7 +137,7 @@ def walk_forward_validate(
             continue
 
         # Train fresh model per fold (no persistence in validation)
-        predictor = Day1Predictor(model_path="/tmp/lgbm_val_tmp.pkl")
+        predictor = Day1Predictor(model_path="/tmp/lgbm_val_tmp.pkl", target_col=target_col)
         predictor.model = None  # Force no loading
         predictor.train_incremental(X_train, y_train)
 
@@ -259,7 +260,8 @@ def main():
     grp.add_argument("--all", action="store_true", help="Semua ticker di universe")
     parser.add_argument("--folds", type=int, default=5, help="Jumlah fold walk-forward (default: 5)")
     parser.add_argument("--min-rows", type=int, default=60, help="Min baris training per fold (default: 60)")
-    parser.add_argument("--period", default="1y", help="Periode data OHLCV (default: 1y)")
+    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "max"), help="Periode data OHLCV (default: dari env atau max)")
+    parser.add_argument("--target", default="target_5d", help="Target horizon model (default: target_5d)")
     parser.add_argument("--output", default="validate_ml_result.json", help="File output JSON")
     args = parser.parse_args()
 
@@ -283,7 +285,7 @@ def main():
             continue
 
         logger.info(f"  Data: {len(ohlcv)} rows — Running {args.folds}-fold walk-forward CV...")
-        res = walk_forward_validate(ohlcv, n_folds=args.folds, min_train_rows=args.min_rows)
+        res = walk_forward_validate(ohlcv, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target)
 
         results[ticker] = res
 

@@ -240,16 +240,40 @@ if page == "📈 Top Picks":
                     # Entry info
                     entry = pick.get("entry_zone", "N/A")
                     max_e = pick.get("max_entry", "N/A")
-                    st.markdown(f"🎯 Entry Ideal: **{entry}** | Max: **{max_e}**")
+                    
+                    entry_style = ""
+                    try:
+                        cp = pick.get("price_prediction", {}).get("current_price")
+                        el = pick.get("entry_low")
+                        eh = pick.get("entry_high")
+                        if el is None or eh is None:
+                            parts = str(entry).split("-")
+                            el = float(parts[0].replace(",", ""))
+                            eh = float(parts[1].replace(",", ""))
+                        if cp and isinstance(cp, (int, float)):
+                            if cp < el * 0.995:
+                                entry_style = " 🚀 *(Buy on Breakout)*"
+                            elif cp > eh * 1.005:
+                                entry_style = " 📉 *(Buy on Weakness)*"
+                            else:
+                                entry_style = " 🛒 *(Market Buy)*"
+                    except Exception:
+                        pass
+
+                    st.markdown(f"🎯 Entry Ideal: **{entry}** | Max: **{max_e}**{entry_style}")
 
                     # Take-Profit Levels
-                    tp1 = pick.get("tp1", "N/A")
-                    tp2 = pick.get("tp2", "N/A")
-                    tp3 = pick.get("tp3", "N/A")
+                    tp1 = pick.get("tp1")
+                    tp1 = tp1 if tp1 is not None else "N/A"
+                    tp2 = pick.get("tp2")
+                    tp2 = tp2 if tp2 is not None else "N/A"
+                    tp3 = pick.get("tp3")
+                    tp3 = tp3 if tp3 is not None else "N/A"
                     tp1_size = pick.get("tp1_size", 0.30)
                     tp2_size = pick.get("tp2_size", 0.40)
                     tp3_size = pick.get("tp3_size", 0.30)
-                    sl = pick.get("stop_loss", "N/A")
+                    sl = pick.get("stop_loss")
+                    sl = sl if sl is not None else "N/A"
 
                     # Display TP levels with position sizing
                     if tp1 != "N/A" and tp2 != "N/A" and tp3 != "N/A":
@@ -305,7 +329,7 @@ if page == "📈 Top Picks":
                             if notes:
                                 st.caption(" | ".join(notes[:3]))
 
-                    # ML Day-1 Prediction
+                    # ML Swing (5-Day) Prediction
                     ml_pred = pick.get("ml_prediction", {})
                     if ml_pred:
                         pred_return = ml_pred.get("pred_return", 0)
@@ -322,7 +346,7 @@ if page == "📈 Top Picks":
                         else:
                             signal_color = "⚪"
 
-                        st.markdown(f"🤖 **ML Forecast (T+1):** {signal_color} **{ml_signal}** | Return: **{pred_return:+.2f}%** | Confidence: {ml_conf}")
+                        st.markdown(f"🤖 **ML Forecast (T+5):** {signal_color} **{ml_signal}** | Return: **{pred_return:+.2f}%** | Confidence: {ml_conf}")
 
                     # Price Prediction
                     price_pred = pick.get("price_prediction", {})
@@ -550,8 +574,25 @@ if page == "📈 Top Picks":
 
                     entry_l = sig.get("entry_low")
                     entry_h = sig.get("entry_high")
+                    
+                    entry_style = ""
+                    try:
+                        price_pred = sig.get("price_prediction") or {}
+                        cp = price_pred.get("current_price")
+                        if cp and isinstance(cp, (int, float)) and entry_l and entry_h:
+                            el = float(entry_l)
+                            eh = float(entry_h)
+                            if cp < el * 0.995:
+                                entry_style = " 🚀 *(Buy on Breakout)*"
+                            elif cp > eh * 1.005:
+                                entry_style = " 📉 *(Buy on Weakness)*"
+                            else:
+                                entry_style = " 🛒 *(Market Buy)*"
+                    except Exception:
+                        pass
+
                     if entry_l and entry_h:
-                        st.markdown(f"🎯 Entry: **{entry_l:,.0f}–{entry_h:,.0f}**")
+                        st.markdown(f"🎯 Entry: **{entry_l:,.0f}–{entry_h:,.0f}**{entry_style}")
 
                     t1 = sig.get("target_1")
                     sl = sig.get("stop_loss")
@@ -562,7 +603,7 @@ if page == "📈 Top Picks":
                         f"SL: **{sl_str}**"
                     )
 
-                    # ML Day-1 Prediction from DB
+                    # ML Swing (5-Day) Prediction from DB
                     ml_pred = sig.get("ml_prediction") or {}
                     if ml_pred:
                         pred_return = ml_pred.get("pred_return", 0)
@@ -579,7 +620,7 @@ if page == "📈 Top Picks":
                             signal_color = "⚪"
 
                         st.markdown(
-                            f"🤖 **ML Forecast (T+1):** {signal_color} **{ml_signal}** "
+                            f"🤖 **ML Forecast (T+5):** {signal_color} **{ml_signal}** "
                             f"| Return: **{float(pred_return):+.2f}%** | Confidence: {ml_conf}"
                         )
 
@@ -1059,7 +1100,22 @@ elif page == "🔍 Bandarmologi":
 # === PAGE: Performance ===
 
 elif page == "📊 Performance":
-    st.title("📊 PERFORMANCE TRACKER")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.title("📊 PERFORMANCE TRACKER")
+    with col2:
+        st.write("") # spacing
+        if st.button("🔄 Check Signals Now", use_container_width=True):
+            with st.spinner("Mengecek performa sinyal ke pasar hari ini..."):
+                try:
+                    from scheduler import run_performance_check
+                    run_performance_check()
+                    st.success("Selesai divalidasi!")
+                    import time
+                    time.sleep(1)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
     # Get performance data
     perf_data = query_db("""
@@ -1208,7 +1264,7 @@ elif page == "📊 Performance":
             st.info("Belum ada data performance untuk menghitung agent accuracy.")
 
     with ml_tab:
-        st.caption("Status training dan validasi model ML Day-1.")
+        st.caption("Status training dan validasi model ML Swing (5-Day).")
 
         model_path = "models/checkpoints/lgbm_day1.pkl"
         meta_path = "models/checkpoints/lgbm_day1_meta.json"
@@ -1872,13 +1928,56 @@ elif page == "💼 Portfolio":
             # Manual input
             col1, col2 = st.columns(2)
             with col1:
-                manual_ticker = st.text_input("Ticker").upper()
-                manual_entry_low = st.number_input("Entry Low", min_value=1.0, value=3000.0)
-                manual_entry_high = st.number_input("Entry High", min_value=1.0, value=3200.0)
+                manual_ticker = st.text_input("Ticker", key="manual_ticker_input").upper()
+                
+                # Tambahkan tombol auto-fill di bawah Ticker
+                if st.button("🤖 Get AI Entry Recommendation", use_container_width=True):
+                    if manual_ticker:
+                        from portfolio.dca_strategy import get_quick_ai_entry
+                        rec = get_quick_ai_entry(manual_ticker)
+                        if rec:
+                            st.session_state["manual_entry_low"] = rec["entry_low"]
+                            st.session_state["manual_entry_high"] = rec["entry_high"]
+                            st.session_state["manual_max_entry"] = rec["max_entry"]
+                            st.success(f"✅ Auto-filled with AI recommendations for {manual_ticker}!")
+                        else:
+                            st.error(f"Gagal mengambil data teknikal untuk {manual_ticker}. Pastikan ticker benar.")
+                    else:
+                        st.warning("Ketikkan Ticker terlebih dahulu.")
+
+                manual_entry_low = st.number_input("Entry Low", min_value=1.0, value=st.session_state.get("manual_entry_low", 3000.0), key="manual_entry_low")
+                manual_entry_high = st.number_input("Entry High", min_value=1.0, value=st.session_state.get("manual_entry_high", 3200.0), key="manual_entry_high")
             with col2:
-                manual_max_entry = st.number_input("Max Entry", min_value=1.0, value=3400.0)
-                manual_budget = st.number_input("Total Budget", min_value=100000, value=2000000, step=100000)
-                manual_dca_count = st.number_input("Levels", min_value=2, max_value=5, value=3)
+                manual_max_entry = st.number_input("Max Entry", min_value=1.0, value=st.session_state.get("manual_max_entry", 3400.0), key="manual_max_entry")
+                manual_budget = st.number_input("Total Budget", min_value=100000.0, value=2000000.0, step=100000.0, key="manual_budget")
+                manual_dca_count = st.number_input("Levels", min_value=2, max_value=5, value=3, key="manual_dca_count")
+
+            if st.button("Preview Manual DCA Levels"):
+                from portfolio.manager import calculate_dca_levels
+                levels_data = calculate_dca_levels(
+                    entry_low=float(manual_entry_low),
+                    entry_high=float(manual_entry_high),
+                    max_entry=float(manual_max_entry),
+                    total_budget=manual_budget,
+                    dca_count=manual_dca_count,
+                )
+
+                st.markdown("**Preview Levels:**")
+                import pandas as pd
+                df_levels = pd.DataFrame(levels_data['levels'])
+                st.dataframe(
+                    df_levels,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "level": "Level",
+                        "price": st.column_config.NumberColumn("Price", format="Rp %.0f"),
+                        "amount_budget": st.column_config.NumberColumn("Budget", format="Rp %.0f"),
+                        "actual_amount": st.column_config.NumberColumn("Actual", format="Rp %.0f"),
+                        "lots": st.column_config.NumberColumn("Lot", format="%d"),
+                        "shares": st.column_config.NumberColumn("Shares", format="%d"),
+                    },
+                )
 
             if st.button("✅ Create Manual DCA"):
                 if manual_ticker:
