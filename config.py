@@ -14,7 +14,7 @@ LQ45 = [
     "KLBF", "MAPI", "MBMA", "MDKA", "MEDC",
     "PGAS", "PGEO", "PTBA", "SCMA", "SMGR",
     "TLKM", "TOWR", "UNTR", "UNVR", "WIFI",
-    "BRIS",
+    "BRIS","BRMS"
 ]
 
 CUSTOM_WATCHLIST: list[str] = []
@@ -81,15 +81,15 @@ ALLOWED_LLM_MODELS = frozenset({
     "gemini/gemini-3-flash-preview",
     "gemini/gemini-2.5-flash-lite",
     "gemini/gemini-3.1-pro-preview",
-    # "ag/claude-opus-4-6-thinking",
-    # "ag/claude-sonnet-4-6",
-    # "ag/gemini-3-flash",
-    # "ag/gemini-pro-agent",
-    # "ag/gemini-3.1-pro-low",
-    # "ag/gemini-3-flash-agent",
-    # "ag/gemini-3.5-flash-extra-low",
-    # "ag/gpt-oss-120b-medium",
-    # "ag/gemini-3.5-flash-low",
+    "ag/claude-opus-4-6-thinking",
+    "ag/claude-sonnet-4-6",
+    "ag/gemini-3-flash",
+    "ag/gemini-pro-agent",
+    "ag/gemini-3.1-pro-low",
+    "ag/gemini-3-flash-agent",
+    "ag/gemini-3.5-flash-extra-low",
+    "ag/gpt-oss-120b-medium",
+    "ag/gemini-3.5-flash-low",
     # "cx/gpt-5.3-codex",
     # "cx/gpt-5.3-codex-high",
     # "cx/gpt-5.3-codex-high-review",

@@ -1,8 +1,11 @@
 def calc_cagr(start, end, n_years):
-    if start is None or end is None or n_years <= 0 or start <= 0:
+    if start is None or end is None or n_years <= 0 or start <= 0 or end <= 0:
         return None
     try:
-        return (end / start) ** (1 / n_years) - 1
+        val = (end / start) ** (1 / n_years) - 1
+        if isinstance(val, complex):
+            return None
+        return val
     except Exception:
         return None
 """

@@ -144,7 +144,11 @@ def walk_forward_validate(
         if predictor.model is None:
             continue
 
-        preds = predictor.model.predict(X_test[predictor.feature_cols].fillna(0.0))
+        if hasattr(predictor.model, "predict_proba"):
+            probas = predictor.model.predict_proba(X_test[predictor.feature_cols].fillna(0.0))[:, 1]
+            preds = (probas - 0.5) * 0.04
+        else:
+            preds = predictor.model.predict(X_test[predictor.feature_cols].fillna(0.0))
         actuals = y_test.values
 
         dir_acc = _directional_accuracy(actuals, preds)

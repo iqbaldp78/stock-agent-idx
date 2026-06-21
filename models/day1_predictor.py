@@ -50,26 +50,29 @@ class Day1Predictor:
 
         X_aligned = self._align_feature_frame(X)[valid_idx]
         y_valid = y[valid_idx]
+        y_valid_binary = (y_valid > 0.0).astype(int)
 
-        estimator = lgb.LGBMRegressor(objective='regression', metric='rmse', verbosity=-1)
+        estimator = lgb.LGBMClassifier(verbosity=-1, bagging_freq=1, class_weight='balanced')
         
         param_dist = {
+            'objective': ['binary'],
             'learning_rate': [0.01, 0.05, 0.1],
-            'num_leaves': [15, 31, 64, 127],
-            'bagging_fraction': [0.6, 0.7, 0.8, 0.9],
-            'feature_fraction': [0.6, 0.7, 0.8, 0.9],
-            'n_estimators': [100, 200, 300]
+            'num_leaves': [7, 15, 31],
+            'min_child_samples': [20, 50, 100],
+            'bagging_fraction': [0.6, 0.8, 1.0],
+            'feature_fraction': [0.6, 0.8, 1.0],
+            'n_estimators': [50, 100, 200]
         }
 
         tscv = TimeSeriesSplit(n_splits=3)
         random_search = RandomizedSearchCV(
             estimator, param_distributions=param_dist,
-            n_iter=20, cv=tscv, scoring='neg_root_mean_squared_error',
-            random_state=42, n_jobs=-1
+            n_iter=20, cv=tscv, scoring='accuracy',
+            random_state=42, n_jobs=1
         )
         
         logger.info("Starting hyperparameter tuning via RandomizedSearchCV...")
-        random_search.fit(X_aligned, y_valid)
+        random_search.fit(X_aligned, y_valid_binary)
         self.model = random_search.best_estimator_
         
         logger.info(f"Best params: {random_search.best_params_}")
@@ -91,8 +94,12 @@ class Day1Predictor:
                 for col in model_cols:
                     if col not in aligned.columns:
                         aligned[col] = 0.0
-                pred = self.model.predict(aligned[model_cols])
-                ml_pred = float(pred[0])
+                if hasattr(self.model, "predict_proba"):
+                    proba = self.model.predict_proba(aligned[model_cols])[0][1]
+                    ml_pred = (proba - 0.5) * 0.04
+                else:
+                    pred = self.model.predict(aligned[model_cols])
+                    ml_pred = float(pred[0])
             except Exception as e:
                 logger.warning("Model predict failed (%s), fallback to 0.0.", e)
         

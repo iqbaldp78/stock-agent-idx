@@ -234,8 +234,8 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "support_proximity": _proximity(current_price, support_near),
             "resistance_proximity": _proximity(current_price, resistance_near),
             "range_pct": range_pct,
-            "macd": float(macd.iloc[-1]) if len(macd.dropna()) > 0 else 0.0,
-            "macd_hist": float(macd_hist.iloc[-1]) if len(macd_hist.dropna()) > 0 else 0.0,
+            "macd": float(macd.iloc[-1] / current_price) if len(macd.dropna()) > 0 and current_price > 0 else 0.0,
+            "macd_hist": float(macd_hist.iloc[-1] / current_price) if len(macd_hist.dropna()) > 0 and current_price > 0 else 0.0,
             "bb_upper_dist": float(current_price / bb_upper.iloc[-1] - 1) if len(bb_upper.dropna()) > 0 else 0.0,
             "bb_lower_dist": float(current_price / bb_lower.iloc[-1] - 1) if len(bb_lower.dropna()) > 0 else 0.0,
             "stoch_k": float(stoch_k.iloc[-1]) if len(stoch_k.dropna()) > 0 else 0.0,
@@ -313,8 +313,8 @@ def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
     stoch_k, stoch_d = _compute_stoch(df['High'], df['Low'], df['Close'])
     atr = _compute_atr(df['High'], df['Low'], df['Close'])
 
-    df['macd'] = macd
-    df['macd_hist'] = macd_hist
+    df['macd'] = macd / df['Close']
+    df['macd_hist'] = macd_hist / df['Close']
     df['bb_upper_dist'] = df['Close'] / bb_upper - 1
     df['bb_lower_dist'] = df['Close'] / bb_lower - 1
     df['stoch_k'] = stoch_k
