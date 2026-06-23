@@ -10,11 +10,12 @@ import joblib
 import os
 from data.ml_features import ML_TRAIN_FEATURES
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
+from imblearn.over_sampling import SMOTE
 
 logger = logging.getLogger(__name__)
 
 class Day1Predictor:
-    def __init__(self, model_path: str = "models/checkpoints/lgbm_day1.pkl", target_col: str = "target_5d"):
+    def __init__(self, model_path: str = "models/checkpoints/lgbm_day1.pkl", target_col: str = "target_1d"):
         self.model_path = model_path
         self.target_col = target_col
         self.model = None
@@ -28,7 +29,7 @@ class Day1Predictor:
                 logger.warning(f"Failed to load model: {e}")
 
     # Dead zone: returns within ±NOISE_THRESHOLD are noise, excluded from training
-    NOISE_THRESHOLD = 0.0015  # 0.15%
+    NOISE_THRESHOLD = 0.0005  # 0.05% — lowered from 0.15% to keep more training data
 
     def train_incremental(self, X: pd.DataFrame, y):
         """
@@ -71,15 +72,28 @@ class Day1Predictor:
             f"({len(X_aligned) - len(X_filtered)} ambiguous removed)"
         )
 
+        # ── SMOTE oversampling for class imbalance ────────────────────────
+        # Apply SMOTE to balance BUY (minority) vs non-BUY (majority) classes
+        try:
+            smote = SMOTE(random_state=42, k_neighbors=3)
+            X_resampled, y_resampled = smote.fit_resample(X_filtered, y_binary)
+            logger.info(
+                f"SMOTE resampling: {len(X_filtered)} → {len(X_resampled)} samples "
+                f"(class ratio {y_resampled.sum() / len(y_resampled) * 100:.1f}% BUY)"
+            )
+        except Exception as e:
+            logger.warning(f"SMOTE failed ({e}), proceeding without resampling")
+            X_resampled, y_resampled = X_filtered, y_binary
+
         # ── Time-decay sample weights ─────────────────────────────────────
         # Exponential decay: recent data weighted ~3x more than oldest data
-        n_samples = len(X_filtered)
+        n_samples = len(X_resampled)
         decay_factor = 3.0  # newest/oldest weight ratio
         weights = np.exp(np.linspace(0, np.log(decay_factor), n_samples))
         weights = weights / weights.mean()  # normalize to mean=1
 
         estimator = lgb.LGBMClassifier(verbosity=-1, bagging_freq=1, class_weight='balanced')
-        
+
         param_dist = {
             'objective': ['binary'],
             'learning_rate': [0.01, 0.03, 0.05, 0.1],
@@ -98,13 +112,13 @@ class Day1Predictor:
             estimator, param_distributions=param_dist,
             n_iter=50,
             cv=tscv,
-            scoring='roc_auc',
+            scoring='f1',
             random_state=42,
             n_jobs=1
         )
-        
-        logger.info("Starting hyperparameter tuning via RandomizedSearchCV...")
-        random_search.fit(X_filtered, y_binary, sample_weight=weights)
+
+        logger.info("Starting hyperparameter tuning via RandomizedSearchCV (F1 scoring)...")
+        random_search.fit(X_resampled, y_resampled, sample_weight=weights)
         self.model = random_search.best_estimator_
         
         logger.info(f"Best params: {random_search.best_params_}")
