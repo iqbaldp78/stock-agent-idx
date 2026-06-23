@@ -8,13 +8,13 @@ LQ45 = [
     "AADI", "ADMR", "ADRO", "AKRA", "AMMN",
     "AMRT", "ANTM", "ASII", "BBCA", "BBNI",
     "BBRI", "BBTN", "BMRI", "BRPT", "BUMI",
-    "CPIN", "CUAN", "DEWA", "EMTK", "ESSA",
+    "CUAN", "DEWA", "EMTK", "ESSA", 
     "EXCL", "GOTO", "HRTA", "ICBP", "INCO",
     "INDF", "INKP", "ISAT", "ITMG", "JPFA",
     "KLBF", "MAPI", "MBMA", "MDKA", "MEDC",
-    "PGAS", "PGEO", "PTBA", "SCMA", "SMGR",
-    "TLKM", "TOWR", "UNTR", "UNVR", "WIFI",
-    "BRIS","BRMS"
+    "PGAS", "PGEO", "PTBA", "SCMA", "TLKM", 
+    "TOWR", "UNVR", "BRIS", "BRMS", "TPIA",
+    
 ]
 
 CUSTOM_WATCHLIST: list[str] = []

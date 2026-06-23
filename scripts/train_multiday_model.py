@@ -66,7 +66,7 @@ def build_multiday_dataset(
             continue
 
         try:
-            X, Y = prepare_training_data(ohlcv)
+            X, Y = prepare_training_data(ohlcv, ticker=ticker)
         except Exception as e:
             errors.append({"ticker": ticker, "error": f"prepare_training_data failed: {e}"})
             logger.warning(f"  {ticker}: feature prep failed: {e}")

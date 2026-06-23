@@ -1117,12 +1117,27 @@ elif page == "📊 Performance":
                 except Exception as e:
                     st.error(f"Error: {e}")
 
-    # Get performance data
+    # Helper to parse json fields
+    def load_json_field(field):
+        if not field:
+            return {}
+        if isinstance(field, dict):
+            return field
+        if isinstance(field, str):
+            try:
+                return json.loads(field)
+            except Exception:
+                return {}
+        return {}
+
+    # Get performance data with all signal columns
     perf_data = query_db("""
-        SELECT p.*, s.ticker, s.signal, s.conviction, s.run_date as signal_date
+        SELECT p.*, s.ticker, s.signal, s.conviction, s.run_date as signal_date,
+               s.entry_low, s.entry_high, s.max_entry, s.target_1, s.target_2, s.target_3, s.stop_loss,
+               s.thesis, s.entry_reasoning, s.price_prediction, s.ml_prediction
         FROM performance p
         JOIN signals s ON p.signal_id = s.id
-        ORDER BY p.check_date DESC
+        ORDER BY p.check_date DESC, s.run_date DESC
         LIMIT 50
     """)
 
@@ -1138,23 +1153,245 @@ elif page == "📊 Performance":
             win_rate = (hits / (hits + losses) * 100) if (hits + losses) > 0 else 0
             st.metric("Win Rate", f"{win_rate:.0f}%")
         with col2:
-            st.metric("Profitable", f"{hits} ✅")
+            st.metric("Profitable (TP Hit)", f"{hits} ✅")
         with col3:
-            st.metric("Loss", f"{losses} ❌")
+            st.metric("Loss (SL Hit)", f"{losses} ❌")
         with col4:
-            st.metric("Open", f"{opens} 🔄")
+            st.metric("Open Position", f"{opens} 🔄")
 
         st.divider()
 
-        # Recent signals table
-        st.subheader("Recent Signals")
-        for p in perf_data[:20]:
-            result_icon = "✅" if (p.get("result") or "").startswith("HIT_") and p.get("result") != "HIT_SL" else "❌" if p.get("result") == "HIT_SL" else "🔄"
-            ret = p.get("return_pct", 0) or 0
-            st.markdown(
-                f"{result_icon} **{p['ticker']}** — {p.get('result', 'OPEN')} "
-                f"| Return: {float(ret):+.1f}% | Date: {p.get('check_date', 'N/A')}"
-            )
+        # Recent signals interactive table
+        st.subheader("Recent Signals Performance")
+        import pandas as pd
+        df_perf_table = pd.DataFrame(perf_data)
+        
+        df_display = pd.DataFrame()
+        df_display["Ticker"] = df_perf_table["ticker"]
+        df_display["Signal Date"] = df_perf_table["signal_date"].apply(lambda d: str(d))
+        df_display["Type"] = df_perf_table["signal"]
+        df_display["Conviction"] = df_perf_table["conviction"]
+        
+        # Ideal Entry Zone
+        def format_entry(row):
+            el = row.get("entry_low")
+            eh = row.get("entry_high")
+            if el is not None and eh is not None:
+                return f"{int(el):,} - {int(eh):,}"
+            return "N/A"
+        df_display["Entry Zone"] = df_perf_table.apply(format_entry, axis=1)
+        
+        # Targets & SL
+        df_display["Target 1 (TP1)"] = df_perf_table["target_1"].apply(lambda v: f"Rp {int(v):,}" if pd.notnull(v) and v else "N/A")
+        df_display["Target 2 (TP2)"] = df_perf_table["target_2"].apply(lambda v: f"Rp {int(v):,}" if pd.notnull(v) and v else "N/A")
+        df_display["Stop Loss"] = df_perf_table["stop_loss"].apply(lambda v: f"Rp {int(v):,}" if pd.notnull(v) and v else "N/A")
+        
+        # Performance info
+        df_display["Checked Date"] = df_perf_table["check_date"].apply(lambda d: str(d))
+        df_display["Last Price"] = df_perf_table["actual_price"].apply(lambda v: f"Rp {int(v):,}" if pd.notnull(v) and v else "N/A")
+        df_display["Return"] = df_perf_table["return_pct"].apply(lambda v: f"{float(v):+.2f}%" if pd.notnull(v) else "0.00%")
+        df_display["Result"] = df_perf_table["result"].apply(lambda r: f"✅ {r}" if str(r).startswith("HIT_") and r != "HIT_SL" else f"❌ {r}" if r == "HIT_SL" else f"🔄 {r}")
+        
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
+
+        st.divider()
+        st.subheader("🔍 Deep Validation Sinyal & Prediksi")
+        
+        # Create selectbox option list
+        signal_options = []
+        for idx, row in df_perf_table.iterrows():
+            signal_options.append(f"{row['ticker']} ({row['signal_date']}) - {row['result']} [Ret: {row['return_pct']:+.1f}%]")
+            
+        selected_option = st.selectbox(
+            "Pilih sinyal untuk melihat validasi detail & analisa pergerakan harga:",
+            options=signal_options,
+            index=0
+        )
+        
+        if selected_option:
+            selected_idx = signal_options.index(selected_option)
+            selected_signal = perf_data[selected_idx]
+            
+            ticker = selected_signal["ticker"]
+            sig_date = selected_signal["signal_date"]
+            check_date = selected_signal["check_date"]
+            
+            # Show original thesis & reasoning
+            with st.container():
+                col_thesis, col_reason = st.columns(2)
+                with col_thesis:
+                    st.markdown("##### 📝 Original Thesis")
+                    st.info(selected_signal.get("thesis") or "N/A")
+                with col_reason:
+                    st.markdown("##### 🎯 Entry Reasoning")
+                    st.success(selected_signal.get("entry_reasoning") or "N/A")
+
+            # Load predictions
+            ml_pred = load_json_field(selected_signal.get("ml_prediction"))
+            price_pred = load_json_field(selected_signal.get("price_prediction"))
+            
+            # Query actual price history
+            price_history = query_db("""
+                SELECT trade_date, close, open, high, low, volume
+                FROM ohlcv_prices
+                WHERE ticker = %s AND trade_date >= %s
+                ORDER BY trade_date ASC
+            """, (ticker, sig_date - timedelta(days=7)))
+            
+            # Query actual trading days from signal date onwards to map horizons
+            post_signal_prices = query_db("""
+                SELECT trade_date, close
+                FROM ohlcv_prices
+                WHERE ticker = %s AND trade_date >= %s
+                ORDER BY trade_date ASC
+                LIMIT 15
+            """, (ticker, sig_date))
+            
+            # Render chart and validation tables
+            col_chart, col_val = st.columns([3, 2])
+            
+            with col_chart:
+                st.markdown("##### 📈 Chart Pergerakan Harga vs Key Levels")
+                if price_history:
+                    df_prices = pd.DataFrame(price_history)
+                    df_prices["trade_date"] = pd.to_datetime(df_prices["trade_date"])
+                    df_prices = df_prices.sort_values("trade_date")
+                    
+                    import plotly.graph_objects as go
+                    fig = go.Figure()
+                    
+                    # Add price line
+                    fig.add_trace(go.Scatter(
+                        x=df_prices["trade_date"],
+                        y=df_prices["close"],
+                        mode="lines+markers",
+                        name="Harga Close",
+                        line=dict(color="#3b82f6", width=3),
+                    ))
+                    
+                    # Add targets & SL
+                    tp1 = float(selected_signal.get("target_1") or 0)
+                    tp2 = float(selected_signal.get("target_2") or 0)
+                    sl = float(selected_signal.get("stop_loss") or 0)
+                    el = float(selected_signal.get("entry_low") or 0)
+                    eh = float(selected_signal.get("entry_high") or 0)
+                    
+                    if tp1 > 0:
+                        fig.add_hline(y=tp1, line_dash="dash", line_color="#10b981", 
+                                      annotation_text=f"TP1 (Rp {tp1:,.0f})", annotation_position="top left")
+                    if tp2 > 0:
+                        fig.add_hline(y=tp2, line_dash="dash", line_color="#059669", 
+                                      annotation_text=f"TP2 (Rp {tp2:,.0f})", annotation_position="top left")
+                    if sl > 0:
+                        fig.add_hline(y=sl, line_dash="dash", line_color="#ef4444", 
+                                      annotation_text=f"SL (Rp {sl:,.0f})", annotation_position="top left")
+                                      
+                    if el > 0 and eh > 0:
+                        fig.add_hrect(y0=el, y1=eh, fillcolor="#f59e0b", opacity=0.15, 
+                                      line_width=0, annotation_text="Ideal Entry Zone", annotation_position="inside top left")
+                                      
+                    fig.update_layout(
+                        template="plotly_dark",
+                        hovermode="x unified",
+                        margin=dict(l=10, r=10, t=10, b=10),
+                        height=350,
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("Data harga historis tidak tersedia.")
+            
+            with col_val:
+                st.markdown("##### 🔬 Validasi Prediksi Model")
+                
+                # Map actual trading price horizons
+                actual_trading_prices = {}
+                if post_signal_prices:
+                    baseline_close = float(post_signal_prices[0]["close"])
+                    actual_trading_prices["baseline"] = baseline_close
+                    
+                    horizons_indices = {"day_1": 1, "day_3": 3, "day_5": 5, "day_7": 7}
+                    for key, idx in horizons_indices.items():
+                        if len(post_signal_prices) > idx:
+                            actual_close = float(post_signal_prices[idx]["close"])
+                            actual_pct = (actual_close - baseline_close) / baseline_close * 100
+                            actual_trading_prices[key] = {
+                                "price": actual_close,
+                                "pct_change": actual_pct,
+                                "date": str(post_signal_prices[idx]["trade_date"])
+                            }
+                
+                # Validation tabs
+                pred_val_tabs = st.tabs(["🤖 ML Forecast (T+5)", "📊 Price Predictor"])
+                
+                with pred_val_tabs[0]:
+                    if ml_pred:
+                        multiday_pred = ml_pred.get("predictions_multiday", {}) or {}
+                        pred_keys = {"day_1": "1d", "day_3": "3d", "day_5": "5d", "day_7": "7d"}
+                        
+                        ml_rows = []
+                        for key, pkey in pred_keys.items():
+                            pred_ret = multiday_pred.get(pkey) or multiday_pred.get(key)
+                            if pred_ret is not None:
+                                pred_ret = float(pred_ret)
+                                actual_data = actual_trading_prices.get(key)
+                                if actual_data:
+                                    actual_ret = actual_data["pct_change"]
+                                    
+                                    dir_ok = "✅ Benar" if (pred_ret * actual_ret > 0) or (pred_ret == 0 and actual_ret == 0) else "❌ Salah"
+                                    
+                                    ml_rows.append({
+                                        "Horizon": key.upper().replace("_", " "),
+                                        "Pred Return": f"{pred_ret:+.2f}%",
+                                        "Act Return": f"{actual_ret:+.2f}%",
+                                        "Arah": dir_ok,
+                                        "Error": f"{abs(pred_ret - actual_ret):.2f}%"
+                                    })
+                        
+                        if ml_rows:
+                            st.dataframe(pd.DataFrame(ml_rows), use_container_width=True, hide_index=True)
+                            
+                            # ML info details
+                            st.markdown(f"**ML Signal:** `{ml_pred.get('signal', 'N/A')}` | **Confidence:** `{ml_pred.get('confidence', 'N/A')}`")
+                        else:
+                            st.info("Data horizon realisasi belum lengkap untuk memvalidasi ML.")
+                    else:
+                        st.info("Tidak ada data prediksi ML untuk sinyal ini.")
+                        
+                with pred_val_tabs[1]:
+                    if price_pred:
+                        forecast_prices = price_pred.get("predictions", {}) or {}
+                        
+                        price_rows = []
+                        for key in ["day_1", "day_3", "day_5", "day_7"]:
+                            forecast_data = forecast_prices.get(key)
+                            if forecast_data:
+                                pred_price = forecast_data.get("price")
+                                pred_pct = forecast_data.get("pct_change")
+                                if pred_price is not None:
+                                    pred_price = float(pred_price)
+                                    actual_data = actual_trading_prices.get(key)
+                                    if actual_data:
+                                        actual_price_val = actual_data["price"]
+                                        error_pct = abs(pred_price - actual_price_val) / actual_price_val * 100
+                                        
+                                        price_rows.append({
+                                            "Horizon": key.upper().replace("_", " "),
+                                            "Pred Price": f"Rp {int(pred_price):,}",
+                                            "Act Price": f"Rp {int(actual_price_val):,}",
+                                            "Pred Change": str(pred_pct),
+                                            "Act Change": f"{actual_data['pct_change']:+.2f}%",
+                                            "Error": f"{error_pct:.2f}%"
+                                        })
+                        
+                        if price_rows:
+                            st.dataframe(pd.DataFrame(price_rows), use_container_width=True, hide_index=True)
+                            
+                            # Price predictor details
+                            st.markdown(f"**Confidence:** `{price_pred.get('confidence', 'N/A')}`")
+                        else:
+                            st.info("Data horizon realisasi belum lengkap untuk memvalidasi Price Predictor.")
+                    else:
+                        st.info("Tidak ada data prediksi harga untuk sinyal ini.")
     else:
         # Show agent scores instead
         scores = query_db("""

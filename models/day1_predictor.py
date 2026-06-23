@@ -27,10 +27,13 @@ class Day1Predictor:
             except Exception as e:
                 logger.warning(f"Failed to load model: {e}")
 
+    # Dead zone: returns within ±NOISE_THRESHOLD are noise, excluded from training
+    NOISE_THRESHOLD = 0.0015  # 0.15%
+
     def train_incremental(self, X: pd.DataFrame, y):
         """
         Train or update model with new data.
-        Currently uses simple LGBM Regressor.
+        Includes noise filtering (dead zone) and time-decay sample weighting.
         """
         if len(X) < 10:
             logger.warning("Not enough data to train.")
@@ -50,32 +53,62 @@ class Day1Predictor:
 
         X_aligned = self._align_feature_frame(X)[valid_idx]
         y_valid = y[valid_idx]
-        y_valid_binary = (y_valid > 0.0).astype(int)
+
+        # ── Noise dead-zone filter ────────────────────────────────────────
+        # Exclude samples where |return| < NOISE_THRESHOLD (ambiguous noise)
+        clear_signal = y_valid.abs() >= self.NOISE_THRESHOLD
+        if clear_signal.sum() < 10:
+            logger.warning("Too few clear-signal samples after noise filter.")
+            # Fall back to using all data
+            clear_signal = pd.Series(True, index=y_valid.index)
+
+        X_filtered = X_aligned[clear_signal]
+        y_filtered = y_valid[clear_signal]
+        y_binary = (y_filtered > 0.0).astype(int)
+
+        logger.info(
+            f"Noise filter: {len(X_aligned)} → {len(X_filtered)} samples "
+            f"({len(X_aligned) - len(X_filtered)} ambiguous removed)"
+        )
+
+        # ── Time-decay sample weights ─────────────────────────────────────
+        # Exponential decay: recent data weighted ~3x more than oldest data
+        n_samples = len(X_filtered)
+        decay_factor = 3.0  # newest/oldest weight ratio
+        weights = np.exp(np.linspace(0, np.log(decay_factor), n_samples))
+        weights = weights / weights.mean()  # normalize to mean=1
 
         estimator = lgb.LGBMClassifier(verbosity=-1, bagging_freq=1, class_weight='balanced')
         
         param_dist = {
             'objective': ['binary'],
-            'learning_rate': [0.01, 0.05, 0.1],
-            'num_leaves': [7, 15, 31],
-            'min_child_samples': [20, 50, 100],
-            'bagging_fraction': [0.6, 0.8, 1.0],
-            'feature_fraction': [0.6, 0.8, 1.0],
-            'n_estimators': [50, 100, 200]
+            'learning_rate': [0.01, 0.03, 0.05, 0.1],
+            'num_leaves': [7, 15, 31, 63],
+            'min_child_samples': [20, 50, 100, 200],
+            'bagging_fraction': [0.5, 0.6, 0.7, 0.8],
+            'feature_fraction': [0.5, 0.6, 0.7, 0.8],
+            'n_estimators': [100, 200, 300, 500],
+            'reg_alpha': [0.0, 0.1, 0.5, 1.0],       # L1 regularization
+            'reg_lambda': [0.0, 0.1, 0.5, 1.0],       # L2 regularization
+            'min_gain_to_split': [0.0, 0.01, 0.05],   # prune weak splits
         }
 
         tscv = TimeSeriesSplit(n_splits=3)
         random_search = RandomizedSearchCV(
             estimator, param_distributions=param_dist,
-            n_iter=20, cv=tscv, scoring='accuracy',
-            random_state=42, n_jobs=1
+            n_iter=50,
+            cv=tscv,
+            scoring='roc_auc',
+            random_state=42,
+            n_jobs=1
         )
         
         logger.info("Starting hyperparameter tuning via RandomizedSearchCV...")
-        random_search.fit(X_aligned, y_valid_binary)
+        random_search.fit(X_filtered, y_binary, sample_weight=weights)
         self.model = random_search.best_estimator_
         
         logger.info(f"Best params: {random_search.best_params_}")
+        logger.info(f"Best ROC-AUC (CV): {random_search.best_score_:.4f}")
 
         # Save model
         os.makedirs(os.path.dirname(self.model_path), exist_ok=True)

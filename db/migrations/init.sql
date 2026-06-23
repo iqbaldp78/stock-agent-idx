@@ -245,6 +245,13 @@ CREATE TABLE IF NOT EXISTS sector_ohlcv (
     UNIQUE(sector_code, trade_date)
 );
 
+-- Marker tanggal IHSG yang tidak ada data (libur IDX, tidak ada trading)
+CREATE TABLE IF NOT EXISTS ihsg_no_data (
+    id         SERIAL PRIMARY KEY,
+    trade_date DATE NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Marker tanggal yang sudah dicoba fetch tapi memang tidak ada data (libur/suspensi)
 CREATE TABLE IF NOT EXISTS ohlcv_no_data (
     id         SERIAL PRIMARY KEY,
@@ -283,6 +290,7 @@ ALTER TABLE signals ALTER COLUMN weight_mode TYPE TEXT;
 CREATE INDEX IF NOT EXISTS idx_ohlcv_ticker_date ON ohlcv_prices(ticker, trade_date);
 CREATE INDEX IF NOT EXISTS idx_ohlcv_no_data_ticker_date ON ohlcv_no_data(ticker, trade_date);
 CREATE INDEX IF NOT EXISTS idx_ihsg_ohlcv_date   ON ihsg_ohlcv(trade_date);
+CREATE INDEX IF NOT EXISTS idx_ihsg_no_data_date  ON ihsg_no_data(trade_date);
 CREATE INDEX IF NOT EXISTS idx_stock_info_snap   ON stock_info_snapshot(ticker, snapshot_date);
 CREATE INDEX IF NOT EXISTS idx_sector_ohlcv_date ON sector_ohlcv(sector_code, trade_date);
 

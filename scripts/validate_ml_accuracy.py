@@ -47,13 +47,14 @@ def _mae(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def _precision_recall_buy(
-    y_true: np.ndarray, y_pred: np.ndarray, threshold: float = 0.003
+    y_true: np.ndarray, y_pred: np.ndarray, threshold: float = 0.001
 ) -> tuple[float, float]:
     """
     Precision & recall untuk sinyal BUY (pred_return >= threshold).
     TP = model prediksi BUY & aktual naik
     FP = model prediksi BUY & aktual turun
     FN = model prediksi HOLD/AVOID & aktual naik
+    Threshold 0.001 (0.1%) cocok untuk horizon Day-1.
     """
     pred_buy = y_pred >= threshold
     actual_up = y_true > 0
@@ -84,9 +85,10 @@ def _confusion_matrix_str(y_true: np.ndarray, y_pred: np.ndarray) -> str:
 
 def walk_forward_validate(
     ohlcv: pd.DataFrame,
+    ticker: str = None,
     n_folds: int = 5,
     min_train_rows: int = 60,
-    target_col: str = "target_5d",
+    target_col: str = "target_1d",
 ) -> dict:
     """
     Time-series walk-forward cross-validation.
@@ -101,7 +103,7 @@ def walk_forward_validate(
     from models.day1_predictor import Day1Predictor
 
     try:
-        X_all, y_all = prepare_training_data(ohlcv)
+        X_all, y_all = prepare_training_data(ohlcv, ticker=ticker)
         if isinstance(y_all, pd.DataFrame):
             if target_col in y_all.columns:
                 y_all = y_all[target_col]
@@ -265,7 +267,7 @@ def main():
     parser.add_argument("--folds", type=int, default=5, help="Jumlah fold walk-forward (default: 5)")
     parser.add_argument("--min-rows", type=int, default=60, help="Min baris training per fold (default: 60)")
     parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "max"), help="Periode data OHLCV (default: dari env atau max)")
-    parser.add_argument("--target", default="target_5d", help="Target horizon model (default: target_5d)")
+    parser.add_argument("--target", default="target_1d", help="Target horizon model (default: target_1d)")
     parser.add_argument("--output", default="validate_ml_result.json", help="File output JSON")
     args = parser.parse_args()
 
@@ -289,7 +291,7 @@ def main():
             continue
 
         logger.info(f"  Data: {len(ohlcv)} rows — Running {args.folds}-fold walk-forward CV...")
-        res = walk_forward_validate(ohlcv, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target)
+        res = walk_forward_validate(ohlcv, ticker=ticker, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target)
 
         results[ticker] = res
 

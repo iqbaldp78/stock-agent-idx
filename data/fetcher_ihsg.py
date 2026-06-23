@@ -17,6 +17,8 @@ from db.cache import (
     find_missing_dates,
     group_into_ranges,
     _period_to_dates,
+    get_ihsg_no_data_dates,
+    save_ihsg_no_data_dates,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,6 +47,7 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
     """
     Fetch IHSG OHLCV dengan cache-first strategy.
     - History: ambil dari DB, fetch yfinance hanya untuk tanggal yang belum ada.
+    - Tanggal libur IDX (no-data): di-skip & di-cache agar tidak di-fetch ulang.
     - Today: selalu di-upsert dari API.
     Returns: DataFrame dengan Date index, OHLCV columns, atau None jika error.
     """
@@ -59,6 +62,14 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
         logger.info(f"[cache hit] IHSG OHLCV {start_date_str}..{end_date_str}")
         return cached if not cached.empty else None
 
+    # Filter out dates already known to be non-trading (IDX holidays)
+    known_no_data = get_ihsg_no_data_dates(start_date_str, end_date_str)
+    missing = [d for d in missing if d not in known_no_data]
+
+    if not missing:
+        logger.info(f"[cache hit] IHSG OHLCV {start_date_str}..{end_date_str} (all missing dates are holidays)")
+        return cached if not cached.empty else None
+
     # Fetch hanya rentang yang belum ada dari yfinance
     new_frames = [cached] if not cached.empty else []
     for range_start, range_end in group_into_ranges(missing):
@@ -66,6 +77,15 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
             ticker = yf.Ticker("^JKSE")
             hist = ticker.history(start=range_start.isoformat(), end=(range_end + timedelta(days=1)).isoformat())
             if hist.empty:
+                # Mark all dates in this range as no-data (IDX holidays)
+                from datetime import timedelta as _td
+                holiday_dates = [
+                    range_start + _td(days=i)
+                    for i in range((range_end - range_start).days + 1)
+                    if (range_start + _td(days=i)).weekday() < 5  # only weekdays
+                ]
+                save_ihsg_no_data_dates(holiday_dates)
+                logger.debug(f"[fetcher_ihsg] No data {range_start}..{range_end} — marked as IDX holiday")
                 continue
             hist.index.name = "Date"
             if isinstance(hist.columns, pd.MultiIndex):
@@ -73,6 +93,18 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
             # Remove timezone before saving
             if hist.index.tz is not None:
                 hist.index = hist.index.tz_localize(None)
+            # Mark any expected weekdays NOT returned by yfinance as holidays
+            from datetime import timedelta as _td
+            returned_dates = {d.date() if hasattr(d, 'date') else d for d in hist.index}
+            expected_dates = [
+                range_start + _td(days=i)
+                for i in range((range_end - range_start).days + 1)
+                if (range_start + _td(days=i)).weekday() < 5
+            ]
+            holiday_gaps = [d for d in expected_dates if d not in returned_dates]
+            if holiday_gaps:
+                save_ihsg_no_data_dates(holiday_gaps)
+                logger.debug(f"[fetcher_ihsg] Marked {len(holiday_gaps)} holiday gaps in {range_start}..{range_end}")
             save_ihsg_ohlcv(hist, today)
             new_frames.append(hist)
         except Exception as e:

@@ -308,6 +308,50 @@ def save_ihsg_ohlcv(df: pd.DataFrame, today_date: Optional[date] = None) -> None
         db.close()
 
 
+def get_ihsg_no_data_dates(start_date: str, end_date: str) -> set[date]:
+    """Ambil tanggal no-data marker IHSG (libur IDX) dalam rentang tertentu."""
+    db = SessionLocal()
+    try:
+        rows = db.execute(
+            text("""
+                SELECT trade_date
+                FROM ihsg_no_data
+                WHERE trade_date BETWEEN :start AND :end
+            """),
+            {"start": start_date, "end": end_date},
+        ).fetchall()
+        return {row[0] for row in rows}
+    except Exception as e:
+        logger.warning(f"[cache] get_ihsg_no_data_dates error: {e}")
+        return set()
+    finally:
+        db.close()
+
+
+def save_ihsg_no_data_dates(dates: list[date]) -> None:
+    """Simpan marker tanggal IHSG yang kosong (libur IDX) agar tidak di-fetch ulang."""
+    if not dates:
+        return
+    db = SessionLocal()
+    try:
+        for d in dates:
+            db.execute(
+                text("""
+                    INSERT INTO ihsg_no_data (trade_date)
+                    VALUES (:trade_date)
+                    ON CONFLICT (trade_date) DO NOTHING
+                """),
+                {"trade_date": d},
+            )
+        db.commit()
+        logger.debug(f"[cache] Saved {len(dates)} IHSG no-data markers")
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"[cache] save_ihsg_no_data_dates error: {e}")
+    finally:
+        db.close()
+
+
 # ─── Stock Info Snapshot ────────────────────────────────────────────────────
 
 def get_cached_stock_info(ticker: str, snapshot_date: str) -> Optional[dict]:

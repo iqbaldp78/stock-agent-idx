@@ -1,8 +1,8 @@
 {
-  "run_date": "2026-06-21T13:35:28.961704",
+  "run_date": "2026-06-23T14:39:23.609284",
   "model_path": "models/checkpoints/lgbm_day1.pkl",
-  "model_saved": false,
-  "model_passed_gate": false,
+  "model_saved": true,
+  "model_passed_gate": true,
   "config": {
     "period": "max",
     "min_rows": 120,
@@ -10,249 +10,24 @@
     "force_save": false
   },
   "rows": {
-    "tickers_requested": 46,
-    "tickers_trained": 46,
-    "final_train_rows": 189065
+    "tickers_requested": 1,
+    "tickers_trained": 1,
+    "final_train_rows": 5195
   },
   "holdout_metrics": {
-    "test_rows": 47266,
-    "directional_accuracy": 46.25,
-    "mae_pct": 4.073,
-    "buy_precision": 46.74,
-    "buy_recall": 72.36,
-    "avg_pred_return_pct": 0.5031,
-    "avg_actual_return_pct": 0.2369
+    "test_rows": 1298,
+    "directional_accuracy": 52.26,
+    "mae_pct": 2.0528,
+    "buy_precision": 40.33,
+    "buy_recall": 21.04,
+    "avg_pred_return_pct": -0.1005,
+    "avg_actual_return_pct": 0.0533
   },
   "tickers": [
     {
-      "ticker": "ACES",
-      "ohlcv_rows": 4505,
-      "training_rows": 4449
-    },
-    {
-      "ticker": "ADRO",
-      "ohlcv_rows": 4339,
-      "training_rows": 4283
-    },
-    {
-      "ticker": "AKRA",
-      "ohlcv_rows": 5141,
-      "training_rows": 5082
-    },
-    {
-      "ticker": "AMMN",
-      "ohlcv_rows": 699,
-      "training_rows": 643
-    },
-    {
-      "ticker": "AMRT",
-      "ohlcv_rows": 4222,
-      "training_rows": 4161
-    },
-    {
       "ticker": "ANTM",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "ARTO",
-      "ohlcv_rows": 2515,
-      "training_rows": 2395
-    },
-    {
-      "ticker": "ASII",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "BBCA",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "BBNI",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "BBRI",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "BBTN",
-      "ohlcv_rows": 3996,
-      "training_rows": 3940
-    },
-    {
-      "ticker": "BMRI",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "BRPT",
-      "ohlcv_rows": 5200,
-      "training_rows": 5139
-    },
-    {
-      "ticker": "BUKA",
-      "ohlcv_rows": 1165,
-      "training_rows": 1109
-    },
-    {
-      "ticker": "BYAN",
-      "ohlcv_rows": 4321,
-      "training_rows": 4144
-    },
-    {
-      "ticker": "CPIN",
-      "ohlcv_rows": 5116,
-      "training_rows": 5060
-    },
-    {
-      "ticker": "ESSA",
-      "ohlcv_rows": 3476,
-      "training_rows": 3414
-    },
-    {
-      "ticker": "EXCL",
-      "ohlcv_rows": 5017,
-      "training_rows": 4961
-    },
-    {
-      "ticker": "GOTO",
-      "ohlcv_rows": 996,
-      "training_rows": 939
-    },
-    {
-      "ticker": "HRUM",
-      "ohlcv_rows": 3803,
-      "training_rows": 3747
-    },
-    {
-      "ticker": "ICBP",
-      "ohlcv_rows": 3802,
-      "training_rows": 3746
-    },
-    {
-      "ticker": "INCO",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "INDF",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "INKP",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "INTP",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "ISAT",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "ITMG",
-      "ohlcv_rows": 4475,
-      "training_rows": 4419
-    },
-    {
-      "ticker": "KLBF",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "MAPI",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "MDKA",
-      "ohlcv_rows": 2650,
-      "training_rows": 2585
-    },
-    {
-      "ticker": "MEDC",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "MIKA",
-      "ohlcv_rows": 2709,
-      "training_rows": 2653
-    },
-    {
-      "ticker": "PGAS",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "PGEO",
-      "ohlcv_rows": 779,
-      "training_rows": 723
-    },
-    {
-      "ticker": "PTBA",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "SIDO",
-      "ohlcv_rows": 3014,
-      "training_rows": 2958
-    },
-    {
-      "ticker": "SMGR",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "TBIG",
-      "ohlcv_rows": 3789,
-      "training_rows": 3733
-    },
-    {
-      "ticker": "TINS",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "TLKM",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "TOWR",
-      "ohlcv_rows": 3945,
-      "training_rows": 3858
-    },
-    {
-      "ticker": "UNTR",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "UNVR",
-      "ohlcv_rows": 5200,
-      "training_rows": 5144
-    },
-    {
-      "ticker": "BRIS",
-      "ohlcv_rows": 1949,
-      "training_rows": 1893
-    },
-    {
-      "ticker": "ADMR",
-      "ohlcv_rows": 1063,
-      "training_rows": 1007
+      "ohlcv_rows": 5202,
+      "training_rows": 5195
     }
   ],
   "errors": []

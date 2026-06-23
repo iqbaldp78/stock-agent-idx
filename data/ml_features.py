@@ -14,6 +14,12 @@ FEATURE_COLUMNS = [
     "dist_avg_1m",
     "foreign_net_7d",
     "foreign_net_1m",
+    "top3_buy_ratio_7d",
+    "top3_sell_ratio_7d",
+    "retail_buy_ratio_7d",
+    "retail_sell_ratio_7d",
+    "top3_buy_ratio_1m",
+    "top3_sell_ratio_1m",
     "is_retail_accum",
     "technical_score",
     "rsi",
@@ -42,10 +48,46 @@ FEATURE_COLUMNS = [
     "stoch_k",
     "stoch_d",
     "atr",
+    # Day-1 specific features
+    "close_to_high",
+    "close_to_low",
+    "body_ratio",
+    "ret_1d_zscore",
+    "vol_trend_5d",
+    "day_of_week",
+    "gap_continuation",
+    "ret_2d",
+    "ret_10d",
+    "rsi_14_prev",
+    "volume_spike_prev",
+    # Market context features (IHSG)
+    "ihsg_ret_1d",
+    "ihsg_ret_5d",
+    "ihsg_rsi",
+    "ihsg_ma_dist_20",
+    "ihsg_volatility",
+    "ihsg_trend",
+    "stock_vs_ihsg_1d",
+    # Foreign flow features
+    "foreign_flow_zscore",
 ]
 
 # Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
 ML_TRAIN_FEATURES = [
+    "bandarm_score",
+    "dist_avg_7d",
+    "dist_avg_1m",
+    "foreign_net_7d",
+    "foreign_net_1m",
+    "top3_buy_ratio_7d",
+    "top3_sell_ratio_7d",
+    "retail_buy_ratio_7d",
+    "retail_sell_ratio_7d",
+    "top3_buy_ratio_1m",
+    "top3_sell_ratio_1m",
+    "is_retail_accum",
+    "technical_score",
+    "macro_score",
     "rsi",
     "is_bullish_trend",
     "vol_ratio",
@@ -65,8 +107,61 @@ ML_TRAIN_FEATURES = [
     "stoch_k",
     "stoch_d",
     "atr",
+    # Day-1 specific features
+    "close_to_high",
+    "close_to_low",
+    "body_ratio",
+    "ret_1d_zscore",
+    "vol_trend_5d",
+    "day_of_week",
+    "gap_continuation",
+    "ret_2d",
+    "ret_10d",
+    "rsi_14_prev",
+    "volume_spike_prev",
+    # Market context features (IHSG)
+    "ihsg_ret_1d",
+    "ihsg_ret_5d",
+    "ihsg_rsi",
+    "ihsg_ma_dist_20",
+    "ihsg_volatility",
+    "ihsg_trend",
+    "stock_vs_ihsg_1d",
+    # Foreign flow features
+    "foreign_flow_zscore",
 ]
 
+
+# ─── IHSG History Cache ──────────────────────────────────────────────────────
+_ihsg_cache = None
+
+def _fetch_ihsg_history() -> pd.DataFrame | None:
+    """Fetch IHSG OHLCV from DB for market context features. Cached in memory."""
+    global _ihsg_cache
+    if _ihsg_cache is not None:
+        return _ihsg_cache
+    try:
+        from db import SessionLocal
+        from db.models import IhsgOhlcv
+        db = SessionLocal()
+        try:
+            rows = db.query(IhsgOhlcv).order_by(IhsgOhlcv.trade_date).all()
+            if not rows:
+                return None
+            _ihsg_cache = pd.DataFrame([{
+                'open': float(r.open or 0),
+                'high': float(r.high or 0),
+                'low': float(r.low or 0),
+                'close': float(r.close or 0),
+                'volume': int(r.volume or 0),
+            } for r in rows], index=pd.to_datetime([r.trade_date for r in rows]))
+            logger.info(f"Loaded IHSG history: {len(_ihsg_cache)} rows ({_ihsg_cache.index.min().date()} to {_ihsg_cache.index.max().date()})")
+            return _ihsg_cache
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning(f"Failed to fetch IHSG history: {e}")
+        return None
 
 def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
@@ -146,6 +241,87 @@ def _proximity(current_price: float, level: float) -> float:
         return 0.0
     return (current_price - level) / current_price
 
+def get_historical_bandar_features(ticker: str, target_date) -> dict:
+    """
+    Query database to calculate Bandarmologi ratios (Top 3 concentration & retail ratio)
+    for a given ticker up to target_date.
+    """
+    try:
+        from db import SessionLocal
+        from db.models import BrokerAccumulation
+        import pandas as pd
+        
+        db = SessionLocal()
+        try:
+            # Query last 35 trading days of broker accumulation to cover rolling 30-day window
+            accum_rows = db.query(BrokerAccumulation).filter(
+                BrokerAccumulation.ticker == ticker,
+                BrokerAccumulation.trade_date <= target_date
+            ).order_by(BrokerAccumulation.trade_date.desc()).limit(1050).all() # limit to prevent huge queries
+            
+            if not accum_rows:
+                return {}
+                
+            df_accum = pd.DataFrame([{
+                "date": r.trade_date,
+                "broker_code": r.broker_code,
+                "buy_value": float(r.buy_value or 0),
+                "sell_value": float(r.sell_value or 0),
+            } for r in accum_rows])
+            
+            if df_accum.empty:
+                return {}
+
+            RETAIL_BROKERS = {"XL", "XC", "YP"}
+            daily_list = []
+            for dt, group in df_accum.groupby("date"):
+                buy_vals = sorted(group["buy_value"].tolist(), reverse=True)
+                total_buy = sum(buy_vals)
+                top3_buy = sum(buy_vals[:3])
+                
+                sell_vals = sorted(group["sell_value"].tolist(), reverse=True)
+                total_sell = sum(sell_vals)
+                top3_sell = sum(sell_vals[:3])
+                
+                retail_buy = group[group["broker_code"].isin(RETAIL_BROKERS)]["buy_value"].sum()
+                retail_sell = group[group["broker_code"].isin(RETAIL_BROKERS)]["sell_value"].sum()
+                
+                daily_list.append({
+                    "date": dt,
+                    "total_buy": total_buy,
+                    "total_sell": total_sell,
+                    "top3_buy": top3_buy,
+                    "top3_sell": top3_sell,
+                    "retail_buy": retail_buy,
+                    "retail_sell": retail_sell,
+                })
+                
+            df_daily = pd.DataFrame(daily_list).set_index("date").sort_index()
+            
+            # We want the values for target_date (last row)
+            roll7 = df_daily.tail(7)
+            t_buy7 = roll7["total_buy"].sum()
+            t_sell7 = roll7["total_sell"].sum()
+            
+            roll30 = df_daily.tail(30)
+            t_buy30 = roll30["total_buy"].sum()
+            t_sell30 = roll30["total_sell"].sum()
+            
+            return {
+                "top3_buy_ratio_7d": float(roll7["top3_buy"].sum() / t_buy7) if t_buy7 > 0 else 0.0,
+                "top3_sell_ratio_7d": float(roll7["top3_sell"].sum() / t_sell7) if t_sell7 > 0 else 0.0,
+                "retail_buy_ratio_7d": float(roll7["retail_buy"].sum() / t_buy7) if t_buy7 > 0 else 0.0,
+                "retail_sell_ratio_7d": float(roll7["retail_sell"].sum() / t_sell7) if t_sell7 > 0 else 0.0,
+                
+                "top3_buy_ratio_1m": float(roll30["top3_buy"].sum() / t_buy30) if t_buy30 > 0 else 0.0,
+                "top3_sell_ratio_1m": float(roll30["top3_sell"].sum() / t_sell30) if t_sell30 > 0 else 0.0,
+            }
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning(f"Failed to calculate live bandar ratios for {ticker}: {e}")
+        return {}
+
 def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.DataFrame) -> pd.DataFrame:
     """
     Extract vector features for a single stock.
@@ -158,6 +334,8 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
 
     # 1. Bandar Features
     price_analysis = bandarm.get("price_analysis", {})
+    from datetime import date
+    bandar_ratios = get_historical_bandar_features(ticker, date.today())
 
     bandar_features = {
         "bandarm_score": bandarm.get("score", 5.0),
@@ -165,6 +343,12 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         "dist_avg_1m": _parse_pct(price_analysis.get("distance_from_1m")),
         "foreign_net_7d": _parse_number(bandarm.get("window_7d", {}).get("foreign_net_7d"), 0.0) / 1e9, # In Billions
         "foreign_net_1m": _parse_number(bandarm.get("window_1m", {}).get("foreign_net_1m"), 0.0) / 1e9,
+        "top3_buy_ratio_7d": bandar_ratios.get("top3_buy_ratio_7d", 0.0),
+        "top3_sell_ratio_7d": bandar_ratios.get("top3_sell_ratio_7d", 0.0),
+        "retail_buy_ratio_7d": bandar_ratios.get("retail_buy_ratio_7d", 0.0),
+        "retail_sell_ratio_7d": bandar_ratios.get("retail_sell_ratio_7d", 0.0),
+        "top3_buy_ratio_1m": bandar_ratios.get("top3_buy_ratio_1m", 0.0),
+        "top3_sell_ratio_1m": bandar_ratios.get("top3_sell_ratio_1m", 0.0),
         "is_retail_accum": 1.0 if "Penalty: Broker retail" in str(bandarm.get("data_used")) else 0.0,
     }
 
@@ -269,12 +453,17 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
     row = pd.DataFrame([all_features])[FEATURE_COLUMNS]
     return row.fillna(0.0)
 
-def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Generate historical features and targets from OHLCV for training.
+    If ticker is provided, retrieves historical Bandarmologi and Agent scores from DB.
     Returns (features_df, targets_df) where targets_df contains columns for 1d, 3d, 5d, and 7d horizons.
     """
     df = ohlcv.copy()
+    
+    # Ensure index is datetime and sorted
+    df.index = pd.to_datetime(df.index)
+    df = df.sort_index()
 
     # Targets: Future returns for 1d, 3d, 5d, 7d
     df['target_1d'] = df['Close'].shift(-1) / df['Close'] - 1
@@ -321,16 +510,158 @@ def prepare_training_data(ohlcv: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
     df['stoch_d'] = stoch_d
     df['atr'] = atr / df['Close']
 
-    # Drop rows with NaN (from rolling/shifting)
-    df = df.dropna()
+    # ── Day-1 Specific Features ──────────────────────────────────────────────
+    # Intraday candle structure
+    candle_range = (df['High'] - df['Low']).replace(0, np.nan)
+    df['close_to_high'] = (df['High'] - df['Close']) / df['Close']   # upper wick ratio
+    df['close_to_low'] = (df['Close'] - df['Low']) / df['Close']     # lower wick (bullish if big)
+    df['body_ratio'] = (df['Close'] - df['Open']).abs() / candle_range.fillna(1e-8)  # body vs full range
 
-    # Keep the existing model schema: non-OHLCV features are placeholders for historical training.
-    # Note: ML Model will only use ML_TRAIN_FEATURES
+    # Mean-reversion z-score of daily return
+    ret_mean = df['ret_1d'].rolling(20).mean()
+    ret_std = df['ret_1d'].rolling(20).std().replace(0, np.nan)
+    df['ret_1d_zscore'] = (df['ret_1d'] - ret_mean) / ret_std  # negative = oversold bounce signal
+
+    # Short-term volume trend (accelerating vs decelerating)
+    df['vol_trend_5d'] = df['Volume'].rolling(5).mean() / vol_ma20
+
+    # Day-of-week (Senin=0, Jumat=4) — market anomaly effect
+    df['day_of_week'] = pd.to_datetime(df.index).dayofweek.astype(float)
+
+    # Gap continuation: gap size × previous day return direction
+    df['gap_continuation'] = df['gap_open'] * df['ret_1d'].shift(1)
+
+    # Longer return horizons
+    df['ret_2d'] = df['Close'].pct_change(2)
+    df['ret_10d'] = df['Close'].pct_change(10)
+
+    # Lagged RSI (1-day lag to avoid lookahead on same-day signal)
+    rsi_series = _compute_rsi(df['Close'], 14)
+    df['rsi_14_prev'] = rsi_series.shift(1)
+
+    # Lagged volume spike
+    df['volume_spike_prev'] = df['volume_spike'].shift(1)
+
+    # ── IHSG Market Context Features ──────────────────────────────────────
+    ihsg_df = _fetch_ihsg_history()
+    if ihsg_df is not None and not ihsg_df.empty:
+        # Compute IHSG indicators
+        ihsg_ret_1d = ihsg_df['close'].pct_change()
+        ihsg_ret_5d = ihsg_df['close'].pct_change(5)
+        ihsg_rsi = _compute_rsi(ihsg_df['close'], 14)
+        ihsg_ma20 = ihsg_df['close'].rolling(20).mean()
+        ihsg_ma50 = ihsg_df['close'].rolling(50).mean()
+        ihsg_ma_dist_20 = ihsg_df['close'] / ihsg_ma20 - 1
+        ihsg_volatility = ihsg_ret_1d.rolling(20).std()
+        ihsg_trend = (ihsg_ma20 > ihsg_ma50).astype(float)
+
+        ihsg_features = pd.DataFrame({
+            'ihsg_ret_1d': ihsg_ret_1d,
+            'ihsg_ret_5d': ihsg_ret_5d,
+            'ihsg_rsi': ihsg_rsi,
+            'ihsg_ma_dist_20': ihsg_ma_dist_20,
+            'ihsg_volatility': ihsg_volatility,
+            'ihsg_trend': ihsg_trend,
+        }, index=ihsg_df.index)
+
+        # Join on date index
+        df = df.join(ihsg_features, how='left')
+
+        # Relative strength: stock return vs IHSG return
+        df['stock_vs_ihsg_1d'] = df['ret_1d'] - df['ihsg_ret_1d'].fillna(0)
+    else:
+        for col in ['ihsg_ret_1d', 'ihsg_ret_5d', 'ihsg_rsi', 'ihsg_ma_dist_20',
+                     'ihsg_volatility', 'ihsg_trend', 'stock_vs_ihsg_1d']:
+            df[col] = 0.0
+
+    # Fetch from database if ticker is provided
+    db_scores = None
+    db_accum = None
+    if ticker:
+        try:
+            from db import SessionLocal
+            from db.models import AgentScore, BrokerAccumulation
+            
+            db = SessionLocal()
+            try:
+                # 1. Agent scores
+                scores_rows = db.query(AgentScore).filter_by(ticker=ticker).all()
+                if scores_rows:
+                    db_scores = pd.DataFrame([{
+                        "date": pd.to_datetime(r.run_date),
+                        "bandarm_score": float(r.bandarm_score or 5.0),
+                        "technical_score": float(r.technical_score or 5.0),
+                        "macro_score": 5.0 if r.macro_signal == "UNKNOWN" else 8.0 if r.macro_signal == "BULLISH" else 3.0,
+                    } for r in scores_rows]).set_index("date")
+                
+                # 2. Broker accumulation
+                accum_rows = db.query(BrokerAccumulation).filter_by(ticker=ticker).all()
+                if accum_rows:
+                    df_accum = pd.DataFrame([{
+                        "date": pd.to_datetime(r.trade_date),
+                        "buy_lot": float(r.buy_lot or 0),
+                        "buy_value": float(r.buy_value or 0),
+                        "day_foreign_net": float(r.day_foreign_net or 0)
+                    } for r in accum_rows])
+                    
+                    df_daily = df_accum.groupby("date").agg({
+                        "buy_lot": "sum",
+                        "buy_value": "sum",
+                        "day_foreign_net": "first"
+                    }).sort_index()
+                    
+                    # Compute rolling sums on the daily grouped accumulation
+                    roll7_val = df_daily["buy_value"].rolling(7).sum()
+                    roll7_lot = df_daily["buy_lot"].rolling(7).sum()
+                    df_daily["avg_7d"] = roll7_val / (roll7_lot * 100)
+                    
+                    roll30_val = df_daily["buy_value"].rolling(30).sum()
+                    roll30_lot = df_daily["buy_lot"].rolling(30).sum()
+                    df_daily["avg_1m"] = roll30_val / (roll30_lot * 100)
+                    
+                    df_daily["foreign_net_7d"] = df_daily["day_foreign_net"].rolling(7).sum() / 1e9
+                    df_daily["foreign_net_1m"] = df_daily["day_foreign_net"].rolling(30).sum() / 1e9
+                    
+                    db_accum = df_daily[["avg_7d", "avg_1m", "foreign_net_7d", "foreign_net_1m"]]
+            finally:
+                db.close()
+        except Exception as e:
+            logger.warning(f"Failed to fetch historical features from DB for {ticker}: {e}")
+
+    # Merge Database Features
+    if db_scores is not None:
+        df = df.join(db_scores, how="left")
+    if db_accum is not None:
+        df = df.join(db_accum, how="left")
+        
+        # Calculate distances based on merged rolling averages
+        df["dist_avg_7d"] = ((df["Close"] - df["avg_7d"]) / df["avg_7d"] * 100).fillna(0.0)
+        df["dist_avg_1m"] = ((df["Close"] - df["avg_1m"]) / df["avg_1m"] * 100).fillna(0.0)
+
+    # Fill default baseline values for missing DB features
+    df["bandarm_score"] = df.get("bandarm_score", pd.Series(5.0, index=df.index)).fillna(5.0)
+    df["technical_score"] = df.get("technical_score", pd.Series(5.0, index=df.index)).fillna(5.0)
+    df["macro_score"] = df.get("macro_score", pd.Series(5.0, index=df.index)).fillna(5.0)
+    df["dist_avg_7d"] = df.get("dist_avg_7d", pd.Series(0.0, index=df.index)).fillna(0.0)
+    df["dist_avg_1m"] = df.get("dist_avg_1m", pd.Series(0.0, index=df.index)).fillna(0.0)
+    df["foreign_net_7d"] = df.get("foreign_net_7d", pd.Series(0.0, index=df.index)).fillna(0.0)
+    df["foreign_net_1m"] = df.get("foreign_net_1m", pd.Series(0.0, index=df.index)).fillna(0.0)
+    df["is_retail_accum"] = df.get("is_retail_accum", pd.Series(0.0, index=df.index)).fillna(0.0)
+
+    # ── Foreign Flow Z-Score ──────────────────────────────────────────────
+    # Z-score of foreign net flow: how unusual is today's flow vs recent history
+    fn7 = df["foreign_net_7d"]
+    fn_mean = fn7.rolling(20).mean()
+    fn_std = fn7.rolling(20).std().replace(0, np.nan)
+    df["foreign_flow_zscore"] = ((fn7 - fn_mean) / fn_std).fillna(0.0)
+
+    # Drop rows with NaN (from rolling/shifting of targets and indicators)
+    df = df.dropna(subset=['target_1d', 'target_3d', 'target_5d', 'target_7d'])
+
+    # Ensure all columns in FEATURE_COLUMNS exist
     for col in FEATURE_COLUMNS:
         if col not in df.columns:
             df[col] = 0.0
 
     targets = df[['target_1d', 'target_3d', 'target_5d', 'target_7d']]
-    # We return the full FEATURE_COLUMNS for backward compatibility, but models/day1_predictor 
-    # will only select ML_TRAIN_FEATURES.
     return df[FEATURE_COLUMNS], targets

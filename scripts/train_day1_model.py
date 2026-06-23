@@ -151,7 +151,7 @@ def build_dataset(
             continue
 
         try:
-            X, y = prepare_training_data(ohlcv)
+            X, y = prepare_training_data(ohlcv, ticker=ticker)
         except Exception as e:
             errors.append({"ticker": ticker, "error": f"prepare_training_data failed: {e}"})
             logger.warning(f"  {ticker}: feature prep failed: {e}")
@@ -231,7 +231,7 @@ def main():
     grp.add_argument("--tickers", nargs="+", help="Ticker(s), e.g. BBCA BMRI")
     grp.add_argument("--all", action="store_true", help="Semua ticker di universe")
     parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "max"), help="Periode OHLCV historis (default: dari env atau max)")
-    parser.add_argument("--target", default="target_5d", help="Target horizon model (default: target_5d)")
+    parser.add_argument("--target", default="target_1d", help="Target horizon model (default: target_1d)")
     parser.add_argument("--min-rows", type=int, default=120, help="Minimum training rows per ticker")
     parser.add_argument("--test-size", type=float, default=0.2, help="Holdout ratio per ticker (default: 0.2)")
     parser.add_argument("--model-path", default="models/checkpoints/lgbm_day1.pkl", help="Output model path")
