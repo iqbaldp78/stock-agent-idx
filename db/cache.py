@@ -119,6 +119,8 @@ def get_cached_ohlcv(ticker: str, start_date: str, end_date: str) -> pd.DataFram
     df = pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"])
     df["Date"] = pd.to_datetime(df["Date"])
     df.set_index("Date", inplace=True)
+    for col in ["Open", "High", "Low", "Close", "Volume"]:
+        df[col] = df[col].astype(float)
     return df
 
 
@@ -262,6 +264,8 @@ def get_cached_ihsg_ohlcv(start_date: str, end_date: str) -> pd.DataFrame:
     df = pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"])
     df["Date"] = pd.to_datetime(df["Date"])
     df.set_index("Date", inplace=True)
+    for col in ["Open", "High", "Low", "Close", "Volume"]:
+        df[col] = df[col].astype(float)
     return df
 
 
@@ -529,6 +533,8 @@ def get_cached_sector_ohlcv(sector_code: str, start_date: str, end_date: str) ->
     df = pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close"])
     df["Date"] = pd.to_datetime(df["Date"])
     df.set_index("Date", inplace=True)
+    for col in ["Open", "High", "Low", "Close"]:
+        df[col] = df[col].astype(float)
     return df
 
 

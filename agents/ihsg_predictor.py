@@ -46,7 +46,7 @@ def _calculate_momentum_score(ohlcv: pd.DataFrame, macro_data: dict) -> float:
         return 0.5
 
     try:
-        close = ohlcv["Close"]
+        close = ohlcv["Close"].astype(float)
         rsi = _calculate_rsi(close, 14)
         macd, signal = _calculate_macd(close)
 

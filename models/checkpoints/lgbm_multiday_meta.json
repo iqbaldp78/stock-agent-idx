@@ -1,5 +1,5 @@
 {
-  "run_date": "2026-06-23T05:25:15.517774",
+  "run_date": "2026-06-25T01:26:12.710606",
   "checkpoints_dir": "models/checkpoints",
   "config": {
     "period": "max",
@@ -9,361 +9,361 @@
   "rows": {
     "tickers_requested": 46,
     "tickers_trained": 46,
-    "holdout_train_rows": 153316,
-    "holdout_test_rows": 38340,
-    "final_train_rows": 191656
+    "holdout_train_rows": 153373,
+    "holdout_test_rows": 38375,
+    "final_train_rows": 191748
   },
   "holdout_metrics": {
     "1d": {
-      "test_rows": 38340,
-      "directional_accuracy": 47.49,
-      "mae_pct": 1.7642,
-      "buy_precision": 45.34,
-      "buy_recall": 9.41
+      "test_rows": 38375,
+      "directional_accuracy": 52.96,
+      "mae_pct": 1.7723,
+      "buy_precision": 49.01,
+      "buy_recall": 22.61
     },
     "3d": {
-      "test_rows": 38340,
-      "directional_accuracy": 49.04,
-      "mae_pct": 3.0265,
-      "buy_precision": 46.98,
-      "buy_recall": 29.11
+      "test_rows": 38375,
+      "directional_accuracy": 52.06,
+      "mae_pct": 3.0522,
+      "buy_precision": 49.43,
+      "buy_recall": 41.14
     },
     "5d": {
-      "test_rows": 38340,
-      "directional_accuracy": 48.46,
-      "mae_pct": 3.9335,
-      "buy_precision": 47.08,
-      "buy_recall": 45.76
+      "test_rows": 38375,
+      "directional_accuracy": 52.39,
+      "mae_pct": 4.0139,
+      "buy_precision": 49.87,
+      "buy_recall": 45.61
     },
     "7d": {
-      "test_rows": 38340,
-      "directional_accuracy": 48.13,
-      "mae_pct": 4.7029,
-      "buy_precision": 46.94,
-      "buy_recall": 53.83
+      "test_rows": 38375,
+      "directional_accuracy": 51.93,
+      "mae_pct": 4.8446,
+      "buy_precision": 49.07,
+      "buy_recall": 47.57
     }
   },
   "tickers": [
     {
       "ticker": "ACES",
-      "ohlcv_rows": 4507,
-      "training_rows": 4500,
-      "train_rows": 3600,
-      "test_rows": 900
+      "ohlcv_rows": 4509,
+      "training_rows": 4502,
+      "train_rows": 3601,
+      "test_rows": 901
     },
     {
       "ticker": "ADRO",
-      "ohlcv_rows": 4341,
-      "training_rows": 4334,
-      "train_rows": 3467,
-      "test_rows": 867
+      "ohlcv_rows": 4343,
+      "training_rows": 4336,
+      "train_rows": 3468,
+      "test_rows": 868
     },
     {
       "ticker": "AKRA",
-      "ohlcv_rows": 5143,
-      "training_rows": 5136,
-      "train_rows": 4108,
+      "ohlcv_rows": 5145,
+      "training_rows": 5138,
+      "train_rows": 4110,
       "test_rows": 1028
     },
     {
       "ticker": "AMMN",
-      "ohlcv_rows": 701,
-      "training_rows": 694,
-      "train_rows": 555,
-      "test_rows": 139
+      "ohlcv_rows": 703,
+      "training_rows": 696,
+      "train_rows": 556,
+      "test_rows": 140
     },
     {
       "ticker": "AMRT",
-      "ohlcv_rows": 4224,
-      "training_rows": 4217,
-      "train_rows": 3373,
+      "ohlcv_rows": 4226,
+      "training_rows": 4219,
+      "train_rows": 3375,
       "test_rows": 844
     },
     {
       "ticker": "ANTM",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "ARTO",
-      "ohlcv_rows": 2517,
-      "training_rows": 2510,
-      "train_rows": 2008,
-      "test_rows": 502
+      "ohlcv_rows": 2519,
+      "training_rows": 2512,
+      "train_rows": 2009,
+      "test_rows": 503
     },
     {
       "ticker": "ASII",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "BBCA",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "BBNI",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "BBRI",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "BBTN",
-      "ohlcv_rows": 3998,
-      "training_rows": 3991,
-      "train_rows": 3192,
+      "ohlcv_rows": 4000,
+      "training_rows": 3993,
+      "train_rows": 3194,
       "test_rows": 799
     },
     {
       "ticker": "BMRI",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "BRPT",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "BUKA",
-      "ohlcv_rows": 1167,
-      "training_rows": 1160,
-      "train_rows": 928,
-      "test_rows": 232
+      "ohlcv_rows": 1169,
+      "training_rows": 1162,
+      "train_rows": 929,
+      "test_rows": 233
     },
     {
       "ticker": "BYAN",
-      "ohlcv_rows": 4323,
-      "training_rows": 4316,
-      "train_rows": 3452,
+      "ohlcv_rows": 4325,
+      "training_rows": 4318,
+      "train_rows": 3454,
       "test_rows": 864
     },
     {
       "ticker": "CPIN",
-      "ohlcv_rows": 5118,
-      "training_rows": 5111,
-      "train_rows": 4088,
+      "ohlcv_rows": 5120,
+      "training_rows": 5113,
+      "train_rows": 4090,
       "test_rows": 1023
     },
     {
       "ticker": "ESSA",
-      "ohlcv_rows": 3478,
-      "training_rows": 3471,
-      "train_rows": 2776,
+      "ohlcv_rows": 3480,
+      "training_rows": 3473,
+      "train_rows": 2778,
       "test_rows": 695
     },
     {
       "ticker": "EXCL",
-      "ohlcv_rows": 5019,
-      "training_rows": 5012,
-      "train_rows": 4009,
+      "ohlcv_rows": 5021,
+      "training_rows": 5014,
+      "train_rows": 4011,
       "test_rows": 1003
     },
     {
       "ticker": "GOTO",
-      "ohlcv_rows": 998,
-      "training_rows": 991,
-      "train_rows": 792,
+      "ohlcv_rows": 1000,
+      "training_rows": 993,
+      "train_rows": 794,
       "test_rows": 199
     },
     {
       "ticker": "HRUM",
-      "ohlcv_rows": 3805,
-      "training_rows": 3798,
-      "train_rows": 3038,
+      "ohlcv_rows": 3807,
+      "training_rows": 3800,
+      "train_rows": 3040,
       "test_rows": 760
     },
     {
       "ticker": "ICBP",
-      "ohlcv_rows": 3804,
-      "training_rows": 3797,
-      "train_rows": 3037,
+      "ohlcv_rows": 3806,
+      "training_rows": 3799,
+      "train_rows": 3039,
       "test_rows": 760
     },
     {
       "ticker": "INCO",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "INDF",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "INKP",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "INTP",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "ISAT",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "ITMG",
-      "ohlcv_rows": 4477,
-      "training_rows": 4470,
-      "train_rows": 3576,
-      "test_rows": 894
+      "ohlcv_rows": 4479,
+      "training_rows": 4472,
+      "train_rows": 3577,
+      "test_rows": 895
     },
     {
       "ticker": "KLBF",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "MAPI",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "MDKA",
-      "ohlcv_rows": 2652,
-      "training_rows": 2645,
-      "train_rows": 2116,
-      "test_rows": 529
+      "ohlcv_rows": 2654,
+      "training_rows": 2647,
+      "train_rows": 2117,
+      "test_rows": 530
     },
     {
       "ticker": "MEDC",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "MIKA",
-      "ohlcv_rows": 2711,
-      "training_rows": 2704,
-      "train_rows": 2163,
-      "test_rows": 541
+      "ohlcv_rows": 2713,
+      "training_rows": 2706,
+      "train_rows": 2164,
+      "test_rows": 542
     },
     {
       "ticker": "PGAS",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "PGEO",
-      "ohlcv_rows": 781,
-      "training_rows": 774,
-      "train_rows": 619,
-      "test_rows": 155
+      "ohlcv_rows": 783,
+      "training_rows": 776,
+      "train_rows": 620,
+      "test_rows": 156
     },
     {
       "ticker": "PTBA",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "SIDO",
-      "ohlcv_rows": 3016,
-      "training_rows": 3009,
-      "train_rows": 2407,
-      "test_rows": 602
+      "ohlcv_rows": 3018,
+      "training_rows": 3011,
+      "train_rows": 2408,
+      "test_rows": 603
     },
     {
       "ticker": "SMGR",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "TBIG",
-      "ohlcv_rows": 3791,
-      "training_rows": 3784,
-      "train_rows": 3027,
-      "test_rows": 757
+      "ohlcv_rows": 3793,
+      "training_rows": 3786,
+      "train_rows": 3028,
+      "test_rows": 758
     },
     {
       "ticker": "TINS",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "TLKM",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "TOWR",
-      "ohlcv_rows": 3947,
-      "training_rows": 3940,
-      "train_rows": 3152,
-      "test_rows": 788
+      "ohlcv_rows": 3949,
+      "training_rows": 3942,
+      "train_rows": 3153,
+      "test_rows": 789
     },
     {
       "ticker": "UNTR",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "UNVR",
-      "ohlcv_rows": 5202,
-      "training_rows": 5195,
-      "train_rows": 4156,
-      "test_rows": 1039
+      "ohlcv_rows": 5204,
+      "training_rows": 5197,
+      "train_rows": 4157,
+      "test_rows": 1040
     },
     {
       "ticker": "BRIS",
-      "ohlcv_rows": 1951,
-      "training_rows": 1944,
-      "train_rows": 1555,
-      "test_rows": 389
+      "ohlcv_rows": 1953,
+      "training_rows": 1946,
+      "train_rows": 1556,
+      "test_rows": 390
     },
     {
       "ticker": "ADMR",
-      "ohlcv_rows": 1065,
-      "training_rows": 1058,
-      "train_rows": 846,
+      "ohlcv_rows": 1067,
+      "training_rows": 1060,
+      "train_rows": 848,
       "test_rows": 212
     }
   ],
