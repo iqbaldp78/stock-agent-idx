@@ -1,5 +1,5 @@
 {
-  "run_date": "2026-06-26T14:32:37.870523",
+  "run_date": "2026-06-27T03:48:18.998690",
   "model_path": "models/checkpoints/lgbm_day1.pkl",
   "model_saved": true,
   "model_passed_gate": true,
@@ -10,137 +10,22 @@
     "force_save": false
   },
   "rows": {
-    "tickers_requested": 46,
-    "tickers_trained": 46,
-    "final_train_rows": 191794
+    "tickers_requested": 41,
+    "tickers_trained": 41,
+    "final_train_rows": 167192
   },
   "holdout_metrics": {
-    "test_rows": 47948,
-    "directional_accuracy": 53.87,
-    "mae_pct": 1.7922,
-    "buy_precision": 48.88,
-    "buy_recall": 14.56,
-    "avg_pred_return_pct": -0.0031,
-    "avg_actual_return_pct": 0.0521
+    "test_rows": 41798,
+    "directional_accuracy": 52.55,
+    "mae_pct": 1.8292,
+    "buy_precision": 44.47,
+    "buy_recall": 17.58,
+    "avg_pred_return_pct": 0.0017,
+    "avg_actual_return_pct": 0.0564
   },
   "tickers": [
     {
-      "ticker": "ACES",
-      "ohlcv_rows": 4510,
-      "training_rows": 4503
-    },
-    {
-      "ticker": "ADRO",
-      "ohlcv_rows": 4344,
-      "training_rows": 4337
-    },
-    {
-      "ticker": "AKRA",
-      "ohlcv_rows": 5146,
-      "training_rows": 5139
-    },
-    {
-      "ticker": "AMMN",
-      "ohlcv_rows": 704,
-      "training_rows": 697
-    },
-    {
-      "ticker": "AMRT",
-      "ohlcv_rows": 4227,
-      "training_rows": 4220
-    },
-    {
-      "ticker": "ANTM",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "ARTO",
-      "ohlcv_rows": 2520,
-      "training_rows": 2513
-    },
-    {
-      "ticker": "ASII",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "BBCA",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "BBNI",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
       "ticker": "BBRI",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "BBTN",
-      "ohlcv_rows": 4001,
-      "training_rows": 3994
-    },
-    {
-      "ticker": "BMRI",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "BRPT",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "BUKA",
-      "ohlcv_rows": 1170,
-      "training_rows": 1163
-    },
-    {
-      "ticker": "BYAN",
-      "ohlcv_rows": 4326,
-      "training_rows": 4319
-    },
-    {
-      "ticker": "CPIN",
-      "ohlcv_rows": 5121,
-      "training_rows": 5114
-    },
-    {
-      "ticker": "ESSA",
-      "ohlcv_rows": 3481,
-      "training_rows": 3474
-    },
-    {
-      "ticker": "EXCL",
-      "ohlcv_rows": 5022,
-      "training_rows": 5015
-    },
-    {
-      "ticker": "GOTO",
-      "ohlcv_rows": 1001,
-      "training_rows": 994
-    },
-    {
-      "ticker": "HRUM",
-      "ohlcv_rows": 3808,
-      "training_rows": 3801
-    },
-    {
-      "ticker": "ICBP",
-      "ohlcv_rows": 3807,
-      "training_rows": 3800
-    },
-    {
-      "ticker": "INCO",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "INDF",
       "ohlcv_rows": 5205,
       "training_rows": 5198
     },
@@ -150,14 +35,19 @@
       "training_rows": 5198
     },
     {
-      "ticker": "INTP",
+      "ticker": "PGAS",
       "ohlcv_rows": 5205,
       "training_rows": 5198
     },
     {
-      "ticker": "ISAT",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
+      "ticker": "MBMA",
+      "ohlcv_rows": 750,
+      "training_rows": 743
+    },
+    {
+      "ticker": "EXCL",
+      "ohlcv_rows": 5022,
+      "training_rows": 5015
     },
     {
       "ticker": "ITMG",
@@ -165,82 +55,7 @@
       "training_rows": 4473
     },
     {
-      "ticker": "KLBF",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "MAPI",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "MDKA",
-      "ohlcv_rows": 2655,
-      "training_rows": 2648
-    },
-    {
-      "ticker": "MEDC",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "MIKA",
-      "ohlcv_rows": 2714,
-      "training_rows": 2707
-    },
-    {
-      "ticker": "PGAS",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "PGEO",
-      "ohlcv_rows": 784,
-      "training_rows": 777
-    },
-    {
-      "ticker": "PTBA",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "SIDO",
-      "ohlcv_rows": 3019,
-      "training_rows": 3012
-    },
-    {
-      "ticker": "SMGR",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "TBIG",
-      "ohlcv_rows": 3794,
-      "training_rows": 3787
-    },
-    {
-      "ticker": "TINS",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "TLKM",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "TOWR",
-      "ohlcv_rows": 3950,
-      "training_rows": 3943
-    },
-    {
-      "ticker": "UNTR",
-      "ohlcv_rows": 5205,
-      "training_rows": 5198
-    },
-    {
-      "ticker": "UNVR",
+      "ticker": "BRPT",
       "ohlcv_rows": 5205,
       "training_rows": 5198
     },
@@ -250,9 +65,169 @@
       "training_rows": 1947
     },
     {
+      "ticker": "MAPI",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "INTP",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "BUKA",
+      "ohlcv_rows": 1170,
+      "training_rows": 1163
+    },
+    {
+      "ticker": "EMAS",
+      "ohlcv_rows": 179,
+      "training_rows": 172
+    },
+    {
+      "ticker": "MDKA",
+      "ohlcv_rows": 2655,
+      "training_rows": 2648
+    },
+    {
+      "ticker": "BBNI",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "AMRT",
+      "ohlcv_rows": 4227,
+      "training_rows": 4220
+    },
+    {
       "ticker": "ADMR",
       "ohlcv_rows": 1068,
       "training_rows": 1061
+    },
+    {
+      "ticker": "ICBP",
+      "ohlcv_rows": 3807,
+      "training_rows": 3800
+    },
+    {
+      "ticker": "BBTN",
+      "ohlcv_rows": 4001,
+      "training_rows": 3994
+    },
+    {
+      "ticker": "ESSA",
+      "ohlcv_rows": 3481,
+      "training_rows": 3474
+    },
+    {
+      "ticker": "MEDC",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "SMGR",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "BMRI",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "KLBF",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "BRMS",
+      "ohlcv_rows": 3764,
+      "training_rows": 3757
+    },
+    {
+      "ticker": "AMMN",
+      "ohlcv_rows": 704,
+      "training_rows": 697
+    },
+    {
+      "ticker": "PTBA",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "GOTO",
+      "ohlcv_rows": 1001,
+      "training_rows": 994
+    },
+    {
+      "ticker": "MSIN",
+      "ohlcv_rows": 1935,
+      "training_rows": 1928
+    },
+    {
+      "ticker": "ASII",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "INCO",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "DEWA",
+      "ohlcv_rows": 4536,
+      "training_rows": 4529
+    },
+    {
+      "ticker": "ANTM",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "INDF",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "ADRO",
+      "ohlcv_rows": 4344,
+      "training_rows": 4337
+    },
+    {
+      "ticker": "TLKM",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "AKRA",
+      "ohlcv_rows": 5146,
+      "training_rows": 5139
+    },
+    {
+      "ticker": "TINS",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "ISAT",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "TOWR",
+      "ohlcv_rows": 3950,
+      "training_rows": 3943
+    },
+    {
+      "ticker": "BBCA",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
+    },
+    {
+      "ticker": "UNVR",
+      "ohlcv_rows": 5205,
+      "training_rows": 5198
     }
   ],
   "errors": []
