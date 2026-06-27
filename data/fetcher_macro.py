@@ -26,6 +26,42 @@ def _calculate_vs_ma(ticker_obj, period: int = 20) -> float | None:
     except Exception:
         return None
 
+def _get_usdidr_trend() -> dict:
+    """Mengambil pergerakan day-by-day USD/IDR selama 1 bulan menggunakan endpoint non-yfinance."""
+    try:
+        import requests
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/USDIDR=X?range=1mo&interval=1d"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        resp = requests.get(url, headers=headers, timeout=5)
+        data = resp.json()
+        result = data["chart"]["result"][0]
+        closes = result["indicators"]["quote"][0]["close"]
+        
+        # Filter out None values
+        valid_closes = [c for c in closes if c is not None]
+        
+        if len(valid_closes) >= 2:
+            current = valid_closes[-1]
+            prev = valid_closes[-2]
+            month_ago = valid_closes[0]
+            
+            day_change_pct = (current - prev) / prev * 100
+            month_change_pct = (current - month_ago) / month_ago * 100
+            
+            return {
+                "usdidr_1d_change_pct": round(day_change_pct, 2),
+                "usdidr_1m_change_pct": round(month_change_pct, 2),
+                "trend_narrative": f"Naik {day_change_pct:.2f}% (harian)" if day_change_pct > 0 else f"Turun {abs(day_change_pct):.2f}% (harian)"
+            }
+    except Exception as e:
+        print(f"[DEBUG] _get_usdidr_trend error: {e}")
+    
+    return {
+        "usdidr_1d_change_pct": 0.0,
+        "usdidr_1m_change_pct": 0.0,
+        "trend_narrative": "Tidak tersedia"
+    }
+
 
 def get_macro_data() -> dict:
     """Ambil data makro pasar Indonesia."""
@@ -40,18 +76,28 @@ def get_macro_data() -> dict:
         ihsg_change_pct = 0
 
     try:
-        usdidr = yf.Ticker("USDIDR=X")
-        usdidr_price = usdidr.info.get("regularMarketPrice")
+        import requests
+        resp = requests.get("https://open.er-api.com/v6/latest/USD", timeout=5)
+        usdidr_price = resp.json()["rates"]["IDR"]
     except Exception:
-        usdidr_price = None
+        try:
+            usdidr = yf.Ticker("USDIDR=X")
+            usdidr_price = usdidr.info.get("regularMarketPrice")
+        except Exception:
+            usdidr_price = None
 
     ihsg_vs_ma20 = _calculate_vs_ma(ihsg, 20) if ihsg else None
     is_volatile = abs(ihsg_change_pct or 0) > 1.5
+
+    usdidr_trend = _get_usdidr_trend()
 
     return {
         "ihsg_price": ihsg_price,
         "ihsg_change_pct": ihsg_change_pct,
         "usdidr": usdidr_price,
+        "usdidr_1d_change_pct": usdidr_trend["usdidr_1d_change_pct"],
+        "usdidr_1m_change_pct": usdidr_trend["usdidr_1m_change_pct"],
+        "usdidr_trend_narrative": usdidr_trend["trend_narrative"],
         "ihsg_vs_ma20": ihsg_vs_ma20,
         "is_volatile": is_volatile,
     }
@@ -62,8 +108,7 @@ _SECTOR_CACHE_TIME = None
 
 def get_sector_outlook() -> dict:
     """
-    Outlook per sektor berdasarkan indeks sektoral.
-    Cache-first: baca sector_ohlcv dari DB, fetch yfinance hanya untuk tanggal yang belum ada.
+    Outlook per sektor berdasarkan indeks sektoral (diambil dari data rotasi).
     In-memory TTL 1 jam untuk menghindari DB query berulang dalam 1 sesi.
     """
     global _SECTOR_CACHE, _SECTOR_CACHE_TIME
@@ -75,85 +120,20 @@ def get_sector_outlook() -> dict:
             print(f"[DEBUG] Returning in-memory sector outlook (age: {age.total_seconds():.0f}s)")
             return _SECTOR_CACHE
 
-    sectors = {
-        "perbankan": "^JKFINA",
-        "mining": "^JKMING",
-        "consumer": "^JKCONS",
-        "infrastructure": "^JKINFR",
-        "property": "^JKPROP",
-    }
-
-    today = date.today()
-    end_date_str = today.isoformat()
-    start_date_str = (today - timedelta(days=35)).isoformat()  # ~1 bulan + buffer
-
-    outlook = {name: "NETRAL" for name in sectors}
-
-    for sector_name, idx_ticker in sectors.items():
-        try:
-            from db.cache import get_ohlcv_no_data_dates, save_ohlcv_no_data_dates
-            
-            # Cek DB dulu
-            cached = get_cached_sector_ohlcv(idx_ticker, start_date_str, end_date_str)
-            missing = find_missing_dates(cached, start_date_str, end_date_str)
-
-            no_data_dates = get_ohlcv_no_data_dates(idx_ticker, start_date_str, end_date_str, source="yfinance")
-            if no_data_dates:
-                missing = [d for d in missing if d not in no_data_dates]
-
-            # Fetch hanya tanggal yang belum ada
-            if missing:
-                for range_start, range_end in group_into_ranges(missing):
-                    try:
-                        df_new = yf.download(
-                            idx_ticker,
-                            start=range_start.isoformat(),
-                            end=(range_end + timedelta(days=1)).isoformat(),
-                            progress=False,
-                            auto_adjust=True,
-                        )
-                        
-                        expected_dates = []
-                        cur = range_start
-                        while cur <= range_end:
-                            if cur.weekday() < 5 and cur < today:
-                                expected_dates.append(cur)
-                            cur += timedelta(days=1)
-                        
-                        if not df_new.empty:
-                            # Flatten MultiIndex jika ada
-                            if isinstance(df_new.columns, pd.MultiIndex):
-                                df_new.columns = df_new.columns.get_level_values(0)
-                            save_sector_ohlcv(idx_ticker, df_new, today)
-                            cached = pd.concat([cached, df_new]).sort_index()
-                            cached = cached[~cached.index.duplicated(keep="last")]
-                            
-                            returned_dates = {idx.date() if hasattr(idx, "date") else idx for idx in df_new.index}
-                            unresolved_no_data = [d for d in expected_dates if d not in returned_dates]
-                            if unresolved_no_data:
-                                save_ohlcv_no_data_dates(idx_ticker, unresolved_no_data, source="yfinance")
-                        elif expected_dates:
-                            save_ohlcv_no_data_dates(idx_ticker, expected_dates, source="yfinance")
-                    except Exception as e:
-                        print(f"[DEBUG] {sector_name} fetch {range_start}..{range_end}: {e}")
-
-            if not cached.empty and len(cached) >= 5:
-                change_5d = (
-                    (cached["Close"].iloc[-1] - cached["Close"].iloc[-5])
-                    / cached["Close"].iloc[-5] * 100
-                )
-                print(f"[DEBUG] {sector_name} change_5d: {change_5d:.2f}%")
-                if change_5d > 2:
-                    outlook[sector_name] = "POSITIF"
-                elif change_5d < -2:
-                    outlook[sector_name] = "NEGATIF"
-                else:
-                    outlook[sector_name] = "NETRAL"
-            else:
-                print(f"[DEBUG] {sector_name} data empty or <5 rows")
-
-        except Exception as e:
-            print(f"[DEBUG] {sector_name} error: {e}")
+    from data.fetcher_ihsg import get_sector_rotation
+    
+    rot = get_sector_rotation()
+    outlook = {}
+    
+    for sector_name, data in rot.get("sectors", {}).items():
+        change_5d = data.get("5d_return", 0.0)
+        print(f"[DEBUG] {sector_name} change_5d: {change_5d:.2f}%")
+        if change_5d > 2.0:
+            outlook[sector_name] = "POSITIF"
+        elif change_5d < -2.0:
+            outlook[sector_name] = "NEGATIF"
+        else:
+            outlook[sector_name] = "NETRAL"
 
     # Cache in-memory
     _SECTOR_CACHE = outlook

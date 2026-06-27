@@ -126,7 +126,6 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
     finally:
         db.close()
 
-
 def save_full_result(result: dict) -> None:
     """Simpan semua hasil analisis sekaligus."""
     today = date.today()
@@ -137,13 +136,28 @@ def save_full_result(result: dict) -> None:
     if result.get("debate_log"):
         save_debate_log(today, result["debate_log"])
 
-    if result.get("top_picks"):
-        save_signals(today, result["top_picks"], result["scores"])
+    top_picks = result.get("top_picks") or []
+    top_tickers = {p["ticker"] for p in top_picks}
+    all_signals = list(top_picks)
+
+    if result.get("composites"):
+        for ticker, comp in result["composites"].items():
+            if ticker not in top_tickers:
+                all_signals.append({
+                    "ticker": ticker,
+                    "rank": None,
+                    "decision_label": "AVOID",
+                    "composite_score": comp.get("composite_score", 0),
+                    "weight_mode": comp.get("weight_mode", ""),
+                    "conviction": "LOW",
+                    "thesis": "Tidak masuk kriteria Top Picks (Evaluated by system)."
+                })
+
+    if all_signals:
+        save_signals(today, all_signals, result.get("scores", {}))
 
     if result.get("ihsg_prediction"):
         save_ihsg_prediction(today, result["ihsg_prediction"])
-
-
 def _truncate(value, max_len: int) -> str | None:
     """Truncate string agar tidak overflow kolom VARCHAR."""
     if value is None:

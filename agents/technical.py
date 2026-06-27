@@ -235,7 +235,7 @@ def analyze(ticker: str) -> dict:
         if len(ohlcv) < 200:
             print(f"[ERROR] Data OHLCV hanya {len(ohlcv)} baris, minimal 200 baris agar MA200 bisa dihitung!")
             return {"ticker": ticker, "error": f"Data OHLCV hanya {len(ohlcv)} baris, minimal 200 baris agar MA200 bisa dihitung!", "trend": "unknown"}
-        if info is None or not isinstance(info, dict) or not info.get("current_price"):
+        if info is None or not isinstance(info, dict):
             print("[ERROR] Info saham kosong/gagal diambil!")
             return {"ticker": ticker, "error": "Info saham kosong/gagal diambil", "trend": "unknown"}
         for col in ["Close", "Volume", "High", "Low"]:
@@ -260,7 +260,9 @@ def analyze(ticker: str) -> dict:
         # Gunakan seluruh data OHLCV yang sudah diambil (1 tahun)
         closes = ohlcv["Close"]
         volumes = ohlcv["Volume"]
-        current_price = float(closes.iloc[-1])
+        current_price = info.get("current_price")
+        if not current_price:
+            current_price = float(closes.iloc[-1])
         ma200_rolling = closes.rolling(200).mean()
 
         # === Divergence RSI & MACD ===
@@ -637,6 +639,7 @@ def analyze(ticker: str) -> dict:
         result = {
             "ticker": ticker,
             "score": round(score, 1),
+            "current_price": current_price,
             "signal": signal,
             "trend": trend,
             "setup": "; ".join(setup_notes) if setup_notes else "Tidak ada sinyal kuat",

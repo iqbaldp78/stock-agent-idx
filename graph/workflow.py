@@ -95,15 +95,20 @@ def run_parallel_scoring(state: AgentState) -> dict:
                 "news": news,
             }
 
+            # Check for missing scores due to agent errors
+            if "score" not in bandarm or "score" not in tech or "score" not in fund:
+                logger.warning(f"  [{ticker}] ERROR: Missing score from one of the agents (Bandarm: {'score' in bandarm}, Tech: {'score' in tech}, Fund: {'score' in fund})")
+                continue
+
             # Calculate composite
             agent_scores = {
                 "bandarm": bandarm["score"],
                 "technical": tech["score"],
                 "fundamental": fund["score"],
-                "macro": macro_data["score"],
-                "news": news["score"],
+                "macro": macro_data.get("score", 5.0),
+                "news": news.get("score", 5.0),
             }
-            composite = calculate_composite(agent_scores, ticker, market_cap, is_volatile)
+            composite = calculate_composite(agent_scores, ticker, market_cap, is_volatile, macro_data)
             composites[ticker] = composite
 
             logger.info(f"  [{ticker}] composite={composite['composite_score']} mode={composite['weight_mode']}")
@@ -518,9 +523,20 @@ def run_full_analysis(universe: list[str] | None = None, auto_train_ml: bool = T
     if auto_train_ml:
         maybe_train_ml_before_analysis(universe=universe)
 
+    from portfolio.manager import get_all_holdings
+    try:
+        holdings = get_all_holdings()
+        portfolio_tickers = [h["ticker"] for h in holdings]
+    except Exception as e:
+        logger.warning(f"Failed to fetch portfolio holdings: {e}")
+        portfolio_tickers = []
+
+    final_universe = universe or get_universe()
+    final_universe = list(set(final_universe + portfolio_tickers))
+
     app = build_workflow()
     initial_state = {
-        "universe": universe or get_universe(),
+        "universe": final_universe,
         "candidates": [],
         "macro_data": {},
         "scores": {},

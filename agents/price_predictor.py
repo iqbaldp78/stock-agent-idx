@@ -168,7 +168,10 @@ def calculate_base_prediction(
     current_price = price_analysis.get("current_price", 0)
     
     if current_price == 0:
-        # Fallback: try to get from technical or composite
+        # Fallback to technical data which has robust OHLCV fallback
+        current_price = tech_data.get("current_price", 0)
+        
+    if current_price == 0:
         logger.warning(f"[PREDICTOR] No current price for {ticker}")
         return None
     

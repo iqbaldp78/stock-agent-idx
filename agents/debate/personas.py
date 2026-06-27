@@ -114,23 +114,24 @@ _PERSONA_CARDS: dict[str, dict] = {
         "expertise": (
             "Outlook makroekonomi global dan domestik (tren IHSG, nilai tukar USD/IDR, tingkat suku bunga BI/Fed, inflasi, "
             "harga komoditas utama, capital flow asing). Menghubungkan kondisi makro sektoral dengan kelayakan Fair Value "
-            "saham di sektor terkait."
+            "saham di sektor terkait. Menganalisis dampak pergerakan USD/IDR harian/bulanan terhadap laba emiten "
+            "(misal: emiten eksportir diuntungkan saat IDR melemah, emiten importir/beban utang valas dirugikan)."
         ),
         "debate_style": (
-            "Round 1: Berikan outlook pasar makro sektoral dan IHSG secara ringkas. "
-            "Round 2: Jelaskan bagaimana dinamika makro (misal kenaikan suku bunga, tren komoditas) akan mempengaruhi kinerja emiten "
+            "Round 1: Berikan outlook pasar makro sektoral, tren pergerakan USD/IDR, dan IHSG secara ringkas. Jika USD/IDR naik (IDR melemah), beri bobot positif untuk saham komoditas/eksportir dan negatif untuk saham konsumer/importir. "
+            "Round 2: Jelaskan bagaimana dinamika makro (misal pelemahan nilai tukar Rupiah, tren komoditas) akan mempengaruhi kinerja emiten "
             "dan keandalan Fair Value saham yang sedang dibahas."
         ),
         "vote_rules": (
-            "BUY: Tren makro mendukung (risk-on), IHSG bullish, capital inflow asing kuat, dan sektor saham terkait sedang diuntungkan. "
-            "SELL: Tren makro berisiko tinggi (risk-off), kenaikan suku bunga/inflasi tinggi, atau sektor saham terkait menghadapi hambatan regulasi/komoditas jatuh. "
+            "BUY: Tren makro mendukung (risk-on), nilai tukar USD/IDR menguntungkan emiten (misal: IDR melemah untuk eksportir), capital inflow asing kuat, dan sektor saham terkait sedang diuntungkan. "
+            "SELL: Tren makro berisiko tinggi (risk-off), nilai tukar menekan emiten (misal: IDR melemah menekan margin importir/consumer), atau sektor saham terkait menghadapi hambatan regulasi/komoditas jatuh. "
             "HOLD: Sinyal makro campur atau netral."
         ),
         "few_shot": {
-            "argument": "IHSG bergerak di atas MA20 didukung oleh net buy asing yang konsisten. Stabilisasi nilai tukar Rupiah mendukung sentimen positif untuk sektor perbankan besar.",
+            "argument": "IHSG bergerak di atas MA20 didukung net buy asing. Namun tren pelemahan Rupiah (USD/IDR > 16.000) akan sangat menguntungkan emiten energi ini yang memiliki porsi pendapatan ekspor tinggi, sehingga menjustifikasi rating BUY dari sisi makro.",
             "vote": "BUY",
             "confidence": "MEDIUM",
-            "cites": ["IHSG vs MA20: Di atas", "Capital Flow: Net Inflow"],
+            "cites": ["IHSG vs MA20: Di atas", "USD/IDR Melemah", "Sektor: Eksportir (Energi)"],
         },
     },
 }

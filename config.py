@@ -5,16 +5,15 @@ load_dotenv()
 
 # Universe saham LQ45 (per Juni 2026)
 LQ45 = [
-    "AADI", "ADMR", "ADRO", "AMMN", "DSSA"
+    "AADI", "ADMR", "ADRO", "AMMN", "DSSA",
     "AMRT", "ANTM", "ASII", "BBCA", "BBNI",
     "BBRI", "BBTN", "BMRI", "BRPT", "BUMI",
-    "CUAN", "DEWA", "EMTK", "ESSA", "EMAS"
+    "CUAN", "DEWA", "EMTK", "ESSA", "EMAS",
     "EXCL", "GOTO", "HRTA", "ICBP", "INCO",
-    "INDF", "ISAT", "ITMG", "JPFA", "BREN"
-    "KLBF", "MAPI", "MBMA", "MDKA", "MEDC",
-    "PGAS", "PTBA", "SCMA", "TLKM", 
+    "INDF", "ISAT", "ITMG", "JPFA", "BREN",
+    "KLBF", "MAPI", "MBMA", "MDKA", "MEDC",    
+    "PGAS", "PTBA", "SCMA", "TLKM", "MSIN",
     "TOWR", "BRIS", "BRMS", "TPIA",
-    "MSIN",
 ]
 
 CUSTOM_WATCHLIST: list[str] = []

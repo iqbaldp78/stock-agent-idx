@@ -28,7 +28,8 @@ def detect_mode(ticker: str, market_cap: float, is_volatile: bool) -> str:
 
 
 def calculate_composite(scores: dict, ticker: str,
-                         market_cap: float, is_volatile: bool) -> dict:
+                         market_cap: float, is_volatile: bool,
+                         macro_data: dict = None) -> dict:
     """
     Hitung composite score dari 5 agent (bandarm, technical, fundamental, macro, news).
     scores = {"bandarm": 8.5, "technical": 7.0, "fundamental": 8.0, "macro": 7.0, "news": 6.5}
@@ -41,6 +42,59 @@ def calculate_composite(scores: dict, ticker: str,
         scores["macro"] * w["macro"] +
         scores.get("news", 5) * w.get("news", 0.12)
     )
+    
+    # USD/IDR Sector Adjustment
+    sector = "Unknown"
+    usdidr_adj = 0.0
+    usdidr_narrative = ""
+    
+    if macro_data:
+        # Common idx sectors map
+        COMMON_SECTORS = {
+            "ADRO": "Energy", "PTBA": "Energy", "ITMG": "Energy", "HRUM": "Energy", "BUMI": "Energy", "MEDC": "Energy", "PGAS": "Energy", "AKRA": "Energy", "CUAN": "Energy", "DEWA": "Energy", "ESSA": "Energy",
+            "BREN": "Utilities", "PGEO": "Utilities", "KEEN": "Utilities",
+            "AMMN": "Basic Materials", "MDKA": "Basic Materials", "BRMS": "Basic Materials", "ANTM": "Basic Materials", "INCO": "Basic Materials", "TPIA": "Basic Materials", "BRPT": "Basic Materials", "SMGR": "Basic Materials", "INTP": "Basic Materials", "MBMA": "Basic Materials",
+            "BBCA": "Financial Services", "BBRI": "Financial Services", "BMRI": "Financial Services", "BBNI": "Financial Services", "BRIS": "Financial Services", "ARTO": "Financial Services", "BBTN": "Financial Services",
+            "ICBP": "Consumer Defensive", "INDF": "Consumer Defensive", "MYOR": "Consumer Defensive", "UNVR": "Consumer Defensive", "CMRY": "Consumer Defensive", "AMRT": "Consumer Defensive", "MIDI": "Consumer Defensive", "CPIN": "Consumer Defensive", "JPFA": "Consumer Defensive",
+            "ASII": "Industrials", "UNTR": "Industrials", "JSMR": "Industrials",
+            "TLKM": "Communication Services", "ISAT": "Communication Services", "EXCL": "Communication Services", "TOWR": "Communication Services",
+            "GOTO": "Technology", "BUKA": "Technology", "EMTK": "Technology",
+            "MAPI": "Consumer Cyclical", "ACES": "Consumer Cyclical", "ERAA": "Consumer Cyclical", "HRTA": "Consumer Cyclical", "MSIN": "Consumer Cyclical",
+            "KLBF": "Healthcare", "MIKA": "Healthcare", "HEAL": "Healthcare",
+            "CTRA": "Real Estate", "BSDE": "Real Estate", "PWON": "Real Estate", "SMRA": "Real Estate", "AADI": "Energy"
+        }
+        
+        sector = COMMON_SECTORS.get(ticker.upper())
+        if not sector:
+            try:
+                import yfinance as yf
+                info = yf.Ticker(f"{ticker.upper()}.JK").info
+                sector = info.get('sector', 'Unknown')
+            except Exception:
+                sector = 'Unknown'
+                
+        usdidr_1d_change = macro_data.get("usdidr_1d_change_pct", 0.0)
+        
+        # IDR melemah (USD/IDR naik hari ini) -> positif untuk eksportir, negatif untuk importir
+        if usdidr_1d_change > 0.5:
+            if sector in ["Energy", "Basic Materials"]:
+                usdidr_adj = 0.5
+                usdidr_narrative = f"Bonus eksportir (USD/IDR naik {usdidr_1d_change}%)"
+            elif sector in ["Consumer Defensive", "Healthcare", "Real Estate", "Financial Services"]:
+                usdidr_adj = -0.5
+                usdidr_narrative = f"Penalti beban valas (USD/IDR naik {usdidr_1d_change}%)"
+        # IDR menguat (USD/IDR turun hari ini) -> negatif untuk eksportir, positif untuk importir
+        elif usdidr_1d_change < -0.5:
+            if sector in ["Energy", "Basic Materials"]:
+                usdidr_adj = -0.3
+                usdidr_narrative = f"Penalti eksportir (Rupiah menguat {abs(usdidr_1d_change)}%)"
+            elif sector in ["Consumer Defensive", "Healthcare", "Real Estate", "Financial Services"]:
+                usdidr_adj = 0.5
+                usdidr_narrative = f"Sinyal positif valas reda (Rupiah menguat {abs(usdidr_1d_change)}%)"
+                
+        composite += usdidr_adj
+        composite = max(1.0, min(10.0, composite))
+    
     mode = detect_mode(ticker, market_cap, is_volatile)
 
     return {
@@ -48,6 +102,9 @@ def calculate_composite(scores: dict, ticker: str,
         "composite_score": round(composite, 2),
         "weights_used": w,
         "weight_mode": mode,
+        "sector": sector,
+        "usdidr_adj": usdidr_adj,
+        "usdidr_narrative": usdidr_narrative,
         "breakdown": {
             "bandarm": {"score": scores["bandarm"], "weight": w["bandarm"],
                         "contribution": round(scores["bandarm"] * w["bandarm"], 2)},
@@ -58,8 +115,8 @@ def calculate_composite(scores: dict, ticker: str,
             "macro": {"score": scores["macro"], "weight": w["macro"],
                       "contribution": round(scores["macro"] * w["macro"], 2)},
             "news": {"score": scores.get("news", 5), "weight": w.get("news", 0.12),
-                     "contribution": round(scores.get("news", 5) * w.get("news", 0.12), 2)},
-        },
+                     "contribution": round(scores.get("news", 5) * w.get("news", 0.12), 2)}
+        }
     }
 
 
