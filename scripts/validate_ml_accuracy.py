@@ -200,25 +200,9 @@ def walk_forward_validate(
 # ─── Ticker list ──────────────────────────────────────────────────────────────
 
 def get_universe_tickers() -> list[str]:
-    """Ambil daftar ticker dari DB universe, fallback ke LQ45 default."""
-    try:
-        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        from db import SessionLocal
-        from db.models import Universe
-        db = SessionLocal()
-        rows = db.query(Universe.ticker).filter(Universe.active == True).all()
-        db.close()
-        tickers = [r.ticker for r in rows]
-        if tickers:
-            return tickers
-    except Exception as e:
-        logger.warning(f"Tidak bisa ambil universe dari DB: {e}")
-
-    # Fallback LQ45 subset
-    return [
-        "BBCA", "BBRI", "BMRI", "TLKM", "ASII",
-        "UNVR", "ICBP", "KLBF", "ANTM", "INDF",
-    ]
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from config import get_universe
+    return get_universe()
 
 
 def fetch_ohlcv(ticker: str, period: str = "1y") -> pd.DataFrame:

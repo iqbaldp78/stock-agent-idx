@@ -143,7 +143,7 @@ def load_backtest_result(path=None):
 st.sidebar.title("🤖 Stock Agent IDX")
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "⚙️ Settings"],
+    ["📈 Top Picks", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"],
 )
 
 st.sidebar.divider()
@@ -2631,26 +2631,112 @@ elif page == "💼 Portfolio":
             """)
 
 
+# === PAGE: Universe ===
+
+elif page == "🌍 Universe":
+    st.title("🌍 Universe Management")
+    st.caption("Kelola daftar saham yang akan dianalisis oleh AI.")
+    
+    from db import SessionLocal
+    from db.models import Universe
+    import pandas as pd
+    import re
+    
+    st.subheader("➕ Tambah Ticker Baru")
+    with st.form("add_universe_form"):
+        new_tickers = st.text_area(
+            "Masukkan ticker (pisahkan dengan koma, spasi, atau baris baru):",
+            placeholder="GOTO, PANI\nBRIS AMRT"
+        )
+        submitted = st.form_submit_button("Tambahkan ke Universe")
+        if submitted and new_tickers:
+            tickers = [t.strip().upper() for t in re.split(r'[,\s\n]+', new_tickers) if t.strip()]
+            if tickers:
+                db = SessionLocal()
+                added = 0
+                for t in tickers:
+                    existing = db.query(Universe).filter_by(ticker=t).first()
+                    if not existing:
+                        db.add(Universe(ticker=t, is_custom=True, active=True))
+                        added += 1
+                    elif not existing.active:
+                        existing.active = True
+                        added += 1
+                db.commit()
+                db.close()
+                st.success(f"Berhasil menambahkan atau mengaktifkan {added} ticker.")
+                st.rerun()
+
+    st.divider()
+    
+    st.subheader("📋 Daftar Universe")
+    db = SessionLocal()
+    records = db.query(Universe).order_by(Universe.ticker).all()
+    db.close()
+    
+    if records:
+        df = pd.DataFrame([{
+            "id": r.id,
+            "ticker": r.ticker,
+            "is_lq45": r.is_lq45,
+            "is_custom": r.is_custom,
+            "active": r.active,
+            "delete": False
+        } for r in records])
+        
+        search_query = st.text_input("🔍 Cari Ticker:", "").strip().upper()
+        if search_query:
+            display_df = df[df['ticker'].str.contains(search_query)]
+        else:
+            display_df = df
+        
+        st.caption("Centang kolom **Active** untuk on/off, atau centang **Hapus** untuk menghapus permanen, lalu klik Simpan.")
+        edited_df = st.data_editor(
+            display_df,
+            hide_index=True,
+            use_container_width=True,
+            disabled=["id", "ticker", "is_lq45", "is_custom"],
+            column_config={
+                "active": st.column_config.CheckboxColumn("Active (Ikut Dianalisis)"),
+                "is_lq45": st.column_config.CheckboxColumn("LQ45"),
+                "is_custom": st.column_config.CheckboxColumn("Custom"),
+                "delete": st.column_config.CheckboxColumn("🗑️ Hapus", default=False),
+            },
+            key="universe_editor"
+        )
+        
+        if st.button("💾 Simpan Perubahan", type="primary"):
+            rows_to_delete = edited_df[edited_df['delete'] == True]
+            changed_rows = edited_df[(edited_df['active'] != display_df['active']) & (edited_df['delete'] == False)]
+            
+            if not rows_to_delete.empty or not changed_rows.empty:
+                db = SessionLocal()
+                
+                # Proses hapus
+                for _, row in rows_to_delete.iterrows():
+                    u = db.query(Universe).filter_by(id=row['id']).first()
+                    if u:
+                        db.delete(u)
+                        
+                # Proses update status
+                for _, row in changed_rows.iterrows():
+                    u = db.query(Universe).filter_by(id=row['id']).first()
+                    if u:
+                        u.active = bool(row['active'])
+                        
+                db.commit()
+                db.close()
+                st.success(f"Berhasil: Dihapus {len(rows_to_delete)} saham, Diubah status {len(changed_rows)} saham.")
+                st.rerun()
+            else:
+                st.info("Tidak ada perubahan.")
+    else:
+        st.info("Belum ada data universe.")
+
 # === PAGE: Settings ===
 
 elif page == "⚙️ Settings":
     st.title("⚙️ Settings")
-
-    # Custom watchlist
-    st.subheader("Custom Watchlist")
-    custom_input = st.text_area(
-        "Tambahkan ticker (satu per baris):",
-        placeholder="BRIS\nAMRT\nMDKA",
-        height=100,
-    )
-
-    if st.button("Save Watchlist"):
-        tickers = [t.strip().upper() for t in custom_input.split("\n") if t.strip()]
-        if tickers:
-            st.session_state["custom_watchlist"] = tickers
-            st.success(f"Saved {len(tickers)} tickers: {', '.join(tickers)}")
-
-    st.divider()
 
     # System status
     st.subheader("📡 System Status")

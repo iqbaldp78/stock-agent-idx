@@ -32,24 +32,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_universe_tickers() -> list[str]:
-    """Ambil daftar ticker dari DB universe, fallback ke LQ45 subset."""
-    try:
-        from db import SessionLocal
-        from db.models import Universe
-
-        db = SessionLocal()
-        rows = db.query(Universe.ticker).filter(Universe.active == True).all()
-        db.close()
-        tickers = [r.ticker for r in rows]
-        if tickers:
-            return tickers
-    except Exception as e:
-        logger.warning(f"Tidak bisa ambil universe dari DB: {e}")
-
-    return [
-        "BBCA", "BBRI", "BMRI", "TLKM", "ASII",
-        "UNVR", "ICBP", "KLBF", "ANTM", "INDF",
-    ]
+    from config import get_universe
+    return get_universe()
 
 
 def fetch_ohlcv(ticker: str, period: str) -> pd.DataFrame:

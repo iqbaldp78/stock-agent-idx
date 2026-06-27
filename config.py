@@ -3,24 +3,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Universe saham LQ45 (per Juni 2026)
-LQ45 = [
-    "AADI", "ADMR", "ADRO", "AMMN", "DSSA",
-    "AMRT", "ANTM", "ASII", "BBCA", "BBNI",
-    "BBRI", "BBTN", "BMRI", "BRPT", "BUMI",
-    "CUAN", "DEWA", "EMTK", "ESSA", "EMAS",
-    "EXCL", "GOTO", "HRTA", "ICBP", "INCO",
-    "INDF", "ISAT", "ITMG", "JPFA", "BREN",
-    "KLBF", "MAPI", "MBMA", "MDKA", "MEDC",    
-    "PGAS", "PTBA", "SCMA", "TLKM", "MSIN",
-    "TOWR", "BRIS", "BRMS", "TPIA",
-]
+# Universe diambil dinamis dari database table `universe`
 
 CUSTOM_WATCHLIST: list[str] = []
 
 
 def get_universe() -> list[str]:
-    return list(set(LQ45 + CUSTOM_WATCHLIST))
+    try:
+        from db import SessionLocal
+        from db.models import Universe
+        db = SessionLocal()
+        active_universes = db.query(Universe.ticker).filter(Universe.active == True).all()
+        db_tickers = [row[0] for row in active_universes]
+        db.close()
+        return list(set(db_tickers + CUSTOM_WATCHLIST))
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Failed to fetch universe from DB: {e}")
+        return list(set(CUSTOM_WATCHLIST))
 
 
 def to_yahoo_ticker(code: str) -> str:

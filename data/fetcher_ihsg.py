@@ -138,11 +138,11 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
 
 def _get_lq45_ticker_data() -> dict[str, pd.DataFrame]:
     """
-    Fetch semua LQ45 tickers OHLCV secara parallel.
+    Fetch semua tickers OHLCV secara parallel untuk analisis market breadth.
     Returns: {ticker: DataFrame}
     """
     universe = get_universe()
-    tickers = universe[:45]  # LQ45 saja
+    tickers = universe
 
     results = {}
     with ThreadPoolExecutor(max_workers=5) as executor:
@@ -157,7 +157,7 @@ def _get_lq45_ticker_data() -> dict[str, pd.DataFrame]:
                 if df is not None and not df.empty:
                     results[ticker] = df
             except Exception as e:
-                logger.warning(f"[LQ45 fetch] {ticker}: {e}")
+                logger.warning(f"[Universe fetch] {ticker}: {e}")
 
     return results
 
