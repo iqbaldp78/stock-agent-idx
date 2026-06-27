@@ -616,12 +616,24 @@ def analyze(ticker: str) -> dict:
 
         # === Calculate TP1/TP2/TP3 with R/R optimization ===
         tp_data = {}
-        if signal == "BUY" and entry_low and stop_loss and resistance_strong:
+        # Use target as fallback for resistance_strong when not available
+        # (target already calculated above based on signal type: BUY, SELL, or HOLD)
+        effective_resistance_strong = resistance_strong
+        if not effective_resistance_strong and target is not None:
+            try:
+                target_float = float(target) if isinstance(target, str) else target
+                # Only use target as resistance if it's above entry (long direction)
+                if entry_low and target_float > float(entry_low):
+                    effective_resistance_strong = target_float
+            except (TypeError, ValueError):
+                pass
+
+        if entry_low and stop_loss and effective_resistance_strong:
             tp_calc = _calculate_tp_levels(
                 entry=entry_low,
                 stop_loss=stop_loss,
                 resistance_near=resistance_near or entry_high,
-                resistance_strong=resistance_strong,
+                resistance_strong=effective_resistance_strong,
             )
             tp_data = {
                 "tp1": tp_calc.get("tp1"),

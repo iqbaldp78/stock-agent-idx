@@ -379,6 +379,23 @@ def analyze(ticker: str) -> dict:
                     data_used.append(f"Penalty: Broker retail {code} akumulasi di rank {rank} (score -1.0)")
     score += retail_penalty
 
+    # === Calculate aggregated metrics for UI ===
+    # Window 7 days
+    w7_net_lot = sum(b[1]["total_buy_lot"] for b in w7.get("top_accumulators", [])) - \
+                 sum(d[1]["total_sell_lot"] for d in w7.get("top_distributors", []))
+    w7_net_value = sum(b[1]["total_buy_value"] for b in w7.get("top_accumulators", [])) - \
+                   sum(d[1]["total_sell_value"] for d in w7.get("top_distributors", []))
+    w7_total_buyer = len(w7.get("top_accumulators", []))
+    w7_total_seller = len(w7.get("top_distributors", []))
+
+    # Window 30 days
+    w30_net_lot = sum(b[1]["total_buy_lot"] for b in w30.get("top_accumulators", [])) - \
+                  sum(d[1]["total_sell_lot"] for d in w30.get("top_distributors", []))
+    w30_net_value = sum(b[1]["total_buy_value"] for b in w30.get("top_accumulators", [])) - \
+                    sum(d[1]["total_sell_value"] for d in w30.get("top_distributors", []))
+    w30_total_buyer = len(w30.get("top_accumulators", []))
+    w30_total_seller = len(w30.get("top_distributors", []))
+
     return {
         "ticker": ticker,
         "score": round(score, 1),
@@ -386,7 +403,12 @@ def analyze(ticker: str) -> dict:
         "weight": "40%",
         "window_7d": {
             "period": w7["period"],
+            "bandar_signal": signal_7d.replace("_", " ").title(),
             "assessment": signal_7d.replace("_", " ").title(),
+            "net_lot": w7_net_lot,
+            "net_value": w7_net_value,
+            "total_buyer": w7_total_buyer,
+            "total_seller": w7_total_seller,
             "top_accumulators": top_7d,
             "top_distributors": top_dist_7d,
             "distribution_signal": dist_signal_7d,
@@ -394,7 +416,12 @@ def analyze(ticker: str) -> dict:
         },
         "window_1m": {
             "period": w30["period"],
+            "bandar_signal": signal_30d.replace("_", " ").title(),
             "assessment": signal_30d.replace("_", " ").title(),
+            "net_lot": w30_net_lot,
+            "net_value": w30_net_value,
+            "total_buyer": w30_total_buyer,
+            "total_seller": w30_total_seller,
             "top_accumulators": top_30d,
             "top_distributors": top_dist_30d,
             "distribution_signal": dist_signal_30d,

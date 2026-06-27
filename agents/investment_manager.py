@@ -397,7 +397,13 @@ def _build_pick_rule_based(
     }
 
     target_1 = tp1
-    target_2 = _calc_target_2(tp1)
+    if target_1 is None:
+        try:
+            fallback_target = tech.get("target")
+            target_1 = float(fallback_target) if fallback_target is not None else None
+        except (ValueError, TypeError):
+            target_1 = None
+    target_2 = _calc_target_2(target_1)
     risk_reward = _calc_risk_reward(current_price, target_1, stop_loss, decision_label)
 
     return {
