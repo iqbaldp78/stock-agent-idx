@@ -12,6 +12,8 @@ import json
 import logging
 from datetime import date, datetime, timedelta
 from pathlib import Path
+import subprocess
+import signal
 
 import os
 
@@ -148,39 +150,63 @@ page = st.sidebar.radio(
 
 st.sidebar.divider()
 
-# On-demand trigger
-if st.sidebar.button("▶️ Run Analysis Now", type="primary"):
-    with st.sidebar.status("Running analysis...", expanded=True):
+@st.fragment(run_every="1s")
+def render_analysis_status():
+    if not st.session_state.get("analysis_running"):
+        return
+
+    pid = st.session_state.get("analysis_pid")
+    is_alive = False
+    if pid:
         try:
-            from graph.workflow import run_full_analysis
-            from db.tracker import save_full_result
-            from config import get_universe
+            os.kill(pid, 0)
+            is_alive = True
+        except OSError:
+            pass
 
-            st.write("🔄 Filtering universe...")
-            st.info(
-                "Filtering saham berdasarkan:\n"
-                "- Rata-rata volume 20 hari >= 300.000\n"
-                "- Market cap >= 1 Triliun IDR\n"
-                "Universe awal diambil dari config (LQ45/IDX30/Bluechip)."
-            )
-            result = run_full_analysis()
-            st.write(f"✅ Analyzed {len(result.get('composites', {}))} tickers")
-            st.write(f"🏆 {len(result.get('top_picks', []))} top picks selected")
+    if is_alive:
+        st.info(f"🔄 Analysis is running... (PID: {pid})")
+        if st.button("🛑 Cancel Analysis", type="primary", use_container_width=True, key="cancel_analysis_btn"):
+            try:
+                os.killpg(os.getpgid(pid), signal.SIGTERM)
+            except Exception as e:
+                logger.error(f"Failed to kill process {pid}: {e}")
+            st.session_state["analysis_running"] = False
+            st.warning("Analysis cancelled.")
+            st.rerun()
+    else:
+        st.session_state["analysis_running"] = False
+        result_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "last_analysis_result.json")
+        if os.path.exists(result_file):
+            try:
+                with open(result_file, 'r') as f:
+                    result = json.load(f)
+                st.session_state["last_result"] = result
+                st.session_state["last_run"] = datetime.now()
+                debate_log = result.get("debate_log", [])
+                if debate_log:
+                    st.session_state["last_debate_log"] = debate_log
+                st.success("Analysis complete!")
+            except Exception as e:
+                logger.error(f"Failed to load analysis result: {e}")
+                st.error("Analysis finished but failed to load results.")
+        else:
+            st.error("Analysis finished but no results file found. It may have crashed.")
+        st.rerun()
 
-            save_full_result(result)
-            st.write("💾 Saved to database")
 
-            debate_log = result.get("debate_log", [])
-            if debate_log:
-                st.session_state["last_debate_log"] = debate_log
-                st.write(f"🗣️ Log debat ({len(debate_log)} entri) dihasilkan")
-
-            # Store in session for immediate display
-            st.session_state["last_result"] = result
-            st.session_state["last_run"] = datetime.now()
-        except Exception as e:
-            st.error(f"Error: {e}")
-            logger.exception("Analysis failed")
+# On-demand trigger
+if not st.session_state.get("analysis_running"):
+    if st.sidebar.button("▶️ Run Analysis Now", type="primary"):
+        st.session_state["analysis_running"] = True
+        
+        # Start the process in background
+        p = subprocess.Popen([sys.executable, "scripts/run_analysis_job.py"], preexec_fn=os.setsid)
+        st.session_state["analysis_pid"] = p.pid
+        st.rerun()
+else:
+    with st.sidebar:
+        render_analysis_status()
 
 st.sidebar.divider()
 
