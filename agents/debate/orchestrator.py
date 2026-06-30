@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 def run_llm_debate(state: dict) -> dict:
     """
     Multi-agent LLM debate: Round 1 parallel → Round 2 cross-exam → synthesis.
+    Prioritizes STRONG BUY stocks from ML predictions + top composite scores.
     """
     scores = state.get("scores", {})
     composites = state.get("composites", {})
@@ -29,12 +30,37 @@ def run_llm_debate(state: dict) -> dict:
     if not composites:
         return {"debate_log": [], "finalists": []}
 
+    # Extract STRONG BUY tickers from ml_predictions
+    strong_buy_tickers = set()
+    for ticker, ml_result in ml_predictions.items():
+        if ml_result and ml_result.get("signal") == "STRONG BUY":
+            strong_buy_tickers.add(ticker)
+
+    # Sort composites by score
     sorted_tickers = sorted(
         composites.items(),
         key=lambda x: x[1]["composite_score"],
         reverse=True,
     )
-    debate_candidates = sorted_tickers[: min(LLM_DEBATE_MAX_TICKERS, len(sorted_tickers))]
+
+    # Build debate candidates: STRONG BUY first, then fill with top composites
+    debate_candidates = []
+    seen_tickers = set()
+
+    # Priority 1: Add all STRONG BUY tickers
+    for ticker in strong_buy_tickers:
+        if ticker in composites:
+            debate_candidates.append((ticker, composites[ticker]))
+            seen_tickers.add(ticker)
+
+    # Priority 2: Fill remaining slots with top composite scores
+    for ticker, composite in sorted_tickers:
+        if ticker not in seen_tickers:
+            debate_candidates.append((ticker, composite))
+            seen_tickers.add(ticker)
+        if len(debate_candidates) >= min(LLM_DEBATE_MAX_TICKERS, len(composites)):
+            break
+
     debate_log: list[dict] = []
 
     log_debate_section(

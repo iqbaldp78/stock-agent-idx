@@ -24,6 +24,14 @@ from agents.debate.logging_utils import log_debate_turn, log_debate_section, log
 from agents.llm_client import health_check
 from graph.scoring import calculate_composite
 from config import LLM_ENABLED, get_universe
+from agents.commodity_integration import (
+    add_commodity_context_to_macro,
+    enrich_ticker_with_commodities,
+)
+from agents.commodity_price_discovery import (
+    analyze_with_price_discovery,
+    calculate_adjusted_commodity_bonus,
+)
 
 import json
 import logging
@@ -70,6 +78,14 @@ def run_parallel_scoring(state: AgentState) -> dict:
 
     # Macro data (shared for all tickers)
     macro_data = macro_analyze()
+
+    # Add commodity market context
+    try:
+        macro_data = add_commodity_context_to_macro(macro_data)
+        logger.info("[SCORING] Commodity context added to macro_data")
+    except Exception as e:
+        logger.warning(f"[SCORING] Failed to add commodity context: {e}")
+
     is_volatile = macro_data["is_volatile"]
 
     scores = {}
@@ -109,6 +125,34 @@ def run_parallel_scoring(state: AgentState) -> dict:
                 "news": news.get("score", 5.0),
             }
             composite = calculate_composite(agent_scores, ticker, market_cap, is_volatile, macro_data)
+
+            # === COMMODITY ANALYSIS WITH PRICE DISCOVERY ===
+            try:
+                commodity_analysis = analyze_with_price_discovery(ticker)
+
+                if commodity_analysis.get("commodities") and not commodity_analysis.get("error"):
+                    # Calculate adjusted bonus based on price discovery
+                    commodity_bonus, commodity_narrative = calculate_adjusted_commodity_bonus(commodity_analysis)
+
+                    # Apply bonus to composite score
+                    if commodity_bonus != 0:
+                        old_composite = composite["composite_score"]
+                        new_composite = max(1.0, min(10.0, old_composite + commodity_bonus))
+                        composite["composite_score"] = new_composite
+                        composite["commodity_bonus"] = commodity_bonus
+                        composite["commodity_narrative"] = commodity_narrative
+                        composite["composite_before_commodity"] = old_composite
+
+                        logger.info(
+                            f"  [{ticker}] Commodity adjustment: {old_composite} → {new_composite} "
+                            f"({commodity_bonus:+.2f}) | {commodity_narrative}"
+                        )
+
+                    # Store commodity analysis for debate phase
+                    composite["commodity_analysis"] = commodity_analysis
+            except Exception as e:
+                logger.warning(f"  [{ticker}] Commodity analysis failed: {e}")
+
             composites[ticker] = composite
 
             logger.info(f"  [{ticker}] composite={composite['composite_score']} mode={composite['weight_mode']}")
