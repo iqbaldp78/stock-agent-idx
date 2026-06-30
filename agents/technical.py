@@ -11,6 +11,7 @@ Rule-based scoring menggunakan indikator klasik.
 import numpy as np
 import pandas as pd
 from data.fetcher_stockbit import get_ohlcv, get_stock_info
+from data.fetcher_tradingview import get_technical_analysis
 
 
 
@@ -226,6 +227,10 @@ def analyze(ticker: str) -> dict:
         data_used = []
         confidence = "LOW"
 
+        # Fetch full TA from TradingView at the beginning
+        tv_ta = get_technical_analysis(ticker)
+        tv_indicators = tv_ta.get("indicators", {}) if tv_ta.get("status") == "success" else {}
+
         # Ambil data OHLCV 1 tahun penuh agar cukup untuk MA200
         ohlcv = get_ohlcv(ticker, period="1y")
         info = get_stock_info(ticker)
@@ -288,52 +293,54 @@ def analyze(ticker: str) -> dict:
             setup_notes.append("MACD bearish divergence (strong sell signal)")
             data_used.append("MACD divergence: bearish")
 
-        # === Support & Resistance Area (terdekat & terkuat) ===
+        # === Support & Resistance Area (TradingView Fibonacci Pivot) ===
         support_near = None
         resistance_near = None
-        support_near_strength = 0
-        resistance_near_strength = 0
         support_strong = None
         resistance_strong = None
-        support_strong_strength = 0
-        resistance_strong_strength = 0
-        if len(ohlcv) >= 200:
-            lows = ohlcv['Low'][-200:]
-            closes_ = ohlcv['Close'][-200:]
-            support_data = pd.concat([lows, closes_]).sort_index()
-            highs = ohlcv['High'][-200:]
-            closes_ = ohlcv['Close'][-200:]
-            support_data = pd.concat([lows, closes_]).sort_index()
-            resistance_data = pd.concat([highs, closes_]).sort_index()
-            # Penentuan support dari gabungan Low dan Close
-            possible_supports = support_data[support_data < current_price]
-            possible_supports = possible_supports[possible_supports > current_price * 0.9]
-            if not possible_supports.empty:
-                support_near = possible_supports.max()
-            else:
-                support_near = support_data.min()
-            support_strong = support_data.min()
-            # Penentuan resistance dari gabungan High dan Close
-            possible_resistances = resistance_data[resistance_data > current_price]
-            possible_resistances = possible_resistances[possible_resistances < current_price * 1.1]
-            if not possible_resistances.empty:
-                resistance_near = possible_resistances.min()
-            else:
-                resistance_near = resistance_data.max()
-            resistance_strong = resistance_data.max()
-            # Hitung sentuh support/resistance dari gabungan
-            support_near_strength = ((support_data >= support_near) & (support_data <= support_near * 1.01)).sum()
-            resistance_near_strength = ((resistance_data >= resistance_near * 0.99) & (resistance_data <= resistance_near)).sum()
-            support_strong_strength = (support_data <= support_strong * 1.01).sum()
-            resistance_strong_strength = (resistance_data >= resistance_strong * 0.99).sum()
-            if abs(current_price - support_near) / support_near < 0.03:
-                score += 0.7
-                setup_notes.append(f"Harga mendekati support terdekat di {support_near:.0f}")
-            if abs(current_price - resistance_near) / resistance_near < 0.03:
-                score -= 0.5
-                setup_notes.append(f"Harga mendekati resistance terdekat di {resistance_near:.0f}")
-            data_used.append(f"Support terdekat: {support_near:.0f} (sentuh {support_near_strength}x), Resistance terdekat: {resistance_near:.0f} (sentuh {resistance_near_strength}x)")
-            data_used.append(f"Support kuat: {support_strong:.0f} (sentuh {support_strong_strength}x), Resistance kuat: {resistance_strong:.0f} (sentuh {resistance_strong_strength}x)")
+
+        if tv_indicators:
+            pivots = [
+                tv_indicators.get("Pivot.M.Fibonacci.S3"),
+                tv_indicators.get("Pivot.M.Fibonacci.S2"),
+                tv_indicators.get("Pivot.M.Fibonacci.S1"),
+                tv_indicators.get("Pivot.M.Fibonacci.Middle"),
+                tv_indicators.get("Pivot.M.Fibonacci.R1"),
+                tv_indicators.get("Pivot.M.Fibonacci.R2"),
+                tv_indicators.get("Pivot.M.Fibonacci.R3"),
+            ]
+            
+            # Filter None values
+            pivots = [p for p in pivots if p is not None]
+            
+            if pivots:
+                # Supports (below current_price)
+                supports = [p for p in pivots if p < current_price]
+                if supports:
+                    support_near = max(supports)
+                    support_strong = min(supports)
+                
+                # Resistances (above current_price)
+                resistances = [p for p in pivots if p > current_price]
+                if resistances:
+                    resistance_near = min(resistances)
+                    resistance_strong = max(resistances)
+            
+            if support_near:
+                data_used.append(f"TV Fib Support Terdekat: {support_near:.0f}")
+                if abs(current_price - support_near) / support_near < 0.03:
+                    score += 0.7
+                    setup_notes.append(f"Harga mendekati support terdekat (Fibonacci) di {support_near:.0f}")
+            if support_strong:
+                data_used.append(f"TV Fib Support Kuat: {support_strong:.0f}")
+                
+            if resistance_near:
+                data_used.append(f"TV Fib Resistance Terdekat: {resistance_near:.0f}")
+                if abs(current_price - resistance_near) / resistance_near < 0.03:
+                    score -= 0.5
+                    setup_notes.append(f"Harga mendekati resistance terdekat (Fibonacci) di {resistance_near:.0f}")
+            if resistance_strong:
+                data_used.append(f"TV Fib Resistance Kuat: {resistance_strong:.0f}")
 
         # === Breakout + Volume ===
         breakout_score = 0
@@ -666,6 +673,17 @@ def analyze(ticker: str) -> dict:
             "data_used": data_used,
             "confidence": confidence,
         }
+
+        # Include full TA from TradingView (fetched earlier)
+        if tv_ta.get("status") == "success":
+            result["tradingview_ta"] = {
+                "summary": tv_ta["summary"],
+                "indicators": tv_ta["indicators"]
+            }
+            print(f"[TECHNICAL AGENT] 📊 TradingView TA Summary: {tv_ta['summary']}")
+        else:
+            result["tradingview_ta"] = {"error": tv_ta.get("message")}
+            print(f"[TECHNICAL AGENT] ❌ Failed to fetch TradingView TA: {tv_ta.get('message')}")
 
         # Add TP levels if calculated
         if tp_data:

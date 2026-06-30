@@ -1,0 +1,6 @@
+# Project Rules for stock-engine-prediction-v2
+
+## Technical Analysis Preference
+When building or modifying technical indicators, Support & Resistance levels, or momentum tracking in agents (e.g. `technical.py`), **always prioritize fetching data from the `tradingview_ta` integration** (e.g., using TradingView's native Pivot Points, RSI, MACD, etc.) instead of manually calculating these indicators using raw OHLCV historical data.
+
+This ensures the agent relies on industry-standard algorithms and minimizes code complexity.

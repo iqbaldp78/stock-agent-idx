@@ -34,3 +34,4 @@ seaborn==0.13.2
 
 # Scheduler
 APScheduler==3.10.4
+tradingview-ta==3.3.0
