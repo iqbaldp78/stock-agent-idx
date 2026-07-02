@@ -150,6 +150,7 @@ def save_full_result(result: dict) -> None:
                     "composite_score": comp.get("composite_score", 0),
                     "weight_mode": comp.get("weight_mode", ""),
                     "conviction": "LOW",
+                    "ml_prediction": comp.get("ml_prediction"),
                     "thesis": "Tidak masuk kriteria Top Picks (Evaluated by system)."
                 })
 

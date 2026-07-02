@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(docker compose *)",
-      "Bash(python -m py_compile data/fetcher_stockbit.py)"
+      "Bash(python -m py_compile data/fetcher_stockbit.py)",
+      "Bash(python3 -m py_compile ui/app.py)",
+      "Bash(sed -i '253,575s/^/    /' ui/app.py)",
+      "Bash(streamlit run *)",
+      "Bash(pkill -f \"streamlit run\")",
+      "Bash(sleep 3 && tail -50 /tmp/streamlit.log)",
+      "Read(//tmp/**)"
     ]
   }
 }

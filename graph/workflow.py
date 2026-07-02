@@ -23,6 +23,7 @@ from agents.debate import run_llm_debate
 from agents.debate.logging_utils import log_debate_turn, log_debate_section, log_finalists
 from agents.llm_client import health_check
 from graph.scoring import calculate_composite
+from data.fetcher_tradingview import get_technical_analysis
 from config import LLM_ENABLED, get_universe
 from agents.commodity_integration import (
     add_commodity_context_to_macro,
@@ -254,6 +255,20 @@ def run_debate_rule_based(state: AgentState) -> dict:
     debate_log = []
 
     log_debate_section(f"DEBAT MULTI-AGENT (rule-based) — {len(debate_candidates)} ticker")
+
+    # LAZY FETCH: Fetch TradingView TA only for debate candidates
+    logger.info("[DEBATE RULE] Lazy-fetching TradingView TA for candidates...")
+    for ticker, _ in debate_candidates:
+        if ticker in scores and "technical" in scores[ticker]:
+            tv_ta = get_technical_analysis(ticker)
+            if tv_ta.get("status") == "success":
+                scores[ticker]["technical"]["tradingview_ta"] = {
+                    "summary": tv_ta.get("summary", {}),
+                    "indicators": tv_ta.get("indicators", {})
+                }
+            else:
+                scores[ticker]["technical"]["tradingview_ta"] = {"error": tv_ta.get("message")}
+
     logger.info("[DEBATE] Round 1 — Initial Arguments (rule-based)")
     round1_votes = {}
 

@@ -227,9 +227,8 @@ def analyze(ticker: str) -> dict:
         data_used = []
         confidence = "LOW"
 
-        # Fetch full TA from TradingView at the beginning
-        tv_ta = get_technical_analysis(ticker)
-        tv_indicators = tv_ta.get("indicators", {}) if tv_ta.get("status") == "success" else {}
+        # TradingView TA fetch has been moved to debate phase to save API calls
+        tv_indicators = {}
 
         # Ambil data OHLCV 1 tahun penuh agar cukup untuk MA200
         ohlcv = get_ohlcv(ticker, period="1y")
@@ -674,16 +673,7 @@ def analyze(ticker: str) -> dict:
             "confidence": confidence,
         }
 
-        # Include full TA from TradingView (fetched earlier)
-        if tv_ta.get("status") == "success":
-            result["tradingview_ta"] = {
-                "summary": tv_ta["summary"],
-                "indicators": tv_ta["indicators"]
-            }
-            print(f"[TECHNICAL AGENT] 📊 TradingView TA Summary: {tv_ta['summary']}")
-        else:
-            result["tradingview_ta"] = {"error": tv_ta.get("message")}
-            print(f"[TECHNICAL AGENT] ❌ Failed to fetch TradingView TA: {tv_ta.get('message')}")
+        # TradingView TA logic is now handled in the orchestrator/workflow phase
 
         # Add TP levels if calculated
         if tp_data:

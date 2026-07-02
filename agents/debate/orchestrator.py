@@ -13,6 +13,7 @@ from agents.debate.round1 import present_all, present_macro_global
 from agents.debate.round2 import cross_examine
 from agents.debate.synthesis import compute_round1_votes, select_finalists
 from config import LLM_DEBATE_MAX_TICKERS
+from data.fetcher_tradingview import get_technical_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,20 @@ def run_llm_debate(state: dict) -> dict:
         f"DEBAT MULTI-AGENT (LLM) — {len(debate_candidates)} ticker"
     )
     logger.info("Kandidat: %s", [t for t, _ in debate_candidates])
+
+    # LAZY FETCH: Fetch TradingView TA only for debate candidates to save API limits
+    logger.info("[DEBATE LLM] Lazy-fetching TradingView TA for candidates...")
+    for ticker, _ in debate_candidates:
+        if ticker in scores and "technical" in scores[ticker]:
+            tv_ta = get_technical_analysis(ticker)
+            if tv_ta.get("status") == "success":
+                scores[ticker]["technical"]["tradingview_ta"] = {
+                    "summary": tv_ta.get("summary", {}),
+                    "indicators": tv_ta.get("indicators", {})
+                }
+            else:
+                scores[ticker]["technical"]["tradingview_ta"] = {"error": tv_ta.get("message")}
+
 
     logger.info("[DEBATE LLM] Round 1 — Initial Arguments")
     macro_global = present_macro_global(macro_data)
