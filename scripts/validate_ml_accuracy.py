@@ -5,14 +5,13 @@ Walk-forward time-series cross-validation untuk Day1Predictor.
 Metrics yang dihitung:
 - Directional Accuracy: seberapa sering prediksi arah (naik/turun) benar
 - MAE: rata-rata absolute error antara predicted vs actual return
-- Precision/Recall untuk sinyal BUY (pred_return >= +0.3%)
+- Precision/Recall untuk sinyal BUY (pred_return >= 0.3%)
 - Confusion Matrix (arah: UP vs DOWN)
 
 Usage:
     python scripts/validate_ml_accuracy.py --ticker BBCA
     python scripts/validate_ml_accuracy.py --ticker BBCA BMRI TLKM
-    python scripts/validate_ml_accuracy.py --all
-    python scripts/validate_ml_accuracy.py --all --folds 5 --min-rows 120
+    python scripts/validate_ml_accuracy.py --all --folds 3 --min-rows 120
 """
 import argparse
 import json
@@ -34,6 +33,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def _directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -54,7 +54,7 @@ def _precision_recall_buy(
     TP = model prediksi BUY & aktual naik
     FP = model prediksi BUY & aktual turun
     FN = model prediksi HOLD/AVOID & aktual naik
-    Threshold 0.003 (0.3%) cocok untuk horizon Day-1 pada regresi magnitude.
+    Threshold 0.003 (0.3%) cocok untuk horizon Day-1.
     """
     pred_buy = y_pred >= threshold
     actual_up = y_true > 0
@@ -83,40 +83,20 @@ def _confusion_matrix_str(y_true: np.ndarray, y_pred: np.ndarray) -> str:
 
 # ─── Walk-forward CV ──────────────────────────────────────────────────────────
 
-def walk_forward_validate(
-    ohlcv: pd.DataFrame,
-    ticker: str = None,
+def walk_forward_validate_dataset(
+    X_all: pd.DataFrame,
+    y_all: pd.Series,
     n_folds: int = 5,
     min_train_rows: int = 60,
     target_col: str = "target_1d",
 ) -> dict:
     """
-    Time-series walk-forward cross-validation.
-
-    Fold ke-i:
-      train = data[0 : split_i]
-      test  = data[split_i : split_{i+1}]
-
-    Tidak ada look-ahead. Model dilatih ulang per fold.
+    Time-series walk-forward cross-validation over a pre-built dataset.
     """
-    from data.ml_features import prepare_training_data
-    from models.day1_predictor import Day1Predictor
-
-    try:
-        X_all, y_all = prepare_training_data(ohlcv, ticker=ticker)
-        if isinstance(y_all, pd.DataFrame):
-            if target_col in y_all.columns:
-                y_all = y_all[target_col]
-            else:
-                y_all = y_all.iloc[:, 0]
-    except Exception as e:
-        return {"error": f"prepare_training_data failed: {e}"}
-
     n = len(X_all)
     if n < min_train_rows + n_folds * 10:
         return {"error": f"Data terlalu sedikit ({n} baris) untuk {n_folds} fold"}
 
-    # Bagi data menjadi n_folds + 1 bagian
     fold_size = n // (n_folds + 1)
     all_true, all_pred = [], []
     fold_results = []
@@ -138,9 +118,8 @@ def walk_forward_validate(
         if len(X_test) < 5:
             continue
 
-        # Train fresh model per fold (no persistence in validation)
         predictor = Day1Predictor(model_path="/tmp/lgbm_val_tmp.pkl", target_col=target_col)
-        predictor.model = None  # Force no loading
+        predictor.model = None
         predictor.train_incremental(X_train, y_train)
 
         if predictor.model is None:
@@ -192,6 +171,31 @@ def walk_forward_validate(
         "aggregate": aggregate,
     }
 
+def walk_forward_validate(
+    ohlcv: pd.DataFrame,
+    ticker: str = None,
+    n_folds: int = 5,
+    min_train_rows: int = 60,
+    target_col: str = "target_1d",
+) -> dict:
+    """
+    Time-series walk-forward cross-validation per ticker.
+    """
+    from data.ml_features import prepare_training_data
+    from models.day1_predictor import Day1Predictor
+
+    try:
+        X_all, y_all = prepare_training_data(ohlcv, ticker=ticker)
+        if isinstance(y_all, pd.DataFrame):
+            if target_col in y_all.columns:
+                y_all = y_all[target_col]
+            else:
+                y_all = y_all.iloc[:, 0]
+    except Exception as e:
+        return {"error": f"prepare_training_data failed: {e}"}
+
+    return walk_forward_validate_dataset(X_all, y_all, n_folds=n_folds, min_train_rows=min_train_rows, target_col=target_col)
+
 
 # ─── Ticker list ──────────────────────────────────────────────────────────────
 
@@ -201,8 +205,8 @@ def get_universe_tickers() -> list[str]:
     return get_universe()
 
 
-def fetch_ohlcv(ticker: str, period: str = "1y") -> pd.DataFrame:
-    """Ambil OHLCV dari Stockbit/yfinance."""
+def fetch_ohlcv(ticker: str, period: str = "max") -> pd.DataFrame:
+    """Ambil OHLCV dari Stockbit/yfinance fallback."""
     try:
         from data.fetcher_stockbit import get_ohlcv
         df = get_ohlcv(ticker, period=period)
@@ -241,17 +245,16 @@ def normalize_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
 
 def main():
     parser = argparse.ArgumentParser(description="Validate ML Day-1 Predictor accuracy")
-    grp = parser.add_mutually_exclusive_group(required=True)
-    grp.add_argument("--ticker", nargs="+", metavar="TICKER", help="Ticker(s) spesifik")
-    grp.add_argument("--all", action="store_true", help="Semua ticker di universe")
-    parser.add_argument("--folds", type=int, default=5, help="Jumlah fold walk-forward (default: 5)")
+    parser.add_argument("--ticker", nargs="+", metavar="TICKER", help="Ticker(s) spesifik")
+    parser.add_argument("--all", action="store_true", help="Semua ticker di universe")
+    parser.add_argument("--folds", type=int, default=3, help="Jumlah fold walk-forward (default: 3)")
     parser.add_argument("--min-rows", type=int, default=60, help="Min baris training per fold (default: 60)")
-    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "max"), help="Periode data OHLCV (default: dari env atau max)")
+    parser.add_argument("--period", default="max", help="Periode data OHLCV (default: max)")
     parser.add_argument("--target", default="target_1d", help="Target horizon model (default: target_1d)")
     parser.add_argument("--output", default="validate_ml_result.json", help="File output JSON")
     args = parser.parse_args()
 
-    tickers = get_universe_tickers() if args.all else args.ticker
+    tickers = args.ticker if args.ticker else get_universe_tickers()
 
     logger.info(f"Validating {len(tickers)} ticker(s): {', '.join(tickers)}")
     logger.info(f"Walk-forward: {args.folds} folds | Min train rows: {args.min_rows} | Period: {args.period}")
@@ -259,6 +262,13 @@ def main():
 
     results = {}
     summary_rows = []
+
+    # -----------------------------
+    # Build global dataset across tickers
+    # -----------------------------
+    global_parts_x = []
+    global_parts_y = []
+    used_tickers = []
 
     for ticker in tickers:
         logger.info(f"📊 {ticker} — Fetching OHLCV ({args.period})...")
@@ -270,9 +280,73 @@ def main():
             results[ticker] = {"error": "No OHLCV data"}
             continue
 
-        logger.info(f"  Data: {len(ohlcv)} rows — Running {args.folds}-fold walk-forward CV...")
-        res = walk_forward_validate(ohlcv, ticker=ticker, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target)
+        logger.info(f"  Data: {len(ohlcv)} rows")
+        try:
+            X, y = prepare_training_data(ohlcv, ticker=ticker)
+            if isinstance(y, pd.DataFrame):
+                if args.target in y.columns:
+                    y = y[args.target]
+                else:
+                    y = y.iloc[:, 0]
+        except Exception as e:
+            logger.warning(f"  ⚠️  {ticker}: feature prep failed: {e}")
+            results[ticker] = {"error": f"prepare_training_data failed: {e}"}
+            continue
 
+        if len(X) < args.min_rows:
+            logger.warning(f"  ⚠️  {ticker}: rows too small ({len(X)} < {args.min_rows})")
+            results[ticker] = {"error": f"Training rows terlalu sedikit ({len(X)})"}
+            continue
+
+        # Append to global dataset
+        global_parts_x.append(X)
+        global_parts_y.append(y)
+        used_tickers.append(ticker)
+
+    if not global_parts_x:
+        raise SystemExit("Tidak ada data training yang valid.")
+
+    X_global = pd.concat(global_parts_x, ignore_index=False)
+    y_global = pd.concat(global_parts_y, ignore_index=False)
+
+    # Sort chronologically
+    sort_idx = np.argsort(X_global.index)
+    X_global = X_global.iloc[sort_idx].reset_index(drop=True)
+    y_global = y_global.iloc[sort_idx].reset_index(drop=True)
+
+    logger.info(f"Global dataset: {len(X_global)} rows from {len(used_tickers)} tickers")
+
+    # -----------------------------
+    # Global walk-forward validation
+    # -----------------------------
+    global_res = walk_forward_validate_dataset(
+        X_global, y_global, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target
+    )
+
+    # -----------------------------
+    # Per-ticker validation using global model snapshot
+    # -----------------------------
+    from models.day1_predictor import Day1Predictor
+    global_predictor = Day1Predictor(model_path="/tmp/lgbm_val_tmp.pkl", target_col=args.target)
+    global_predictor.model = None
+
+    for ticker in used_tickers:
+        try:
+            # rebuild just this ticker's chronological local frame for reporting
+            ticker_mask = X_global["ticker_id"] == X_global["ticker_id"].iloc[0]
+            # We cannot recover exact per-ticker subset after concat-reset easily here,
+            # so we evaluate by refeeding the original per-ticker frames below.
+        except Exception:
+            pass
+
+    # Re-validate per ticker using their own frames but same global-style training every fold
+    for ticker, X_ticker, y_ticker in zip(used_tickers, global_parts_x, global_parts_y):
+        sort_idx = np.argsort(X_ticker.index)
+        X_ticker = X_ticker.iloc[sort_idx].reset_index(drop=True)
+        y_ticker = y_ticker.iloc[sort_idx].reset_index(drop=True)
+        res = walk_forward_validate_dataset(
+            X_ticker, y_ticker, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target
+        )
         results[ticker] = res
 
         if "error" in res:
@@ -289,10 +363,41 @@ def main():
             "test_rows": agg["total_test_rows"],
         })
 
-    # ── Print Summary Table ──────────────────────────────────────────────────
+    # -----------------------------
+    # Print global result first
+    # -----------------------------
     print()
     print("=" * 72)
-    print("  ML DAY-1 ACCURACY VALIDATION SUMMARY")
+    if "aggregate" in global_res:
+        g_agg = global_res["aggregate"]
+        print("  ML DAY-1 GLOBAL MODEL VALIDATION SUMMARY")
+        print("=" * 72)
+        print(f"Dataset      : {len(X_global)} rows | {len(used_tickers)} tickers | folds={args.folds}")
+        print(f"Dir Accuracy : {g_agg['directional_accuracy']:.2f}%")
+        print(f"MAE          : {g_agg['mae_pct']:.4f}%")
+        print(f"Buy Precision: {g_agg['buy_precision']:.2f}%")
+        print(f"Buy Recall   : {g_agg['buy_recall']:.2f}%")
+        print()
+        print("  Confusion Matrix (global):")
+        for line in g_agg["confusion_matrix"].split("\n"):
+            print(f"    {line}")
+        print()
+        for fold in global_res.get("folds", []):
+            print(
+                f"  Fold {fold['fold']}: train={fold['train_rows']} test={fold['test_rows']} "
+                f"DirAcc={fold['directional_accuracy']:.1f}% MAE={fold['mae_pct']:.3f}% "
+                f"Prec={fold['buy_precision']:.1f}% Rec={fold['buy_recall']:.1f}%"
+            )
+    else:
+        print("  Global validation failed:")
+        print(f"  {global_res.get('error')}")
+
+    # -----------------------------
+    # Per-ticker summary
+    # -----------------------------
+    print()
+    print("=" * 72)
+    print("  ML DAY-1 PER-TICKER SUMMARY")
     print("=" * 72)
     if summary_rows:
         header = f"{'Ticker':<8} {'DirAcc':>8} {'MAE%':>8} {'BuyPrec':>9} {'BuyRec':>8} {'Rows':>6}"
@@ -306,38 +411,28 @@ def main():
             )
         print("-" * 72)
 
-        avg_da = np.mean([r["dir_acc"] for r in summary_rows])
-        avg_mae = np.mean([r["mae_pct"] for r in summary_rows])
-        avg_prec = np.mean([r["buy_prec"] for r in summary_rows])
-        print(
-            f"{'AVERAGE':<8} {avg_da:>7.1f}% {avg_mae:>7.3f}% {avg_prec:>8.1f}%"
-        )
+        avg_da = float(np.mean([r["dir_acc"] for r in summary_rows]))
+        avg_mae = float(np.mean([r["mae_pct"] for r in summary_rows]))
+        avg_prec = float(np.mean([r["buy_prec"] for r in summary_rows]))
+        print(f"{'AVERAGE':<8} {avg_da:>7.1f}% {avg_mae:>7.3f}% {avg_prec:>8.1f}%")
         print()
         print("  DirAcc ≥55% ✅ | 50-55% ⚠️  | <50% ❌ (random = 50%)")
-
-        # Print confusion matrix for first successful ticker
-        first_ok = next((r["ticker"] for r in summary_rows), None)
-        if first_ok and "aggregate" in results.get(first_ok, {}):
-            print()
-            print(f"  Confusion Matrix — {first_ok}:")
-            cm = results[first_ok]["aggregate"]["confusion_matrix"]
-            for line in cm.split("\n"):
-                print(f"    {line}")
     else:
         print("  Tidak ada ticker yang berhasil divalidasi.")
 
     print("=" * 72)
 
-    # ── Save JSON ────────────────────────────────────────────────────────────
     output = {
         "run_date": datetime.now().isoformat(),
+        "global": global_res,
+        "tickers": results,
+        "summary": summary_rows,
         "config": {
             "folds": args.folds,
             "min_rows": args.min_rows,
             "period": args.period,
+            "target": args.target,
         },
-        "tickers": results,
-        "summary": summary_rows,
     }
     with open(args.output, "w") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)

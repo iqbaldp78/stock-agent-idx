@@ -9,6 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 FEATURE_COLUMNS = [
+    "ticker_id",
     "bandarm_score",
     "dist_avg_7d",
     "dist_avg_1m",
@@ -74,6 +75,7 @@ FEATURE_COLUMNS = [
 
 # Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
 ML_TRAIN_FEATURES = [
+    "ticker_id",
     "bandarm_score",
     "dist_avg_7d",
     "dist_avg_1m",
@@ -234,6 +236,13 @@ def _extract_first_numeric(data_used: list, key: str, default: float) -> float:
         except Exception:
             continue
     return default
+
+
+def _ticker_id(ticker: str) -> int:
+    try:
+        return abs(hash(str(ticker).upper())) % 10000
+    except Exception:
+        return 0
 
 
 def _proximity(current_price: float, level: float) -> float:
@@ -648,12 +657,14 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None) -> tuple[pd.D
     df["foreign_net_1m"] = df.get("foreign_net_1m", pd.Series(0.0, index=df.index)).fillna(0.0)
     df["is_retail_accum"] = df.get("is_retail_accum", pd.Series(0.0, index=df.index)).fillna(0.0)
 
-    # ── Foreign Flow Z-Score ──────────────────────────────────────────────
-    # Z-score of foreign net flow: how unusual is today's flow vs recent history
+    # Foreign flow z-score
     fn7 = df["foreign_net_7d"]
     fn_mean = fn7.rolling(20).mean()
     fn_std = fn7.rolling(20).std().replace(0, np.nan)
     df["foreign_flow_zscore"] = ((fn7 - fn_mean) / fn_std).fillna(0.0)
+
+    # Ticker categorical id so the model can share signal across stocks
+    df["ticker_id"] = 0 if not ticker else (_ticker_id(ticker))
 
     # Drop rows with NaN (from rolling/shifting of targets and indicators)
     df = df.dropna(subset=['target_1d', 'target_3d', 'target_5d', 'target_7d'])

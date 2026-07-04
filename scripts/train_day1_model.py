@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Train ML Day-1 Predictor.
-
 Mengambil OHLCV historis, membuat fitur/target T+1, melatih LightGBM,
 lalu menyimpan model ke path yang dipakai workflow utama:
 models/checkpoints/lgbm_day1.pkl
@@ -9,7 +8,7 @@ models/checkpoints/lgbm_day1.pkl
 Usage:
     python scripts/train_day1_model.py --all
     python scripts/train_day1_model.py --tickers BBCA BMRI TLKM
-    python scripts/train_day1_model.py --all --period 1y --min-rows 120
+    python scripts/train_day1_model.py --all --period 5y --min-rows 120 --mode global
 """
 import argparse
 import json
@@ -37,11 +36,9 @@ def get_universe_tickers() -> list[str]:
 
 
 def fetch_ohlcv(ticker: str, period: str) -> pd.DataFrame:
-    """Ambil OHLCV historis panjang dari Stockbit range, fallback ke yfinance."""
+    """Ambil OHLCV historis panjang dari Stockbit/yfinance."""
     try:
         from data.fetcher_stockbit import get_ohlcv
-
-        # Langsung panggil get_ohlcv karena sekarang sudah support 5y, 10y, max, all
         df = get_ohlcv(ticker, period=period)
         if df is not None and not df.empty:
             return df
@@ -50,7 +47,6 @@ def fetch_ohlcv(ticker: str, period: str) -> pd.DataFrame:
 
     try:
         from data.fetcher_yfinance import get_ohlcv
-
         df = get_ohlcv(ticker, period=period)
         if df is not None and not df.empty:
             return df
@@ -59,7 +55,6 @@ def fetch_ohlcv(ticker: str, period: str) -> pd.DataFrame:
 
     try:
         import yfinance as yf
-
         df = yf.download(f"{ticker}.JK", period=period, auto_adjust=True, progress=False)
         if df is not None and not df.empty:
             return df
@@ -127,7 +122,7 @@ def build_dataset(
 
     for ticker in tickers:
         logger.info(f"📊 {ticker} — loading OHLCV ({period})...")
-        raw = fetch_ohlcv(ticker, period)
+        raw = fetch_ohlcv(ticker, period=period)
         ohlcv = normalize_ohlcv(raw)
         if ohlcv.empty:
             errors.append({"ticker": ticker, "error": "No OHLCV data"})
@@ -162,7 +157,7 @@ def build_dataset(
 
     X_all_df = pd.concat(all_x_parts, ignore_index=False)
     y_all_df = pd.concat(all_y_parts, ignore_index=False)
-    
+
     # Sort chronologically
     sort_idx = np.argsort(X_all_df.index)
     X_all_df = X_all_df.iloc[sort_idx].reset_index(drop=True)
@@ -207,10 +202,9 @@ def evaluate_model(model, X_test: pd.DataFrame, y_test, feature_cols: list[str],
 
 def main():
     parser = argparse.ArgumentParser(description="Train ML Day-1 Predictor")
-    grp = parser.add_mutually_exclusive_group(required=True)
-    grp.add_argument("--tickers", nargs="+", help="Ticker(s), e.g. BBCA BMRI")
-    grp.add_argument("--all", action="store_true", help="Semua ticker di universe")
-    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "max"), help="Periode OHLCV historis (default: dari env atau max)")
+    parser.add_argument("--tickers", nargs="+", help="Ticker(s), e.g. BBCA BMRI")
+    parser.add_argument("--all", action="store_true", help="Semua ticker di universe")
+    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "max"), help="Periode OHLCV historis (default: env/max)")
     parser.add_argument("--target", default="target_1d", help="Target horizon model (default: target_1d)")
     parser.add_argument("--min-rows", type=int, default=120, help="Minimum training rows per ticker")
     parser.add_argument("--test-size", type=float, default=0.2, help="Holdout ratio per ticker (default: 0.2)")
@@ -228,9 +222,10 @@ def main():
         help="Tetap simpan model walaupun holdout directional accuracy di bawah threshold.",
     )
     parser.add_argument(
-        "--save-holdout-model",
-        action="store_true",
-        help="Simpan model yang dilatih hanya dari train split. Default: retrain final model dengan semua data.",
+        "--mode",
+        choices=["global", "per_ticker"],
+        default="global",
+        help="global = train one model across all tickers; per_ticker = train one model per ticker",
     )
     args = parser.parse_args()
 
@@ -252,92 +247,141 @@ def main():
     from models.day1_predictor import Day1Predictor
     from sklearn.model_selection import TimeSeriesSplit
 
-    logger.info(f"Running Walk-Forward Validation (3 splits) over {len(X_all)} rows...")
-    tscv = TimeSeriesSplit(n_splits=3)
-    
+    logger.info(f"Mode={args.mode} | Rows={len(X_all)} | Tickers used={len(ticker_summaries)}")
     metrics_list = []
-    fold = 1
-    for train_idx, test_idx in tscv.split(X_all):
-        X_train_cv, X_test_cv = X_all.iloc[train_idx], X_all.iloc[test_idx]
-        y_train_cv, y_test_cv = y_all.iloc[train_idx], y_all.iloc[test_idx]
-        
-        fold_predictor = Day1Predictor(model_path="/tmp/lgbm_day1_fold.pkl", target_col=args.target)
-        fold_predictor.model = None
-        fold_predictor.train_incremental(X_train_cv, y_train_cv)
-        
-        fold_metrics = evaluate_model(fold_predictor.model, X_test_cv, y_test_cv, fold_predictor.feature_cols, args.target)
-        metrics_list.append(fold_metrics)
-        logger.info(f"Fold {fold} Acc: {fold_metrics['directional_accuracy']}%")
-        fold += 1
 
-    holdout_metrics = {
-        "test_rows": int(np.mean([m["test_rows"] for m in metrics_list])),
-        "directional_accuracy": round(np.mean([m["directional_accuracy"] for m in metrics_list]), 2),
-        "mae_pct": round(np.mean([m["mae_pct"] for m in metrics_list]), 4),
-        "buy_precision": round(np.mean([m["buy_precision"] for m in metrics_list]), 2),
-        "buy_recall": round(np.mean([m["buy_recall"] for m in metrics_list]), 2),
-        "avg_pred_return_pct": round(np.mean([m["avg_pred_return_pct"] for m in metrics_list]), 4),
-        "avg_actual_return_pct": round(np.mean([m["avg_actual_return_pct"] for m in metrics_list]), 4),
-    }
+    if args.mode == "global":
+        tscv = TimeSeriesSplit(n_splits=3)
+        fold = 1
+        for train_idx, test_idx in tscv.split(X_all):
+            X_train_cv, X_test_cv = X_all.iloc[train_idx], X_all.iloc[test_idx]
+            y_train_cv, y_test_cv = y_all.iloc[train_idx], y_all.iloc[test_idx]
 
-    model_passed_gate = bool(holdout_metrics["directional_accuracy"] >= args.min_dir_acc)
-    model_saved = False
-    final_train_rows = len(X_all)
+            fold_predictor = Day1Predictor(model_path="/tmp/lgbm_day1_fold.pkl", target_col=args.target)
+            fold_predictor.model = None
+            fold_predictor.train_incremental(X_train_cv, y_train_cv)
 
-    if not model_passed_gate and not args.force_save:
-        logger.warning(
-            "Model tidak disimpan: walk-forward directional accuracy %.2f%% < %.2f%%. "
-            "Gunakan --force-save jika tetap ingin menyimpan.",
-            holdout_metrics["directional_accuracy"],
-            args.min_dir_acc,
-        )
-    else:
-        logger.info(f"Training final model with all rows: rows={len(X_all)}")
-        final_predictor = Day1Predictor(model_path=args.model_path, target_col=args.target)
-        final_predictor.model = None
-        final_predictor.train_incremental(X_all, y_all)
-        model_saved = True
+            fold_metrics = evaluate_model(fold_predictor.model, X_test_cv, y_test_cv, fold_predictor.feature_cols, args.target)
+            metrics_list.append(fold_metrics)
+            logger.info(f"Fold {fold} Acc: {fold_metrics['directional_accuracy']}%")
+            fold += 1
 
-    metadata = {
-        "run_date": datetime.now().isoformat(),
-        "model_path": args.model_path,
-        "model_saved": model_saved,
-        "model_passed_gate": model_passed_gate,
-        "config": {
-            "period": args.period,
-            "min_rows": args.min_rows,
-            "min_dir_acc": args.min_dir_acc,
-            "force_save": args.force_save,
-        },
-        "rows": {
-            "tickers_requested": len(tickers),
-            "tickers_trained": len(ticker_summaries),
-            "final_train_rows": final_train_rows,
-        },
-        "holdout_metrics": holdout_metrics,
-        "tickers": ticker_summaries,
-        "errors": errors,
-    }
+        holdout_metrics = {
+            "test_rows": int(np.mean([m["test_rows"] for m in metrics_list])),
+            "directional_accuracy": round(np.mean([m["directional_accuracy"] for m in metrics_list]), 2),
+            "mae_pct": round(np.mean([m["mae_pct"] for m in metrics_list]), 4),
+            "buy_precision": round(np.mean([m["buy_precision"] for m in metrics_list]), 2),
+            "buy_recall": round(np.mean([m["buy_recall"] for m in metrics_list]), 2),
+            "avg_pred_return_pct": round(np.mean([m["avg_pred_return_pct"] for m in metrics_list]), 4),
+            "avg_actual_return_pct": round(np.mean([m["avg_actual_return_pct"] for m in metrics_list]), 4),
+        }
 
-    os.makedirs(os.path.dirname(args.metadata_output), exist_ok=True)
-    with open(args.metadata_output, "w") as f:
-        json.dump(metadata, f, indent=2, ensure_ascii=False)
+        model_passed_gate = bool(holdout_metrics["directional_accuracy"] >= args.min_dir_acc)
+        model_saved = False
+        final_train_rows = len(X_all)
+
+        if not model_passed_gate and not args.force_save:
+            logger.warning(
+                "Model tidak disimpan: walk-forward directional accuracy %.2f%% < %.2f%%. "
+                "Gunakan --force-save jika tetap ingin menyimpan.",
+                holdout_metrics["directional_accuracy"],
+                args.min_dir_acc,
+            )
+        else:
+            logger.info(f"Training final global model with all rows: rows={len(X_all)}")
+            final_predictor = Day1Predictor(model_path=args.model_path, target_col=args.target)
+            final_predictor.model = None
+            final_predictor.train_incremental(X_all, y_all)
+            model_saved = True
+
+        metadata = {
+            "run_date": datetime.now().isoformat(),
+            "model_path": args.model_path,
+            "mode": "global",
+            "model_saved": model_saved,
+            "model_passed_gate": model_passed_gate,
+            "config": {
+                "period": args.period,
+                "min_rows": args.min_rows,
+                "min_dir_acc": args.min_dir_acc,
+                "force_save": args.force_save,
+                "mode": args.mode,
+            },
+            "rows": {
+                "tickers_requested": len(tickers),
+                "tickers_trained": len(ticker_summaries),
+                "final_train_rows": final_train_rows,
+            },
+            "holdout_metrics": holdout_metrics,
+            "tickers": ticker_summaries,
+            "errors": errors,
+        }
+
+        os.makedirs(os.path.dirname(args.metadata_output), exist_ok=True)
+        with open(args.metadata_output, "w") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+
+        print()
+        print("=" * 72)
+        print("  ML DAY-1 TRAINING SUMMARY (GLOBAL WALK-FORWARD)")
+        print("=" * 72)
+        print(f"Mode           : {args.mode}")
+        print(f"Tickers trained: {len(ticker_summaries)} / {len(tickers)}")
+        print(f"Final rows     : {final_train_rows}")
+        print(f"Model saved    : {model_saved}")
+        print(f"Model path     : {args.model_path}")
+        print(f"Metadata       : {args.metadata_output}")
+        print("-" * 72)
+        print(f"Avg Test Rows  : {holdout_metrics['test_rows']} per fold")
+        print(f"Avg Dir Acc    : {holdout_metrics['directional_accuracy']:.2f}%")
+        print(f"Avg MAE        : {holdout_metrics['mae_pct']:.4f}%")
+        print(f"Avg Buy Prec   : {holdout_metrics['buy_precision']:.2f}%")
+        print(f"Avg Buy Recall : {holdout_metrics['buy_recall']:.2f}%")
+        print("=" * 72)
+        return
+
+    # Fallback: per-ticker mode
+    for ticker_summary in ticker_summaries:
+        ticker = ticker_summary["ticker"]
+        if ticker_summary["training_rows"] < args.min_rows:
+            continue
+
+        X_ticker = X_all[X_all["ticker_id"] == X_all["ticker_id"].iloc[0]]
+        y_ticker = y_all.iloc[: len(X_ticker)]
+
+        tscv = TimeSeriesSplit(n_splits=3)
+        ticker_metrics = []
+        fold = 1
+        for train_idx, test_idx in tscv.split(X_ticker):
+            X_train_cv, X_test_cv = X_ticker.iloc[train_idx], X_ticker.iloc[test_idx]
+            y_train_cv, y_ticker_cv = y_ticker.iloc[train_idx], y_ticker.iloc[test_idx]
+
+            fold_predictor = Day1Predictor(model_path="/tmp/lgbm_day1_fold.pkl", target_col=args.target)
+            fold_predictor.model = None
+            fold_predictor.train_incremental(X_train_cv, y_train_cv)
+
+            fold_metrics = evaluate_model(fold_predictor.model, X_test_cv, y_ticker_cv, fold_predictor.feature_cols, args.target)
+            ticker_metrics.append(fold_metrics)
+            logger.info(f"[{ticker}] Fold {fold} Acc: {fold_metrics['directional_accuracy']}%")
+            fold += 1
+
+        metrics_list.append({
+            "ticker": ticker,
+            "metrics": {
+                "directional_accuracy": round(np.mean([m["directional_accuracy"] for m in ticker_metrics]), 2),
+                "mae_pct": round(np.mean([m["mae_pct"] for m in ticker_metrics]), 4),
+                "buy_precision": round(np.mean([m["buy_precision"] for m in ticker_metrics]), 2),
+                "buy_recall": round(np.mean([m["buy_recall"] for m in ticker_metrics]), 2),
+            }
+        })
 
     print()
     print("=" * 72)
-    print("  ML DAY-1 TRAINING SUMMARY (WALK-FORWARD)")
+    print("  ML DAY-1 TRAINING SUMMARY (PER-TICKER)")
     print("=" * 72)
-    print(f"Tickers trained : {len(ticker_summaries)} / {len(tickers)}")
-    print(f"Final rows      : {final_train_rows}")
-    print(f"Model saved     : {model_saved}")
-    print(f"Model path      : {args.model_path}")
-    print(f"Metadata        : {args.metadata_output}")
-    print("-" * 72)
-    print(f"Avg Test Rows   : {holdout_metrics['test_rows']} per fold")
-    print(f"Avg Dir Accuracy: {holdout_metrics['directional_accuracy']:.2f}%")
-    print(f"Avg MAE         : {holdout_metrics['mae_pct']:.4f}%")
-    print(f"Avg Buy Prec    : {holdout_metrics['buy_precision']:.2f}%")
-    print(f"Avg Buy Recall  : {holdout_metrics['buy_recall']:.2f}%")
+    for item in metrics_list:
+        m = item["metrics"]
+        print(f"{item['ticker']:<8} Acc={m['directional_accuracy']:.1f}% MAE={m['mae_pct']:.2f}% Prec={m['buy_precision']:.1f}%")
     print("=" * 72)
 
 
