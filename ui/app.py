@@ -161,6 +161,14 @@ def render_analysis_status():
         try:
             os.kill(pid, 0)
             is_alive = True
+            # Periksa apakah proses menjadi zombie (sudah selesai tapi belum di-reap)
+            try:
+                with open(f"/proc/{pid}/stat", "r") as f:
+                    stat_line = f.read()
+                    if len(stat_line.split()) >= 3 and stat_line.split()[2] == 'Z':
+                        is_alive = False
+            except Exception:
+                pass
         except OSError:
             pass
 
