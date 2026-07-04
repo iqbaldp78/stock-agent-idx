@@ -346,6 +346,14 @@ def _build_pick_rule_based(
 
     pred_return = float(ml_prediction.get("pred_return", 0.0)) if ml_prediction else 0.0
     decision_label = _decision_label(pred_return, tech, bandarm)
+    
+    # Fix Stop Loss logic: if IM forces a BUY but Technical was SELL, stop_loss will be incorrectly > current_price.
+    if "BUY" in decision_label and stop_loss and current_price:
+        if stop_loss > current_price:
+            entry_low_tech = tech.get("entry_low")
+            base_price = float(entry_low_tech) if entry_low_tech else current_price
+            stop_loss = round(base_price * 0.95, 0)
+    
     fair_value = fund.get("fair_value", {})
 
     def _broker_true_cost_rows(window: dict, limit: int = 5) -> list[dict]:

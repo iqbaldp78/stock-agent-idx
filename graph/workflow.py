@@ -551,13 +551,20 @@ def maybe_train_ml_before_analysis(universe: list[str] | None = None) -> None:
 
     logger.info("[ML TRAIN] Running before full analysis: %s", " ".join(cmd))
     try:
-        result = subprocess.run(cmd, check=False, text=True, capture_output=True)
-        if result.stdout:
-            logger.info("[ML TRAIN]\n%s", result.stdout.strip())
-        if result.stderr:
-            logger.warning("[ML TRAIN STDERR]\n%s", result.stderr.strip())
-        if result.returncode != 0:
-            logger.warning("[ML TRAIN] Training command exited with code %s", result.returncode)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        
+        # Stream the output line by line so it doesn't look stuck
+        if process.stdout:
+            for line in iter(process.stdout.readline, ""):
+                if line:
+                    logger.info("[ML TRAIN] %s", line.strip())
+        
+        process.wait()
+        
+        if process.returncode != 0:
+            logger.warning("[ML TRAIN] Training command exited with code %s", process.returncode)
+        else:
+            logger.info("[ML TRAIN] Training completed successfully.")
     except Exception as e:
         logger.warning("[ML TRAIN] Auto training failed: %s", e)
 

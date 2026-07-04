@@ -1,314 +1,363 @@
 {
-  "run_date": "2026-06-30T03:01:30.384082",
+  "run_date": "2026-07-03T23:31:21.149427",
   "checkpoints_dir": "models/checkpoints",
   "config": {
-    "period": "max",
+    "period": "all",
     "min_rows": 120,
     "test_size": 0.2
   },
   "rows": {
-    "tickers_requested": 38,
-    "tickers_trained": 38,
-    "holdout_train_rows": 127924,
-    "holdout_test_rows": 31989,
-    "final_train_rows": 159913
+    "tickers_requested": 45,
+    "tickers_trained": 45,
+    "holdout_train_rows": 152730,
+    "holdout_test_rows": 38214,
+    "final_train_rows": 190944
   },
   "holdout_metrics": {
     "1d": {
-      "test_rows": 31989,
-      "directional_accuracy": 52.43,
-      "mae_pct": 1.8956,
-      "buy_precision": 49.05,
-      "buy_recall": 23.64
+      "test_rows": 38214,
+      "directional_accuracy": 52.94,
+      "mae_pct": 1.7839,
+      "buy_precision": 48.31,
+      "buy_recall": 22.53
     },
     "3d": {
-      "test_rows": 31989,
-      "directional_accuracy": 52.56,
-      "mae_pct": 3.262,
-      "buy_precision": 50.29,
-      "buy_recall": 43.98
+      "test_rows": 38214,
+      "directional_accuracy": 52.35,
+      "mae_pct": 3.0472,
+      "buy_precision": 49.68,
+      "buy_recall": 40.33
     },
     "5d": {
-      "test_rows": 31989,
-      "directional_accuracy": 52.94,
-      "mae_pct": 4.2842,
-      "buy_precision": 50.82,
-      "buy_recall": 50.32
+      "test_rows": 38214,
+      "directional_accuracy": 52.42,
+      "mae_pct": 4.0517,
+      "buy_precision": 49.19,
+      "buy_recall": 46.08
     },
     "7d": {
-      "test_rows": 31989,
-      "directional_accuracy": 52.21,
-      "mae_pct": 5.1289,
-      "buy_precision": 49.98,
-      "buy_recall": 53.03
+      "test_rows": 38214,
+      "directional_accuracy": 51.74,
+      "mae_pct": 4.8737,
+      "buy_precision": 48.82,
+      "buy_recall": 49.54
     }
   },
   "tickers": [
     {
-      "ticker": "BRIS",
-      "ohlcv_rows": 1956,
-      "training_rows": 1949,
-      "train_rows": 1559,
-      "test_rows": 390
-    },
-    {
-      "ticker": "ICBP",
-      "ohlcv_rows": 3809,
-      "training_rows": 3802,
-      "train_rows": 3041,
-      "test_rows": 761
-    },
-    {
-      "ticker": "MSIN",
-      "ohlcv_rows": 1937,
-      "training_rows": 1930,
-      "train_rows": 1544,
-      "test_rows": 386
-    },
-    {
-      "ticker": "MBMA",
-      "ohlcv_rows": 752,
-      "training_rows": 745,
-      "train_rows": 596,
-      "test_rows": 149
-    },
-    {
-      "ticker": "INTP",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "AMMN",
-      "ohlcv_rows": 706,
-      "training_rows": 699,
-      "train_rows": 559,
-      "test_rows": 140
-    },
-    {
-      "ticker": "INDF",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "TOWR",
-      "ohlcv_rows": 3952,
-      "training_rows": 3945,
-      "train_rows": 3156,
-      "test_rows": 789
-    },
-    {
-      "ticker": "EXCL",
-      "ohlcv_rows": 5024,
-      "training_rows": 5017,
-      "train_rows": 4013,
-      "test_rows": 1004
-    },
-    {
-      "ticker": "DEWA",
-      "ohlcv_rows": 4538,
-      "training_rows": 4531,
-      "train_rows": 3624,
-      "test_rows": 907
-    },
-    {
-      "ticker": "AMRT",
-      "ohlcv_rows": 4229,
-      "training_rows": 4222,
-      "train_rows": 3377,
-      "test_rows": 845
-    },
-    {
-      "ticker": "UNVR",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "INCO",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "TLKM",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "PGAS",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
+      "ticker": "UNTR",
+      "ohlcv_rows": 5210,
+      "training_rows": 5203,
+      "train_rows": 4162,
+      "test_rows": 1041
     },
     {
       "ticker": "INKP",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "MAPI",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "PTBA",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "ITMG",
-      "ohlcv_rows": 4482,
-      "training_rows": 4475,
-      "train_rows": 3580,
-      "test_rows": 895
-    },
-    {
-      "ticker": "BMRI",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "BRMS",
-      "ohlcv_rows": 3766,
-      "training_rows": 3759,
-      "train_rows": 3007,
-      "test_rows": 752
-    },
-    {
-      "ticker": "ANTM",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "ADRO",
-      "ohlcv_rows": 4346,
-      "training_rows": 4339,
-      "train_rows": 3471,
-      "test_rows": 868
-    },
-    {
-      "ticker": "ISAT",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "TINS",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
-    },
-    {
-      "ticker": "BBTN",
-      "ohlcv_rows": 4003,
-      "training_rows": 3996,
-      "train_rows": 3196,
-      "test_rows": 800
-    },
-    {
-      "ticker": "ADMR",
-      "ohlcv_rows": 1070,
-      "training_rows": 1063,
-      "train_rows": 850,
-      "test_rows": 213
-    },
-    {
-      "ticker": "MDKA",
-      "ohlcv_rows": 2657,
-      "training_rows": 2650,
-      "train_rows": 2120,
-      "test_rows": 530
-    },
-    {
-      "ticker": "BBRI",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
+      "ohlcv_rows": 5210,
+      "training_rows": 5203,
+      "train_rows": 4162,
+      "test_rows": 1041
     },
     {
       "ticker": "AKRA",
-      "ohlcv_rows": 5148,
-      "training_rows": 5141,
-      "train_rows": 4112,
-      "test_rows": 1029
+      "ohlcv_rows": 5151,
+      "training_rows": 5147,
+      "train_rows": 4117,
+      "test_rows": 1030
     },
     {
-      "ticker": "BBNI",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
+      "ticker": "BBTN",
+      "ohlcv_rows": 4006,
+      "training_rows": 4002,
+      "train_rows": 3201,
+      "test_rows": 801
     },
     {
-      "ticker": "MEDC",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
+      "ticker": "PTBA",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
     },
     {
-      "ticker": "BRPT",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
+      "ticker": "PGEO",
+      "ohlcv_rows": 789,
+      "training_rows": 785,
+      "train_rows": 628,
+      "test_rows": 157
+    },
+    {
+      "ticker": "HRUM",
+      "ohlcv_rows": 3813,
+      "training_rows": 3806,
+      "train_rows": 3044,
+      "test_rows": 762
+    },
+    {
+      "ticker": "SIDO",
+      "ohlcv_rows": 3024,
+      "training_rows": 3017,
+      "train_rows": 2413,
+      "test_rows": 604
+    },
+    {
+      "ticker": "BBRI",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "TINS",
+      "ohlcv_rows": 5210,
+      "training_rows": 5203,
+      "train_rows": 4162,
+      "test_rows": 1041
+    },
+    {
+      "ticker": "TLKM",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "INTP",
+      "ohlcv_rows": 5210,
+      "training_rows": 5203,
+      "train_rows": 4162,
+      "test_rows": 1041
+    },
+    {
+      "ticker": "BRIS",
+      "ohlcv_rows": 1959,
+      "training_rows": 1955,
+      "train_rows": 1564,
+      "test_rows": 391
+    },
+    {
+      "ticker": "ACES",
+      "ohlcv_rows": 4515,
+      "training_rows": 4508,
+      "train_rows": 3606,
+      "test_rows": 902
+    },
+    {
+      "ticker": "ANTM",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "UNVR",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
     },
     {
       "ticker": "ASII",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
     },
     {
-      "ticker": "BBCA",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
+      "ticker": "MAPI",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
     },
     {
-      "ticker": "KLBF",
-      "ohlcv_rows": 5207,
-      "training_rows": 5200,
-      "train_rows": 4160,
-      "test_rows": 1040
+      "ticker": "AMMN",
+      "ohlcv_rows": 709,
+      "training_rows": 705,
+      "train_rows": 564,
+      "test_rows": 141
     },
     {
-      "ticker": "EMAS",
-      "ohlcv_rows": 181,
-      "training_rows": 174,
-      "train_rows": 139,
-      "test_rows": 35
+      "ticker": "PGAS",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "BRPT",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
     },
     {
       "ticker": "ESSA",
-      "ohlcv_rows": 3483,
-      "training_rows": 3476,
-      "train_rows": 2780,
-      "test_rows": 696
+      "ohlcv_rows": 3486,
+      "training_rows": 3482,
+      "train_rows": 2785,
+      "test_rows": 697
+    },
+    {
+      "ticker": "ARTO",
+      "ohlcv_rows": 2525,
+      "training_rows": 2518,
+      "train_rows": 2014,
+      "test_rows": 504
+    },
+    {
+      "ticker": "BBNI",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "EXCL",
+      "ohlcv_rows": 5027,
+      "training_rows": 5020,
+      "train_rows": 4016,
+      "test_rows": 1004
+    },
+    {
+      "ticker": "SMGR",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "INDF",
+      "ohlcv_rows": 5210,
+      "training_rows": 5203,
+      "train_rows": 4162,
+      "test_rows": 1041
+    },
+    {
+      "ticker": "TBIG",
+      "ohlcv_rows": 3799,
+      "training_rows": 3792,
+      "train_rows": 3033,
+      "test_rows": 759
+    },
+    {
+      "ticker": "KLBF",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "MEDC",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "TOWR",
+      "ohlcv_rows": 3955,
+      "training_rows": 3951,
+      "train_rows": 3160,
+      "test_rows": 791
+    },
+    {
+      "ticker": "BYAN",
+      "ohlcv_rows": 4331,
+      "training_rows": 4324,
+      "train_rows": 3459,
+      "test_rows": 865
+    },
+    {
+      "ticker": "ICBP",
+      "ohlcv_rows": 3812,
+      "training_rows": 3805,
+      "train_rows": 3044,
+      "test_rows": 761
+    },
+    {
+      "ticker": "AMRT",
+      "ohlcv_rows": 4232,
+      "training_rows": 4228,
+      "train_rows": 3382,
+      "test_rows": 846
+    },
+    {
+      "ticker": "ADMR",
+      "ohlcv_rows": 1073,
+      "training_rows": 1069,
+      "train_rows": 855,
+      "test_rows": 214
+    },
+    {
+      "ticker": "ADRO",
+      "ohlcv_rows": 4349,
+      "training_rows": 4346,
+      "train_rows": 3476,
+      "test_rows": 870
+    },
+    {
+      "ticker": "BBCA",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "MIKA",
+      "ohlcv_rows": 2719,
+      "training_rows": 2712,
+      "train_rows": 2169,
+      "test_rows": 543
+    },
+    {
+      "ticker": "BMRI",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "ITMG",
+      "ohlcv_rows": 4485,
+      "training_rows": 4478,
+      "train_rows": 3582,
+      "test_rows": 896
+    },
+    {
+      "ticker": "CPIN",
+      "ohlcv_rows": 5126,
+      "training_rows": 5122,
+      "train_rows": 4097,
+      "test_rows": 1025
+    },
+    {
+      "ticker": "ISAT",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "GOTO",
+      "ohlcv_rows": 1006,
+      "training_rows": 999,
+      "train_rows": 799,
+      "test_rows": 200
+    },
+    {
+      "ticker": "INCO",
+      "ohlcv_rows": 5210,
+      "training_rows": 5206,
+      "train_rows": 4164,
+      "test_rows": 1042
+    },
+    {
+      "ticker": "MDKA",
+      "ohlcv_rows": 2660,
+      "training_rows": 2656,
+      "train_rows": 2124,
+      "test_rows": 532
     }
   ],
   "errors": []
