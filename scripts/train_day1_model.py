@@ -190,11 +190,7 @@ def evaluate_model(model, X_test: pd.DataFrame, y_test, feature_cols: list[str],
     else:
         y_test_series = y_test
 
-    if hasattr(model, "predict_proba"):
-        probas = model.predict_proba(X_test[feature_cols].fillna(0.0))[:, 1]
-        preds = (probas - 0.5) * 0.04
-    else:
-        preds = model.predict(X_test[feature_cols].fillna(0.0))
+    preds = model.predict(X_test[feature_cols].fillna(0.0))
     actuals = y_test_series.values
     buy_prec, buy_rec = precision_recall_buy(actuals, preds)
 

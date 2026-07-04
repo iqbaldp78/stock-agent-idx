@@ -10,7 +10,6 @@ import joblib
 import os
 from data.ml_features import ML_TRAIN_FEATURES
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
-from imblearn.over_sampling import SMOTE
 
 logger = logging.getLogger(__name__)
 
@@ -28,19 +27,16 @@ class Day1Predictor:
             except Exception as e:
                 logger.warning(f"Failed to load model: {e}")
 
-    # Dead zone: returns within ±NOISE_THRESHOLD are noise, excluded from training
-    NOISE_THRESHOLD = 0.0005  # 0.05% — lowered from 0.15% to keep more training data
-
     def train_incremental(self, X: pd.DataFrame, y):
         """
         Train or update model with new data.
-        Includes noise filtering (dead zone) and time-decay sample weighting.
+        Uses regression target magnitude with time-decay sample weighting.
         """
         if len(X) < 10:
             logger.warning("Not enough data to train.")
             return
 
-        # If y is a DataFrame from new ml_features, take the specified target column
+        # If y is a DataFrame, take the specified target column
         if isinstance(y, pd.DataFrame):
             if self.target_col in y.columns:
                 y = y[self.target_col]
@@ -53,49 +49,25 @@ class Day1Predictor:
             return
 
         X_aligned = self._align_feature_frame(X)[valid_idx]
-        y_valid = y[valid_idx]
-
-        # ── Noise dead-zone filter ────────────────────────────────────────
-        # Exclude samples where |return| < NOISE_THRESHOLD (ambiguous noise)
-        clear_signal = y_valid.abs() >= self.NOISE_THRESHOLD
-        if clear_signal.sum() < 10:
-            logger.warning("Too few clear-signal samples after noise filter.")
-            # Fall back to using all data
-            clear_signal = pd.Series(True, index=y_valid.index)
-
-        X_filtered = X_aligned[clear_signal]
-        y_filtered = y_valid[clear_signal]
-        y_binary = (y_filtered > 0.0).astype(int)
+        y_valid = y[valid_idx].astype(float)
 
         logger.info(
-            f"Noise filter: {len(X_aligned)} → {len(X_filtered)} samples "
-            f"({len(X_aligned) - len(X_filtered)} ambiguous removed)"
+            f"Training regression on {len(X_aligned)} samples "
+            f"target_col={self.target_col}"
         )
-
-        # ── SMOTE oversampling for class imbalance ────────────────────────
-        # Apply SMOTE to balance BUY (minority) vs non-BUY (majority) classes
-        try:
-            smote = SMOTE(random_state=42, k_neighbors=3)
-            X_resampled, y_resampled = smote.fit_resample(X_filtered, y_binary)
-            logger.info(
-                f"SMOTE resampling: {len(X_filtered)} → {len(X_resampled)} samples "
-                f"(class ratio {y_resampled.sum() / len(y_resampled) * 100:.1f}% BUY)"
-            )
-        except Exception as e:
-            logger.warning(f"SMOTE failed ({e}), proceeding without resampling")
-            X_resampled, y_resampled = X_filtered, y_binary
 
         # ── Time-decay sample weights ─────────────────────────────────────
         # Exponential decay: recent data weighted ~3x more than oldest data
-        n_samples = len(X_resampled)
+        n_samples = len(X_aligned)
         decay_factor = 3.0  # newest/oldest weight ratio
         weights = np.exp(np.linspace(0, np.log(decay_factor), n_samples))
         weights = weights / weights.mean()  # normalize to mean=1
 
-        estimator = lgb.LGBMClassifier(verbosity=-1, bagging_freq=1, class_weight='balanced')
+        estimator = lgb.LGBMRegressor(verbosity=-1, bagging_freq=1)
 
         param_dist = {
-            'objective': ['binary'],
+            'objective': ['regression'],
+            'metric': ['rmse'],
             'learning_rate': [0.01, 0.03, 0.05, 0.1],
             'num_leaves': [7, 15, 31, 63],
             'min_child_samples': [20, 50, 100, 200],
@@ -103,8 +75,8 @@ class Day1Predictor:
             'feature_fraction': [0.5, 0.6, 0.7, 0.8],
             'n_estimators': [100, 200, 300, 500],
             'reg_alpha': [0.0, 0.1, 0.5, 1.0],       # L1 regularization
-            'reg_lambda': [0.0, 0.1, 0.5, 1.0],       # L2 regularization
-            'min_gain_to_split': [0.0, 0.01, 0.05],   # prune weak splits
+            'reg_lambda': [0.0, 0.1, 0.5, 1.0],      # L2 regularization
+            'min_gain_to_split': [0.0, 0.01, 0.05],  # prune weak splits
         }
 
         tscv = TimeSeriesSplit(n_splits=3)
@@ -112,17 +84,17 @@ class Day1Predictor:
             estimator, param_distributions=param_dist,
             n_iter=50,
             cv=tscv,
-            scoring='f1',
+            scoring='neg_mean_squared_error',
             random_state=42,
             n_jobs=1
         )
 
-        logger.info("Starting hyperparameter tuning via RandomizedSearchCV (F1 scoring)...")
-        random_search.fit(X_resampled, y_resampled, sample_weight=weights)
+        logger.info("Starting hyperparameter tuning via RandomizedSearchCV (RMSE scoring)...")
+        random_search.fit(X_aligned, y_valid, sample_weight=weights)
         self.model = random_search.best_estimator_
         
         logger.info(f"Best params: {random_search.best_params_}")
-        logger.info(f"Best ROC-AUC (CV): {random_search.best_score_:.4f}")
+        logger.info(f"Best RMSE (CV): {(-random_search.best_score_)**0.5:.4f}")
 
         # Save model
         os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
@@ -132,21 +104,18 @@ class Day1Predictor:
     def predict(self, feature_row: pd.DataFrame) -> float:
         """
         Predict return for tomorrow using ML + Agent Score Ensemble.
+        Returns predicted % return as float.
         """
         ml_pred = 0.0
         if self.model is not None:
             try:
-                model_cols = self.model.feature_name_ if hasattr(self.model, "feature_name_") else self.feature_cols
+                model_cols = self.model.feature_name() if hasattr(self.model, "feature_name") else self.feature_cols
                 aligned = feature_row.copy()
                 for col in model_cols:
                     if col not in aligned.columns:
                         aligned[col] = 0.0
-                if hasattr(self.model, "predict_proba"):
-                    proba = self.model.predict_proba(aligned[model_cols])[0][1]
-                    ml_pred = (proba - 0.5) * 0.04
-                else:
-                    pred = self.model.predict(aligned[model_cols])
-                    ml_pred = float(pred[0])
+                pred = self.model.predict(aligned[model_cols])
+                ml_pred = float(pred[0])
             except Exception as e:
                 logger.warning("Model predict failed (%s), fallback to 0.0.", e)
         
@@ -166,7 +135,7 @@ class Day1Predictor:
         bandarm_score = feature_row.get('bandarm_score', pd.Series([5.0])).iloc[0]
         tech_score = feature_row.get('technical_score', pd.Series([5.0])).iloc[0]
         
-        # 1 pt above neutral (5.0) contributes +0.5% return (scaled for 5 days)
+        # 1 pt above neutral (5.0) contributes +0.5% return
         bandarm_effect = (bandarm_score - 5.0) * 0.005
         tech_effect = (tech_score - 5.0) * 0.002
         
@@ -175,7 +144,7 @@ class Day1Predictor:
 
     def get_signal(self, pred_return: float) -> str:
         """
-        Convert predicted 5-day return to signal string.
+        Convert predicted return to signal string.
         """
         if pred_return >= 0.02: return "STRONG BUY"
         if pred_return >= 0.005: return "BUY"

@@ -47,14 +47,14 @@ def _mae(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def _precision_recall_buy(
-    y_true: np.ndarray, y_pred: np.ndarray, threshold: float = 0.001
+    y_true: np.ndarray, y_pred: np.ndarray, threshold: float = 0.003
 ) -> tuple[float, float]:
     """
     Precision & recall untuk sinyal BUY (pred_return >= threshold).
     TP = model prediksi BUY & aktual naik
     FP = model prediksi BUY & aktual turun
     FN = model prediksi HOLD/AVOID & aktual naik
-    Threshold 0.001 (0.1%) cocok untuk horizon Day-1.
+    Threshold 0.003 (0.3%) cocok untuk horizon Day-1 pada regresi magnitude.
     """
     pred_buy = y_pred >= threshold
     actual_up = y_true > 0
@@ -146,11 +146,7 @@ def walk_forward_validate(
         if predictor.model is None:
             continue
 
-        if hasattr(predictor.model, "predict_proba"):
-            probas = predictor.model.predict_proba(X_test[predictor.feature_cols].fillna(0.0))[:, 1]
-            preds = (probas - 0.5) * 0.04
-        else:
-            preds = predictor.model.predict(X_test[predictor.feature_cols].fillna(0.0))
+        preds = predictor.model.predict(X_test[predictor.feature_cols].fillna(0.0))
         actuals = y_test.values
 
         dir_acc = _directional_accuracy(actuals, preds)
