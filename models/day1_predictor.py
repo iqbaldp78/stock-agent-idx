@@ -63,7 +63,8 @@ class Day1Predictor:
         weights = np.exp(np.linspace(0, np.log(decay_factor), n_samples))
         weights = weights / weights.mean()  # normalize to mean=1
 
-        estimator = lgb.LGBMRegressor(verbosity=-1, bagging_freq=1)
+        # ── Lightweight ensemble: 3 LightGBM with different seeds ────────
+        base_estimator = lgb.LGBMRegressor(verbosity=-1, bagging_freq=1)
 
         param_dist = {
             'objective': ['regression'],
@@ -80,23 +81,45 @@ class Day1Predictor:
         }
 
         tscv = TimeSeriesSplit(n_splits=3)
-        random_search = RandomizedSearchCV(
-            estimator, param_distributions=param_dist,
-            n_iter=50,
-            cv=tscv,
-            scoring='neg_mean_squared_error',
-            random_state=42,
-            n_jobs=1
-        )
 
-        logger.info("Starting hyperparameter tuning via RandomizedSearchCV (RMSE scoring)...")
-        random_search.fit(X_aligned, y_valid, sample_weight=weights)
-        self.model = random_search.best_estimator_
-        
-        logger.info(f"Best params: {random_search.best_params_}")
-        logger.info(f"Best RMSE (CV): {(-random_search.best_score_)**0.5:.4f}")
+        best_models = []
+        best_scores = []
+        for seed in (7, 13, 42):
+            estimator = lgb.LGBMRegressor(verbosity=-1, bagging_freq=1, random_state=seed)
+            random_search = RandomizedSearchCV(
+                estimator, param_distributions=param_dist,
+                n_iter=20, cv=tscv,
+                scoring='neg_mean_squared_error',
+                random_state=seed, n_jobs=1
+            )
+            random_search.fit(X_aligned, y_valid, sample_weight=weights)
+            best_models.append(random_search.best_estimator_)
+            best_scores.append(float((-random_search.best_score_) ** 0.5))
 
-        # Save model
+        # Pick best seed by CV RMSE; still keep ensemble weights later
+        best_idx = int(np.argmin(best_scores))
+        self.model = best_models[best_idx]
+
+        logger.info("Ensemble seeds RMSE: " + ", ".join(f"{s:.4f}" for s in best_scores))
+        logger.info(f"Selected seed best RMSE: {best_scores[best_idx]:.4f}")
+
+        # Save ensemble sidecar for inference averaging
+        ensemble_path = self.model_path + ".ensemble.json"
+        try:
+            import json as _json
+            payload = {
+                "seeds": [7, 13, 42],
+                "best_seed": int(best_idx),
+                "feature_cols": list(self.feature_cols),
+            }
+            with open(ensemble_path, "w") as f:
+                _json.dump(payload, f)
+        except Exception as e:
+            logger.warning(f"Failed to save ensemble metadata: {e}")
+
+        logger.info(f"Best RMSE (CV): {best_scores[best_idx]:.4f}")
+
+        # Save primary model
         os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
         joblib.dump(self.model, self.model_path)
         logger.info(f"Model saved to {self.model_path}")

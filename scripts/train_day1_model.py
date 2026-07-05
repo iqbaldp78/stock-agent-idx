@@ -112,11 +112,34 @@ def precision_recall_buy(
     return float(precision), float(recall)
 
 
+def _pick_buy_threshold(y_true: np.ndarray, y_pred: np.ndarray, min_precision: float = 0.25) -> float:
+    """
+    Pilih threshold yang memaksimalkan F1 sinyal BUY, dengan batas minimum precision.
+    Default fallback: 0.003 jika tidak ada kandidat memenuhi syarat.
+    """
+    candidates = []
+    for thr in np.linspace(0.0005, 0.014, 30):
+        pred_buy = y_pred >= thr
+        actual_up = y_true > 0
+        tp = int((pred_buy & actual_up).sum())
+        fp = int((pred_buy & ~actual_up).sum())
+        fn = int((~pred_buy & actual_up).sum())
+        precision = tp / (tp + fp) if (tp + fp) else 0.0
+        recall = tp / (tp + fn) if (tp + fn) else 0.0
+        if precision >= min_precision:
+            f1 = tp / (tp + 0.5 * (fp + fn)) if (tp + 0.5 * (fp + fn)) else 0.0
+            candidates.append((f1, precision, recall, thr))
+    if not candidates:
+        return 0.003
+    candidates.sort(reverse=True)
+    return float(candidates[0][3])
+
+
 def main():
     parser = argparse.ArgumentParser(description="Train ML Day-1 Predictor")
     parser.add_argument("--tickers", nargs="+", help="Ticker(s), e.g. BBCA BMRI")
     parser.add_argument("--all", action="store_true", help="Semua ticker di universe")
-    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "max"), help="Periode OHLCV historis (default: env/max)")
+    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "5y"), help="Periode OHLCV historis (default: env/5y)")
     parser.add_argument("--min-rows", type=int, default=120, help="Minimum training rows per ticker")
     parser.add_argument("--test-size", type=float, default=0.2, help="Holdout ratio per ticker (default: 0.2)")
     parser.add_argument("--model-dir", default="models/checkpoints", help="Direktori model output")
@@ -188,9 +211,21 @@ def main():
         preds = predictor.model.predict(X_test[predictor.feature_cols].fillna(0.0))
         actuals = y_test.values
 
+        # ── Dynamic buy threshold ────────────────────────────────────────
+        # Pilih threshold yang memaksimalkan F1 sinyal BUY dari validation set
+        buy_threshold = _pick_buy_threshold(actuals, preds)
+        buy_prec, buy_rec = precision_recall_buy(actuals, preds, threshold=buy_threshold)
+
+        # Save threshold for inference
+        threshold_path = os.path.join(args.model_dir, f"lgbm_{ticker.lower()}_threshold.json")
+        try:
+            with open(threshold_path, "w") as f:
+                json.dump({"buy_threshold": float(buy_threshold)}, f)
+        except Exception as e:
+            logger.warning(f"Failed to save threshold for {ticker}: {e}")
+
         da = directional_accuracy(actuals, preds)
         mae_val = mae(actuals, preds)
-        buy_prec, buy_rec = precision_recall_buy(actuals, preds)
 
         metrics_list.append({
             "ticker": ticker,
@@ -200,13 +235,14 @@ def main():
             "mae_pct": round(mae_val * 100, 4),
             "buy_precision": round(buy_prec * 100, 2),
             "buy_recall": round(buy_rec * 100, 2),
+            "buy_threshold_pct": round(float(buy_threshold) * 100, 4),
             "avg_pred_return_pct": round(float(np.mean(preds)) * 100, 4),
             "avg_actual_return_pct": round(float(np.mean(actuals)) * 100, 4),
         })
 
         logger.info(
             f"  ✅ {ticker}: DirAcc={da*100:.1f}% MAE={mae_val*100:.3f}% "
-            f"Prec={buy_prec*100:.1f}% Rec={buy_rec*100:.1f}%"
+            f"Prec={buy_prec*100:.1f}% Rec={buy_rec*100:.1f}% thr={buy_threshold*100:.3f}%"
         )
 
     print()

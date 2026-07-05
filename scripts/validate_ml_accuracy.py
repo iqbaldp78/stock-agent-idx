@@ -26,6 +26,9 @@ import pandas as pd
 # Allow running from repo root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from data.ml_features import prepare_training_data
+from models.day1_predictor import Day1Predictor
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -171,31 +174,6 @@ def walk_forward_validate_dataset(
         "aggregate": aggregate,
     }
 
-def walk_forward_validate(
-    ohlcv: pd.DataFrame,
-    ticker: str = None,
-    n_folds: int = 5,
-    min_train_rows: int = 60,
-    target_col: str = "target_1d",
-) -> dict:
-    """
-    Time-series walk-forward cross-validation per ticker.
-    """
-    from data.ml_features import prepare_training_data
-    from models.day1_predictor import Day1Predictor
-
-    try:
-        X_all, y_all = prepare_training_data(ohlcv, ticker=ticker)
-        if isinstance(y_all, pd.DataFrame):
-            if target_col in y_all.columns:
-                y_all = y_all[target_col]
-            else:
-                y_all = y_all.iloc[:, 0]
-    except Exception as e:
-        return {"error": f"prepare_training_data failed: {e}"}
-
-    return walk_forward_validate_dataset(X_all, y_all, n_folds=n_folds, min_train_rows=min_train_rows, target_col=target_col)
-
 
 # ─── Ticker list ──────────────────────────────────────────────────────────────
 
@@ -263,13 +241,6 @@ def main():
     results = {}
     summary_rows = []
 
-    # -----------------------------
-    # Build global dataset across tickers
-    # -----------------------------
-    global_parts_x = []
-    global_parts_y = []
-    used_tickers = []
-
     for ticker in tickers:
         logger.info(f"📊 {ticker} — Fetching OHLCV ({args.period})...")
         raw = fetch_ohlcv(ticker, period=args.period)
@@ -281,6 +252,7 @@ def main():
             continue
 
         logger.info(f"  Data: {len(ohlcv)} rows")
+
         try:
             X, y = prepare_training_data(ohlcv, ticker=ticker)
             if isinstance(y, pd.DataFrame):
@@ -298,54 +270,8 @@ def main():
             results[ticker] = {"error": f"Training rows terlalu sedikit ({len(X)})"}
             continue
 
-        # Append to global dataset
-        global_parts_x.append(X)
-        global_parts_y.append(y)
-        used_tickers.append(ticker)
-
-    if not global_parts_x:
-        raise SystemExit("Tidak ada data training yang valid.")
-
-    X_global = pd.concat(global_parts_x, ignore_index=False)
-    y_global = pd.concat(global_parts_y, ignore_index=False)
-
-    # Sort chronologically
-    sort_idx = np.argsort(X_global.index)
-    X_global = X_global.iloc[sort_idx].reset_index(drop=True)
-    y_global = y_global.iloc[sort_idx].reset_index(drop=True)
-
-    logger.info(f"Global dataset: {len(X_global)} rows from {len(used_tickers)} tickers")
-
-    # -----------------------------
-    # Global walk-forward validation
-    # -----------------------------
-    global_res = walk_forward_validate_dataset(
-        X_global, y_global, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target
-    )
-
-    # -----------------------------
-    # Per-ticker validation using global model snapshot
-    # -----------------------------
-    from models.day1_predictor import Day1Predictor
-    global_predictor = Day1Predictor(model_path="/tmp/lgbm_val_tmp.pkl", target_col=args.target)
-    global_predictor.model = None
-
-    for ticker in used_tickers:
-        try:
-            # rebuild just this ticker's chronological local frame for reporting
-            ticker_mask = X_global["ticker_id"] == X_global["ticker_id"].iloc[0]
-            # We cannot recover exact per-ticker subset after concat-reset easily here,
-            # so we evaluate by refeeding the original per-ticker frames below.
-        except Exception:
-            pass
-
-    # Re-validate per ticker using their own frames but same global-style training every fold
-    for ticker, X_ticker, y_ticker in zip(used_tickers, global_parts_x, global_parts_y):
-        sort_idx = np.argsort(X_ticker.index)
-        X_ticker = X_ticker.iloc[sort_idx].reset_index(drop=True)
-        y_ticker = y_ticker.iloc[sort_idx].reset_index(drop=True)
         res = walk_forward_validate_dataset(
-            X_ticker, y_ticker, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target
+            X, y, n_folds=args.folds, min_train_rows=args.min_rows, target_col=args.target
         )
         results[ticker] = res
 
@@ -363,41 +289,14 @@ def main():
             "test_rows": agg["total_test_rows"],
         })
 
-    # -----------------------------
-    # Print global result first
-    # -----------------------------
-    print()
-    print("=" * 72)
-    if "aggregate" in global_res:
-        g_agg = global_res["aggregate"]
-        print("  ML DAY-1 GLOBAL MODEL VALIDATION SUMMARY")
-        print("=" * 72)
-        print(f"Dataset      : {len(X_global)} rows | {len(used_tickers)} tickers | folds={args.folds}")
-        print(f"Dir Accuracy : {g_agg['directional_accuracy']:.2f}%")
-        print(f"MAE          : {g_agg['mae_pct']:.4f}%")
-        print(f"Buy Precision: {g_agg['buy_precision']:.2f}%")
-        print(f"Buy Recall   : {g_agg['buy_recall']:.2f}%")
-        print()
-        print("  Confusion Matrix (global):")
-        for line in g_agg["confusion_matrix"].split("\n"):
-            print(f"    {line}")
-        print()
-        for fold in global_res.get("folds", []):
-            print(
-                f"  Fold {fold['fold']}: train={fold['train_rows']} test={fold['test_rows']} "
-                f"DirAcc={fold['directional_accuracy']:.1f}% MAE={fold['mae_pct']:.3f}% "
-                f"Prec={fold['buy_precision']:.1f}% Rec={fold['buy_recall']:.1f}%"
-            )
-    else:
-        print("  Global validation failed:")
-        print(f"  {global_res.get('error')}")
+        logger.info(
+            f"  ✅ {ticker}: DirAcc={agg['directional_accuracy']:.1f}% "
+            f"MAE={agg['mae_pct']:.3f}% Prec={agg['buy_precision']:.1f}% Rec={agg['buy_recall']:.1f}%"
+        )
 
-    # -----------------------------
-    # Per-ticker summary
-    # -----------------------------
     print()
     print("=" * 72)
-    print("  ML DAY-1 PER-TICKER SUMMARY")
+    print("  ML DAY-1 PER-TICKER VALIDATION SUMMARY")
     print("=" * 72)
     if summary_rows:
         header = f"{'Ticker':<8} {'DirAcc':>8} {'MAE%':>8} {'BuyPrec':>9} {'BuyRec':>8} {'Rows':>6}"
@@ -424,7 +323,6 @@ def main():
 
     output = {
         "run_date": datetime.now().isoformat(),
-        "global": global_res,
         "tickers": results,
         "summary": summary_rows,
         "config": {
