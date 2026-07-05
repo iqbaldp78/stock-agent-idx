@@ -83,21 +83,9 @@ FEATURE_COLUMNS = [
 
 # Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
 ML_TRAIN_FEATURES = [
-    "ticker_id",
-    "bandarm_score",
+    # ── Proven useful (importance > 0) ──────────────────────────────────
     "dist_avg_7d",
-    "dist_avg_1m",
     "foreign_net_7d",
-    "foreign_net_1m",
-    "top3_buy_ratio_7d",
-    "top3_sell_ratio_7d",
-    "retail_buy_ratio_7d",
-    "retail_sell_ratio_7d",
-    "top3_buy_ratio_1m",
-    "top3_sell_ratio_1m",
-    "is_retail_accum",
-    "technical_score",
-    "macro_score",
     "rsi",
     "is_bullish_trend",
     "vol_ratio",
@@ -117,12 +105,8 @@ ML_TRAIN_FEATURES = [
     "stoch_k",
     "stoch_d",
     "atr",
-    # Volume profile / orderbook proxy
-    "vol_profile_20d_upper",
-    "vol_profile_20d_mid",
-    "vol_profile_20d_lower",
+    # Volume profile (only useful ones)
     "vwap_deviation_20d",
-    "signed_volume_20d",
     "ob_imbalance_proxy_20d",
     "range_concentration_20d",
     # Day-1 specific features
@@ -145,14 +129,6 @@ ML_TRAIN_FEATURES = [
     "ihsg_volatility",
     "ihsg_trend",
     "stock_vs_ihsg_1d",
-    # Relative sector features
-    "ticker_sector_id",
-    "dominant_sector_id",
-    "dominant_sector_ret_1d",
-    "dominant_sector_ret_5d",
-    "stock_vs_sector_1d",
-    "stock_vs_sector_5d",
-    "sector_strength_vs_ihsg",
     # Foreign flow features
     "foreign_flow_zscore",
 ]

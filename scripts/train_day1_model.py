@@ -84,10 +84,17 @@ def normalize_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray, dead_zone: float = 0.003) -> float:
+    """
+    Directional accuracy excluding dead-zone (|return| < dead_zone).
+    Only count samples where actual move is meaningful.
+    """
     if len(y_true) == 0:
         return 0.0
-    return float(((y_true > 0) == (y_pred > 0)).mean())
+    mask = np.abs(y_true) >= dead_zone
+    if mask.sum() == 0:
+        return 0.0
+    return float(((y_true[mask] > 0) == (y_pred[mask] > 0)).mean())
 
 
 def mae(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -148,6 +155,17 @@ def main():
         default="target_1d",
         help="Target horizon model (default: target_1d)",
     )
+    parser.add_argument(
+        "--blend",
+        action="store_true",
+        help="Blend multi-horizon targets: 0.5*1d + 0.3*3d + 0.2*5d for smoother label",
+    )
+    parser.add_argument(
+        "--dead-zone",
+        type=float,
+        default=0.003,
+        help="Return magnitude below this is 'flat' and excluded from DirAcc eval (default: 0.003 = 0.3%%)",
+    )
     args = parser.parse_args()
 
     if not 0 < args.test_size < 0.5:
@@ -178,7 +196,7 @@ def main():
         ohlcv = universe_ohlcv[ticker]
 
         try:
-            X, y = prepare_training_data(ohlcv, ticker=ticker, universe_ohlcv=universe_ohlcv)
+            X, y_all = prepare_training_data(ohlcv, ticker=ticker, universe_ohlcv=universe_ohlcv)
         except Exception as e:
             errors_list.append({"ticker": ticker, "error": f"prepare_training_data failed: {e}"})
             logger.warning(f"  {ticker}: feature prep failed: {e}")
@@ -189,11 +207,25 @@ def main():
             logger.warning(f"  {ticker}: rows too small ({len(X)} < {args.min_rows})")
             continue
 
-        if isinstance(y, pd.DataFrame):
-            if args.target in y.columns:
-                y = y[args.target]
+        # ── Target selection: blend or single horizon ─────────────────────
+        if args.blend and isinstance(y_all, pd.DataFrame):
+            # Multi-horizon blend: smoother label, less noise
+            t1 = y_all["target_1d"] if "target_1d" in y_all.columns else y_all.iloc[:, 0]
+            t3 = y_all["target_3d"] if "target_3d" in y_all.columns else t1
+            t5 = y_all["target_5d"] if "target_5d" in y_all.columns else t1
+            y = (0.5 * t1 + 0.3 * t3 + 0.2 * t5).dropna()
+            # Align X to y
+            common_idx = X.index.intersection(y.index)
+            X = X.loc[common_idx]
+            y = y.loc[common_idx]
+            logger.info(f"  Using blended target (0.5*1d + 0.3*3d + 0.2*5d), {len(y)} samples")
+        elif isinstance(y_all, pd.DataFrame):
+            if args.target in y_all.columns:
+                y = y_all[args.target]
             else:
-                y = y.iloc[:, 0]
+                y = y_all.iloc[:, 0]
+        else:
+            y = y_all
 
         split = max(1, int(len(X) * (1 - args.test_size)))
         X_train, X_test = X.iloc[:split], X.iloc[split:]
@@ -214,13 +246,30 @@ def main():
             logger.warning(f"  {ticker}: training failed")
             continue
 
-        preds = predictor.model.predict(X_test[predictor.feature_cols].fillna(0.0))
+        preds = predictor.model.predict(
+            X_test.reindex(columns=predictor.feature_cols, fill_value=0.0).fillna(0.0)
+        )
         actuals = y_test.values
+
+        # For DirAcc evaluation, always use raw target_1d (not blended)
+        # to measure real next-day directional accuracy
+        if args.blend and isinstance(y_all, pd.DataFrame) and "target_1d" in y_all.columns:
+            raw_1d = y_all["target_1d"].loc[X_test.index].values
+        else:
+            raw_1d = actuals
 
         # ── Dynamic buy threshold ────────────────────────────────────────
         # Pilih threshold yang memaksimalkan F1 sinyal BUY dari validation set
-        buy_threshold = _pick_buy_threshold(actuals, preds)
-        buy_prec, buy_rec = precision_recall_buy(actuals, preds, threshold=buy_threshold)
+        buy_threshold = _pick_buy_threshold(raw_1d, preds)
+        buy_prec, buy_rec = precision_recall_buy(raw_1d, preds, threshold=buy_threshold)
+
+        da = directional_accuracy(raw_1d, preds, dead_zone=args.dead_zone)
+        da_raw = directional_accuracy(raw_1d, preds, dead_zone=0.0)  # without dead-zone for comparison
+        mae_val = mae(raw_1d, preds)
+
+        # Count how many samples excluded by dead-zone
+        n_dead = int((np.abs(raw_1d) < args.dead_zone).sum())
+        n_eval = len(raw_1d) - n_dead
 
         # Save threshold for inference
         threshold_path = os.path.join(args.model_dir, f"lgbm_{ticker.lower()}_threshold.json")
@@ -230,51 +279,54 @@ def main():
         except Exception as e:
             logger.warning(f"Failed to save threshold for {ticker}: {e}")
 
-        da = directional_accuracy(actuals, preds)
-        mae_val = mae(actuals, preds)
-
         metrics_list.append({
             "ticker": ticker,
             "train_rows": int(len(X_train)),
             "test_rows": int(len(X_test)),
             "directional_accuracy": round(da * 100, 2),
+            "da_raw": round(da_raw * 100, 2),
             "mae_pct": round(mae_val * 100, 4),
             "buy_precision": round(buy_prec * 100, 2),
             "buy_recall": round(buy_rec * 100, 2),
             "buy_threshold_pct": round(float(buy_threshold) * 100, 4),
-            "avg_pred_return_pct": round(float(np.mean(preds)) * 100, 4),
-            "avg_actual_return_pct": round(float(np.mean(actuals)) * 100, 4),
+            "n_eval": n_eval,
+            "n_dead": n_dead,
         })
 
         logger.info(
-            f"  ✅ {ticker}: DirAcc={da*100:.1f}% MAE={mae_val*100:.3f}% "
-            f"Prec={buy_prec*100:.1f}% Rec={buy_rec*100:.1f}% thr={buy_threshold*100:.3f}%"
+            f"  ✅ {ticker}: DirAcc={da*100:.1f}% (raw={da_raw*100:.1f}%) MAE={mae_val*100:.3f}% "
+            f"Prec={buy_prec*100:.1f}% Rec={buy_rec*100:.1f}% thr={buy_threshold*100:.3f}% "
+            f"eval={n_eval}/{len(raw_1d)}"
         )
 
     print()
-    print("=" * 72)
+    print("=" * 85)
     print("  ML DAY-1 TRAINING SUMMARY")
-    print("=" * 72)
+    if args.blend:
+        print("  Target: BLENDED (0.5×1d + 0.3×3d + 0.2×5d)")
+    print(f"  Dead-zone: ±{args.dead_zone*100:.1f}% (flat moves excluded from DirAcc)")
+    print("=" * 85)
     print(f"Trained tickers : {len(metrics_list)} / {len(tickers)}")
     print(f"Model directory : {args.model_dir}")
-    print("-" * 72)
+    print("-" * 85)
     if metrics_list:
-        header = f"{'Ticker':<8} {'DirAcc':>8} {'MAE%':>8} {'BuyPrec':>9} {'BuyRec':>8} {'Train':>7}"
+        header = f"{'Ticker':<8} {'DirAcc':>8} {'(raw)':>7} {'MAE%':>8} {'BuyPrec':>9} {'BuyRec':>8} {'Eval':>6} {'Train':>7}"
         print(header)
-        print("-" * 72)
+        print("-" * 85)
         for m in sorted(metrics_list, key=lambda x: -x["directional_accuracy"]):
             da_icon = "✅" if m["directional_accuracy"] >= 55 else "⚠️ " if m["directional_accuracy"] >= 50 else "❌"
             print(
-                f"{m['ticker']:<8} {m['directional_accuracy']:>7.1f}% {m['mae_pct']:>7.3f}% "
-                f"{m['buy_precision']:>8.1f}% {m['buy_recall']:>7.1f}% {m['train_rows']:>7}  {da_icon}"
+                f"{m['ticker']:<8} {m['directional_accuracy']:>7.1f}% {m['da_raw']:>6.1f}% {m['mae_pct']:>7.3f}% "
+                f"{m['buy_precision']:>8.1f}% {m['buy_recall']:>7.1f}% {m['n_eval']:>6} {m['train_rows']:>7}  {da_icon}"
             )
-        print("-" * 72)
+        print("-" * 85)
         avg_da = float(np.mean([m["directional_accuracy"] for m in metrics_list]))
+        avg_da_raw = float(np.mean([m["da_raw"] for m in metrics_list]))
         avg_mae = float(np.mean([m["mae_pct"] for m in metrics_list]))
         avg_prec = float(np.mean([m["buy_precision"] for m in metrics_list]))
-        print(f"{'AVERAGE':<8} {avg_da:>7.1f}% {avg_mae:>7.3f}% {avg_prec:>8.1f}%")
+        print(f"{'AVERAGE':<8} {avg_da:>7.1f}% {avg_da_raw:>6.1f}% {avg_mae:>7.3f}% {avg_prec:>8.1f}%")
         print()
-        print("  DirAcc ≥55% ✅ | 50-55% ⚠️  | <50% ❌ (random = 50%)")
+        print("  DirAcc ≥55% ✅ | 50-55% ⚠️  | <50% ❌ (dead-zone excluded)")
     else:
         print("  Tidak ada ticker yang berhasil dilatih.")
 
