@@ -560,14 +560,7 @@ def _dominant_sector_on_date(universe_stocks: dict[str, pd.DataFrame], target_da
     return best_sector
 
 
-def prepare_training_data(
-    ohlcv: pd.DataFrame,
-    ticker: str = None,
-    universe_ohlcv: dict[str, pd.DataFrame] | None = None,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    if current_price <= 0 or level <= 0:
-        return 0.0
-    return (current_price - level) / current_price
+
 
 def get_historical_bandar_features(ticker: str, target_date) -> dict:
     """
@@ -781,7 +774,7 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
     row = pd.DataFrame([all_features])[FEATURE_COLUMNS]
     return row.fillna(0.0)
 
-def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlcv: dict[str, pd.DataFrame] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Generate historical features and targets from OHLCV for training.
     If ticker is provided, retrieves historical Bandarmologi and Agent scores from DB.
