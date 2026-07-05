@@ -153,7 +153,7 @@ def main():
     parser.add_argument(
         "--target",
         default="target_1d",
-        help="Target horizon model (default: target_1d)",
+        help="Target horizon model (default: target_1d, options: target_3d, target_5d, target_7d)",
     )
     parser.add_argument(
         "--blend",
@@ -167,6 +167,9 @@ def main():
         help="Return magnitude below this is 'flat' and excluded from DirAcc eval (default: 0.003 = 0.3%%)",
     )
     args = parser.parse_args()
+
+    # Extract horizon from target for model naming
+    horizon = args.target.replace("target_", "")  # e.g., "1d", "3d", "5d"
 
     if not 0 < args.test_size < 0.5:
         raise SystemExit("--test-size harus di antara 0 dan 0.5")
@@ -236,7 +239,8 @@ def main():
             logger.warning(f"  {ticker}: holdout too small")
             continue
 
-        model_path = os.path.join(args.model_dir, f"lgbm_{ticker.lower()}.pkl")
+        # Model path includes horizon to separate models per target
+        model_path = os.path.join(args.model_dir, f"lgbm_{ticker.lower()}_{horizon}.pkl")
         predictor = Day1Predictor(model_path=model_path, target_col=args.target)
         predictor.model = None
         predictor.train_incremental(X_train, y_train)
@@ -251,28 +255,32 @@ def main():
         )
         actuals = y_test.values
 
-        # For DirAcc evaluation, always use raw target_1d (not blended)
-        # to measure real next-day directional accuracy
+        # For DirAcc evaluation, use the SAME target as training (not hardcoded to 1d)
+        # This ensures fair evaluation: predict 5d, evaluate on 5d
         if args.blend and isinstance(y_all, pd.DataFrame) and "target_1d" in y_all.columns:
-            raw_1d = y_all["target_1d"].loc[X_test.index].values
+            # Blended target: still eval on raw 1d for interpretability
+            eval_target = y_all["target_1d"].loc[X_test.index].values
+        elif isinstance(y_all, pd.DataFrame) and args.target in y_all.columns:
+            # Single horizon: eval on the same target
+            eval_target = y_all[args.target].loc[X_test.index].values
         else:
-            raw_1d = actuals
+            eval_target = actuals
 
         # ── Dynamic buy threshold ────────────────────────────────────────
         # Pilih threshold yang memaksimalkan F1 sinyal BUY dari validation set
-        buy_threshold = _pick_buy_threshold(raw_1d, preds)
-        buy_prec, buy_rec = precision_recall_buy(raw_1d, preds, threshold=buy_threshold)
+        buy_threshold = _pick_buy_threshold(eval_target, preds)
+        buy_prec, buy_rec = precision_recall_buy(eval_target, preds, threshold=buy_threshold)
 
-        da = directional_accuracy(raw_1d, preds, dead_zone=args.dead_zone)
-        da_raw = directional_accuracy(raw_1d, preds, dead_zone=0.0)  # without dead-zone for comparison
-        mae_val = mae(raw_1d, preds)
+        da = directional_accuracy(eval_target, preds, dead_zone=args.dead_zone)
+        da_raw = directional_accuracy(eval_target, preds, dead_zone=0.0)  # without dead-zone for comparison
+        mae_val = mae(eval_target, preds)
 
         # Count how many samples excluded by dead-zone
-        n_dead = int((np.abs(raw_1d) < args.dead_zone).sum())
-        n_eval = len(raw_1d) - n_dead
+        n_dead = int((np.abs(eval_target) < args.dead_zone).sum())
+        n_eval = len(eval_target) - n_dead
 
-        # Save threshold for inference
-        threshold_path = os.path.join(args.model_dir, f"lgbm_{ticker.lower()}_threshold.json")
+        # Save threshold for inference (include horizon in filename)
+        threshold_path = os.path.join(args.model_dir, f"lgbm_{ticker.lower()}_{horizon}_threshold.json")
         try:
             with open(threshold_path, "w") as f:
                 json.dump({"buy_threshold": float(buy_threshold)}, f)
@@ -296,7 +304,7 @@ def main():
         logger.info(
             f"  ✅ {ticker}: DirAcc={da*100:.1f}% (raw={da_raw*100:.1f}%) MAE={mae_val*100:.3f}% "
             f"Prec={buy_prec*100:.1f}% Rec={buy_rec*100:.1f}% thr={buy_threshold*100:.3f}% "
-            f"eval={n_eval}/{len(raw_1d)}"
+            f"eval={n_eval}/{len(eval_target)}"
         )
 
     print()
