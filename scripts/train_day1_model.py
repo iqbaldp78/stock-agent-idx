@@ -161,18 +161,24 @@ def main():
     metrics_list = []
     errors_list = []
 
+    universe_ohlcv: dict[str, pd.DataFrame] = {}
+    tickers_to_train = []
     for ticker in tickers:
-        logger.info(f"📊 {ticker} — loading OHLCV ({args.period})...")
-        raw = fetch_ohlcv(ticker, period=args.period)
-        ohlcv = normalize_ohlcv(raw)
+        logger.info(f"📊 {ticker} — loading OHLCV ({args.period}) for universe...")
+        raw_u = fetch_ohlcv(ticker, period=args.period)
+        ohlcv_u = normalize_ohlcv(raw_u)
+        if not ohlcv_u.empty:
+            universe_ohlcv[ticker] = ohlcv_u
+            tickers_to_train.append(ticker)
+        else:
+            logger.warning(f"  {ticker}: skip universe OHLCV, empty")
 
-        if ohlcv.empty:
-            errors_list.append({"ticker": ticker, "error": "No OHLCV data"})
-            logger.warning(f"  {ticker}: no OHLCV data")
-            continue
+    for ticker in tickers_to_train:
+        logger.info(f"📊 {ticker} — training...")
+        ohlcv = universe_ohlcv[ticker]
 
         try:
-            X, y = prepare_training_data(ohlcv, ticker=ticker)
+            X, y = prepare_training_data(ohlcv, ticker=ticker, universe_ohlcv=universe_ohlcv)
         except Exception as e:
             errors_list.append({"ticker": ticker, "error": f"prepare_training_data failed: {e}"})
             logger.warning(f"  {ticker}: feature prep failed: {e}")

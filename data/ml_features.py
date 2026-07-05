@@ -129,10 +129,17 @@ ML_TRAIN_FEATURES = [
     "ihsg_volatility",
     "ihsg_trend",
     "stock_vs_ihsg_1d",
+    # Relative sector features
+    "ticker_sector_id",
+    "dominant_sector_id",
+    "dominant_sector_ret_1d",
+    "dominant_sector_ret_5d",
+    "stock_vs_sector_1d",
+    "stock_vs_sector_5d",
+    "sector_strength_vs_ihsg",
     # Foreign flow features
     "foreign_flow_zscore",
 ]
-
 
 # ─── IHSG History Cache ──────────────────────────────────────────────────────
 _ihsg_cache = None
@@ -245,7 +252,319 @@ def _ticker_id(ticker: str) -> int:
         return 0
 
 
-def _proximity(current_price: float, level: float) -> float:
+# Fallback manual sector mapping until DB has sector column.
+# Lowered ticker -> sector. Add as needed.
+SECTOR_MAP: dict[str, str] = {
+    "bbca": "banking",
+    "bbri": "banking",
+    "bbni": "banking",
+    "bmri": "banking",
+    "bjin": "banking",
+    "bpan": "banking",
+    "bsin": "banking",
+    "btpn": "banking",
+    "byna": "banking",
+    "bbtb": "banking",
+    "nisp": "banking",
+    "maya": "banking",
+    "arwa": "banking",
+    "bbkp": "banking",
+    "bbhg": "banking",
+    "bbmd": "banking",
+    "bbhi": "banking",
+    "bbmg": "banking",
+    "bhar": "banking",
+    "bnba": "banking",
+    "bsmi": "banking",
+    "ibfc": "banking",
+    "kbri": "banking",
+    "mega": "banking",
+    "niny": "banking",
+    "bksw": "banking",
+    "bles": "banking",
+    "masb": "banking",
+    "bvic": "banking",
+    "bksi": "banking",
+    "bbtb": "banking",
+    "bbsw": "banking",
+    "bbbm": "banking",
+    "bbdn": "banking",
+    "bbf1": "banking",
+    "bbgp": "banking",
+    "bbyd": "banking",
+    "bbcu": "banking",
+    "bbwt": "banking",
+    "bbtp": "banking",
+    "bbkp": "banking",
+    "bbst": "banking",
+    "bbhi": "banking",
+    "bbss": "banking",
+    "bbmg": "banking",
+    "bbbv": "banking",
+    "bbni": "banking",
+    "bbca": "banking",
+    "bbri": "banking",
+    "bbtb": "banking",
+    "bbtb": "banking",
+    "bbtb": "banking",
+    "bbca": "banking",
+    "bbri": "banking",
+    "bbni": "banking",
+    "bmri": "banking",
+    "btpn": "banking",
+    "byna": "banking",
+    "bsin": "banking",
+    "bpan": "banking",
+    "bjin": "banking",
+    "masb": "banking",
+    "bksw": "banking",
+    "bles": "banking",
+    "bbkp": "banking",
+    "bbmd": "banking",
+    "bbhg": "banking",
+    "bbhi": "banking",
+    "bbss": "banking",
+    "bbmg": "banking",
+    "bhar": "banking",
+    "bnba": "banking",
+    "bsmi": "banking",
+    "ibfc": "banking",
+    "kbri": "banking",
+    "mega": "banking",
+    "niny": "banking",
+    "bbtb": "banking",
+    "bbsw": "banking",
+    "bbbm": "banking",
+    "bbdn": "banking",
+    "bbf1": "banking",
+    "bbgp": "banking",
+    "bbyd": "banking",
+    "bbcu": "banking",
+    "bbwt": "banking",
+    "bbtp": "banking",
+    "bbst": "banking",
+    "bbbm": "banking",
+    "asii": "automotive",
+    "imba": "automotive",
+    "simo": "automotive",
+    "ptba": "mining",
+    "inka": "mining",
+    "hrta": "mining",
+    "adro": "mining",
+    "antm": "mining",
+    "inco": "mining",
+    "mdka": "mining",
+    "byan": "mining",
+    "dkft": "mining",
+    "medc": "mining",
+    "bssr": "mining",
+    "itmg": "mining",
+    "pgio": "mining",
+    "ggzj": "mining",
+    "indf": "consumer",
+    "icbp": "consumer",
+    "unvr": "consumer",
+    "sido": "consumer",
+    "ckra": "consumer",
+    "myor": "consumer",
+    "ultra": "infrastructure",
+    "towr": "infrastructure",
+    "tbig": "infrastructure",
+    "wsbp": "infrastructure",
+    "adhi": "infrastructure",
+    "pada": "infrastructure",
+    "wskt": "infrastructure",
+    "pgas": "oil_gas",
+    "cste": "oil_gas",
+    "enrg": "oil_gas",
+    "excl": "telecom",
+    "tlkm": "telecom",
+    "isat": "telecom",
+    "fren": "telecom",
+    "gtsi": "telecom",
+    "inkl": "telecom",
+    "amrt": "retail",
+    "rasi": "retail",
+    "mpmx": "retail",
+    "mapi": "retail",
+    "buka": "digital",
+    "goto": "digital",
+    "klbf": "pharma",
+    "kaef": "pharma",
+    "srae": "pharma",
+    "ipca": "pharma",
+    "pyfa": "pharma",
+    "mnbm": "property",
+    "bsde": "property",
+    "lpdk": "property",
+    "mgro": "property",
+    "brpt": "chemical",
+    "tins": "metal",
+    "essa": "multifinance",
+    "bris": "insurance",
+    "bbtn": "banking",
+    "bbmg": "multifinance",
+    "smma": "multifinance",
+    "tasa": "insurance",
+    "afpn": "insurance",
+    "inan": "insurance",
+    "bima": "insurance",
+    "jiwa": "insurance",
+    "wncn": "insurance",
+    "bsml": "insurance",
+    "bsat": "insurance",
+    "pins": "insurance",
+    "asli": "insurance",
+    "iclp": "insurance",
+    "lifr": "insurance",
+    "mlbi": "insurance",
+    "pmfn": "multifinance",
+    "mfmi": "multifinance",
+    "apdn": "healthcare",
+    "sraa": "healthcare",
+    "srui": "healthcare",
+    "srim": "healthcare",
+    "srsx": "healthcare",
+    "srti": "healthcare",
+    "irdm": "healthcare",
+    "rsia": "healthcare",
+    "mens": "healthcare",
+    "care": "healthcare",
+    "vins": "healthcare",
+    "mkfi": "healthcare",
+    "avia": "healthcare",
+    "rmai": "healthcare",
+    "silo": "healthcare",
+    "dvok": "healthcare",
+    "saka": "healthcare",
+    "mela": "healthcare",
+    "psei": "healthcare",
+    "heal": "healthcare",
+    "psgj": "healthcare",
+    "spma": "healthcare",
+    "kios": "health_retail",
+    "arco": "health_retail",
+    "mari": "health_retail",
+    "blbd": "health_retail",
+    "pras": "education",
+    "educ": "education",
+    "scco": "education",
+    "abda": "education",
+    "hrme": "education",
+    "tiga": "education",
+    "mill": "retail",
+    "cipc": "retail",
+    "cccm": "retail",
+    "bpii": "retail",
+    "amad": "retail",
+    "mofa": "retail",
+    "bber": "retail",
+    "casa": "retail",
+    "srmr": "retail",
+    "imjs": "retail",
+    "prda": "retail",
+    "roda": "retail",
+    "gema": "retail",
+    "ipla": "retail",
+    "mktr": "retail",
+    "viva": "media",
+    "mncn": "media",
+    "abmm": "media",
+    "dmmx": "media",
+    "mtra": "media",
+    "sgem": "media",
+    "edit": "media",
+    "skrn": "media",
+    "bdxs": "media",
+    "ptai": "tech",
+}
+# Missing tickers -> 'unknown'
+SECTOR_CATEGORIES = [
+    "banking",
+    "mining",
+    "consumer",
+    "infrastructure",
+    "oil_gas",
+    "telecom",
+    "retail",
+    "digital",
+    "automotive",
+    "pharma",
+    "property",
+    "construction",
+    "metal",
+    "chemical",
+    "trading",
+    "multifinance",
+    "insurance",
+    "healthcare",
+    "education",
+    "media",
+    "tech",
+    "health_retail",
+    "unknown",
+]
+
+
+def _get_sector_id(sector_name: str) -> int:
+    try:
+        return SECTOR_CATEGORIES.index(sector_name.lower())
+    except ValueError:
+        return SECTOR_CATEGORIES.index("unknown")
+
+
+def _dominant_sector_on_date(universe_stocks: dict[str, pd.DataFrame], target_date) -> str:
+    """
+    Best-effort dominant sector on target_date from universe price/volume.
+    """
+    if not universe_stocks:
+        return "unknown"
+    td = pd.Timestamp(target_date)
+    sector_returns: dict[str, list[float]] = {c: [] for c in SECTOR_CATEGORIES}
+    sector_volumes: dict[str, list[float]] = {c: [] for c in SECTOR_CATEGORIES}
+    for tk, udf in universe_stocks.items():
+        if tk.upper() == "IHSG":
+            continue
+        if udf is None or udf.empty:
+            continue
+        try:
+            idx_loc = udf.index.get_loc(td, method="nearest")
+            idx = int(idx_loc)
+        except Exception:
+            continue
+        if idx <= 0 or idx >= len(udf):
+            continue
+        try:
+            prev = float(udf.iloc[idx - 1].get("Close", 0) or 0)
+            curr = float(udf.iloc[idx].get("Close", 0) or 0)
+            vol = float(udf.iloc[idx].get("Volume", 0) or 0)
+        except Exception:
+            continue
+        if prev <= 0 or curr <= 0:
+            continue
+        sector = SECTOR_MAP.get(tk.lower(), "unknown")
+        sector_returns[sector].append(curr / prev - 1)
+        sector_volumes[sector].append(vol)
+
+    best_sector = "unknown"
+    best_score = -1e9
+    for sector, rets in sector_returns.items():
+        if not rets:
+            continue
+        avg_ret = sum(rets) / len(rets)
+        avg_vol = sum(sector_volumes.get(sector, [])) / max(len(sector_volumes.get(sector, [])), 1)
+        score = avg_ret * 1000 + avg_vol
+        if score > best_score:
+            best_score = score
+            best_sector = sector
+    return best_sector
+
+
+def prepare_training_data(
+    ohlcv: pd.DataFrame,
+    ticker: str = None,
+    universe_ohlcv: dict[str, pd.DataFrame] | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     if current_price <= 0 or level <= 0:
         return 0.0
     return (current_price - level) / current_price
@@ -646,6 +965,72 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None) -> tuple[pd.D
         # Calculate distances based on merged rolling averages
         df["dist_avg_7d"] = ((df["Close"] - df["avg_7d"]) / df["avg_7d"] * 100).fillna(0.0)
         df["dist_avg_1m"] = ((df["Close"] - df["avg_1m"]) / df["avg_1m"] * 100).fillna(0.0)
+
+    # ── Sector context features from universe OHLCV ───────────────────────
+    sector_today_defaults = {
+        "ticker_sector_id": float(_get_sector_id(SECTOR_MAP.get(ticker.lower() if ticker else "", "unknown"))),
+        "dominant_sector_id": float(_get_sector_id("unknown")),
+        "dominant_sector_ret_1d": 0.0,
+        "dominant_sector_ret_5d": 0.0,
+        "stock_vs_sector_1d": 0.0,
+        "stock_vs_sector_5d": 0.0,
+        "sector_strength_vs_ihsg": 0.0,
+    }
+    if universe_ohlcv:
+        try:
+            def_sector = "unknown"
+            ticker_sector = SECTOR_MAP.get(ticker.lower() if ticker else "", "unknown")
+            sector_today_defaults["ticker_sector_id"] = float(_get_sector_id(ticker_sector))
+            td = pd.Timestamp(df.index[-1])
+            dom_sector = _dominant_sector_on_date(universe_ohlcv, td)
+            if dom_sector not in (None, "", "unknown"):
+                def_sector = dom_sector
+            dom_id = _get_sector_id(def_sector)
+            sector_today_defaults["dominant_sector_id"] = float(dom_id)
+
+            def _sector_ret(sector_name: str, window: int) -> float:
+                vals = []
+                for tk, udf in universe_ohlcv.items():
+                    if tk.upper() == "IHSG":
+                        continue
+                    if SECTOR_MAP.get(tk.lower(), "unknown") != sector_name:
+                        continue
+                    if udf is None or udf.empty:
+                        continue
+                    try:
+                        idx = udf.index.get_loc(td, method="nearest")
+                        idx = int(idx)
+                    except Exception:
+                        continue
+                    if idx - window < 0 or idx >= len(udf):
+                        continue
+                    try:
+                        prev = float(udf.iloc[idx - window].get("Close", 0) or 0)
+                        curr = float(udf.iloc[idx].get("Close", 0) or 0)
+                    except Exception:
+                        continue
+                    if prev > 0 and curr > 0:
+                        vals.append(curr / prev - 1)
+                return float(sum(vals) / len(vals)) if vals else 0.0
+
+            prev_idx = min(len(df) - 1, max(0, len(df) - 2))
+            prev_td = pd.Timestamp(df.index[prev_idx])
+            s1d = _sector_ret(def_sector, 1)
+            s5d = _sector_ret(def_sector, 5)
+            sector_today_defaults["dominant_sector_ret_1d"] = s1d
+            sector_today_defaults["dominant_sector_ret_5d"] = s5d
+            sector_today_defaults["stock_vs_sector_1d"] = float(df.iloc[prev_idx]["ret_1d"]) - s1d
+            sector_today_defaults["stock_vs_sector_5d"] = float((df.iloc[-1]["Close"] / df.iloc[max(0, len(df)-6)]["Close"] - 1)) - s5d
+
+            ihsg_ret5 = 0.0
+            if "ihsg_ret_5d" in df.columns:
+                ihsg_ret5 = float(df.iloc[prev_idx]["ihsg_ret_5d"]) if pd.notna(df.iloc[prev_idx].get("ihsg_ret_5d", 0)) else 0.0
+            sector_today_defaults["sector_strength_vs_ihsg"] = s5d - ihsg_ret5
+        except Exception as e:
+            logger.warning(f"Failed to compute sector features for {ticker}: {e}")
+
+    for col, val in sector_today_defaults.items():
+        df[col] = val
 
     # Fill default baseline values for missing DB features
     df["bandarm_score"] = df.get("bandarm_score", pd.Series(5.0, index=df.index)).fillna(5.0)
