@@ -49,6 +49,14 @@ FEATURE_COLUMNS = [
     "stoch_k",
     "stoch_d",
     "atr",
+    # Volume profile / orderbook proxy
+    "vol_profile_20d_upper",
+    "vol_profile_20d_mid",
+    "vol_profile_20d_lower",
+    "vwap_deviation_20d",
+    "signed_volume_20d",
+    "ob_imbalance_proxy_20d",
+    "range_concentration_20d",
     # Day-1 specific features
     "close_to_high",
     "close_to_low",
@@ -109,6 +117,14 @@ ML_TRAIN_FEATURES = [
     "stoch_k",
     "stoch_d",
     "atr",
+    # Volume profile / orderbook proxy
+    "vol_profile_20d_upper",
+    "vol_profile_20d_mid",
+    "vol_profile_20d_lower",
+    "vwap_deviation_20d",
+    "signed_volume_20d",
+    "ob_imbalance_proxy_20d",
+    "range_concentration_20d",
     # Day-1 specific features
     "close_to_high",
     "close_to_low",
@@ -830,6 +846,42 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df['stoch_k'] = stoch_k
     df['stoch_d'] = stoch_d
     df['atr'] = atr / df['Close']
+
+    # ── Volume profile / orderbook-proxy from OHLCV ─────────────────────
+    roll20 = df.rolling(20, min_periods=10)
+    price_min20 = roll20['Low'].min()
+    price_max20 = roll20['High'].max()
+    price_range20 = (price_max20 - price_min20).replace(0, np.nan)
+
+    # VWAP approx from today-style cumulative TP * Volume / ΣVolume over 20d(window)
+    tp = (df['High'] + df['Low'] + df['Close']) / 3.0
+    vwap20 = (tp * df['Volume']).rolling(20, min_periods=10).sum() / df['Volume'].rolling(20, min_periods=10).sum().replace(0, np.nan)
+    df['vwap_deviation_20d'] = (df['Close'] / vwap20 - 1).fillna(0.0)
+
+    # Volume segmented by relative price bucket inside each day: upper/mid/lower 33%
+    upper = (df['High'] - (df['High'] + df['Low'] + df['Close']) / 3.0).clip(lower=0)
+    lower = ((df['High'] + df['Low'] + df['Close']) / 3.0 - df['Low']).clip(lower=0)
+    mid = df['Volume'] - upper - lower
+    df['ob_imbalance_proxy_20d'] = ((upper - lower) / df['Volume'].replace(0, np.nan)).rolling(20, min_periods=10).mean().fillna(0.0)
+    df['signed_volume_20d'] = (df['ret_1d'] * df['Volume']).rolling(20, min_periods=10).sum().fillna(0.0)
+
+    # Range concentration: how much of 20d range is consumed by recent 5d high-low
+    h5 = df['High'].rolling(5, min_periods=3).max()
+    l5 = df['Low'].rolling(5, min_periods=3).min()
+    df['range_concentration_20d'] = ((h5 - l5) / price_range20).fillna(0.0)
+
+    # Volume-at-band: share of 20d volume when price in upper/mid/lower 3rd of 20d range
+    close_pos = (df['Close'] - price_min20) / price_range20
+    up_mask = (close_pos >= 0.66)
+    mid_mask = (close_pos >= 0.33) & (close_pos < 0.66)
+    low_mask = (close_pos < 0.33)
+    vol_up = (df['Volume'] * up_mask.astype(int)).rolling(20, min_periods=10).sum()
+    vol_mid = (df['Volume'] * mid_mask.astype(int)).rolling(20, min_periods=10).sum()
+    vol_low = (df['Volume'] * low_mask.astype(int)).rolling(20, min_periods=10).sum()
+    vol_sum20 = df['Volume'].rolling(20, min_periods=10).sum().replace(0, np.nan)
+    df['vol_profile_20d_upper'] = (vol_up / vol_sum20).fillna(0.0)
+    df['vol_profile_20d_mid'] = (vol_mid / vol_sum20).fillna(0.0)
+    df['vol_profile_20d_lower'] = (vol_low / vol_sum20).fillna(0.0)
 
     # ── Day-1 Specific Features ──────────────────────────────────────────────
     # Intraday candle structure
