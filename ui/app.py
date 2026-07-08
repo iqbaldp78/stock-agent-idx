@@ -10,7 +10,7 @@ import psycopg2
 import psycopg2.extras
 import json
 import logging
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 import subprocess
 import signal
@@ -145,7 +145,7 @@ def load_backtest_result(path=None):
 st.sidebar.title("🤖 Stock Agent IDX")
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"],
+    ["📈 Top Picks", "💹 Paper Trading", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"]
 )
 
 st.sidebar.divider()
@@ -229,13 +229,47 @@ if last_run:
 if page == "📈 Top Picks":
     st.title("📈 TOP PICKS")
 
-    # Get latest signals from DB
-    signals = query_db("""
-        SELECT * FROM signals
-        WHERE run_date = (SELECT MAX(run_date) FROM signals)
-        ORDER BY rank
-        LIMIT 5
+    # Get latest signals from DB by latest run_date
+    latest_meta = query_db("""
+        SELECT MAX(run_date) AS max_run_date
+        FROM signals
+        WHERE batch_id IS NOT NULL
     """)
+    latest_run_date = latest_meta[0]["max_run_date"] if latest_meta else None
+
+    latest_batch = None
+    if latest_run_date is not None:
+        latest_batch = query_db("""
+            SELECT batch_id
+            FROM signals
+            WHERE run_date = %s
+            AND batch_id IS NOT NULL
+            LIMIT 1
+        """, (latest_run_date,))
+        latest_batch = (latest_batch[0]["batch_id"] if latest_batch else None)
+
+    if latest_batch or latest_run_date:
+        display_batch = latest_batch or f"no-batch-{latest_run_date}"
+        st.caption(f"Latest batch: `{display_batch}` | Updated: {latest_run_date}")
+
+    signals = []
+    if latest_run_date is not None:
+        if latest_batch:
+            signals = query_db("""
+                SELECT * FROM signals
+                WHERE batch_id = %s
+                AND rank IS NOT NULL
+                ORDER BY rank
+                LIMIT 3
+            """, (latest_batch,))
+        else:
+            signals = query_db("""
+                SELECT * FROM signals
+                WHERE run_date = %s
+                AND rank IS NOT NULL
+                ORDER BY rank
+                LIMIT 3
+            """, (latest_run_date,))
 
     # Also check session state for fresh results
     last_result = st.session_state.get("last_result", {})
@@ -295,6 +329,10 @@ if page == "📈 Top Picks":
                         pass
 
                     st.markdown(f"🎯 Entry Ideal: **{entry}** | Max: **{max_e}**{entry_style}")
+
+                    entry_reason = pick.get("entry_reasoning", "")
+                    if entry_reason:
+                        st.caption(f"💡 *{entry_reason}*")
 
                     # Take-Profit Levels
                     tp1 = pick.get("tp1")
@@ -560,7 +598,8 @@ if page == "📈 Top Picks":
                     # Thesis
                     thesis = pick.get("thesis", "")
                     if thesis:
-                        st.caption(thesis[:150])
+                        with st.expander("📝 Investment Thesis", expanded=False):
+                            st.markdown(thesis)
 
                 # Action: Set DCA button
                 st.divider()
@@ -627,6 +666,10 @@ if page == "📈 Top Picks":
 
                     if entry_l and entry_h:
                         st.markdown(f"🎯 Entry: **{entry_l:,.0f}–{entry_h:,.0f}**{entry_style}")
+
+                    entry_reason = sig.get("entry_reasoning", "")
+                    if entry_reason:
+                        st.caption(f"💡 *{entry_reason}*")
 
                     t1 = sig.get("target_1")
                     sl = sig.get("stop_loss")
@@ -703,8 +746,23 @@ if page == "📈 Top Picks":
                                 for i, risk in enumerate(risks, 1):
                                     st.markdown(f"{i}. {risk}")
 
+                with col3:
+                    st.markdown(f"⚡ Mode: **{sig.get('weight_mode', 'N/A')}**")
+                    broker = sig.get("broker_utama", "")
+                    if broker:
+                        st.caption(f"Broker: {broker}")
+
                     # Broker True Costs from DB
-                    broker_true_costs = sig.get("broker_true_costs") or {}
+                    broker_true_costs = sig.get("broker_true_costs")
+                    if isinstance(broker_true_costs, str):
+                        import json
+                        try:
+                            broker_true_costs = json.loads(broker_true_costs)
+                        except Exception:
+                            broker_true_costs = {}
+                    elif not broker_true_costs:
+                        broker_true_costs = {}
+                        
                     true_cost_rows = broker_true_costs.get("w1m") or broker_true_costs.get("w7") or []
                     if true_cost_rows:
                         with st.expander("🏦 True Cost Broker Akumulasi", expanded=False):
@@ -739,9 +797,20 @@ if page == "📈 Top Picks":
                                     "True Cost": st.column_config.NumberColumn(format="Rp %.0f"),
                                 },
                             )
+                            if broker_true_costs.get("w1m") and broker_true_costs.get("w7"):
+                                st.caption("Menampilkan 1 bulan; 7 hari tersedia di halaman Bandarmologi.")
 
                     # Broker Distributors from DB
-                    broker_distributors = sig.get("broker_distributors") or {}
+                    broker_distributors = sig.get("broker_distributors")
+                    if isinstance(broker_distributors, str):
+                        import json
+                        try:
+                            broker_distributors = json.loads(broker_distributors)
+                        except Exception:
+                            broker_distributors = {}
+                    elif not broker_distributors:
+                        broker_distributors = {}
+                        
                     dist_rows = broker_distributors.get("w1m") or broker_distributors.get("w7") or []
                     if dist_rows:
                         with st.expander("📉 Avg Sell Distribusi", expanded=False):
@@ -776,15 +845,13 @@ if page == "📈 Top Picks":
                                     "Avg Sell": st.column_config.NumberColumn(format="Rp %.0f"),
                                 },
                             )
+                            if broker_distributors.get("w1m") and broker_distributors.get("w7"):
+                                st.caption("Menampilkan 1 bulan; 7 hari tersedia di halaman Bandarmologi.")
 
-                with col3:
-                    st.markdown(f"⚡ Mode: **{sig.get('weight_mode', 'N/A')}**")
-                    broker = sig.get("broker_utama", "")
-                    if broker:
-                        st.caption(f"Broker: {broker}")
                     thesis = sig.get("thesis", "")
                     if thesis:
-                        st.caption(thesis[:120])
+                        with st.expander("📝 Investment Thesis", expanded=False):
+                            st.markdown(thesis)
 
                 # Action: Set DCA button (DB signals)
                 st.divider()
@@ -803,6 +870,612 @@ if page == "📈 Top Picks":
     else:
         st.info("Belum ada data. Klik **Run Analysis Now** di sidebar untuk memulai.")
 
+
+# === PAGE: Paper Trading ===
+
+elif page == "💹 Paper Trading":
+    st.title("💹 PAPER TRADING")
+    st.markdown("**Virtual Portfolio Validator** — Test trading strategy dengan modal virtual")
+    
+    # Import paper trading service
+    try:
+        from services.paper_trading import PaperTradingService
+        pt_service = PaperTradingService()
+    except ImportError as e:
+        st.error(f"Paper Trading service tidak tersedia: {e}")
+        st.stop()
+    
+    # --- WALLET SECTION ---
+    st.header("💰 WALLET")
+    col_topup, col_reset, col_summary = st.columns([2, 2, 8])
+    
+    with col_topup:
+        with st.popover("Topup Modal"):
+            amount = st.number_input(
+                "Jumlah Topup (Rp)",
+                min_value=10000000,
+                max_value=1000000000,
+                value=100000000,
+                step=5000000,
+                format="%d"
+            )
+            if st.button("💸 Topup", use_container_width=True):
+                with st.spinner(f"Topup Rp {amount:,.0f}..."):
+                    result = pt_service.topup(amount)
+                    if result["status"] == "success":
+                        st.success(result["message"])
+                    else:
+                        st.error(result["message"])
+    
+    with col_reset:
+        if st.button("🔄 Reset Portfolio", use_container_width=True, type="secondary"):
+            if st.checkbox("Konfirmasi reset semua trades"):
+                result = pt_service.reset_wallet()
+                st.success(result["message"])
+    
+    # Wallet summary
+    with st.container(border=True):
+        summary = pt_service.get_wallet_summary()
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric(
+                "💵 Cash", 
+                f"Rp {summary['cash']:,.0f}",
+                help="Saldo cash tersedia untuk beli"
+            )
+        with col2:
+            st.metric(
+                "📊 Total Equity", 
+                f"Rp {summary['total_equity']:,.0f}",
+                f"{summary['total_return_pct']:+.2f}%"
+            )
+        with col3:
+            st.metric(
+                "📈 Realized P&L", 
+                f"Rp {summary['realized_pnl']:,.0f}",
+                help="Profit/loss dari trades yang sudah closed"
+            )
+        with col4:
+            st.metric(
+                "📊 Unrealized P&L", 
+                f"Rp {summary['unrealized_pnl']:,.0f}",
+                help="Profit/loss dari open positions"
+            )
+        
+        # Progress bar for invested vs cash
+        if summary['total_topup'] > 0:
+            invest_pct = (summary['total_invested'] / summary['total_topup']) * 100
+            st.progress(min(invest_pct / 100, 1.0), text=f"Invested: {invest_pct:.1f}%")
+    
+    # --- EQUITY CURVE ---
+    st.header("📈 EQUITY CURVE")
+    equity = pt_service.get_equity_history()
+    
+    if len(equity["points"]) > 1:
+        import pandas as pd
+        import plotly.graph_objects as go
+        
+        df_equity = pd.DataFrame(equity["points"])
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=df_equity["date"],
+            y=df_equity["equity"],
+            mode="lines+markers",
+            name="Total Equity",
+            line=dict(color="#00d4aa", width=2),
+            marker=dict(size=8),
+            hovertemplate="<b>%{x}</b><br>Equity: Rp %{y:,.0f}<extra></extra>"
+        ))
+        
+        # Add baseline (initial topup)
+        fig.add_hline(
+            y=equity["start_equity"],
+            line_dash="dash",
+            line_color="gray",
+            annotation_text=f"Modal: Rp {equity['start_equity']:,.0f}"
+        )
+        
+        fig.update_layout(
+            title=f"Portfolio Growth: {equity['total_return_pct']:+.2f}%",
+            xaxis_title="Date",
+            yaxis_title="Equity (Rp)",
+            height=300,
+            margin=dict(l=0, r=0, t=40, b=0),
+            hovermode="x unified"
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("Equity curve akan muncul setelah ada trades.")
+    
+    # --- QUICK BUY FROM TOP PICKS ---
+    st.header("🎯 QUICK BUY dari Top Picks")
+    
+    # AUTO-EXECUTE ALL button
+    col_auto_all, col_space = st.columns([2, 6])
+    with col_auto_all:
+        if st.button("⚡ INVEST SEMUA (15% each)", type="primary", use_container_width=True):
+            with st.spinner("Executing all top picks..."):
+                result = pt_service.auto_execute_all_top_picks(budget_pct_per_trade=0.15)
+                if result["status"] == "success":
+                    st.success(f"✅ {result['message']}")
+                    st.rerun()
+                elif result["status"] == "info":
+                    st.info(result["message"])
+                else:
+                    st.error(result.get("message", "Unknown error"))
+    
+    # Get latest top picks
+    try:
+        signals = query_db("""
+            SELECT * FROM signals
+            WHERE run_date = (SELECT MAX(run_date) FROM signals)
+            AND rank IS NOT NULL
+            ORDER BY rank
+            LIMIT 5
+        """)
+    except:
+        signals = []
+    
+    if signals:
+        for sig in signals:
+            with st.container(border=True):
+                col_info, col_buy, col_auto = st.columns([4, 2, 2])
+                
+                with col_info:
+                    st.markdown(f"**{sig['ticker']}** — #{sig['rank']}")
+                    entry_low = sig.get('entry_low') or 0
+                    entry_high = sig.get('entry_high') or 0
+                    tp1 = sig.get('target_1') or 0
+                    sl = sig.get('stop_loss') or 0
+                    st.markdown(f"Entry: Rp {float(entry_low):,.0f}–Rp {float(entry_high):,.0f}")
+                    st.caption(f"TP: Rp {float(tp1):,.0f} | SL: Rp {float(sl):,.0f}")
+                
+                with col_buy:
+                    # Get current price (simplified, nanti ambil dari cache)
+                    current_price = float(sig.get('price_prediction', {}).get('current_price', 0)) or 1000
+                    max_lot = max(1, pt_service.calculate_max_lot(current_price))
+                    
+                    # Use signal id in the key to ensure uniqueness when the same
+                    # ticker appears multiple times in the signals list.
+                    lot = st.number_input(
+                        "Lot",
+                        min_value=1,
+                        max_value=max_lot,
+                        value=max(1, min(10, max_lot)),
+                        key=f"lot_{sig['ticker']}_{sig['id']}"
+                    )
+                
+                with col_auto:
+                    # Buttons
+                    if st.button(f"🛒 Buy {lot} lot", key=f"buy_{sig['ticker']}_{sig['id']}", use_container_width=True):
+                        price = current_price
+                        result = pt_service.buy(
+                            ticker=sig['ticker'],
+                            lot=lot,
+                            price=price,
+                            signal_id=sig['id'],
+                            tp1=float(sig.get('target_1')) if sig.get('target_1') else None,
+                            stop_loss=float(sig.get('stop_loss')) if sig.get('stop_loss') else None,
+                            notes=f"Manual buy from Paper Trading UI"
+                        )
+                        if result["status"] == "success":
+                            st.success(result["message"])
+                            st.rerun()
+                        else:
+                            st.error(result["message"])
+                    
+                    # Auto-execute button (20% budget)
+                    if st.button(f"⚡ Auto 20%", key=f"auto_{sig['ticker']}_{sig['id']}", use_container_width=True, type="secondary"):
+                        with st.spinner("Auto-executing..."):
+                            result = pt_service.auto_execute_signal(
+                                signal_id=sig['id'],
+                                budget_pct=0.20,
+                                price=current_price
+                            )
+                            if result["status"] == "success":
+                                st.success(result["message"])
+                                st.rerun()
+                            else:
+                                st.error(result["message"])
+    else:
+        st.info("No top picks found. Run analysis first.")
+    
+    # --- OPEN POSITIONS ---
+    st.header("📈 OPEN POSITIONS")
+    
+    if summary['positions']:
+        for pos in summary['positions']:
+            with st.container(border=True):
+                col_ticker, col_stats, col_actions = st.columns([2, 6, 2])
+                
+                with col_ticker:
+                    st.markdown(f"### {pos['ticker']}")
+                    st.markdown(f"{pos['lot']} lot ({pos['shares']:,} lembar)")
+                
+                with col_stats:
+                    # P&L dengan warna
+                    pnl_emoji = "🟢" if pos['unrealized_pnl'] >= 0 else "🔴"
+                    st.markdown(f"{pnl_emoji} **P&L: Rp {pos['unrealized_pnl']:+,.0f}** ({pos['unrealized_pnl_pct']:+.2f}%)")
+                    
+                    # Price info dengan TP/SL proximity
+                    col_price, col_value, col_targets = st.columns([3, 3, 3])
+                    with col_price:
+                        st.caption(f"Buy: Rp {pos['buy_price']:,.0f}")
+                        st.caption(f"Now: Rp {pos['current_price']:,.0f}")
+                        price_diff_pct = ((pos['current_price'] - pos['buy_price']) / pos['buy_price'] * 100) if pos['buy_price'] > 0 else 0
+                        diff_emoji = "📈" if price_diff_pct >= 0 else "📉"
+                        st.caption(f"{diff_emoji} {price_diff_pct:+.2f}%")
+                    with col_value:
+                        st.caption(f"Value: Rp {pos['current_value']:,.0f}")
+                        st.caption(f"Lot: {pos['lot']:,} ({pos['shares']:,} lembar)")
+                    with col_targets:
+                        if pos.get('tp1'):
+                            tp_diff_pct = ((pos['tp1'] - pos['current_price']) / pos['current_price'] * 100) if pos['current_price'] > 0 else 0
+                            tp_color = "🟢" if tp_diff_pct <= 2 else "🟡"
+                            st.caption(f"{tp_color} TP1: Rp {pos['tp1']:,.0f} (+{tp_diff_pct:+.2f}%)")
+                        if pos.get('stop_loss'):
+                            sl_diff_pct = ((pos['current_price'] - pos['stop_loss']) / pos['current_price'] * 100) if pos['current_price'] > 0 else 0
+                            sl_color = "🔴" if sl_diff_pct <= 3 else "🟡"
+                            st.caption(f"{sl_color} SL: Rp {pos['stop_loss']:,.0f} ({sl_diff_pct:+.2f}% safety)")
+                        if pos.get('opened_at'):
+                            st.caption(f"⏰ {pos['opened_at']}")
+                
+                with col_actions:
+                    # Manual sell button
+                    if st.button("💱 SELL", key=f"sell_{pos['id']}", use_container_width=True, type="secondary"):
+                        # Use current price for sell
+                        result = pt_service.sell(
+                            trade_id=pos['id'],
+                            price=pos['current_price'],
+                            reason="MANUAL"
+                        )
+                        if result["status"] == "success":
+                            st.success(f"Sold {pos['ticker']}: P&L Rp {result['trade']['realized_pnl']:+,.0f}")
+                            st.rerun()
+                        else:
+                            st.error(result["message"])
+    else:
+        st.info("No open positions. Buy some stocks first!")
+    
+    # --- PERFORMANCE METRICS ---
+    st.header("📊 PERFORMANCE")
+    
+    # Get trade history untuk metrics
+    history = pt_service.get_trade_history(limit=100)
+    closed_trades = [t for t in history if t['status'] != 'OPEN']
+    
+    if closed_trades:
+        profitable = [t for t in closed_trades if t['realized_pnl'] > 0]
+        total_profit = sum(t['realized_pnl'] for t in profitable)
+        total_loss = abs(sum(t['realized_pnl'] for t in closed_trades if t['realized_pnl'] < 0))
+        
+        col_win, col_avg, col_sharpe, col_factor = st.columns(4)
+        
+        with col_win:
+            win_rate = len(profitable) / len(closed_trades) * 100 if closed_trades else 0
+            st.metric("🎯 Win Rate", f"{win_rate:.1f}%")
+        
+        with col_avg:
+            avg_return = sum(t['realized_pnl'] for t in closed_trades) / len(closed_trades) if closed_trades else 0
+            st.metric("📈 Avg Return", f"Rp {avg_return:,.0f}")
+        
+        with col_sharpe:
+            # Simplified Sharpe (nanti improve)
+            sharpe = total_profit / (total_loss + 1) if total_loss > 0 else 0
+            st.metric("📊 Profit Factor", f"{sharpe:.2f}")
+        
+        with col_factor:
+            profit_factor = total_profit / total_loss if total_loss > 0 else 0
+            st.metric("⚖️ P/L Ratio", f"{profit_factor:.2f}")
+        
+        # Trade history table
+        with st.expander("📜 Trade History"):
+            import pandas as pd
+            df = pd.DataFrame(history)
+            if not df.empty:
+                display_df = df.rename(columns={
+                    "price": "Buy @",
+                    "exit_price": "Sell @",
+                    "tp1": "TP1",
+                    "tp2": "TP2",
+                    "tp3": "TP3",
+                    "stop_loss": "SL",
+                    "realized_pnl": "P&L",
+                    "realized_pnl_pct": "P&L %",
+                    "opened_at": "Opened",
+                    "closed_at": "Closed",
+                })
+                show_cols = [c for c in ["ticker","action","lot","shares","Buy @","Sell @","TP1","TP2","TP3","SL","Amount","P&L","P&L %","Status","Opened","Closed"] if c in display_df.columns]
+                display_df = display_df[show_cols]
+                for col in ["Buy @", "Sell @", "P&L"]:
+                    if col in display_df.columns:
+                        display_df[col] = display_df[col].apply(lambda x: f"Rp {x:,.0f}" if pd.notnull(x) else "-")
+                for col in ["TP1", "TP2", "TP3", "SL"]:
+                    if col in display_df.columns:
+                        display_df[col] = display_df[col].apply(lambda x: f"Rp {x:,.0f}" if pd.notnull(x) else "-")
+                if "P&L %" in display_df.columns:
+                    display_df["P&L %"] = display_df["P&L %"].apply(lambda x: f"{x:+.2f}%" if pd.notnull(x) else "-")
+                for col in ["Opened", "Closed"]:
+                    if col in display_df.columns:
+                        display_df[col] = display_df[col].apply(lambda x: x.split("T")[0] if isinstance(x, str) and x else (x if pd.notnull(x) else "-"))
+                if "Status" in display_df.columns:
+                    color_map = {"TP_HIT": "🟢", "SL_HIT": "🔴", "CLOSED": "⚪"}
+                    display_df["Status"] = display_df["Status"].map(lambda x: f"{color_map.get(x, '')} {x}")
+                st.dataframe(display_df, use_container_width=True)
+    else:
+        st.info("No closed trades yet. Performance metrics akan muncul setelah ada trades closed.")
+    
+    # --- INSTRUCTIONS ---
+    with st.expander("📖 Cara Pakai"):
+        st.markdown("""
+        1. **Topup modal** (contoh: 100jt) untuk mulai trading virtual
+        2. **Quick Buy** dari top picks — pilih lot atau auto-execute dengan 20% budget
+        3. **Monitor open positions** — lihat P&L real-time
+        4. **Sell manual** atau tunggu TP/SL hit (auto-check)
+        5. **Track performance** — win rate, avg return, profit factor
+        """)
+
+# === PAGE: Analytics ===
+
+elif page == "📊 Analytics":
+    st.title("📊 PAPER TRADING ANALYTICS")
+    st.markdown("**Backtest Validation • Performance Attribution • Reports**")
+    
+    # Initialize analytics service
+    try:
+        from services.paper_analytics import PaperAnalytics
+        analytics = PaperAnalytics()
+    except ImportError as e:
+        st.error(f"Analytics service tidak tersedia: {e}")
+        st.stop()
+    
+    # Tabs untuk berbagai analytics views
+    tab_backtest, tab_attribution, tab_closed, tab_export = st.tabs([
+        "🔬 Backtest Validation",
+        "📈 Performance Attribution", 
+        "💰 Closed Positions",
+        "📄 Export Reports"
+    ])
+    
+    # === TAB 1: BACKTEST VALIDATION ===
+    with tab_backtest:
+        st.header("🔬 Backtest: Signals vs Actual Returns")
+        
+        col_period, col_signals = st.columns([2, 2])
+        with col_period:
+            lookback_days = st.selectbox("Lookback Period", [7, 14, 30, 60, 90], index=2)
+        with col_signals:
+            max_signals = st.slider("Max Signals to Analyze", 5, 50, 20)
+        
+        if st.button("🔍 Run Backtest", type="primary"):
+            with st.spinner("Analyzing historical signals vs actual returns..."):
+                result = analytics.backtest_signals_vs_actual(lookback_days=lookback_days, max_signals=max_signals)
+                
+                if result["status"] == "success":
+                    # Display period info
+                    st.info(f"📅 **Period**: {result['period']['start_date']} to {result['period']['end_date']} ({lookback_days} days)")
+                    
+                    # Hypothetical vs Actual comparison
+                    st.subheader("📊 Performance Comparison")
+                    
+                    hyp = result["hypothetical"]["summary"]
+                    act = result["actual"]["summary"]
+                    
+                    col_hyp, col_act, col_diff = st.columns(3)
+                    
+                    with col_hyp:
+                        st.metric(
+                            "Hypothetical Win Rate",
+                            f"{hyp.get('win_rate', 0):.1f}%",
+                            f"Avg: {hyp.get('avg_return_pct', 0):+.2f}%"
+                        )
+                    
+                    with col_act:
+                        st.metric(
+                            "Actual Win Rate",
+                            f"{act.get('win_rate', 0):.1f}%",
+                            f"Avg: {act.get('avg_pnl_pct', 0):+.2f}%"
+                        )
+                    
+                    with col_diff:
+                        comp_data = result.get("comparison", {})
+                        if "performance_comparison" in comp_data:
+                            comparison = comp_data["performance_comparison"]
+                            diff_emoji = "✅" if comparison["actual_better"] else "⚠️"
+                            st.metric(
+                                f"{diff_emoji} Performance Gap",
+                                f"{comparison['win_rate_diff']:+.1f}%",
+                                f"Return: {comparison['avg_return_diff']:+.2f}%"
+                            )
+                        else:
+                            st.metric("Performance Gap", "N/A", "N/A")
+                    
+                    # Recommendations
+                    st.subheader("💡 Recommendations")
+                    if "recommendations" in comp_data:
+                        for rec in comp_data["recommendations"]:
+                            st.write(f"• {rec}")
+                    else:
+                        st.write("Belum ada data yang cukup untuk membandingkan performa.")
+                    
+                    # Detailed signals breakdown
+                    with st.expander("📋 Detailed Signals Breakdown"):
+                        signals_data = result["hypothetical"]["signals"]
+                        if signals_data:
+                            import pandas as pd
+                            df_signals = pd.DataFrame(signals_data)
+                            st.dataframe(df_signals, use_container_width=True)
+                    
+                    # Actual trades breakdown
+                    if result["actual"]["trades"]:
+                        with st.expander("💹 Actual Paper Trades"):
+                            df_trades = pd.DataFrame(result["actual"]["trades"])
+                            st.dataframe(df_trades, use_container_width=True)
+                
+                elif result["status"] == "info":
+                    st.info(result["message"])
+                else:
+                    st.error(result.get("message", "Unknown error"))
+    
+    # === TAB 2: PERFORMANCE ATTRIBUTION ===
+    with tab_attribution:
+        st.header("📈 Performance Attribution Analysis")
+        st.markdown("Analyze which factors contribute most to your returns.")
+        
+        if st.button("🔍 Analyze Attribution", type="primary"):
+            with st.spinner("Calculating performance attribution..."):
+                result = analytics.get_performance_attribution()
+                
+                if result["status"] == "success":
+                    # By Ticker
+                    st.subheader("🏆 Performance by Ticker")
+                    by_ticker = result["attribution"]["by_ticker"]
+                    
+                    if by_ticker:
+                        ticker_data = []
+                        for ticker, stats in by_ticker.items():
+                            ticker_data.append({
+                                "Ticker": ticker,
+                                "Trades": stats["total_trades"],
+                                "Total P&L": f"Rp {stats['total_pnl']:+,.0f}",
+                                "Avg Return": f"{stats['avg_pnl_pct']:+.2f}%",
+                                "Win Rate": f"{stats['win_rate']:.1f}%",
+                            })
+                        
+                        import pandas as pd
+                        df_ticker = pd.DataFrame(ticker_data)
+                        st.dataframe(df_ticker, use_container_width=True)
+                        
+                        # Best/worst ticker
+                        col_best, col_worst = st.columns(2)
+                        with col_best:
+                            st.success(f"🏆 **Best**: {result['best_performing_ticker']}")
+                        with col_worst:
+                            st.error(f"📉 **Worst**: {result['worst_performing_ticker']}")
+                    
+                    # By Holding Period
+                    st.subheader("⏰ Performance by Holding Period")
+                    by_period = result["attribution"]["by_holding_period"]
+                    
+                    period_data = []
+                    for period, stats in by_period.items():
+                        if stats["count"] > 0:
+                            period_data.append({
+                                "Period": period,
+                                "Trades": stats["count"],
+                                "Total P&L": f"Rp {stats['total_pnl']:+,.0f}",
+                                "Avg Return": f"{stats['avg_pnl_pct']:+.2f}%",
+                            })
+                    
+                    if period_data:
+                        df_period = pd.DataFrame(period_data)
+                        st.dataframe(df_period, use_container_width=True)
+                
+                elif result["status"] == "info":
+                    st.info(result["message"])
+                else:
+                    st.error(result.get("message", "Unknown error"))
+    
+    # === TAB 3: CLOSED POSITIONS ANALYSIS ===
+    with tab_closed:
+        st.header("💰 Closed Positions Analysis")
+        
+        if st.button("🔍 Analyze Closed Trades", type="primary"):
+            with st.spinner("Analyzing closed positions..."):
+                result = analytics.analyze_closed_positions()
+                
+                if result["status"] == "success":
+                    analysis = result["analysis"]
+                    
+                    # P&L Distribution
+                    st.subheader("📊 P&L Distribution")
+                    dist = analysis["pnl_distribution"]
+                    
+                    col1, col2, col3, col4, col5 = st.columns(5)
+                    col1.metric("🔴 Large Loss", dist["large_loss"], "< -5%")
+                    col2.metric("🟡 Small Loss", dist["small_loss"], "-5% to 0%")
+                    col3.metric("🟢 Small Profit", dist["small_profit"], "0% to 5%")
+                    col4.metric("🔵 Medium Profit", dist["medium_profit"], "5% to 10%")
+                    col5.metric("🟣 Large Profit", dist["large_profit"], "> 10%")
+                    
+                    # Holding Period Stats
+                    st.subheader("⏰ Holding Period Analysis")
+                    period_stats = analysis["holding_period_stats"]
+                    
+                    period_data = []
+                    for period_name, stats in period_stats.items():
+                        if stats["count"] > 0:
+                            period_data.append({
+                                "Category": period_name,
+                                "Trades": stats["count"],
+                                "Total P&L": f"Rp {stats['total_pnl']:+,.0f}",
+                            })
+                    
+                    if period_data:
+                        import pandas as pd
+                        df_period = pd.DataFrame(period_data)
+                        st.dataframe(df_period, use_container_width=True)
+                    
+                    # Best/Worst Trades
+                    col_best, col_worst = st.columns(2)
+                    
+                    with col_best:
+                        st.subheader("🏆 Best Trades")
+                        for trade in analysis["best_trades"]:
+                            st.write(f"• **{trade['ticker']}**: {trade['pnl_pct']:+.2f}% (Rp {trade['pnl']:+,.0f})")
+                    
+                    with col_worst:
+                        st.subheader("📉 Worst Trades")
+                        for trade in analysis["worst_trades"]:
+                            st.write(f"• **{trade['ticker']}**: {trade['pnl_pct']:+.2f}% (Rp {trade['pnl']:+,.0f})")
+                
+                elif result["status"] == "info":
+                    st.info(result["message"])
+                else:
+                    st.error(result.get("message", "Unknown error"))
+    
+    # === TAB 4: EXPORT REPORTS ===
+    with tab_export:
+        st.header("📄 Export Reports")
+        
+        col_csv, col_md = st.columns(2)
+        
+        with col_csv:
+            st.subheader("📊 Trade History (CSV)")
+            if st.button("⬇️ Download CSV", key="download_csv"):
+                csv_data = analytics.export_trade_history_csv()
+                st.download_button(
+                    label="💾 Save CSV",
+                    data=csv_data,
+                    file_name=f"paper_trades_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.csv",
+                    mime="text/csv"
+                )
+        
+        with col_md:
+            st.subheader("📝 Performance Summary (Markdown)")
+            if st.button("⬇️ Generate Report", key="download_md"):
+                md_data = analytics.export_performance_summary_markdown()
+                st.download_button(
+                    label="💾 Save Markdown",
+                    data=md_data,
+                    file_name=f"performance_summary_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.md",
+                    mime="text/markdown"
+                )
+        
+        # Preview
+        st.subheader("👀 Preview")
+        preview_type = st.radio("Select Preview", ["Trade History CSV", "Performance Summary"])
+        
+        if preview_type == "Trade History CSV":
+            csv_preview = analytics.export_trade_history_csv()
+            st.code(csv_preview[:1000] + "..." if len(csv_preview) > 1000 else csv_preview, language="csv")
+        
+        elif preview_type == "Performance Summary":
+            md_preview = analytics.export_performance_summary_markdown()
+            st.markdown(md_preview)
 
 # === PAGE: Bandarmologi ===
 
@@ -2375,7 +3048,7 @@ elif page == "💼 Portfolio":
                 st.download_button(
                     label="Download CSV",
                     data=csv,
-                    file_name=f"transactions_{date.today()}.csv",
+                    file_name=f"transactions_{datetime.now()}.csv",
                     mime="text/csv",
                 )
         else:
@@ -2483,7 +3156,7 @@ elif page == "💼 Portfolio":
                     h_list = get_all_holdings()
                     h_list = update_current_prices(h_list)
                     strats = get_active_strategies()
-                    txns = get_transactions(start_date=date.today() - timedelta(days=30))
+                    txns = get_transactions(start_date=datetime.now() - timedelta(days=30))
 
                     # Don't use TOP PICKS - focus on existing holdings only
                     top_picks = []

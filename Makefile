@@ -175,6 +175,17 @@ train-ml-ticker: ## Train ML Day-1 model for one ticker (usage: make train-ml-ti
 	fi
 	docker compose exec app python scripts/train_day1_model.py --tickers $(TICKER)
 
+.PHONY: train-ml-multiday
+train-ml-multiday: ## Train ML Multi-Day model (T+1, T+3, T+5, T+7) for all universe tickers
+	docker compose exec app python scripts/train_multiday_model.py --all
+
+.PHONY: train-ml-multiday-ticker
+train-ml-multiday-ticker: ## Train ML Multi-Day model for one ticker (usage: make train-ml-multiday-ticker TICKER=BBCA)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make train-ml-multiday-ticker TICKER=BBCA"; \
+		exit 1; \
+	fi
+	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER)
 .PHONY: validate-ml-ticker
 validate-ml-ticker: ## Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
 	@if [ -z "$(TICKER)" ]; then \
@@ -211,6 +222,12 @@ db-migrate: ## Run database migrations
 db-reset: ## Reset database (WARNING: deletes all data)
 	docker compose exec postgres psql -U stockuser -d stockagent -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 	docker compose exec postgres psql -U stockuser -d stockagent -c "SET client_min_messages TO WARNING;" -f /docker-entrypoint-initdb.d/init.sql
+
+.PHONY: paper-reset
+paper-reset: ## Reset paper trading data (wallet, trades, equity)
+	@echo "Resetting paper trading data..."
+	-docker compose exec -T -e "PYTHONUNBUFFERED=1" app python /app/scripts/paper_reset.py
+	@echo "Done! Wallet balance has been reset."
 
 .PHONY: db-backup
 db-backup: ## Backup database to backup.sql

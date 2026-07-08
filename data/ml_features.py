@@ -32,12 +32,20 @@ FEATURE_COLUMNS = [
     "ihsg_vs_ma20",
     "usdidr_val",
     "ret_1d",
+    "ret_1d_lag1",
+    "ret_1d_lag2",
+    "ret_1d_lag3",
+    "ret_1d_lag4",
+    "ret_1d_lag5",
     "ret_3d",
     "ret_5d",
+    "volatility_10d",
     "volatility_20d",
     "gap_open",
+    "ma_dist_5",
     "ma_dist_20",
     "ma_dist_50",
+    "ma_dist_200",
     "volume_spike",
     "support_proximity",
     "resistance_proximity",
@@ -90,12 +98,20 @@ ML_TRAIN_FEATURES = [
     "is_bullish_trend",
     "vol_ratio",
     "ret_1d",
+    "ret_1d_lag1",
+    "ret_1d_lag2",
+    "ret_1d_lag3",
+    "ret_1d_lag4",
+    "ret_1d_lag5",
     "ret_3d",
     "ret_5d",
+    "volatility_10d",
     "volatility_20d",
     "gap_open",
+    "ma_dist_5",
     "ma_dist_20",
     "ma_dist_50",
+    "ma_dist_200",
     "volume_spike",
     "range_pct",
     "macd",
@@ -200,6 +216,15 @@ def _compute_atr(high: pd.Series, low: pd.Series, close: pd.Series, window=14) -
     tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
     atr = tr.rolling(window=window).mean()
     return atr
+
+
+def _proximity(price: float, level: float) -> float:
+    """Hitung seberapa dekat harga ke level support/resistance.
+    Return: nilai mendekati 0 = sangat dekat, negatif = harga di bawah level.
+    """
+    if not level or level == 0:
+        return 0.0
+    return float((price - level) / level)
 
 
 def _parse_number(val: object, default: float = 0.0) -> float:
@@ -778,7 +803,7 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
 
-    # Targets: Future returns for 1d, 3d, 5d, 7d
+    # Targets: Continuous returns (regression target)
     df['target_1d'] = df['Close'].shift(-1) / df['Close'] - 1
     df['target_3d'] = df['Close'].shift(-3) / df['Close'] - 1
     df['target_5d'] = df['Close'].shift(-5) / df['Close'] - 1
@@ -786,15 +811,25 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
 
     # Simple Technical Features for History
     df['ret_1d'] = df['Close'].pct_change()
+    df['ret_1d_lag1'] = df['ret_1d'].shift(1)
+    df['ret_1d_lag2'] = df['ret_1d'].shift(2)
+    df['ret_1d_lag3'] = df['ret_1d'].shift(3)
+    df['ret_1d_lag4'] = df['ret_1d'].shift(4)
+    df['ret_1d_lag5'] = df['ret_1d'].shift(5)
     df['ret_3d'] = df['Close'].pct_change(3)
     df['ret_5d'] = df['Close'].pct_change(5)
+    df['volatility_10d'] = df['ret_1d'].rolling(10).std()
     df['volatility_20d'] = df['ret_1d'].rolling(20).std()
 
     # Moving Average distances
+    df['ma5'] = df['Close'].rolling(5).mean()
     df['ma20'] = df['Close'].rolling(20).mean()
     df['ma50'] = df['Close'].rolling(50).mean()
+    df['ma200'] = df['Close'].rolling(200).mean()
+    df['ma_dist_5'] = df['Close'] / df['ma5'] - 1
     df['ma_dist_20'] = df['Close'] / df['ma20'] - 1
     df['ma_dist_50'] = df['Close'] / df['ma50'] - 1
+    df['ma_dist_200'] = df['Close'] / df['ma200'] - 1
     
     # Calculate RSI and Trend historically
     df['rsi'] = _compute_rsi(df['Close'], 14)

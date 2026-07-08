@@ -2,7 +2,7 @@
 """
 Train ML Multi-Day Predictor (T+1, T+3, T+5, T+7).
 
-Mengambil OHLCV historis, membuat fitur dan target, melatih 4 model LightGBM secara mandiri,
+Mengambil OHLCV historis, membuat fitur dan target, melatih 4 model LightGBM per-ticker,
 lalu menyimpan model ke folder models/checkpoints/.
 
 Usage:
@@ -39,83 +39,6 @@ from scripts.train_day1_model import (
     precision_recall_buy
 )
 
-def build_multiday_dataset(
-    tickers: list[str],
-    period: str,
-    min_rows: int,
-    test_size: float,
-):
-    from data.ml_features import prepare_training_data
-
-    train_x_parts = []
-    train_y_parts = []
-    test_x_parts = []
-    test_y_parts = []
-    all_x_parts = []
-    all_y_parts = []
-    summaries = []
-    errors = []
-
-    for ticker in tickers:
-        logger.info(f"📊 {ticker} — loading OHLCV ({period})...")
-        raw = fetch_ohlcv(ticker, period)
-        ohlcv = normalize_ohlcv(raw)
-        if ohlcv.empty:
-            errors.append({"ticker": ticker, "error": "No OHLCV data"})
-            logger.warning(f"  {ticker}: no OHLCV data")
-            continue
-
-        try:
-            X, Y = prepare_training_data(ohlcv, ticker=ticker)
-        except Exception as e:
-            errors.append({"ticker": ticker, "error": f"prepare_training_data failed: {e}"})
-            logger.warning(f"  {ticker}: feature prep failed: {e}")
-            continue
-
-        if len(X) < min_rows:
-            errors.append({"ticker": ticker, "error": f"Training rows terlalu sedikit ({len(X)} < {min_rows})"})
-            logger.warning(f"  {ticker}: rows too small ({len(X)} < {min_rows})")
-            continue
-
-        split_i = int(len(X) * (1 - test_size))
-        split_i = max(1, min(split_i, len(X) - 1))
-
-        X_train = X.iloc[:split_i].copy()
-        Y_train = Y.iloc[:split_i].copy()
-        X_test = X.iloc[split_i:].copy()
-        Y_test = Y.iloc[split_i:].copy()
-
-        train_x_parts.append(X_train)
-        train_y_parts.append(Y_train)
-        test_x_parts.append(X_test)
-        test_y_parts.append(Y_test)
-        all_x_parts.append(X)
-        all_y_parts.append(Y)
-
-        summaries.append({
-            "ticker": ticker,
-            "ohlcv_rows": len(ohlcv),
-            "training_rows": len(X),
-            "train_rows": len(X_train),
-            "test_rows": len(X_test),
-        })
-
-    if not all_x_parts:
-        empty_x = pd.DataFrame()
-        empty_y = pd.DataFrame()
-        return empty_x, empty_y, empty_x, empty_y, empty_x, empty_y, summaries, errors
-
-    return (
-        pd.concat(train_x_parts, ignore_index=True),
-        pd.concat(train_y_parts, ignore_index=True),
-        pd.concat(test_x_parts, ignore_index=True),
-        pd.concat(test_y_parts, ignore_index=True),
-        pd.concat(all_x_parts, ignore_index=True),
-        pd.concat(all_y_parts, ignore_index=True),
-        summaries,
-        errors,
-    )
-
 def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFrame) -> dict:
     results = {}
     if X_test.empty:
@@ -137,17 +60,68 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
         y_true = y_true_raw[valid_idx].values
         X_valid = X_test[valid_idx]
 
+        # preds is now probabilities
         preds = model.predict(X_valid[predictor.feature_cols].fillna(0.0))
-        buy_prec, buy_rec = precision_recall_buy(y_true, preds)
+        
+        binary_preds = (preds > 0.5).astype(int)
+        y_true_int = y_true.astype(int)
+        
+        # Manual metrics
+        acc = np.mean(binary_preds == y_true_int)
+        
+        true_positives = np.sum((binary_preds == 1) & (y_true_int == 1))
+        predicted_positives = np.sum(binary_preds == 1)
+        actual_positives = np.sum(y_true_int == 1)
+        
+        prec = true_positives / predicted_positives if predicted_positives > 0 else 0.0
+        rec = true_positives / actual_positives if actual_positives > 0 else 0.0
 
         results[h] = {
             "test_rows": int(len(y_true)),
-            "directional_accuracy": round(directional_accuracy(y_true, preds) * 100, 2),
-            "mae_pct": round(mae(y_true, preds) * 100, 4),
-            "buy_precision": round(buy_prec * 100, 2),
-            "buy_recall": round(buy_rec * 100, 2),
+            "accuracy": round(acc * 100, 2),
+            "buy_precision": round(prec * 100, 2),
+            "buy_recall": round(rec * 100, 2),
         }
     return results
+
+def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, final_dir):
+    from data.ml_features import prepare_training_data
+    from models.multiday_predictor import MultiDayPredictor
+    
+    try:
+        X, Y = prepare_training_data(ohlcv, ticker=ticker)
+    except Exception as e:
+        return None, {"ticker": ticker, "error": f"prepare_training_data failed: {e}"}
+
+    if len(X) < min_rows:
+        return None, {"ticker": ticker, "error": f"Training rows terlalu sedikit ({len(X)} < {min_rows})"}
+
+    split_i = int(len(X) * (1 - test_size))
+    split_i = max(1, min(split_i, len(X) - 1))
+
+    X_train = X.iloc[:split_i].copy()
+    Y_train = Y.iloc[:split_i].copy()
+    X_test = X.iloc[split_i:].copy()
+    Y_test = Y.iloc[split_i:].copy()
+
+    # Train Holdout (for evaluation)
+    holdout_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=holdout_dir)
+    holdout_predictor.train_incremental(X_train, Y_train, X_val=X_test, Y_targets_val=Y_test)
+    holdout_metrics = evaluate_multiday_model(holdout_predictor, X_test, Y_test)
+
+    # Train Final
+    final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
+    final_predictor.train_incremental(X, Y, X_val=X_test, Y_targets_val=Y_test)
+    
+    summary = {
+        "ticker": ticker,
+        "ohlcv_rows": len(ohlcv),
+        "training_rows": len(X),
+        "train_rows": len(X_train),
+        "test_rows": len(X_test),
+        "metrics": holdout_metrics
+    }
+    return summary, None
 
 def main():
     parser = argparse.ArgumentParser(description="Train ML Multi-Day Predictor")
@@ -164,27 +138,48 @@ def main():
     tickers = get_universe_tickers() if args.all else [t.upper() for t in args.tickers]
     logger.info(f"Training universe: {len(tickers)} ticker(s): {', '.join(tickers)}")
 
-    X_train, Y_train, X_test, Y_test, X_all, Y_all, ticker_summaries, errors = build_multiday_dataset(
-        tickers=tickers,
-        period=args.period,
-        min_rows=args.min_rows,
-        test_size=args.test_size,
-    )
+    summaries = []
+    errors = []
+    holdout_dir = "/tmp/checkpoints_holdout"
 
-    if X_train.empty or X_all.empty:
-        raise SystemExit("Tidak ada data training yang valid.")
+    for ticker in tickers:
+        logger.info(f"========== Training {ticker} ==========")
+        raw = fetch_ohlcv(ticker, args.period)
+        ohlcv = normalize_ohlcv(raw)
+        if ohlcv.empty:
+            errors.append({"ticker": ticker, "error": "No OHLCV data"})
+            continue
+            
+        summary, err = train_and_evaluate_ticker(
+            ticker, ohlcv, args.min_rows, args.test_size, holdout_dir, args.checkpoints_dir
+        )
+        
+        if err:
+            logger.warning(f"{ticker} skipped: {err['error']}")
+            errors.append(err)
+        if summary:
+            summaries.append(summary)
 
-    from models.multiday_predictor import MultiDayPredictor
+    if not summaries:
+        raise SystemExit("Tidak ada data training yang berhasil diproses.")
 
-    logger.info(f"Training holdout models for evaluation: train_rows={len(X_train)} test_rows={len(X_test)}")
-    holdout_predictor = MultiDayPredictor(checkpoints_dir="/tmp/checkpoints_holdout")
-    holdout_predictor.train_incremental(X_train, Y_train)
-
-    holdout_metrics = evaluate_multiday_model(holdout_predictor, X_test, Y_test)
-
-    logger.info(f"Training final models with all data: rows={len(X_all)}")
-    final_predictor = MultiDayPredictor(checkpoints_dir=args.checkpoints_dir)
-    final_predictor.train_incremental(X_all, Y_all)
+    # Aggregate global metrics (macro average)
+    global_metrics = {}
+    horizons = ['1d', '3d', '5d', '7d']
+    
+    total_train_rows = sum(s["train_rows"] for s in summaries)
+    total_test_rows = sum(s["test_rows"] for s in summaries)
+    total_final_rows = sum(s["training_rows"] for s in summaries)
+    
+    for h in horizons:
+        h_metrics = [s["metrics"][h] for s in summaries if h in s["metrics"]]
+        if h_metrics:
+            global_metrics[h] = {
+                "test_rows": sum(m["test_rows"] for m in h_metrics),
+                "accuracy": round(sum(m["accuracy"] for m in h_metrics) / len(h_metrics), 2),
+                "buy_precision": round(sum(m["buy_precision"] for m in h_metrics) / len(h_metrics), 2),
+                "buy_recall": round(sum(m["buy_recall"] for m in h_metrics) / len(h_metrics), 2),
+            }
 
     metadata = {
         "run_date": datetime.now().isoformat(),
@@ -196,13 +191,13 @@ def main():
         },
         "rows": {
             "tickers_requested": len(tickers),
-            "tickers_trained": len(ticker_summaries),
-            "holdout_train_rows": len(X_train),
-            "holdout_test_rows": len(X_test),
-            "final_train_rows": len(X_all),
+            "tickers_trained": len(summaries),
+            "holdout_train_rows": total_train_rows,
+            "holdout_test_rows": total_test_rows,
+            "final_train_rows": total_final_rows,
         },
-        "holdout_metrics": holdout_metrics,
-        "tickers": ticker_summaries,
+        "holdout_metrics_macro_avg": global_metrics,
+        "tickers": summaries,
         "errors": errors,
     }
 
@@ -211,18 +206,18 @@ def main():
         json.dump(metadata, f, indent=2, ensure_ascii=False)
 
     print("\n" + "=" * 72)
-    print("  ML MULTI-DAY TRAINING SUMMARY")
+    print("  ML MULTI-DAY PER-TICKER TRAINING SUMMARY")
     print("=" * 72)
-    print(f"Tickers trained : {len(ticker_summaries)} / {len(tickers)}")
-    print(f"Final rows      : {len(X_all)}")
-    print(f"Models saved to : {args.checkpoints_dir}")
+    print(f"Tickers trained : {len(summaries)} / {len(tickers)}")
+    print(f"Final rows      : {total_final_rows}")
+    print(f"Models saved to : {args.checkpoints_dir} (lgbm_<ticker>_<horizon>.pkl)")
     print(f"Metadata        : {args.metadata_output}")
     print("-" * 72)
-    for h, metrics in holdout_metrics.items():
+    print("MACRO AVERAGE ACCURACY (Across all tickers):")
+    for h, metrics in global_metrics.items():
         print(f"Horizon [{h.upper()}]:")
         print(f"  Holdout rows  : {metrics['test_rows']}")
-        print(f"  Dir Accuracy  : {metrics['directional_accuracy']:.2f}%")
-        print(f"  MAE           : {metrics['mae_pct']:.4f}%")
+        print(f"  Accuracy      : {metrics['accuracy']:.2f}%")
         print(f"  Buy Precision : {metrics['buy_precision']:.2f}%")
     print("=" * 72)
 

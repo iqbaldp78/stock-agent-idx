@@ -9,21 +9,22 @@ import numpy as np
 import logging
 import joblib
 import os
-from data.ml_features import FEATURE_COLUMNS
+from data.ml_features import ML_TRAIN_FEATURES
 
 logger = logging.getLogger(__name__)
 
 class MultiDayPredictor:
-    def __init__(self, checkpoints_dir: str = "models/checkpoints"):
+    def __init__(self, ticker: str = "GLOBAL", checkpoints_dir: str = "models/checkpoints"):
+        self.ticker = ticker.upper()
         self.checkpoints_dir = checkpoints_dir
-        self.feature_cols = FEATURE_COLUMNS
+        self.feature_cols = ML_TRAIN_FEATURES
         self.horizons = ['1d', '3d', '5d', '7d']
         self.models = {h: None for h in self.horizons}
 
         self._load_models()
 
     def _get_model_path(self, horizon: str) -> str:
-        return os.path.join(self.checkpoints_dir, f"lgbm_{horizon}.pkl")
+        return os.path.join(self.checkpoints_dir, f"lgbm_{self.ticker}_{horizon}.pkl")
 
     def _load_models(self):
         for h in self.horizons:
@@ -31,62 +32,85 @@ class MultiDayPredictor:
             if os.path.exists(path):
                 try:
                     self.models[h] = joblib.load(path)
-                    logger.info(f"Loaded {h} model from {path}")
                 except Exception as e:
-                    logger.warning(f"Failed to load {h} model: {e}")
+                    logger.debug(f"Failed to load {h} model for {self.ticker}: {e}")
 
-    def train_incremental(self, X: pd.DataFrame, Y_targets: pd.DataFrame):
+    def train_incremental(self, X_train: pd.DataFrame, Y_targets_train: pd.DataFrame, X_val: pd.DataFrame = None, Y_targets_val: pd.DataFrame = None):
         """
-        Train 4 independent models for 1d, 3d, 5d, and 7d horizons.
-        Y_targets should have columns: target_1d, target_3d, target_5d, target_7d
+        Train 4 independent models for 1d, 3d, 5d, and 7d horizons with early stopping.
         """
-        if len(X) < 10:
-            logger.warning("Not enough data to train.")
+        if len(X_train) < 10:
+            logger.warning(f"Not enough data to train {self.ticker}.")
             return
 
-        X_aligned = self._align_feature_frame(X)
-
-        # Base parameters - can be tuned individually per horizon later
-        params = {
-            'objective': 'regression',
-            'metric': 'rmse',
-            'verbosity': -1,
-            'boosting_type': 'gbdt',
-            'learning_rate': 0.05,
-            'num_leaves': 64,
-            'feature_fraction': 0.8,
-            'bagging_fraction': 0.8,
-            'bagging_freq': 5
-        }
+        X_train_aligned = self._align_feature_frame(X_train)
+        X_val_aligned = self._align_feature_frame(X_val) if X_val is not None else None
 
         os.makedirs(self.checkpoints_dir, exist_ok=True)
 
         for h in self.horizons:
             col_name = f'target_{h}'
-            if col_name not in Y_targets.columns:
-                logger.warning(f"Target {col_name} not found in Y_targets. Skipping training for {h}.")
+            if col_name not in Y_targets_train.columns:
                 continue
 
-            y = Y_targets[col_name]
-            # Drop NaNs if any specific to this horizon
-            valid_idx = ~y.isna()
+            y_train = Y_targets_train[col_name]
+            valid_idx = ~y_train.isna()
             if not valid_idx.any():
                 continue
 
-            X_valid = X_aligned[valid_idx]
-            y_valid = y[valid_idx]
+            X_tr = X_train_aligned[valid_idx].copy()
+            y_tr = y_train[valid_idx].astype(float)
 
-            logger.info(f"Training model for horizon: {h} on {len(X_valid)} samples")
-            dtrain = lgb.Dataset(X_valid, label=y_valid)
+            # Time-decay sample weights
+            n_samples = len(X_tr)
+            decay_factor = 3.0
+            weights = np.exp(np.linspace(0, np.log(decay_factor), n_samples))
+            weights = weights / weights.mean()
 
-            # For longer horizons, maybe use fewer boosting rounds to prevent overfitting
-            # but for now we use 300 for all
-            self.models[h] = lgb.train(params, dtrain, num_boost_round=300)
+            params = {
+                'objective': 'binary',
+                'metric': 'binary_logloss',
+                'verbosity': -1,
+                'boosting_type': 'gbdt',
+                'learning_rate': 0.05,
+                'num_leaves': 31,
+                'min_child_samples': 20,
+                'bagging_fraction': 0.8,
+                'feature_fraction': 0.8,
+                'bagging_freq': 1,
+                'seed': 42
+            }
+
+            dtrain = lgb.Dataset(X_tr, label=y_tr, weight=weights)
+            
+            valid_sets = [dtrain]
+            callbacks = []
+
+            if X_val_aligned is not None and Y_targets_val is not None and col_name in Y_targets_val.columns:
+                y_val = Y_targets_val[col_name]
+                val_valid_idx = ~y_val.isna()
+                if val_valid_idx.any():
+                    X_v = X_val_aligned[val_valid_idx].copy()
+                    y_v = y_val[val_valid_idx].astype(float)
+                    dval = lgb.Dataset(X_v, label=y_v, reference=dtrain)
+                    valid_sets.append(dval)
+                    callbacks.append(lgb.early_stopping(stopping_rounds=20, verbose=False))
+            
+            logger.debug(f"Training {self.ticker} horizon: {h} on {len(X_tr)} samples")
+            
+            # Using lgb.train directly instead of scikit-learn API for native early stopping and callbacks
+            callbacks.append(lgb.log_evaluation(period=0)) # suppress output
+            self.models[h] = lgb.train(
+                params, 
+                dtrain, 
+                num_boost_round=300,
+                valid_sets=valid_sets,
+                callbacks=callbacks
+            )
 
             # Save model
             model_path = self._get_model_path(h)
             joblib.dump(self.models[h], model_path)
-            logger.info(f"Model {h} saved to {model_path}")
 
     def predict(self, feature_row: pd.DataFrame) -> dict:
         """
@@ -129,7 +153,7 @@ class MultiDayPredictor:
     def _rule_based_prediction(self, feature_row: pd.DataFrame, horizon: str) -> float:
         """
         Emergency fallback prediction if ML model is missing.
-        Uses original linear logic logic.
+        Uses original linear logic but maps to a probability [0.0, 1.0].
         """
         score = (
             feature_row['bandarm_score'].iloc[0] * 0.4 +
@@ -137,18 +161,15 @@ class MultiDayPredictor:
             (1.0 if feature_row['is_bullish_trend'].iloc[0] > 0.5 else -0.5) * 0.2 +
             feature_row['macro_score'].iloc[0] * 0.1
         )
-        # Map 1-10 score to roughly -2% to +2% return base
-        base_pct = (score - 5.5) / 100.0
+        # Map 1-10 score to roughly 0.40 to 0.60 probability
+        prob = 0.50 + (score - 5.5) * 0.02
+        return max(0.0, min(1.0, prob))
 
-        factors = {'1d': 1.0, '3d': 3.0, '5d': 5.0, '7d': 7.0}
-        return base_pct * factors.get(horizon, 1.0)
-
-    def get_signal(self, pred_return_1d: float) -> str:
+    def get_signal(self, pred_prob_1d: float) -> str:
         """
-        Convert predicted 1d return to signal string.
-        (Retained for backward compatibility)
+        Convert predicted 1d probability to signal string.
         """
-        if pred_return_1d >= 0.01: return "STRONG BUY"
-        if pred_return_1d >= 0.003: return "BUY"
-        if pred_return_1d <= -0.005: return "AVOID"
+        if pred_prob_1d >= 0.55: return "STRONG BUY"
+        if pred_prob_1d >= 0.51: return "BUY"
+        if pred_prob_1d <= 0.48: return "AVOID"
         return "HOLD"

@@ -3,13 +3,14 @@ DB — Tracker
 Menyimpan hasil analisis ke PostgreSQL.
 """
 import json
-from datetime import date
+from datetime import datetime
+import uuid
 from sqlalchemy.orm import Session
 from db import SessionLocal
 from db.models import AgentScore, DebateLog, Signal
 
 
-def save_scores(run_date: date, scores: dict, composites: dict,
+def save_scores(run_date: datetime, scores: dict, composites: dict,
                 macro_data: dict) -> None:
     """Simpan scoring hasil agent ke tabel agent_scores."""
     db: Session = SessionLocal()
@@ -21,7 +22,7 @@ def save_scores(run_date: date, scores: dict, composites: dict,
             fund = ticker_scores.get("fundamental", {})
 
             record = AgentScore(
-                run_date=run_date,
+                run_date=run_date,  # already datetime
                 ticker=ticker,
                 fundamental_score=fund.get("score"),
                 technical_score=tech.get("score"),
@@ -41,13 +42,13 @@ def save_scores(run_date: date, scores: dict, composites: dict,
         db.close()
 
 
-def save_debate_log(run_date: date, debate_log: list) -> None:
+def save_debate_log(run_date: datetime, debate_log: list) -> None:
     """Simpan log debat ke tabel debate_logs."""
     db: Session = SessionLocal()
     try:
         for entry in debate_log:
             record = DebateLog(
-                run_date=run_date,
+                run_date=run_date,  # already datetime
                 ticker=entry["ticker"],
                 round=entry["round"],
                 agent=entry["agent"],
@@ -64,7 +65,7 @@ def save_debate_log(run_date: date, debate_log: list) -> None:
         db.close()
 
 
-def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
+def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: str | None = None) -> None:
     """Simpan final signals ke tabel signals."""
     db: Session = SessionLocal()
     try:
@@ -89,7 +90,7 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
                     pass
 
             record = Signal(
-                run_date=run_date,
+                run_date=run_date,  # already datetime
                 ticker=ticker,
                 rank=pick.get("rank"),
                 signal=db_signal,
@@ -98,6 +99,7 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
                 max_entry=_parse_number(pick.get("max_entry")),
                 target_1=_parse_number(pick.get("target_1")),
                 target_2=_parse_number(pick.get("target_2")),
+                target_3=_parse_number(pick.get("target_3")),
                 stop_loss=_parse_number(pick.get("stop_loss")),
                 risk_reward=_parse_risk_reward(pick.get("risk_reward")),
                 conviction=pick.get("conviction"),
@@ -116,6 +118,7 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
                 price_prediction=pick.get("price_prediction"),
                 broker_true_costs=pick.get("broker_true_costs"),
                 broker_distributors=pick.get("broker_distributors"),
+                batch_id=batch_id,
             )
             db.add(record)
 
@@ -126,9 +129,11 @@ def save_signals(run_date: date, top_picks: list, scores: dict) -> None:
     finally:
         db.close()
 
+
 def save_full_result(result: dict) -> None:
     """Simpan semua hasil analisis sekaligus."""
-    today = date.today()
+    today = datetime.now()
+    batch_id = str(uuid.uuid4())
 
     if result.get("composites"):
         save_scores(today, result["scores"], result["composites"], result["macro_data"])
@@ -154,10 +159,10 @@ def save_full_result(result: dict) -> None:
                 })
 
     if all_signals:
-        save_signals(today, all_signals, result.get("scores", {}))
+        save_signals(today, all_signals, result.get("scores", {}), batch_id=batch_id)
 
     if result.get("ihsg_prediction"):
-        save_ihsg_prediction(today, result["ihsg_prediction"])
+        save_ihsg_prediction(today, result["ihsg_prediction"], batch_id=batch_id)
 def _truncate(value, max_len: int) -> str | None:
     """Truncate string agar tidak overflow kolom VARCHAR."""
     if value is None:
@@ -215,7 +220,7 @@ def _parse_number(value) -> float | None:
         return None
 
 
-def save_ihsg_prediction(run_date: date, ihsg_pred: dict) -> None:
+def save_ihsg_prediction(run_date: datetime, ihsg_pred: dict, batch_id: str | None = None) -> None:
     """Simpan IHSG prediction ke tabel ihsg_predictions."""
     if not ihsg_pred or not ihsg_pred.get("current_price"):
         return

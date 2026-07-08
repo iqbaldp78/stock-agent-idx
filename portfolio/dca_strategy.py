@@ -3,7 +3,7 @@ DCA Strategy Module
 Logic DCA: create strategy dari signal, check triggers, timing recommendation.
 """
 import logging
-from datetime import date
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -70,8 +70,8 @@ def create_dca_from_signal(
             tp3=float(signal.target_3) if signal.target_3 else None,
             stop_loss=float(signal.stop_loss) if signal.stop_loss else None,
             status="ACTIVE",
-            activated_at=date.today(),
-            created_at=date.today(),
+            activated_at=datetime.now(),
+            created_at=datetime.now(),
         )
         db.add(strategy)
         db.commit()
@@ -130,8 +130,8 @@ def create_dca_manual(
             tp3=tp3,
             stop_loss=stop_loss,
             status="ACTIVE",
-            activated_at=date.today(),
-            created_at=date.today(),
+            activated_at=datetime.now(),
+            created_at=datetime.now(),
         )
         db.add(strategy)
         db.commit()
@@ -256,7 +256,7 @@ def deactivate_strategy(strategy_id: int) -> bool:
         if not s:
             return False
         s.status = "CANCELLED"
-        s.completed_at = date.today()
+        s.completed_at = datetime.now()
         db.commit()
         return True
     except Exception as e:

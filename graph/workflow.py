@@ -179,7 +179,6 @@ def run_ml_prediction(state: AgentState) -> dict:
 
     logger.info(f"[ML] Running Multi-Day forecast for {len(composites)} tickers")
 
-    predictor = MultiDayPredictor()
     ml_results = {}
 
     # Sort by composite score to only run ML on top candidates (performance optimization)
@@ -195,16 +194,17 @@ def run_ml_prediction(state: AgentState) -> dict:
             feature_row = extract_features(ticker, scores, macro_data, ohlcv)
 
             # 3. Predict Multi-Day
+            predictor = MultiDayPredictor(ticker=ticker)
             preds = predictor.predict(feature_row)
 
             # Format predictions to percentages
             pred_pcts = {h: round(val * 100, 2) for h, val in preds.items()}
 
             # Use 1d prediction for the main signal/direction
-            signal = predictor.get_signal(preds.get('1d', 0.0))
+            signal = predictor.get_signal(preds.get('1d', 0.5))
 
             ml_results[ticker] = {
-                "pred_return": pred_pcts.get('1d', 0.0), # Main 1d return
+                "pred_prob": pred_pcts.get('1d', 50.0), # Main 1d probability
                 "predictions_multiday": pred_pcts,       # 1d, 3d, 5d, 7d
                 "signal": signal,
                 "confidence": "MEDIUM" # Default for now
@@ -214,7 +214,7 @@ def run_ml_prediction(state: AgentState) -> dict:
             if ticker in composites:
                 composites[ticker]["ml_prediction"] = ml_results[ticker]
 
-            logger.info(f"  [{ticker}] ML Pred (1d/3d/5d/7d): {pred_pcts.get('1d',0):+.2f}% / {pred_pcts.get('3d',0):+.2f}% / {pred_pcts.get('5d',0):+.2f}% / {pred_pcts.get('7d',0):+.2f}% -> {signal}")
+            logger.info(f"  [{ticker}] ML Prob (1d/3d/5d/7d): {pred_pcts.get('1d',0):.2f}% / {pred_pcts.get('3d',0):.2f}% / {pred_pcts.get('5d',0):.2f}% / {pred_pcts.get('7d',0):.2f}% -> {signal}")
         except Exception as e:
             logger.warning(f"  [{ticker}] ML Error: {e}")
 
@@ -412,9 +412,10 @@ def run_debate_rule_based(state: AgentState) -> dict:
     def _ml_bonus(ml_pred: dict | None) -> float:
         if not ml_pred:
             return 0.0
-        pred_return = float(ml_pred.get("pred_return", 0.0))
+        pred_prob = float(ml_pred.get("pred_prob", 50.0))
         signal = str(ml_pred.get("signal", "")).upper()
-        base = max(-0.8, min(0.8, pred_return * 0.30))
+        # Scale probability to bonus: 50% -> 0, 60% -> +0.5, 40% -> -0.5
+        base = max(-0.8, min(0.8, (pred_prob - 50.0) * 0.05))
         signal_boost = 0.0
         if signal == "STRONG BUY":
             signal_boost = 0.20

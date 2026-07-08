@@ -39,14 +39,14 @@ def run_performance_check():
     """Check yesterday's signals: hit target or hit SL?"""
     logger.info("=== PERFORMANCE CHECK START ===")
     try:
-        from datetime import date, timedelta
+        from datetime import datetime, timedelta
         from sqlalchemy.orm import Session
         from db import SessionLocal
         from db.models import Signal, Performance
         from data.fetcher_stockbit import get_stock_info
 
         db: Session = SessionLocal()
-        today = date.today()
+        today = datetime.now()
 
         # Get open signals (no performance record with final result)
         open_signals = db.query(Signal).filter(
@@ -162,7 +162,7 @@ def run_portfolio_analysis():
         from portfolio.dca_strategy import get_active_strategies
         from db import SessionLocal
         from db.models import Signal
-        from datetime import date, timedelta
+        from datetime import datetime, timedelta
         from agents.portfolio_advisor import analyze_portfolio
 
         # Get data

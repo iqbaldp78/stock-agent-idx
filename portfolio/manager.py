@@ -3,7 +3,7 @@ Portfolio Manager
 CRUD operations untuk portfolio holdings, avg cost calculator, P&L tracker.
 """
 import logging
-from datetime import date, datetime
+from datetime import datetime, date
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -39,7 +39,7 @@ def add_holding(
             existing.total_shares = total_shares
             existing.total_invested = total_invested
             existing.notes = notes or existing.notes
-            existing.updated_at = date.today()
+            existing.updated_at = datetime.now()
             db.commit()
             logger.info(f"[Portfolio] Updated holding: {ticker} {total_shares} lembar @ {avg_cost}")
             return _holding_to_dict(existing)
@@ -51,8 +51,8 @@ def add_holding(
                 total_invested=total_invested,
                 status="ACTIVE",
                 notes=notes,
-                created_at=date.today(),
-                updated_at=date.today(),
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
             )
             db.add(holding)
             db.commit()
@@ -100,7 +100,7 @@ def delete_holding(ticker: str) -> bool:
         if not h:
             return False
         h.status = "CLOSED"
-        h.updated_at = date.today()
+        h.updated_at = datetime.now()
         db.commit()
         return True
     except Exception as e:
@@ -222,7 +222,7 @@ def update_current_prices(holdings: list[dict]) -> list[dict]:
                     holding_obj.current_value = current_value
                     holding_obj.unrealized_pnl = unrealized_pnl
                     holding_obj.unrealized_pnl_pct = round(unrealized_pnl_pct, 2)
-                    holding_obj.updated_at = date.today()
+                    holding_obj.updated_at = datetime.now()
 
                 h = dict(h)
                 h["current_price"] = current_price
@@ -300,7 +300,7 @@ def record_buy(
     """
     shares = lots * 100
     amount = price * shares
-    txn_date = transaction_date or date.today()
+    txn_date = transaction_date or datetime.now()
 
     db: Session = SessionLocal()
     try:
@@ -317,7 +317,7 @@ def record_buy(
             holding.avg_cost = new_avg
             holding.total_shares = int(holding.total_shares) + shares
             holding.total_invested = float(holding.total_invested or 0) + amount
-            holding.updated_at = date.today()
+            holding.updated_at = datetime.now()
             holding_id = holding.id
         else:
             holding = PortfolioHolding(
@@ -326,8 +326,8 @@ def record_buy(
                 total_shares=shares,
                 total_invested=amount,
                 status="ACTIVE",
-                created_at=date.today(),
-                updated_at=date.today(),
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
             )
             db.add(holding)
             db.flush()
@@ -345,7 +345,7 @@ def record_buy(
             transaction_date=txn_date,
             signal_id=signal_id,
             notes=notes,
-            created_at=date.today(),
+            created_at=datetime.now(),
         )
         db.add(txn)
         db.commit()
@@ -383,7 +383,7 @@ def record_sell(
     """
     shares = lots * 100
     amount = price * shares
-    txn_date = transaction_date or date.today()
+    txn_date = transaction_date or datetime.now()
 
     db: Session = SessionLocal()
     try:
@@ -397,7 +397,7 @@ def record_sell(
         holding.total_shares = int(holding.total_shares) - shares
         if holding.total_shares == 0:
             holding.status = "CLOSED"
-        holding.updated_at = date.today()
+        holding.updated_at = datetime.now()
 
         txn = DcaTransaction(
             holding_id=holding.id,
@@ -409,7 +409,7 @@ def record_sell(
             broker_fee=broker_fee,
             transaction_date=txn_date,
             notes=notes,
-            created_at=date.today(),
+            created_at=datetime.now(),
         )
         db.add(txn)
         db.commit()

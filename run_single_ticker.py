@@ -36,7 +36,7 @@ def run_single_ticker_analysis(ticker: str = "BBCA"):
         db = SessionLocal()
         from db.models import Signal, AgentScore
         
-        today = date.today()
+        today = datetime.now()
         signals = db.query(Signal).filter(
             Signal.run_date == today,
             Signal.ticker == ticker

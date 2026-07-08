@@ -1,0 +1,71 @@
+{
+  "title": "Stock-Agent-IDX Profit Dashboard",
+  "date": "2026-07-05",
+  "summary": {
+    "iterations": 6,
+    "best_dir_acc": 51.1,
+    "avg_dir_acc": 50.8,
+    "target_dir_acc": 58,
+    "status": "plateau",
+    "conclusion": "OHLCV features alone insufficient for >55% DirAcc"
+  },
+  "profit_metrics": {
+    "sharpe_target": 0.3,
+    "profit_factor_target": 1.1,
+    "max_drawdown_target": 6,
+    "win_rate_target": 51,
+    "current_estimate": {
+      "sharpe": 0.18,
+      "profit_factor": 1.08,
+      "max_drawdown": 7.2,
+      "win_rate": 51.1
+    }
+  },
+  "key_insights": [
+    "IDX daily returns have SNR \u2248 0.02 (near random walk)",
+    "Autocorrelation AC1 \u2248 0.01 for 1d horizon, 0.79 for 5d",
+    "All OHLCV-derived features show zero importance beyond basics",
+    "Foreign flow data limited to 40 days (insufficient for 5y training)",
+    "51% DirAcc = break-even after 0.1% commission"
+  ],
+  "recommendations": [
+    "Accept 51% DirAcc as maximum with OHLCV-only data",
+    "Focus on Sharpe ratio & profit factor instead of DirAcc",
+    "Increase trade threshold to 0.3% (from 0.2%)",
+    "Implement 1.5% stop-loss and take-profit",
+    "Position sizing: 0.5% per trade, max 2% daily exposure",
+    "Track monthly: Sharpe, drawdown, profit factor consistency"
+  ],
+  "experiment_history": [
+    {
+      "v": "v1",
+      "dir_acc": 50.8,
+      "change": "Baseline"
+    },
+    {
+      "v": "v2",
+      "dir_acc": 51.0,
+      "change": "+ 3-seed ensemble"
+    },
+    {
+      "v": "v3",
+      "dir_acc": 51.7,
+      "change": "+ Sector features"
+    },
+    {
+      "v": "v4",
+      "dir_acc": 50.5,
+      "change": "+ Volume profile"
+    },
+    {
+      "v": "v5",
+      "dir_acc": 51.1,
+      "change": "+ Prune 20 dead features + Dead-zone"
+    },
+    {
+      "v": "v6",
+      "dir_acc": 51.1,
+      "change": "+ Consolidated features"
+    }
+  ]
+}

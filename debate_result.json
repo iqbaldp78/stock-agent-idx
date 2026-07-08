@@ -1,221 +1,225 @@
 {
   "candidates": [
-    "ANTM"
+    "BBCA",
+    "BMRI",
+    "TLKM"
   ],
   "universe": [
-    "ANTM"
+    "BBCA",
+    "BMRI",
+    "TLKM"
   ],
   "scores": {
-    "ANTM": {
+    "BBCA": {
       "bandarm": {
-        "ticker": "ANTM",
-        "score": 2.0,
+        "ticker": "BBCA",
+        "score": 3.0,
         "signal": "DISTRIBUTION",
         "weight": "40%",
         "window_7d": {
-          "period": "2026-06-22 s/d 2026-06-30",
-          "bandar_signal": "Moderate Accumulation",
-          "assessment": "Moderate Accumulation",
-          "net_lot": 590259,
-          "net_value": 171247598000,
+          "period": "2026-06-26 s/d 2026-07-06",
+          "bandar_signal": "Strong Accumulation",
+          "assessment": "Strong Accumulation",
+          "net_lot": -294805,
+          "net_value": -120948555000,
           "total_buyer": 5,
           "total_seller": 5,
           "top_accumulators": [
             {
-              "broker": "CC",
-              "broker_name": "Mandiri Sekuritas",
-              "total_buy_lot": 922469,
-              "total_buy_value": 260935380000,
-              "avg_price": 2827,
-              "active_days": "5/7 hari",
-              "status": "📈 AKTIF AKUMULASI"
-            },
-            {
-              "broker": "BB",
-              "broker_name": "Unknown",
-              "total_buy_lot": 690873,
-              "total_buy_value": 194521401000,
-              "avg_price": 2819,
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_buy_lot": 646628,
+              "total_buy_value": 386513905000,
+              "avg_price": 5974,
               "active_days": "6/7 hari",
               "status": "⚡ KONSISTEN — PANTAU KETAT"
             },
             {
-              "broker": "DX",
-              "broker_name": "BNI Sekuritas",
-              "total_buy_lot": 365489,
-              "total_buy_value": 104019485000,
-              "avg_price": 2840,
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_buy_lot": 300077,
+              "total_buy_value": 187238527500,
+              "avg_price": 6048,
               "active_days": "2/7 hari",
               "status": "⚠️ TIDAK KONSISTEN"
             },
             {
-              "broker": "XL",
+              "broker": "IF",
               "broker_name": "Unknown",
-              "total_buy_lot": 151685,
-              "total_buy_value": 41914748000,
-              "avg_price": 2807,
-              "active_days": "4/7 hari",
+              "total_buy_lot": 249405,
+              "total_buy_value": 150000322500,
+              "avg_price": 6003,
+              "active_days": "3/7 hari",
               "status": "📊 AKUMULASI RINGAN"
             },
             {
-              "broker": "YU",
-              "broker_name": "CIMB Sekuritas",
-              "total_buy_lot": 94290,
-              "total_buy_value": 26010687000,
-              "avg_price": 2758,
+              "broker": "DX",
+              "broker_name": "BNI Sekuritas",
+              "total_buy_lot": 186563,
+              "total_buy_value": 112336292500,
+              "avg_price": 5997,
+              "active_days": "3/7 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "AG",
+              "broker_name": "Unknown",
+              "total_buy_lot": 122945,
+              "total_buy_value": 72616722500,
+              "avg_price": 5836,
               "active_days": "2/7 hari",
               "status": "⚠️ TIDAK KONSISTEN"
             }
           ],
           "top_distributors": [
             {
-              "broker": "BK",
-              "broker_name": "JP Morgan",
-              "total_sell_lot": 476119,
-              "total_sell_value": 132425602000,
-              "avg_price": 2786,
-              "active_days": "4/7 hari",
-              "status": "⚠️ DISTRIBUSI RINGAN"
-            },
-            {
-              "broker": "KZ",
-              "broker_name": "Daewoo Securities",
-              "total_sell_lot": 420223,
-              "total_sell_value": 115150158000,
-              "avg_price": 2743,
-              "active_days": "4/7 hari",
-              "status": "⚠️ DISTRIBUSI RINGAN"
-            },
-            {
               "broker": "AK",
               "broker_name": "UBS Securities",
-              "total_sell_lot": 273896,
-              "total_sell_value": 75751811000,
-              "avg_price": 2799,
+              "total_sell_lot": 893496,
+              "total_sell_value": 506849537500,
+              "avg_price": 5842,
+              "active_days": "2/7 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Unknown",
+              "total_sell_lot": 526534,
+              "total_sell_value": 294664055000,
+              "avg_price": 5841,
               "active_days": "5/7 hari",
               "status": "⚠️ DISTRIBUSI AKTIF"
             },
             {
-              "broker": "LG",
-              "broker_name": "Trimegah Sekuritas",
-              "total_sell_lot": 237319,
-              "total_sell_value": 66524706000,
-              "avg_price": 2818,
+              "broker": "AI",
+              "broker_name": "Unknown",
+              "total_sell_lot": 177087,
+              "total_sell_value": 103107565000,
+              "avg_price": 5830,
               "active_days": "4/7 hari",
               "status": "⚠️ DISTRIBUSI RINGAN"
             },
             {
-              "broker": "MG",
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "total_sell_lot": 139939,
+              "total_sell_value": 80902315000,
+              "avg_price": 5776,
+              "active_days": "3/7 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "SQ",
               "broker_name": "Unknown",
-              "total_sell_lot": 226990,
-              "total_sell_value": 66301826000,
-              "avg_price": 2892,
-              "active_days": "2/7 hari",
-              "status": "ℹ️ DISTRIBUSI SESUAI"
+              "total_sell_lot": 63367,
+              "total_sell_value": 44130852500,
+              "avg_price": 5937,
+              "active_days": "5/7 hari",
+              "status": "⚠️ DISTRIBUSI AKTIF"
             }
           ],
           "distribution_signal": "DISTRIBUTION",
           "foreign_net_7d": 0
         },
         "window_1m": {
-          "period": "2026-05-20 s/d 2026-06-30",
-          "bandar_signal": "Distribution",
-          "assessment": "Distribution",
-          "net_lot": -1283557,
-          "net_value": -409212083000,
+          "period": "2026-05-26 s/d 2026-07-06",
+          "bandar_signal": "Light Accumulation",
+          "assessment": "Light Accumulation",
+          "net_lot": -4063230,
+          "net_value": -2037737266000,
           "total_buyer": 5,
           "total_seller": 5,
           "top_accumulators": [
             {
-              "broker": "CC",
-              "broker_name": "Mandiri Sekuritas",
-              "total_buy_lot": 1106514,
-              "total_buy_value": 312092661000,
-              "avg_price": 2850,
-              "active_days": "11/30 hari",
-              "status": "⚠️ TIDAK KONSISTEN"
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_buy_lot": 3145564,
+              "total_buy_value": 1909972237500,
+              "avg_price": 5871,
+              "active_days": "17/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
             },
             {
               "broker": "DX",
               "broker_name": "BNI Sekuritas",
-              "total_buy_lot": 704552,
-              "total_buy_value": 203450604000,
-              "avg_price": 2904,
-              "active_days": "10/30 hari",
+              "total_buy_lot": 1197556,
+              "total_buy_value": 659547333500,
+              "avg_price": 5550,
+              "active_days": "9/30 hari",
               "status": "⚠️ TIDAK KONSISTEN"
-            },
-            {
-              "broker": "XL",
-              "broker_name": "Unknown",
-              "total_buy_lot": 679971,
-              "total_buy_value": 189880372000,
-              "avg_price": 2880,
-              "active_days": "13/30 hari",
-              "status": "📊 AKUMULASI RINGAN"
             },
             {
               "broker": "BB",
               "broker_name": "Unknown",
-              "total_buy_lot": 544953,
-              "total_buy_value": 168423018000,
-              "avg_price": 2938,
-              "active_days": "8/30 hari",
-              "status": "⚠️ TIDAK KONSISTEN"
-            },
-            {
-              "broker": "SQ",
-              "broker_name": "Unknown",
-              "total_buy_lot": 529119,
-              "total_buy_value": 150944942000,
-              "avg_price": 2903,
+              "total_buy_lot": 1095536,
+              "total_buy_value": 623079556500,
+              "avg_price": 5728,
               "active_days": "12/30 hari",
               "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Unknown",
+              "total_buy_lot": 1082342,
+              "total_buy_value": 569914347000,
+              "avg_price": 5706,
+              "active_days": "16/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Unknown",
+              "total_buy_lot": 710129,
+              "total_buy_value": 372048921000,
+              "avg_price": 5592,
+              "active_days": "10/30 hari",
+              "status": "⚠️ TIDAK KONSISTEN"
             }
           ],
           "top_distributors": [
             {
-              "broker": "RX",
-              "broker_name": "Macquarie Securities",
-              "total_sell_lot": 1916731,
-              "total_sell_value": 564464680000,
-              "avg_price": 2903,
-              "active_days": "6/30 hari",
-              "status": "ℹ️ DISTRIBUSI SESUAI"
-            },
-            {
-              "broker": "KZ",
-              "broker_name": "Daewoo Securities",
-              "total_sell_lot": 1494946,
-              "total_sell_value": 430381931000,
-              "avg_price": 2890,
-              "active_days": "12/30 hari",
-              "status": "⚠️ DISTRIBUSI RINGAN"
-            },
-            {
               "broker": "AK",
               "broker_name": "UBS Securities",
-              "total_sell_lot": 517320,
-              "total_sell_value": 168498842000,
-              "avg_price": 2877,
-              "active_days": "15/30 hari",
-              "status": "⚠️ DISTRIBUSI RINGAN"
-            },
-            {
-              "broker": "BK",
-              "broker_name": "JP Morgan",
-              "total_sell_lot": 439821,
-              "total_sell_value": 137611589000,
-              "avg_price": 2902,
+              "total_sell_lot": 5827414,
+              "total_sell_value": 3067717280500,
+              "avg_price": 5581,
               "active_days": "13/30 hari",
               "status": "⚠️ DISTRIBUSI RINGAN"
             },
             {
-              "broker": "AZ",
-              "broker_name": "Unknown",
-              "total_sell_lot": 479848,
-              "total_sell_value": 133046638000,
-              "avg_price": 2862,
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_sell_lot": 1489066,
+              "total_sell_value": 951196943000,
+              "avg_price": 5713,
+              "active_days": "15/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_sell_lot": 1425642,
+              "total_sell_value": 774996126500,
+              "avg_price": 5649,
               "active_days": "12/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "TP",
+              "broker_name": "Unknown",
+              "total_sell_lot": 1330419,
+              "total_sell_value": 774051926500,
+              "avg_price": 5774,
+              "active_days": "10/30 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Unknown",
+              "total_sell_lot": 1221816,
+              "total_sell_value": 604337385000,
+              "avg_price": 5702,
+              "active_days": "14/30 hari",
               "status": "⚠️ DISTRIBUSI RINGAN"
             }
           ],
@@ -223,15 +227,15 @@
           "foreign_net_1m": 0
         },
         "price_analysis": {
-          "current_price": 2630.0,
-          "bandar_avg_7d": 2827,
-          "bandar_avg_1m": 2850,
-          "distance_from_7d": "-6.97%",
-          "distance_from_1m": "-7.72%",
-          "ideal_entry_zone": "2836–2864",
-          "max_entry": "2884",
-          "entry_status": "🟢 IDEAL",
-          "entry_label": "Harga 7.7% DI BAWAH true cost bandar — entry sangat menarik",
+          "current_price": 6150.0,
+          "bandar_avg_7d": 5974,
+          "bandar_avg_1m": 5871,
+          "distance_from_7d": "+2.95%",
+          "distance_from_1m": "+4.75%",
+          "ideal_entry_zone": "5842–5900",
+          "max_entry": "6093",
+          "entry_status": "🟠 CAUTION",
+          "entry_label": "Harga 4.8% di atas true cost bandar — tunggu pullback",
           "net_foreign_7d": "netral",
           "net_foreign_1m": "netral",
           "anomali_akumulasi_7d": null,
@@ -240,223 +244,220 @@
           "anomali_distribusi_1m": null
         },
         "broker_to_watch": [
-          "CC (Mandiri Sekuritas)",
-          "BB (Unknown)"
+          "YU (CIMB Sekuritas)",
+          "KZ (Daewoo Securities)"
         ],
         "data_used": [
           "Stockbit broker summary 7H & 1M",
-          "Distribution 7H: Top3 sell >= 30% value",
+          "Distribution 7H: Dist, Top3 sell >= 30% value",
           "Distribution 1M: Dist, Top3 sell >= 30% value"
         ],
         "confidence": "LOW"
       },
       "technical": {
-        "ticker": "ANTM",
-        "score": 0.7,
-        "current_price": 2630.0,
-        "signal": "SELL",
-        "trend": "bearish",
-        "setup": "Harga mendekati support terdekat di 2610; Harga mendekati resistance terdekat di 2640; RSI netral; Harga di bawah MA20 (short-term bearish); Harga di bawah MA50 (mid-term bearish); Harga di bawah MA100 (intermediate-term bearish); Harga di bawah MA200 (long-term bearish); Death cross MA20/MA50; Death cross MA50/MA100 (mid-intermediate bearish); Golden cross MA100/MA200 (intermediate-long bullish); MACD death cross; Volume normal; Dekat 52W low — potential reversal; Trend utama: bearish (semua MA major di atas harga)",
-        "entry_zone": "2610-2793",
-        "target": "2218",
-        "stop_loss": "5069",
-        "support_near": "2610",
-        "resistance_near": "2640",
-        "support_strong": "2450",
-        "resistance_strong": "4970",
+        "ticker": "BBCA",
+        "score": 5.5,
+        "current_price": 6150.0,
+        "signal": "HOLD",
+        "trend": "sideways",
+        "setup": "Harga mendekati resistance terdekat (Fibonacci) di 6301; RSI netral; Harga di atas MA20 (short-term bullish); Harga di atas MA50 (mid-term bullish); Harga di bawah MA100 (intermediate-term bearish); Harga di bawah MA200 (long-term bearish); Death cross MA20/MA50; Death cross MA50/MA100 (mid-intermediate bearish); Death cross MA100/MA200 (intermediate-long bearish); MACD golden cross; Volume normal; Trend utama: sideways (harga di antara MA major)",
+        "entry_zone": "5640-5892",
+        "target": "6765",
+        "stop_loss": "5842",
+        "support_near": "5640",
+        "resistance_near": "6301",
+        "support_strong": "3910",
+        "resistance_strong": "7370",
         "divergence": {
           "rsi": "none",
           "macd": "none"
         },
         "data_used": [
-          "Support terdekat: 2610 (sentuh 3x), Resistance terdekat: 2640 (sentuh 1x)",
-          "Support kuat: 2450 (sentuh 1x), Resistance kuat: 4970 (sentuh 1x)",
-          "RSI: 40.8",
-          "MA20: 2844",
-          "MA50: 3329",
-          "MA100: 3665",
-          "MA200: 3450",
-          "MACD: death_cross",
-          "Vol ratio 5/20: 0.56",
-          "52W pos: 7%",
-          "Trend: bearish (-1.0)"
+          "TV Fib Support Terdekat: 5640",
+          "TV Fib Support Kuat: 3910",
+          "TV Fib Resistance Terdekat: 6301",
+          "TV Fib Resistance Kuat: 7370",
+          "RSI: 46.7",
+          "MA20: 5892",
+          "MA50: 5962",
+          "MA100: 6495",
+          "MA200: 7270",
+          "MACD: golden_cross",
+          "Vol ratio 5/20: 0.62",
+          "52W pos: 32%",
+          "Trend: sideways (0)"
         ],
         "confidence": "HIGH",
         "tradingview_ta": {
           "summary": {
-            "RECOMMENDATION": "SELL",
-            "BUY": 2,
-            "SELL": 14,
+            "RECOMMENDATION": "BUY",
+            "BUY": 12,
+            "SELL": 4,
             "NEUTRAL": 10
           },
           "indicators": {
-            "Recommend.Other": -0.09090909090909091,
-            "Recommend.All": -0.4454545454545455,
-            "Recommend.MA": -0.8,
-            "RSI": 36.47022368857435,
-            "RSI[1]": 39.04408615297023,
-            "Stoch.K": 18.01310401310401,
-            "Stoch.D": 25.070409655775496,
-            "Stoch.K[1]": 17.938000696621383,
-            "Stoch.D[1]": 16.515664227657286,
-            "CCI20": -91.83673469387655,
-            "CCI20[1]": -53.05186590765199,
-            "ADX": 30.806967757031256,
-            "ADX+DI": 16.11913884606985,
-            "ADX-DI": 34.461570345423375,
-            "ADX+DI[1]": 16.828586606349486,
-            "ADX-DI[1]": 31.977159272371743,
-            "AO": -315.05882352941217,
-            "AO[1]": -298.79411764705947,
-            "Mom": -500,
-            "Mom[1]": -130,
-            "MACD.macd": -144.90571638075699,
-            "MACD.signal": -145.05362251504815,
+            "Recommend.Other": 0.18181818181818182,
+            "Recommend.All": 0.2909090909090909,
+            "Recommend.MA": 0.4,
+            "RSI": 54.22771794259758,
+            "RSI[1]": 52.76084225701608,
+            "Stoch.K": 44.16666666666666,
+            "Stoch.D": 29.97474747474746,
+            "Stoch.K[1]": 40.42232277526395,
+            "Stoch.D[1]": 19.610356963298138,
+            "CCI20": 43.20680700591388,
+            "CCI20[1]": 36.19104123405693,
+            "ADX": 15.45213238722822,
+            "ADX+DI": 27.445492048116886,
+            "ADX-DI": 23.8457216411731,
+            "ADX+DI[1]": 28.305891097987285,
+            "ADX-DI[1]": 25.2184992103214,
+            "AO": -50.294117647058556,
+            "AO[1]": -56.10294117647027,
+            "Mom": -100,
+            "Mom[1]": -250,
+            "MACD.macd": -0.27333441109476553,
+            "MACD.signal": -13.734438298495789,
             "Rec.Stoch.RSI": 0,
-            "Stoch.RSI.K": 19.097796760132212,
+            "Stoch.RSI.K": 57.35456853042979,
             "Rec.WR": 0,
-            "W.R": -96.96969696969697,
+            "W.R": -42.5,
             "Rec.BBPower": 0,
-            "BBPower": -344.03053030273895,
+            "BBPower": 289.1739355176305,
             "Rec.UO": 0,
-            "UO": 37.79527745412602,
-            "close": 2630,
-            "EMA5": 2725.8553138338257,
-            "SMA5": 2710,
-            "EMA10": 2797.3262890294245,
-            "SMA10": 2879,
-            "EMA20": 2897.5809586671658,
-            "SMA20": 2836.4999999999955,
-            "EMA30": 3004.9428829127373,
-            "SMA30": 2937,
-            "EMA50": 3183.076781391538,
-            "SMA50": 3326.400000000001,
-            "EMA100": 3368.3154784322505,
-            "SMA100": 3663.800000000003,
-            "EMA200": 3298.672323498019,
-            "SMA200": 3449.3,
+            "UO": 42.148045487752114,
+            "close": 6125,
+            "EMA5": 5959.07947648236,
+            "SMA5": 5825,
+            "EMA10": 5936.315113320305,
+            "SMA10": 5930,
+            "EMA20": 5923.8579525881105,
+            "SMA20": 5892.5,
+            "EMA30": 5945.67576824206,
+            "SMA30": 5843.333333333333,
+            "EMA50": 6067.661987586458,
+            "SMA50": 5961.5,
+            "EMA100": 6469.185628013214,
+            "SMA100": 6495,
+            "EMA200": 7102.882221170027,
+            "SMA200": 7270,
             "Rec.Ichimoku": 0,
-            "Ichimoku.BLine": 2860,
-            "Rec.VWMA": -1,
-            "VWMA": 2824.8199810622523,
+            "Ichimoku.BLine": 5685,
+            "Rec.VWMA": 1,
+            "VWMA": 5758.823397279711,
             "Rec.HullMA9": 1,
-            "HullMA9": 2617.148148148148,
-            "Pivot.M.Classic.S3": 1103.3333333333335,
-            "Pivot.M.Classic.S2": 2173.3333333333335,
-            "Pivot.M.Classic.S1": 2536.666666666667,
-            "Pivot.M.Classic.Middle": 3243.3333333333335,
-            "Pivot.M.Classic.R1": 3606.666666666667,
-            "Pivot.M.Classic.R2": 4313.333333333334,
-            "Pivot.M.Classic.R3": 5383.333333333334,
-            "Pivot.M.Fibonacci.S3": 2173.3333333333335,
-            "Pivot.M.Fibonacci.S2": 2582.0733333333337,
-            "Pivot.M.Fibonacci.S1": 2834.5933333333332,
-            "Pivot.M.Fibonacci.Middle": 3243.3333333333335,
-            "Pivot.M.Fibonacci.R1": 3652.0733333333337,
-            "Pivot.M.Fibonacci.R2": 3904.5933333333332,
-            "Pivot.M.Fibonacci.R3": 4313.333333333334,
-            "Pivot.M.Camarilla.S3": 2605.75,
-            "Pivot.M.Camarilla.S2": 2703.8333333333335,
-            "Pivot.M.Camarilla.S1": 2801.9166666666665,
-            "Pivot.M.Camarilla.Middle": 3243.3333333333335,
-            "Pivot.M.Camarilla.R1": 2998.0833333333335,
-            "Pivot.M.Camarilla.R2": 3096.1666666666665,
-            "Pivot.M.Camarilla.R3": 3194.25,
-            "Pivot.M.Woodie.S3": 1345,
-            "Pivot.M.Woodie.S2": 2112.5,
-            "Pivot.M.Woodie.S1": 2415,
-            "Pivot.M.Woodie.Middle": 3182.5,
-            "Pivot.M.Woodie.R1": 3485,
-            "Pivot.M.Woodie.R2": 4252.5,
-            "Pivot.M.Woodie.R3": 4555,
-            "Pivot.M.Demark.S1": 2355,
-            "Pivot.M.Demark.Middle": 3152.5,
-            "Pivot.M.Demark.R1": 3425,
-            "open": 2700,
-            "P.SAR": 3184.5475584,
-            "BB.lower": 2472.1773408088648,
-            "BB.upper": 3200.822659191126,
-            "AO[2]": -291.2352941176473,
-            "volume": 41178300,
-            "change": -3.308823529411765,
-            "low": 2610,
-            "high": 2700
+            "HullMA9": 5897.685185185185,
+            "Pivot.M.Classic.S3": 2180,
+            "Pivot.M.Classic.S2": 3910,
+            "Pivot.M.Classic.S1": 4730,
+            "Pivot.M.Classic.Middle": 5640,
+            "Pivot.M.Classic.R1": 6460,
+            "Pivot.M.Classic.R2": 7370,
+            "Pivot.M.Classic.R3": 9100,
+            "Pivot.M.Fibonacci.S3": 3910,
+            "Pivot.M.Fibonacci.S2": 4570.86,
+            "Pivot.M.Fibonacci.S1": 4979.14,
+            "Pivot.M.Fibonacci.Middle": 5640,
+            "Pivot.M.Fibonacci.R1": 6300.86,
+            "Pivot.M.Fibonacci.R2": 6709.14,
+            "Pivot.M.Fibonacci.R3": 7370,
+            "Pivot.M.Camarilla.S3": 5074.25,
+            "Pivot.M.Camarilla.S2": 5232.833333333333,
+            "Pivot.M.Camarilla.S1": 5391.416666666667,
+            "Pivot.M.Camarilla.Middle": 5640,
+            "Pivot.M.Camarilla.R1": 5708.583333333333,
+            "Pivot.M.Camarilla.R2": 5867.166666666667,
+            "Pivot.M.Camarilla.R3": 6025.75,
+            "Pivot.M.Woodie.S3": 2955,
+            "Pivot.M.Woodie.S2": 3887.5,
+            "Pivot.M.Woodie.S1": 4685,
+            "Pivot.M.Woodie.Middle": 5617.5,
+            "Pivot.M.Woodie.R1": 6415,
+            "Pivot.M.Woodie.R2": 7347.5,
+            "Pivot.M.Woodie.R3": 8145,
+            "Pivot.M.Demark.S1": 4320,
+            "Pivot.M.Demark.Middle": 5435,
+            "Pivot.M.Demark.R1": 6050,
+            "open": 6050,
+            "P.SAR": 6472.36816,
+            "BB.lower": 5151.031861776921,
+            "BB.upper": 6633.968138223079,
+            "AO[2]": -49.19117647058829,
+            "volume": 148684900,
+            "change": 1.2396694214876034,
+            "low": 5975,
+            "high": 6175
           }
         },
-        "tp1": 3840.0,
-        "tp2": 5069.0,
-        "tp3": 6298.0,
-        "tp1_size": 0.31,
-        "tp2_size": 0.38,
-        "tp3_size": 0.31,
-        "risk_reward_tp1": "1:0.5",
-        "risk_reward_tp2": "1:1.0",
-        "risk_reward_tp3": "1:1.5",
+        "tp1": 6211.0,
+        "tp2": 6799.0,
+        "tp3": 7370.0,
+        "tp1_size": 0.3,
+        "tp2_size": 0.4,
+        "tp3_size": 0.3,
+        "risk_reward_tp1": "1:2.8",
+        "risk_reward_tp2": "1:5.7",
+        "risk_reward_tp3": "1:8.6",
         "tp_constraints_met": true
       },
       "fundamental": {
-        "ticker": "ANTM",
-        "score": 10.0,
+        "ticker": "BBCA",
+        "score": 7.5,
         "signal": "BUY",
         "key_points": [
-          "PER 4.6x — undervalued",
-          "PBV 1.63x — wajar",
-          "ROE 21.84% — sangat baik",
-          "DER 0.14x — leverage rendah",
-          "Earnings growth 59.9% — akseleratif",
+          "PER 12.9x — valuasi wajar",
+          "ROE 22.41% — sangat baik",
           "Net income konsisten naik 3 tahun terakhir",
           "EPS konsisten naik 3 tahun terakhir",
-          "Revenue konsisten naik 3 tahun terakhir",
-          "Valuasi menarik: DEEP_UNDERVALUED (upside +291.5%)"
+          "Revenue konsisten naik 3 tahun terakhir"
         ],
         "risks": [],
         "data_used": [
-          "PER: 4.6x",
-          "PBV: 1.63x",
-          "ROE: 21.84%",
-          "DER: 0.14x",
-          "Revenue Growth: 12.1%",
-          "Earnings Growth: 59.9%",
-          "Rata-rata Net Income 3 tahun: 8,161",
-          "Rata-rata EPS 3 tahun: 339.61",
-          "Rata-rata Revenue 3 tahun: 90,376",
-          "Rata-rata Dividend Yield 5 tahun: 7.41%",
-          "Fair Value: 10,295 (DEEP_UNDERVALUED)",
-          "Upside to fair value: +291.46%",
-          "CAGR Revenue: 28.07% (2017–2026)",
-          "CAGR Net Income: 66.71% (2017–2026)",
-          "CAGR Eps: 66.78% (2017–2026)"
+          "PER: 12.9x",
+          "PBV: 2.91x",
+          "ROE: 22.41%",
+          "Revenue Growth: 2.2%",
+          "Earnings Growth: 3.8%",
+          "Rata-rata Net Income 3 tahun: 57,036",
+          "Rata-rata EPS 3 tahun: 462.68",
+          "Rata-rata Revenue 3 tahun: 116,654",
+          "Rata-rata Dividend Yield 5 tahun: 4.95%",
+          "Fair Value: 6,312 (FAIRLY_VALUED)",
+          "Upside to fair value: +2.63%",
+          "CAGR Revenue: 7.07% (2017–2026)",
+          "CAGR Net Income: 10.81% (2017–2026)",
+          "CAGR Eps: 10.81% (2017–2026)"
         ],
         "fair_value": {
-          "current_price": 2630.0,
+          "current_price": 6150.0,
           "method": "blended",
-          "fair_value_low": 2790.0,
-          "fair_value_base": 10295.0,
-          "fair_value_high": 17854.0,
-          "upside_pct": 291.46,
-          "margin_of_safety_pct": 74.45,
-          "valuation_label": "DEEP_UNDERVALUED",
+          "fair_value_low": 3750.0,
+          "fair_value_base": 6312.0,
+          "fair_value_high": 9540.0,
+          "upside_pct": 2.63,
+          "margin_of_safety_pct": 2.56,
+          "valuation_label": "FAIRLY_VALUED",
           "methods": {
             "pe_based": {
               "available": true,
-              "eps": 566.81,
-              "target_pe": 23.0,
-              "fair_value": 13037.0
+              "eps": 478.23,
+              "target_pe": 19.0,
+              "fair_value": 9086.0
             },
             "pbv_roe_based": {
               "available": true,
-              "bvps": 1613.5,
-              "roe_pct": 21.84,
+              "bvps": 2113.4,
+              "roe_pct": 22.41,
               "required_return_pct": 12.0,
-              "fair_pbv": 1.82,
-              "fair_value": 2937.0
+              "fair_pbv": 1.87,
+              "fair_value": 3947.0
             },
             "eps_growth_based": {
               "available": true,
-              "eps": 566.81,
-              "growth_pct": 59.85,
-              "target_pe": 30.0,
-              "fair_value": 17004.0
+              "eps": 478.23,
+              "growth_pct": 3.8,
+              "target_pe": 8.8,
+              "fair_value": 4208.0
             }
           },
           "notes": [
@@ -469,43 +470,985 @@
         "confidence": "HIGH"
       },
       "news": {
-        "ticker": "ANTM",
+        "ticker": "BBCA",
         "score": 5,
-        "summary": "Error saat menganalisis berita: HTTP error saat mengambil berita: 429",
+        "summary": "Tidak ada berita relevan yang ditemukan.",
+        "articles": []
+      }
+    },
+    "BMRI": {
+      "bandarm": {
+        "ticker": "BMRI",
+        "score": 0.0,
+        "signal": "DISTRIBUTION",
+        "weight": "40%",
+        "window_7d": {
+          "period": "2026-06-26 s/d 2026-07-06",
+          "bandar_signal": "Light Accumulation",
+          "assessment": "Light Accumulation",
+          "net_lot": -1142471,
+          "net_value": -443301991000,
+          "total_buyer": 5,
+          "total_seller": 5,
+          "top_accumulators": [
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_buy_lot": 1350409,
+              "total_buy_value": 531663973000,
+              "avg_price": 3938,
+              "active_days": "4/7 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Unknown",
+              "total_buy_lot": 444937,
+              "total_buy_value": 173663053000,
+              "avg_price": 3917,
+              "active_days": "6/7 hari",
+              "status": "⚡ KONSISTEN — PANTAU KETAT"
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Unknown",
+              "total_buy_lot": 194858,
+              "total_buy_value": 76061207000,
+              "avg_price": 3913,
+              "active_days": "5/7 hari",
+              "status": "📈 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Unknown",
+              "total_buy_lot": 184646,
+              "total_buy_value": 71633231000,
+              "avg_price": 3911,
+              "active_days": "4/7 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_buy_lot": 159922,
+              "total_buy_value": 62708353000,
+              "avg_price": 3934,
+              "active_days": "3/7 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "ZP",
+              "broker_name": "Unknown",
+              "total_sell_lot": 1942929,
+              "total_sell_value": 765493254000,
+              "avg_price": 3930,
+              "active_days": "6/7 hari",
+              "status": "⚠️ DISTRIBUSI KONSISTEN"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_sell_lot": 1302430,
+              "total_sell_value": 500969741000,
+              "avg_price": 3896,
+              "active_days": "5/7 hari",
+              "status": "⚠️ DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "DX",
+              "broker_name": "BNI Sekuritas",
+              "total_sell_lot": 150921,
+              "total_sell_value": 60867783000,
+              "avg_price": 4020,
+              "active_days": "2/7 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Unknown",
+              "total_sell_lot": 44042,
+              "total_sell_value": 16945447000,
+              "avg_price": 3889,
+              "active_days": "2/7 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Unknown",
+              "total_sell_lot": 36921,
+              "total_sell_value": 14755583000,
+              "avg_price": 3942,
+              "active_days": "3/7 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_7d": 0
+        },
+        "window_1m": {
+          "period": "2026-05-26 s/d 2026-07-06",
+          "bandar_signal": "Light Accumulation",
+          "assessment": "Light Accumulation",
+          "net_lot": -3945399,
+          "net_value": -1535376503000,
+          "total_buyer": 5,
+          "total_seller": 5,
+          "top_accumulators": [
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_buy_lot": 3128309,
+              "total_buy_value": 1240082002000,
+              "avg_price": 4007,
+              "active_days": "16/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Unknown",
+              "total_buy_lot": 1229707,
+              "total_buy_value": 485991753000,
+              "avg_price": 4077,
+              "active_days": "20/30 hari",
+              "status": "📈 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Unknown",
+              "total_buy_lot": 672035,
+              "total_buy_value": 266682172000,
+              "avg_price": 4098,
+              "active_days": "15/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_buy_lot": 633310,
+              "total_buy_value": 257664290000,
+              "avg_price": 4082,
+              "active_days": "8/30 hari",
+              "status": "⚠️ TIDAK KONSISTEN"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_buy_lot": 502043,
+              "total_buy_value": 231399160000,
+              "avg_price": 4121,
+              "active_days": "9/30 hari",
+              "status": "⚠️ TIDAK KONSISTEN"
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "ZP",
+              "broker_name": "Unknown",
+              "total_sell_lot": 5457565,
+              "total_sell_value": 2135530425000,
+              "avg_price": 4054,
+              "active_days": "15/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_sell_lot": 2127438,
+              "total_sell_value": 860267976000,
+              "avg_price": 4081,
+              "active_days": "15/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_sell_lot": 1519908,
+              "total_sell_value": 651494246000,
+              "avg_price": 4138,
+              "active_days": "15/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_sell_lot": 726710,
+              "total_sell_value": 280799095000,
+              "avg_price": 3975,
+              "active_days": "15/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Unknown",
+              "total_sell_lot": 279182,
+              "total_sell_value": 89104138000,
+              "avg_price": 3983,
+              "active_days": "9/30 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_1m": 0
+        },
+        "price_analysis": {
+          "current_price": 4030.0,
+          "bandar_avg_7d": 3938,
+          "bandar_avg_1m": 4007,
+          "distance_from_7d": "+2.34%",
+          "distance_from_1m": "+0.57%",
+          "ideal_entry_zone": "3987–4027",
+          "max_entry": "4017",
+          "entry_status": "🟡 ACCEPTABLE",
+          "entry_label": "Harga 0.6% di atas true cost bandar — layak entry",
+          "net_foreign_7d": "netral",
+          "net_foreign_1m": "netral",
+          "anomali_akumulasi_7d": null,
+          "anomali_akumulasi_1m": null,
+          "anomali_distribusi_7d": null,
+          "anomali_distribusi_1m": null
+        },
+        "broker_to_watch": [
+          "YU (CIMB Sekuritas)",
+          "XL (Unknown)"
+        ],
+        "data_used": [
+          "Stockbit broker summary 7H & 1M",
+          "Distribution 7H: Dist, Top3 sell >= 30% value",
+          "Distribution 1M: Dist, Top3 sell >= 30% value",
+          "Penalty: Broker retail XL akumulasi di rank 2 (score -1.0)"
+        ],
+        "confidence": "MEDIUM"
+      },
+      "technical": {
+        "ticker": "BMRI",
+        "score": 3.7,
+        "current_price": 4030.0,
+        "signal": "SELL",
+        "trend": "bearish",
+        "setup": "Harga mendekati support terdekat (Fibonacci) di 4023; RSI oversold; Harga di bawah MA20 (short-term bearish); Harga di bawah MA50 (mid-term bearish); Harga di bawah MA100 (intermediate-term bearish); Harga di bawah MA200 (long-term bearish); Death cross MA20/MA50; Death cross MA50/MA100 (mid-intermediate bearish); Death cross MA100/MA200 (intermediate-long bearish); MACD bearish momentum; Volume normal; Dekat 52W low — potential reversal; Trend utama: bearish (semua MA major di atas harga)",
+        "entry_zone": "4023-4106",
+        "target": "3420",
+        "stop_loss": "5042",
+        "support_near": "4023",
+        "resistance_near": "4375",
+        "support_strong": "3103",
+        "resistance_strong": "4943",
+        "divergence": {
+          "rsi": "none",
+          "macd": "none"
+        },
+        "data_used": [
+          "TV Fib Support Terdekat: 4023",
+          "TV Fib Support Kuat: 3103",
+          "TV Fib Resistance Terdekat: 4375",
+          "TV Fib Resistance Kuat: 4943",
+          "RSI: 25.8",
+          "MA20: 4106",
+          "MA50: 4244",
+          "MA100: 4571",
+          "MA200: 4630",
+          "MACD: bearish",
+          "Vol ratio 5/20: 0.62",
+          "52W pos: 22%",
+          "Trend: bearish (-1.0)"
+        ],
+        "confidence": "HIGH",
+        "tradingview_ta": {
+          "summary": {
+            "RECOMMENDATION": "SELL",
+            "BUY": 4,
+            "SELL": 13,
+            "NEUTRAL": 9
+          },
+          "indicators": {
+            "Recommend.Other": -0.09090909090909091,
+            "Recommend.All": -0.31212121212121213,
+            "Recommend.MA": -0.5333333333333333,
+            "RSI": 46.463521223673446,
+            "RSI[1]": 45.5419825997181,
+            "Stoch.K": 23.37662337662337,
+            "Stoch.D": 14.297414297414294,
+            "Stoch.K[1]": 27.16841788300924,
+            "Stoch.D[1]": 13.651860568313289,
+            "CCI20": -36.370216230887394,
+            "CCI20[1]": -34.054732906918815,
+            "ADX": 18.086627492564862,
+            "ADX+DI": 20.981680967662697,
+            "ADX-DI": 26.83306076954934,
+            "ADX+DI[1]": 22.06919229640441,
+            "ADX-DI[1]": 27.705543022639375,
+            "AO": -198.6176470588207,
+            "AO[1]": -211.58823529411438,
+            "Mom": -190,
+            "Mom[1]": -300,
+            "MACD.macd": -88.20787401602638,
+            "MACD.signal": -81.16209136444347,
+            "Rec.Stoch.RSI": 0,
+            "Stoch.RSI.K": 37.072246988165254,
+            "Rec.WR": 0,
+            "W.R": -70.12987012987013,
+            "Rec.BBPower": -1,
+            "BBPower": -60.957090456277,
+            "Rec.UO": 0,
+            "UO": 47.985332271046566,
+            "close": 4030,
+            "EMA5": 3971.9146864006466,
+            "SMA5": 3920.0000000000014,
+            "EMA10": 3998.725996244153,
+            "SMA10": 3962.0000000000014,
+            "EMA20": 4065.438188027215,
+            "SMA20": 4105.999999999989,
+            "EMA30": 4125.625574572725,
+            "SMA30": 4103.33333333335,
+            "EMA50": 4240.217543972808,
+            "SMA50": 4244.19999999999,
+            "EMA100": 4434.338101071181,
+            "SMA100": 4570.599999999979,
+            "EMA200": 4644.638863090584,
+            "SMA200": 4629.675000000002,
+            "Rec.Ichimoku": 0,
+            "Ichimoku.BLine": 4110,
+            "Rec.VWMA": -1,
+            "VWMA": 4124.513295035189,
+            "Rec.HullMA9": 1,
+            "HullMA9": 3944.0740740740744,
+            "Pivot.M.Classic.S3": 2183.3333333333335,
+            "Pivot.M.Classic.S2": 3103.3333333333335,
+            "Pivot.M.Classic.S1": 3476.666666666667,
+            "Pivot.M.Classic.Middle": 4023.3333333333335,
+            "Pivot.M.Classic.R1": 4396.666666666667,
+            "Pivot.M.Classic.R2": 4943.333333333334,
+            "Pivot.M.Classic.R3": 5863.333333333334,
+            "Pivot.M.Fibonacci.S3": 3103.3333333333335,
+            "Pivot.M.Fibonacci.S2": 3454.7733333333335,
+            "Pivot.M.Fibonacci.S1": 3671.8933333333334,
+            "Pivot.M.Fibonacci.Middle": 4023.3333333333335,
+            "Pivot.M.Fibonacci.R1": 4374.7733333333335,
+            "Pivot.M.Fibonacci.R2": 4591.893333333333,
+            "Pivot.M.Fibonacci.R3": 4943.333333333334,
+            "Pivot.M.Camarilla.S3": 3597,
+            "Pivot.M.Camarilla.S2": 3681.3333333333335,
+            "Pivot.M.Camarilla.S1": 3765.6666666666665,
+            "Pivot.M.Camarilla.Middle": 4023.3333333333335,
+            "Pivot.M.Camarilla.R1": 3934.3333333333335,
+            "Pivot.M.Camarilla.R2": 4018.6666666666665,
+            "Pivot.M.Camarilla.R3": 4103,
+            "Pivot.M.Woodie.S3": 2430,
+            "Pivot.M.Woodie.S2": 3040,
+            "Pivot.M.Woodie.S1": 3350,
+            "Pivot.M.Woodie.Middle": 3960,
+            "Pivot.M.Woodie.R1": 4270,
+            "Pivot.M.Woodie.R2": 4880,
+            "Pivot.M.Woodie.R3": 5190,
+            "Pivot.M.Demark.S1": 3290,
+            "Pivot.M.Demark.Middle": 3930,
+            "Pivot.M.Demark.R1": 4210,
+            "open": 4020,
+            "P.SAR": 4244.58155465984,
+            "BB.lower": 3662.9018167487975,
+            "BB.upper": 4549.098183251181,
+            "AO[2]": -236.29411764705583,
+            "volume": 143666300,
+            "change": 0.4987531172069825,
+            "low": 3940,
+            "high": 4040
+          }
+        },
+        "tp1": 4532.0,
+        "tp2": 5042.0,
+        "tp3": 5552.0,
+        "tp1_size": 0.31,
+        "tp2_size": 0.38,
+        "tp3_size": 0.31,
+        "risk_reward_tp1": "1:0.5",
+        "risk_reward_tp2": "1:1.0",
+        "risk_reward_tp3": "1:1.5",
+        "tp_constraints_met": true
+      },
+      "fundamental": {
+        "ticker": "BMRI",
+        "score": 9.5,
+        "signal": "BUY",
+        "key_points": [
+          "PER 6.1x — undervalued",
+          "PBV 1.23x — wajar",
+          "ROE 19.18% — di atas rata-rata",
+          "DER 0.07x — leverage rendah",
+          "Net income konsisten naik 3 tahun terakhir",
+          "EPS konsisten naik 3 tahun terakhir",
+          "Valuasi menarik: DEEP_UNDERVALUED (upside +149.5%)"
+        ],
+        "risks": [
+          "Revenue turun -6.0%"
+        ],
+        "data_used": [
+          "PER: 6.1x",
+          "PBV: 1.23x",
+          "ROE: 19.18%",
+          "DER: 0.07x",
+          "Revenue Growth: -6.0%",
+          "Earnings Growth: 16.6%",
+          "Rata-rata Net Income 3 tahun: 57,871",
+          "Rata-rata EPS 3 tahun: 620.05",
+          "Rata-rata Revenue 3 tahun: 156,455",
+          "Rata-rata Dividend Yield 5 tahun: 10.88%",
+          "Fair Value: 10,054 (DEEP_UNDERVALUED)",
+          "Upside to fair value: +149.48%",
+          "CAGR Revenue: 5.91% (2017–2026)",
+          "CAGR Net Income: 12.91% (2017–2026)",
+          "CAGR Eps: 12.91% (2017–2026)"
+        ],
+        "fair_value": {
+          "current_price": 4030.0,
+          "method": "blended",
+          "fair_value_low": 4975.0,
+          "fair_value_base": 10054.0,
+          "fair_value_high": 13553.0,
+          "upside_pct": 149.48,
+          "margin_of_safety_pct": 59.92,
+          "valuation_label": "DEEP_UNDERVALUED",
+          "methods": {
+            "pe_based": {
+              "available": true,
+              "eps": 659.57,
+              "target_pe": 19.0,
+              "fair_value": 12532.0
+            },
+            "pbv_roe_based": {
+              "available": true,
+              "bvps": 3276.42,
+              "roe_pct": 19.18,
+              "required_return_pct": 12.0,
+              "fair_pbv": 1.6,
+              "fair_value": 5237.0
+            },
+            "eps_growth_based": {
+              "available": true,
+              "eps": 659.57,
+              "growth_pct": 16.57,
+              "target_pe": 19.57,
+              "fair_value": 12908.0
+            }
+          },
+          "notes": [
+            "EPS source: derived_from_current_price_per",
+            "BVPS source: derived_from_current_price_pbv",
+            "Target PE fallback base: 15.0x"
+          ],
+          "confidence": "HIGH"
+        },
+        "confidence": "HIGH"
+      },
+      "news": {
+        "ticker": "BMRI",
+        "score": 5,
+        "summary": "Tidak ada berita relevan yang ditemukan.",
+        "articles": []
+      }
+    },
+    "TLKM": {
+      "bandarm": {
+        "ticker": "TLKM",
+        "score": 2.0,
+        "signal": "DISTRIBUTION",
+        "weight": "40%",
+        "window_7d": {
+          "period": "2026-06-26 s/d 2026-07-06",
+          "bandar_signal": "Moderate Accumulation",
+          "assessment": "Moderate Accumulation",
+          "net_lot": -491114,
+          "net_value": -117430674000,
+          "total_buyer": 5,
+          "total_seller": 5,
+          "top_accumulators": [
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_buy_lot": 963926,
+              "total_buy_value": 230075126000,
+              "avg_price": 2400,
+              "active_days": "5/7 hari",
+              "status": "📈 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_buy_lot": 635635,
+              "total_buy_value": 152236786000,
+              "avg_price": 2409,
+              "active_days": "6/7 hari",
+              "status": "⚡ KONSISTEN — PANTAU KETAT"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_buy_lot": 126349,
+              "total_buy_value": 29019192000,
+              "avg_price": 2431,
+              "active_days": "4/7 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "OD",
+              "broker_name": "Unknown",
+              "total_buy_lot": 118763,
+              "total_buy_value": 28744193000,
+              "avg_price": 2424,
+              "active_days": "5/7 hari",
+              "status": "📈 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "Unknown",
+              "total_buy_lot": 110600,
+              "total_buy_value": 26559547000,
+              "avg_price": 2416,
+              "active_days": "4/7 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "BB",
+              "broker_name": "Unknown",
+              "total_sell_lot": 1161922,
+              "total_sell_value": 275552647000,
+              "avg_price": 2387,
+              "active_days": "3/7 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_sell_lot": 666213,
+              "total_sell_value": 161323139000,
+              "avg_price": 2426,
+              "active_days": "5/7 hari",
+              "status": "⚠️ DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_sell_lot": 393537,
+              "total_sell_value": 94662141000,
+              "avg_price": 2410,
+              "active_days": "4/7 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_sell_lot": 207254,
+              "total_sell_value": 48249451000,
+              "avg_price": 2408,
+              "active_days": "4/7 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "DP",
+              "broker_name": "Unknown",
+              "total_sell_lot": 17461,
+              "total_sell_value": 4278140000,
+              "avg_price": 2450,
+              "active_days": "2/7 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_7d": 0
+        },
+        "window_1m": {
+          "period": "2026-05-26 s/d 2026-07-06",
+          "bandar_signal": "Light Accumulation",
+          "assessment": "Light Accumulation",
+          "net_lot": -1834541,
+          "net_value": -499600891000,
+          "total_buyer": 5,
+          "total_seller": 5,
+          "top_accumulators": [
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_buy_lot": 1913116,
+              "total_buy_value": 546266190000,
+              "avg_price": 2752,
+              "active_days": "13/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_buy_lot": 1151039,
+              "total_buy_value": 288145087000,
+              "avg_price": 2703,
+              "active_days": "15/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Unknown",
+              "total_buy_lot": 747039,
+              "total_buy_value": 264727341000,
+              "avg_price": 2794,
+              "active_days": "14/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_buy_lot": 1060426,
+              "total_buy_value": 263620412000,
+              "avg_price": 2643,
+              "active_days": "12/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Unknown",
+              "total_buy_lot": 577148,
+              "total_buy_value": 147882026000,
+              "avg_price": 2666,
+              "active_days": "14/30 hari",
+              "status": "📊 AKUMULASI RINGAN"
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_sell_lot": 2644081,
+              "total_sell_value": 759219995000,
+              "avg_price": 2764,
+              "active_days": "15/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_sell_lot": 1925432,
+              "total_sell_value": 515669282000,
+              "avg_price": 2702,
+              "active_days": "16/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Unknown",
+              "total_sell_lot": 1443807,
+              "total_sell_value": 381505701000,
+              "avg_price": 2675,
+              "active_days": "11/30 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AG",
+              "broker_name": "Unknown",
+              "total_sell_lot": 706490,
+              "total_sell_value": 194568274000,
+              "avg_price": 2721,
+              "active_days": "6/30 hari",
+              "status": "ℹ️ DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "TP",
+              "broker_name": "Unknown",
+              "total_sell_lot": 563499,
+              "total_sell_value": 159278695000,
+              "avg_price": 2772,
+              "active_days": "12/30 hari",
+              "status": "⚠️ DISTRIBUSI RINGAN"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_1m": 0
+        },
+        "price_analysis": {
+          "current_price": 2480.0,
+          "bandar_avg_7d": 2400,
+          "bandar_avg_1m": 2752,
+          "distance_from_7d": "+3.33%",
+          "distance_from_1m": "-9.88%",
+          "ideal_entry_zone": "2738–2766",
+          "max_entry": "2448",
+          "entry_status": "🟢 IDEAL",
+          "entry_label": "Harga 9.9% DI BAWAH true cost bandar — entry sangat menarik",
+          "net_foreign_7d": "netral",
+          "net_foreign_1m": "netral",
+          "anomali_akumulasi_7d": null,
+          "anomali_akumulasi_1m": null,
+          "anomali_distribusi_7d": null,
+          "anomali_distribusi_1m": null
+        },
+        "broker_to_watch": [
+          "BK (JP Morgan)",
+          "YU (CIMB Sekuritas)"
+        ],
+        "data_used": [
+          "Stockbit broker summary 7H & 1M",
+          "Distribution 7H: Dist, Top3 sell >= 30% value",
+          "Distribution 1M: Dist, Top3 sell >= 30% value"
+        ],
+        "confidence": "LOW"
+      },
+      "technical": {
+        "ticker": "TLKM",
+        "score": 5.0,
+        "current_price": 2480.0,
+        "signal": "HOLD",
+        "trend": "bearish",
+        "setup": "MACD bullish divergence (strong buy signal); RSI oversold; Harga di bawah MA20 (short-term bearish); Harga di bawah MA50 (mid-term bearish); Harga di bawah MA100 (intermediate-term bearish); Harga di bawah MA200 (long-term bearish); Death cross MA20/MA50; Death cross MA50/MA100 (mid-intermediate bearish); Death cross MA100/MA200 (intermediate-long bearish); MACD bearish momentum; Volume normal; Dekat 52W low — potential reversal; Trend utama: bearish (semua MA major di atas harga)",
+        "entry_zone": "2317-2479",
+        "target": "2728",
+        "stop_loss": "2356",
+        "support_near": "2317",
+        "resistance_near": "2577",
+        "support_strong": "1897",
+        "resistance_strong": "3257",
+        "divergence": {
+          "rsi": "none",
+          "macd": "bullish"
+        },
+        "data_used": [
+          "MACD divergence: bullish",
+          "TV Fib Support Terdekat: 2317",
+          "TV Fib Support Kuat: 1897",
+          "TV Fib Resistance Terdekat: 2577",
+          "TV Fib Resistance Kuat: 3257",
+          "RSI: 25.3",
+          "MA20: 2597",
+          "MA50: 2806",
+          "MA100: 3052",
+          "MA200: 3214",
+          "MACD: bearish",
+          "Vol ratio 5/20: 0.65",
+          "52W pos: 8%",
+          "Trend: bearish (-1.0)"
+        ],
+        "confidence": "HIGH",
+        "tradingview_ta": {
+          "summary": {
+            "RECOMMENDATION": "SELL",
+            "BUY": 3,
+            "SELL": 14,
+            "NEUTRAL": 9
+          },
+          "indicators": {
+            "Recommend.Other": -0.09090909090909091,
+            "Recommend.All": -0.3787878787878788,
+            "Recommend.MA": -0.6666666666666666,
+            "RSI": 41.19466807707289,
+            "RSI[1]": 42.89659444143739,
+            "Stoch.K": 19.607843137254903,
+            "Stoch.D": 15.522875816993471,
+            "Stoch.K[1]": 47.97008547008547,
+            "Stoch.D[1]": 28.9894321871066,
+            "CCI20": -46.34581105169654,
+            "CCI20[1]": -43.728034603950285,
+            "ADX": 26.21532302903636,
+            "ADX+DI": 19.70420424802164,
+            "ADX-DI": 31.520335739851884,
+            "ADX+DI[1]": 20.422324485338628,
+            "ADX-DI[1]": 32.66909519732077,
+            "AO": -306.23529411764684,
+            "AO[1]": -331.91176470588243,
+            "Mom": -30,
+            "Mom[1]": -60,
+            "MACD.macd": -117.9857816163626,
+            "MACD.signal": -116.1383519944509,
+            "Rec.Stoch.RSI": 0,
+            "Stoch.RSI.K": 41.273554476811746,
+            "Rec.WR": 0,
+            "W.R": -80.88235294117648,
+            "Rec.BBPower": -1,
+            "BBPower": -57.793527753852686,
+            "Rec.UO": 0,
+            "UO": 46.736476078634716,
+            "close": 2480,
+            "EMA5": 2473.4268518545455,
+            "SMA5": 2448,
+            "EMA10": 2501.828923350788,
+            "SMA10": 2467,
+            "EMA20": 2591.0631293128063,
+            "SMA20": 2597,
+            "EMA30": 2665.622759875965,
+            "SMA30": 2715.6666666666665,
+            "EMA50": 2781.299804162155,
+            "SMA50": 2805.8,
+            "EMA100": 2958.328461296649,
+            "SMA100": 3052.1,
+            "EMA200": 3057.3974339506212,
+            "SMA200": 3213.8,
+            "Rec.Ichimoku": 0,
+            "Ichimoku.BLine": 2760,
+            "Rec.VWMA": -1,
+            "VWMA": 2612.2619510893787,
+            "Rec.HullMA9": 1,
+            "HullMA9": 2479.185185185185,
+            "Pivot.M.Classic.S3": 1216.6666666666665,
+            "Pivot.M.Classic.S2": 1896.6666666666665,
+            "Pivot.M.Classic.S1": 2123.333333333333,
+            "Pivot.M.Classic.Middle": 2576.6666666666665,
+            "Pivot.M.Classic.R1": 2803.333333333333,
+            "Pivot.M.Classic.R2": 3256.6666666666665,
+            "Pivot.M.Classic.R3": 3936.6666666666665,
+            "Pivot.M.Fibonacci.S3": 1896.6666666666665,
+            "Pivot.M.Fibonacci.S2": 2156.4266666666663,
+            "Pivot.M.Fibonacci.S1": 2316.9066666666668,
+            "Pivot.M.Fibonacci.Middle": 2576.6666666666665,
+            "Pivot.M.Fibonacci.R1": 2836.4266666666663,
+            "Pivot.M.Fibonacci.R2": 2996.9066666666668,
+            "Pivot.M.Fibonacci.R3": 3256.6666666666665,
+            "Pivot.M.Camarilla.S3": 2163,
+            "Pivot.M.Camarilla.S2": 2225.3333333333335,
+            "Pivot.M.Camarilla.S1": 2287.6666666666665,
+            "Pivot.M.Camarilla.Middle": 2576.6666666666665,
+            "Pivot.M.Camarilla.R1": 2412.3333333333335,
+            "Pivot.M.Camarilla.R2": 2474.6666666666665,
+            "Pivot.M.Camarilla.R3": 2537,
+            "Pivot.M.Woodie.S3": 1360,
+            "Pivot.M.Woodie.S2": 1855,
+            "Pivot.M.Woodie.S1": 2040,
+            "Pivot.M.Woodie.Middle": 2535,
+            "Pivot.M.Woodie.R1": 2720,
+            "Pivot.M.Woodie.R2": 3215,
+            "Pivot.M.Woodie.R3": 3400,
+            "Pivot.M.Demark.S1": 2010,
+            "Pivot.M.Demark.Middle": 2520,
+            "Pivot.M.Demark.R1": 2690,
+            "open": 2520,
+            "P.SAR": 2824.838675713106,
+            "BB.lower": 2214.319977004286,
+            "BB.upper": 2979.680022995714,
+            "AO[2]": -361,
+            "volume": 48614200,
+            "change": -1.5873015873015872,
+            "low": 2470,
+            "high": 2530
+          }
+        },
+        "tp1": 2627.0,
+        "tp2": 2947.0,
+        "tp3": 3257.0,
+        "tp1_size": 0.3,
+        "tp2_size": 0.4,
+        "tp3_size": 0.3,
+        "risk_reward_tp1": "1:8.0",
+        "risk_reward_tp2": "1:16.1",
+        "risk_reward_tp3": "1:24.1",
+        "tp_constraints_met": true
+      },
+      "fundamental": {
+        "ticker": "TLKM",
+        "score": 5.3,
+        "signal": "SELL",
+        "key_points": [
+          "PER 14.1x — valuasi wajar",
+          "PBV 1.83x — wajar"
+        ],
+        "risks": [
+          "Earnings turun -21.7%",
+          "Net income konsisten turun 3 tahun terakhir",
+          "EPS konsisten turun 3 tahun terakhir",
+          "Valuasi mahal: EXPENSIVE (upside -35.4%)"
+        ],
+        "data_used": [
+          "PER: 14.1x",
+          "PBV: 1.83x",
+          "ROE: 12.35%",
+          "DER: 0.51x",
+          "Revenue Growth: 1.5%",
+          "Earnings Growth: -21.7%",
+          "Rata-rata Net Income 3 tahun: 19,198",
+          "Rata-rata EPS 3 tahun: 193.79",
+          "Rata-rata Revenue 3 tahun: 148,488",
+          "Rata-rata Dividend Yield 5 tahun: 8.41%",
+          "Fair Value: 1,602 (EXPENSIVE)",
+          "Upside to fair value: -35.41%",
+          "CAGR Revenue: 1.66% (2017–2026)",
+          "CAGR Net Income: -2.66% (2017–2026)",
+          "CAGR Eps: -2.66% (2017–2026)"
+        ],
+        "fair_value": {
+          "current_price": 2480.0,
+          "method": "blended",
+          "fair_value_low": 1167.0,
+          "fair_value_base": 1602.0,
+          "fair_value_high": 2025.0,
+          "upside_pct": -35.41,
+          "margin_of_safety_pct": -54.82,
+          "valuation_label": "EXPENSIVE",
+          "methods": {
+            "pe_based": {
+              "available": true,
+              "eps": 175.39,
+              "target_pe": 11.0,
+              "fair_value": 1929.0
+            },
+            "pbv_roe_based": {
+              "available": true,
+              "bvps": 1355.19,
+              "roe_pct": 12.35,
+              "required_return_pct": 12.0,
+              "fair_pbv": 1.03,
+              "fair_value": 1395.0
+            },
+            "eps_growth_based": {
+              "available": true,
+              "eps": 175.39,
+              "growth_pct": -21.72,
+              "target_pe": 7.0,
+              "fair_value": 1228.0
+            }
+          },
+          "notes": [
+            "EPS source: derived_from_current_price_per",
+            "BVPS source: derived_from_current_price_pbv",
+            "Target PE fallback base: 15.0x"
+          ],
+          "confidence": "HIGH"
+        },
+        "confidence": "HIGH"
+      },
+      "news": {
+        "ticker": "TLKM",
+        "score": 5,
+        "summary": "Tidak ada berita relevan yang ditemukan.",
         "articles": []
       }
     }
   },
   "composites": {
-    "ANTM": {
-      "ticker": "ANTM",
-      "composite_score": 3.77,
+    "BBCA": {
+      "ticker": "BBCA",
+      "composite_score": 4.93,
       "weights_used": {
-        "bandarm": 0.35,
+        "bandarm": 0.3,
         "technical": 0.22,
-        "fundamental": 0.18,
+        "fundamental": 0.22,
         "macro": 0.13,
-        "news": 0.12
+        "news": 0.13
       },
-      "weight_mode": "default",
-      "sector": "Basic Materials",
+      "weight_mode": "big_cap",
+      "sector": "Financial Services",
       "usdidr_adj": 0.0,
       "usdidr_narrative": "",
       "breakdown": {
         "bandarm": {
-          "score": 2.0,
-          "weight": 0.35,
-          "contribution": 0.7
+          "score": 3.0,
+          "weight": 0.3,
+          "contribution": 0.9
         },
         "technical": {
-          "score": 0.7,
+          "score": 5.5,
           "weight": 0.22,
-          "contribution": 0.15
+          "contribution": 1.21
         },
         "fundamental": {
-          "score": 10.0,
-          "weight": 0.18,
-          "contribution": 1.8
+          "score": 7.5,
+          "weight": 0.22,
+          "contribution": 1.65
         },
         "macro": {
           "score": 4.0,
@@ -514,8 +1457,92 @@
         },
         "news": {
           "score": 5,
-          "weight": 0.12,
+          "weight": 0.13,
+          "contribution": 0.65
+        }
+      }
+    },
+    "BMRI": {
+      "ticker": "BMRI",
+      "composite_score": 4.07,
+      "weights_used": {
+        "bandarm": 0.3,
+        "technical": 0.22,
+        "fundamental": 0.22,
+        "macro": 0.13,
+        "news": 0.13
+      },
+      "weight_mode": "big_cap",
+      "sector": "Financial Services",
+      "usdidr_adj": 0.0,
+      "usdidr_narrative": "",
+      "breakdown": {
+        "bandarm": {
+          "score": 0.0,
+          "weight": 0.3,
+          "contribution": 0.0
+        },
+        "technical": {
+          "score": 3.7,
+          "weight": 0.22,
+          "contribution": 0.81
+        },
+        "fundamental": {
+          "score": 9.5,
+          "weight": 0.22,
+          "contribution": 2.09
+        },
+        "macro": {
+          "score": 4.0,
+          "weight": 0.13,
+          "contribution": 0.52
+        },
+        "news": {
+          "score": 5,
+          "weight": 0.13,
+          "contribution": 0.65
+        }
+      }
+    },
+    "TLKM": {
+      "ticker": "TLKM",
+      "composite_score": 4.04,
+      "weights_used": {
+        "bandarm": 0.3,
+        "technical": 0.22,
+        "fundamental": 0.22,
+        "macro": 0.13,
+        "news": 0.13
+      },
+      "weight_mode": "big_cap",
+      "sector": "Communication Services",
+      "usdidr_adj": 0.0,
+      "usdidr_narrative": "",
+      "breakdown": {
+        "bandarm": {
+          "score": 2.0,
+          "weight": 0.3,
           "contribution": 0.6
+        },
+        "technical": {
+          "score": 5.0,
+          "weight": 0.22,
+          "contribution": 1.1
+        },
+        "fundamental": {
+          "score": 5.3,
+          "weight": 0.22,
+          "contribution": 1.17
+        },
+        "macro": {
+          "score": 4.0,
+          "weight": 0.13,
+          "contribution": 0.52
+        },
+        "news": {
+          "score": 5,
+          "weight": 0.13,
+          "contribution": 0.65
         }
       }
     }
@@ -525,19 +1552,19 @@
     "ihsg_trend": "UNKNOWN",
     "ihsg_price": null,
     "ihsg_change_pct": 0,
-    "usdidr": 17842.393428,
+    "usdidr": 17986.543531,
     "usdidr_trend": "WEAK_IDR",
     "is_volatile": false,
     "sector_outlook": {
-      "perbankan": "NEGATIF",
-      "mining": "NEGATIF",
-      "consumer": "POSITIF",
+      "perbankan": "POSITIF",
+      "mining": "POSITIF",
+      "consumer": "NETRAL",
       "infrastructure": "NETRAL",
-      "property": "NEGATIF"
+      "property": "POSITIF"
     },
     "market_risk": "HIGH",
     "data_used": [
-      "USD/IDR: 17842",
+      "USD/IDR: 17987",
       "Volatile: False"
     ],
     "commodity_overview": {},
@@ -547,61 +1574,133 @@
   "debate_log": [
     {
       "round": 1,
-      "ticker": "MARKET",
+      "ticker": "BBCA",
+      "agent": "bandarmologi",
+      "argument": "BBCA: distribusi terdeteksi — hindari",
+      "vote": "SELL"
+    },
+    {
+      "round": 1,
+      "ticker": "BBCA",
+      "agent": "technical",
+      "argument": "BBCA: chart netral, belum ada trigger",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "BBCA",
+      "agent": "fundamental",
+      "argument": "BBCA: fundamental solid — PER 12.9x — valuasi wajar; ROE 22.41% — sangat baik",
+      "vote": "BUY"
+    },
+    {
+      "round": 1,
+      "ticker": "BBCA",
       "agent": "macro",
-      "argument": "Rupiah terdepresiasi tajam dengan nilai tukar USD/IDR mencapai 17.842, yang mendorong tingkat risiko pasar ke kategori TINGGI (HIGH). Outlook makro sektoral menunjukkan sentimen negatif pada sektor-sektor penggerak utama seperti perbankan, pertambangan, dan properti. Meskipun sektor konsumer diproyeksikan positif, tekanan dari pelemahan nilai tukar yang ekstrem ini menciptakan kondisi risk-off yang kuat di pasar domestik, sehingga kami merekomendasikan tindakan SELL untuk membatasi risiko.",
+      "argument": "Pasar bearish, risk tinggi untuk BBCA",
       "vote": "SELL"
     },
     {
       "round": 1,
-      "ticker": "ANTM",
-      "agent": "fundamental",
-      "argument": "ANTM menunjukkan kinerja fundamental yang sangat solid dengan ROE tinggi sebesar 21.84% dan leverage yang sangat aman dengan DER hanya 0.14x. Pertumbuhan laba bersih yang akseleratif sebesar 59.9% didukung oleh kenaikan konsisten pada revenue, net income, dan EPS selama 3 tahun terakhir. Dengan PER hanya 4.6x, saham ini dikategorikan DEEP_UNDERVALUED. Nilai wajar (Fair Value) berdasarkan metode blended berada di 10,295, menawarkan potensi upside signifikan sebesar +291.46% dengan Margin of Safety sebesar 74.45%.",
-      "vote": "BUY"
+      "ticker": "BBCA",
+      "agent": "news",
+      "argument": "BBCA: berita netral, tidak ada sentimen kuat",
+      "vote": "HOLD"
     },
     {
       "round": 1,
-      "ticker": "ANTM",
+      "ticker": "BMRI",
       "agent": "bandarmologi",
-      "argument": "Dalam 7 hari terakhir terdeteksi akumulasi moderat oleh broker CC (Mandiri Sekuritas) dengan rata-rata harga modal 2.827 dan broker BB dengan rata-rata 2.819. Harga saat ini (2.630) berada 7,72% di bawah rata-rata modal bandar 1 bulan terakhir (2.850), yang merupakan area entry ideal. Secara fundamental, ANTM berada dalam kondisi DEEP_UNDERVALUED dengan Fair Value base sebesar 10.295, memberikan margin of safety yang sangat besar.",
+      "argument": "BMRI: distribusi terdeteksi — hindari",
+      "vote": "SELL"
+    },
+    {
+      "round": 1,
+      "ticker": "BMRI",
+      "agent": "technical",
+      "argument": "BMRI: chart bearish, hindari",
+      "vote": "SELL"
+    },
+    {
+      "round": 1,
+      "ticker": "BMRI",
+      "agent": "fundamental",
+      "argument": "BMRI: fundamental solid — PER 6.1x — undervalued; PBV 1.23x — wajar",
       "vote": "BUY"
     },
     {
       "round": 1,
-      "ticker": "ANTM",
-      "agent": "technical",
-      "argument": "Struktur chart ANTM menunjukkan tren bearish yang sangat kuat, dengan harga saat ini di 2630 berada di bawah seluruh Moving Average utama (MA20, MA50, MA100, MA200) serta terkonfirmasi oleh death cross MA20/MA50 dan MA50/MA100. Meskipun harga mendekati support terdekat di 2610 dan secara fundamental dinilai deep undervalued dengan Fair Value 10295, indikator teknikal seperti MACD death cross dan ringkasan TradingView TA (14 SELL) mengonfirmasi dominasi tekanan jual. Sebaiknya hindari entry hingga terbentuk pola pembalikan arah yang valid.",
+      "ticker": "BMRI",
+      "agent": "macro",
+      "argument": "Pasar bearish, risk tinggi untuk BMRI",
       "vote": "SELL"
     },
     {
-      "round": 2,
-      "ticker": "ANTM",
+      "round": 1,
+      "ticker": "BMRI",
+      "agent": "news",
+      "argument": "BMRI: berita netral, tidak ada sentimen kuat",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "TLKM",
       "agent": "bandarmologi",
-      "argument": "Membantah rekomendasi SELL teknikal. Meskipun tren harga saat ini bearish, analisis bandarmologi mendeteksi adanya peralihan ke akumulasi moderat (Moderate Accumulation) dalam 7 hari terakhir dengan net buy Rp171,2 miliar, dipimpin oleh CC (avg 2.827) dan BB (avg 2.819). Harga saat ini di 2.630 sudah berada 6,97% di bawah rata-rata modal bandar 7 hari terakhir (2.827) dan jauh di bawah Fair Value fundamental 10.295 (Deep Undervalued). Ini merupakan early signal akumulasi di area diskon yang sangat ideal untuk buy on weakness.",
-      "vote": "BUY"
-    },
-    {
-      "round": 2,
-      "ticker": "ANTM",
-      "agent": "technical",
-      "argument": "Meskipun fundamental menunjukkan status DEEP_UNDERVALUED dengan Fair Value 10.295 dan bandarmologi mendeteksi akumulasi di bawah rata-rata modal bandar (2.850), secara teknikal ANTM berada dalam tren bearish yang sangat kuat. Harga saat ini (2.630) berada di bawah seluruh MA utama (MA20 di 2.844, MA50 di 3.329, MA100 di 3.665, dan MA200 di 3.450) dengan konfirmasi death cross MA20/MA50 dan MA50/MA100, serta MACD death cross. Belum ada konfirmasi breakout chart dengan volume tinggi untuk memicu reversal. Membeli saat ini berisiko tinggi karena harga mendekati support terdekat 2.610 dan berpotensi breakdown menuju support kuat di 2.450. Ringkasan TradingView TA juga mendukung sinyal SELL yang kuat dengan 14 indikator SELL.",
+      "argument": "TLKM: distribusi terdeteksi — hindari",
       "vote": "SELL"
     },
     {
-      "round": 2,
-      "ticker": "ANTM",
+      "round": 1,
+      "ticker": "TLKM",
+      "agent": "technical",
+      "argument": "TLKM: chart netral, belum ada trigger",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "TLKM",
       "agent": "fundamental",
-      "argument": "Kami membantah keras rekomendasi SELL dari tim teknikal. Menghindari ANTM hanya karena tren bearish jangka pendek adalah kesalahan fatal ketika saham ini diperdagangkan pada PER 4.6x dengan ROE luar biasa sebesar 21.84% dan DER sangat aman di 0.14x. Dengan Fair Value sebesar 10.295 (potensi upside +291.46% dan Margin of Safety 74.45%), harga saat ini di 2.630 adalah peluang investasi jangka panjang yang sangat murah. Kami mendukung pandangan bandarmologi yang melihat akumulasi di bawah harga rata-rata bandar sebagai sinyal beli yang kuat. Fundamental solid dan pertumbuhan laba 59.9% menegaskan bahwa nilai intrinsik akan segera terealisasi.",
-      "vote": "BUY"
+      "argument": "TLKM: fundamental cukup, tidak outstanding",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "TLKM",
+      "agent": "macro",
+      "argument": "Pasar bearish, risk tinggi untuk TLKM",
+      "vote": "SELL"
+    },
+    {
+      "round": 1,
+      "ticker": "TLKM",
+      "agent": "news",
+      "argument": "TLKM: berita netral, tidak ada sentimen kuat",
+      "vote": "HOLD"
     }
   ],
   "finalists": [
     {
-      "ticker": "ANTM",
-      "final_score": 4.47,
-      "composite_score": 3.77,
-      "weight_mode": "default",
-      "debate_bonus": 0.7,
+      "ticker": "BBCA",
+      "final_score": 4.58,
+      "composite_score": 4.93,
+      "weight_mode": "big_cap",
+      "debate_bonus": -0.35,
+      "ml_bonus": 0.0
+    },
+    {
+      "ticker": "TLKM",
+      "final_score": 3.49,
+      "composite_score": 4.04,
+      "weight_mode": "big_cap",
+      "debate_bonus": -0.55,
+      "ml_bonus": 0.0
+    },
+    {
+      "ticker": "BMRI",
+      "final_score": 3.47,
+      "composite_score": 4.07,
+      "weight_mode": "big_cap",
+      "debate_bonus": -0.6,
       "ml_bonus": 0.0
     }
   ]

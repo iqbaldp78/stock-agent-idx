@@ -32,125 +32,14 @@ MIN_VOLUME = 100_000
 MIN_MARKET_CAP = 1_000_000_000_000  # 1 Triliun IDR
 
 # LLM — 9Router (OpenAI-compatible)
-ALLOWED_LLM_MODELS = frozenset({
-    "kr/claude-haiku-4.5-agentic",
-    "kr/claude-haiku-4.5-thinking-agentic",
-    "kr/claude-haiku-4.5-thinking",
-    "kr/claude-sonnet-4.5-agentic",
-    "kr/claude-sonnet-4.5-thinking-agentic",
-    "kr/deepseek-3.2",
-    "kr/qwen3-coder-next",
-    "kr/claude-sonnet-4.5-thinking",
-    # "kr/MiniMax-M2.5",
-    "kr/glm-5",
-    # "gh/claude-haiku-4.5",
-    # "gh/claude-opus-4.5",
-    # "gh/gpt-4o",
-    # "gh/gemini-2.5-pro",
-    # "gh/gpt-5.2-codex",
-    "gc/gemini-3-pro-preview",
-    "gemini/gemini-2.5-pro",
-    # "gh/claude-opus-4.6",
-    # "gh/claude-opus-4.7",
-    # "gh/claude-sonnet-4",
-    # "gh/claude-sonnet-4.5",
-    # "gh/claude-sonnet-4.6",
-    # "gh/gpt-5.4",
-    # "gh/gemini-3-flash-preview",
-    # "gh/gemini-3.1-pro-preview",
-    # "gh/goldeneye-free-auto",
-    # "gh/gpt-4o-mini",
-    # "gh/gpt-4",
-    # "gh/gpt-3.5-turbo",
-    # "gh/gpt-5.3-codex",
-    # "gh/gpt-5.4-mini",
-    # "gh/gpt-5.2",
-    # "gh/gpt-4.1",
-    # "gh/grok-code-fast-1",
-    # "gh/gpt-5-mini",
-    # "gh/oswe-vscode-prime",
-    "kr/claude-haiku-4.5",
-    "kr/claude-sonnet-4.5",
-    "gc/gemini-3-flash-preview",
-    "gemini/gemini-2.0-flash",
-    "gemini/gemini-2.0-flash-lite",
-    "gemini/gemini-2.5-flash",
-    "gemini/gemini-3.1-flash-lite-preview",
-    "gemini/gemma-4-31b-it",
-    "gemini/gemini-3-flash-preview",
-    "gemini/gemini-2.5-flash-lite",
-    "gemini/gemini-3.1-pro-preview",
-    "antigravity/claude-opus-4-6-thinking",
-    "antigravity/claude-sonnet-4-6",
-    "antigravity/gemini-3-flash",
-    "antigravity/gemini-pro-agent",
-    "antigravity/gemini-3.1-pro-low",
-    "antigravity/gemini-3-flash-agent",
-    "antigravity/gemini-3.5-flash-extra-low",
-    "antigravity/gpt-oss-120b-medium",
-    "antigravity/gemini-3.5-flash-low",
-    # "cx/gpt-5.3-codex",
-    # "cx/gpt-5.3-codex-high",
-    # "cx/gpt-5.3-codex-high-review",
-    # "cx/gpt-5.3-codex-low",
-    # "cx/gpt-5.3-codex-low-review",
-    # "cx/gpt-5.3-codex-none",
-    # "cx/gpt-5.3-codex-none-review",
-    # "cx/gpt-5.3-codex-xhigh-review",
-    # "cx/gpt-5.3-codex-xhigh",
-    # # "cx/gpt-5.3-codex-review",
-    # "cx/gpt-5.3-codex-spark",
-    # "cx/gpt-5.3-codex-spark-review",
-    # "cx/gpt-5.4",
-    # "cx/gpt-5.4-mini",
-    # # "cx/gpt-5.4-mini-review",
-    # "cx/gpt-5.4-review",
-    # "cx/gpt-5.5",
-    # "cx/gpt-5.5-review",
-    "kc/anthropic/claude-opus-4-20250514",
-    # "kc/anthropic/claude-sonnet-4-20250514",
-    "kc/deepseek/deepseek-reasoner",
-    # "cl/anthropic/claude-opus-4.6",
-    # "cl/anthropic/claude-opus-4.7",
-    # "cl/anthropic/claude-sonnet-4.6",
-    # "cl/openai/gpt-5.3-codex",
-    # "cl/kwaipilot/kat-coder-pro",
-    # "cl/openai/gpt-5.4",
-    "free",
-    # "kc/google/gemini-2.5-flash",
-    # "kc/deepseek/deepseek-chat",
-    # "kc/google/gemini-2.5-pro",
-    # "kc/openai/gpt-4.1",
-    # "cl/google/gemini-3.1-flash-lite-preview",
-    # "cl/google/gemini-3.1-pro-preview",
-    # "qd/dfmodel",
-    # "qd/dmodel",
-    # "qd/gm51model",
-    # "qd/kmodel",
-    # "qd/mmodel",
-    # "qd/auto",
-    # "qd/efficient",
-    # "qd/lite",
-    # "qd/qmodel",
-    "nvidia/z-ai/glm4.7",
-    "nvidia/minimaxai/minimax-m2.7",
-    "ollama/glm-4.7-flash",
-    # "ollama/glm-5",
-    "ollama/gpt-oss:120b",
-    # "ollama/qwen3.5",
-    "ollama/kimi-k2.5",
-    "ollama/minimax-m2.5",
-    "ds/deepseek-chat",
-    "ds/deepseek-reasoner",
-    # "ds/deepseek-v4-pro-max",
-    # "ds/deepseek-v4-pro-none",
-    "ds/deepseek-v4-flash",
-    "ds/deepseek-v4-pro",
-    "groq/openai/gpt-oss-120b",
-    "groq/llama-3.3-70b-versatile",
-    # "groq/meta-llama/llama-4-maverick-17b-128e-instruct",
-    "groq/qwen/qwen3-32b",
-})
+# Load allowed models from the environment to avoid hardcoding large lists in the repo.
+# Provide a comma-separated list via the `ALLOWED_LLM_MODELS` env var.
+_env_allowed = os.getenv("ALLOWED_LLM_MODELS", "").strip()
+if _env_allowed:
+    ALLOWED_LLM_MODELS = set(m.strip() for m in _env_allowed.split(",") if m.strip())
+else:
+    # Minimal safe defaults so the app works without an env var set.
+    ALLOWED_LLM_MODELS = {"free", "kr/claude-haiku-4.5", "kr/claude-sonnet-4.5"}
 
 LLM_ENABLED = os.getenv("LLM_ENABLED", "true").lower() in ("true", "1", "yes")
 LLM_DEBATE_MAX_TICKERS = int(os.getenv("LLM_DEBATE_MAX_TICKERS", "12"))
@@ -174,31 +63,49 @@ else:
 
 LLM_ROUND_ROBIN_INDEX = 0  # Global index for round-robin
 
-LLM_MODEL_DEBATE_R1 = os.getenv("LLM_MODEL_DEBATE_R1", "gc/gemini-3-flash-preview")
-LLM_MODEL_DEBATE_R2 = os.getenv("LLM_MODEL_DEBATE_R2", "gc/gemini-3-pro-preview")
+LLM_MODEL_DEBATE_R1 = os.getenv("LLM_MODEL_DEBATE_R1", "kr/claude-haiku-4.5")
+LLM_MODEL_DEBATE_R2 = os.getenv("LLM_MODEL_DEBATE_R2", "kr/claude-sonnet-4.5")
 LLM_MODEL_INVESTMENT_MANAGER = os.getenv(
-    "LLM_MODEL_INVESTMENT_MANAGER", "gemini/gemini-2.5-pro"
+    "LLM_MODEL_INVESTMENT_MANAGER", "kr/claude-sonnet-4.5-thinking"
 )
-LLM_MODEL_DEBATE_FALLBACK = os.getenv("LLM_MODEL_DEBATE_FALLBACK", "gemini/gemini-2.0-flash-lite")
-LLM_MODEL_IM_FALLBACK = os.getenv("LLM_MODEL_IM_FALLBACK", "gemini/gemini-2.5-pro")
+LLM_MODEL_DEBATE_FALLBACK = os.getenv("LLM_MODEL_DEBATE_FALLBACK", "kr/claude-haiku-4.5")
+LLM_MODEL_IM_FALLBACK = os.getenv("LLM_MODEL_IM_FALLBACK", "kr/claude-sonnet-4.5")
 LLM_MODEL_DEBATE_R2_FALLBACK = os.getenv(
-    "LLM_MODEL_DEBATE_R2_FALLBACK", "gemini/gemini-2.0-flash-lite"
+    "LLM_MODEL_DEBATE_R2_FALLBACK", "kr/claude-haiku-4.5"
 )
 
 # Per-agent models (different providers = more objective debate)
 LLM_MODEL_AGENT: dict[str, str] = {
-    "fundamental": os.getenv("LLM_MODEL_FUNDAMENTAL", "kr/glm-5"),
+    "fundamental": os.getenv("LLM_MODEL_FUNDAMENTAL", "kr/claude-haiku-4.5"),
     "technical": os.getenv("LLM_MODEL_TECHNICAL", "kr/deepseek-3.2"),
-    "bandarmologi": os.getenv("LLM_MODEL_BANDARM", "kr/deepseek-3.2"),
-    "macro": os.getenv("LLM_MODEL_MACRO", "kr/deepseek-3.2"),
+    "bandarmologi": os.getenv("LLM_MODEL_BANDARM", "kr/glm-5"),
+    "macro": os.getenv("LLM_MODEL_MACRO", "kr/claude-haiku-4.5"),
 }
 
 LLM_MODEL_AGENT_R2: dict[str, str] = {
-    "fundamental": os.getenv("LLM_MODEL_FUNDAMENTAL_R2", "gc/gemini-3-flash-preview"),
-    "technical": os.getenv("LLM_MODEL_TECHNICAL_R2", "gc/gemini-3-pro-preview"),
-    "bandarmologi": os.getenv("LLM_MODEL_BANDARM_R2", "gc/gemini-3-pro-preview"),
-    "macro": os.getenv("LLM_MODEL_MACRO_R2", "kr/deepseek-3.2"),
+    "fundamental": os.getenv("LLM_MODEL_FUNDAMENTAL_R2", "kr/claude-sonnet-4.5"),
+    "technical": os.getenv("LLM_MODEL_TECHNICAL_R2", "ds/deepseek-v4-pro"),
+    "bandarmologi": os.getenv("LLM_MODEL_BANDARM_R2", "kr/claude-sonnet-4.5"),
+    "macro": os.getenv("LLM_MODEL_MACRO_R2", "kr/claude-sonnet-4.5"),
 }
+
+# Ensure any models configured via env vars are included in the allowed set.
+# This avoids raising validation errors for models explicitly set in the env
+# (e.g. LLM_MODEL_DEBATE_R1, per-agent overrides, or round-robin list).
+_referenced_models = set()
+_referenced_models.update([
+    os.getenv("LLM_MODEL_DEBATE_R1", "kr/claude-haiku-4.5"),
+    os.getenv("LLM_MODEL_DEBATE_R2", "kr/claude-sonnet-4.5"),
+    os.getenv("LLM_MODEL_INVESTMENT_MANAGER", "kr/claude-sonnet-4.5-thinking"),
+    os.getenv("LLM_MODEL_DEBATE_FALLBACK", "kr/claude-haiku-4.5"),
+    os.getenv("LLM_MODEL_IM_FALLBACK", "kr/claude-sonnet-4.5"),
+    os.getenv("LLM_MODEL_DEBATE_R2_FALLBACK", "kr/claude-haiku-4.5"),
+])
+_referenced_models.update(LLM_MODEL_AGENT.values())
+_referenced_models.update(LLM_MODEL_AGENT_R2.values())
+_referenced_models.update(LLM_ROUND_ROBIN_MODELS or [])
+_referenced_models = {m for m in _referenced_models if m}
+ALLOWED_LLM_MODELS = set(ALLOWED_LLM_MODELS) | _referenced_models
 
 NINEROUTER_API_KEY = os.getenv("NINEROUTER_API_KEY", os.getenv("OPENAI_API_KEY", ""))
 
@@ -211,7 +118,41 @@ def _default_llm_base_url() -> str:
     if os.getenv("LLM_BASE_URL"):
         return os.getenv("LLM_BASE_URL", "").rstrip("/")
     if os.path.exists("/.dockerenv"):
-        return "http://host.docker.internal:20128/v1"
+        # Docker di Linux: auto-discover gateway IP atau gunakan env var
+        import subprocess
+        
+        # Priority 1: Environment variable
+        if os.getenv("OMNIROUTE_HOST"):
+            return os.getenv("OMNIROUTE_HOST").rstrip("/")
+        
+        # Priority 2: Try to auto-discover Docker gateway
+        try:
+            # Get default gateway from ip route
+            result = subprocess.run(
+                ['ip', 'route', 'show', 'default'],
+                capture_output=True, text=True, timeout=2
+            )
+            if result.returncode == 0 and 'via' in result.stdout:
+                lines = result.stdout.strip().split('\n')
+                for line in lines:
+                    if 'via' in line:
+                        parts = line.split()
+                        if len(parts) >= 3:
+                            gateway = parts[2]
+                            return f"http://{gateway}:20128/v1"
+        except:
+            pass
+        
+        # Priority 3: Common Docker gateway IPs (fallback)
+        # Try multiple common Docker bridge IPs
+        common_gateways = [
+            "172.18.0.1",  # Current streamlit network
+            "172.17.0.1",  # Docker default bridge
+            "host.docker.internal",  # Docker Desktop (Mac/Windows)
+        ]
+        
+        return os.getenv("OMNIROUTE_HOST", f"http://{common_gateways[0]}:20128/v1")
+    
     return "http://localhost:20128/v1"
 
 

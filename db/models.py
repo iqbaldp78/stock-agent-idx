@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, Integer, String, Boolean, Date, Numeric,
+    Column, Integer, String, Boolean, Date, DateTime, Numeric,
     Text, BigInteger, ForeignKey, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -15,14 +15,14 @@ class Universe(Base):
     is_lq45 = Column(Boolean, default=True)
     is_custom = Column(Boolean, default=False)
     active = Column(Boolean, default=True)
-    created_at = Column(Date, server_default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class AgentScore(Base):
     __tablename__ = "agent_scores"
 
     id = Column(Integer, primary_key=True)
-    run_date = Column(Date, nullable=False)
+    run_date = Column(DateTime, nullable=False)
     ticker = Column(String(10), nullable=False)
     fundamental_score = Column(Numeric(4, 2))
     technical_score = Column(Numeric(4, 2))
@@ -31,7 +31,7 @@ class AgentScore(Base):
     composite_score = Column(Numeric(4, 2))
     weight_mode = Column(String(20))
     weights_used = Column(JSONB)
-    created_at = Column(Date, server_default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class BrokerAccumulation(Base):
@@ -60,7 +60,7 @@ class DebateLog(Base):
     __tablename__ = "debate_logs"
 
     id = Column(Integer, primary_key=True)
-    run_date = Column(Date, nullable=False)
+    run_date = Column(DateTime, nullable=False)
     ticker = Column(String(10), nullable=False)
     round = Column(Integer, nullable=False)
     agent = Column(String(50), nullable=False)
@@ -73,7 +73,7 @@ class Signal(Base):
     __tablename__ = "signals"
 
     id = Column(Integer, primary_key=True)
-    run_date = Column(Date, nullable=False)
+    run_date = Column(DateTime, nullable=False)
     ticker = Column(String(10), nullable=False)
     rank = Column(Integer)
     signal = Column(Text)
@@ -102,7 +102,8 @@ class Signal(Base):
     risk_reward_tp1 = Column(String(20))
     risk_reward_tp2 = Column(String(20))
     risk_reward_tp3 = Column(String(20))
-    created_at = Column(Date, server_default=func.now())
+    batch_id = Column(String(36))
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class Performance(Base):
@@ -252,3 +253,47 @@ class DcaStrategy(Base):
     activated_at = Column(Date)
     completed_at = Column(Date)
     created_at = Column(Date, server_default=func.now())
+
+
+# ============================================================
+# Paper Trading Models
+# ============================================================
+
+class PaperWallet(Base):
+    __tablename__ = "paper_wallet"
+    
+    id = Column(Integer, primary_key=True)
+    cash = Column(Numeric(15, 2), default=0)         # saldo cash
+    total_topup = Column(Numeric(15, 2), default=0)  # total modal diisi
+    total_invested = Column(Numeric(15, 2), default=0)  # total uang masuk saham
+    total_pnl = Column(Numeric(15, 2), default=0)    # total realized P&L
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now())
+
+
+class PaperTrade(Base):
+    __tablename__ = "paper_trades"
+    
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String(10), nullable=False)
+    action = Column(String(10), nullable=False)      # BUY/SELL
+    lot = Column(Integer, nullable=False)            # 1 lot = 100 lembar
+    shares = Column(Integer, nullable=False)         # lot × 100
+    price = Column(Numeric(12, 2), nullable=False)   # harga eksekusi
+    amount = Column(Numeric(15, 2), nullable=False)  # total nilai (shares × price)
+    fee = Column(Numeric(10, 2), default=0)          # fee transaksi
+    signal_id = Column(Integer, ForeignKey("signals.id"), nullable=True)
+    tp1 = Column(Numeric(12, 2))                     # take-profit level 1
+    tp2 = Column(Numeric(12, 2))
+    tp3 = Column(Numeric(12, 2))
+    stop_loss = Column(Numeric(12, 2))
+    status = Column(String(20), default="OPEN")      # OPEN/CLOSED/TP_HIT/SL_HIT
+    opened_at = Column(DateTime, server_default=func.now())
+    closed_at = Column(DateTime)
+    realized_pnl = Column(Numeric(15, 2), default=0)  # P&L setelah close
+    realized_pnl_pct = Column(Numeric(6, 2), default=0)
+    notes = Column(Text)
+    exit_price = Column(Numeric(12, 2))              # harga jual/exit saat close
+    
+    # Foreign key to wallet (optional, bisa dihitung aggregat)
+    wallet_id = Column(Integer, ForeignKey("paper_wallet.id"), nullable=True)

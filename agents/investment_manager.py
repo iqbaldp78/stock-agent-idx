@@ -347,12 +347,51 @@ def _build_pick_rule_based(
     pred_return = float(ml_prediction.get("pred_return", 0.0)) if ml_prediction else 0.0
     decision_label = _decision_label(pred_return, tech, bandarm)
     
-    # Fix Stop Loss logic: if IM forces a BUY but Technical was SELL, stop_loss will be incorrectly > current_price.
-    if "BUY" in decision_label and stop_loss and current_price:
-        if stop_loss > current_price:
-            entry_low_tech = tech.get("entry_low")
+    # Fix Stop Loss and TP logic: if IM forces a BUY but Technical was SELL, stop_loss will be > current_price and TP will be < current_price.
+    if "BUY" in decision_label and current_price:
+        entry_low_tech = tech.get("entry_low")
+        try:
             base_price = float(entry_low_tech) if entry_low_tech else current_price
+        except (ValueError, TypeError):
+            base_price = current_price
+            
+        if not stop_loss or stop_loss > current_price:
             stop_loss = round(base_price * 0.95, 0)
+            
+        if not tp1 or tp1 < current_price:
+            from agents.technical import _calculate_tp_levels
+            res_near = tech.get("resistance_near")
+            res_strong = tech.get("resistance_strong")
+            try:
+                r_near = float(res_near) if res_near else None
+            except (ValueError, TypeError):
+                r_near = None
+            try:
+                r_strong = float(res_strong) if res_strong else None
+            except (ValueError, TypeError):
+                r_strong = None
+                
+            # Pastikan resistance valid di atas current_price
+            if r_near and r_near <= current_price:
+                r_near = None
+            if r_strong and r_strong <= current_price:
+                r_strong = None
+                
+            tp_calc = _calculate_tp_levels(
+                entry=base_price,
+                stop_loss=stop_loss if stop_loss else round(base_price * 0.95, 0),
+                resistance_near=r_near or (base_price * 1.05),
+                resistance_strong=r_strong or (r_near * 1.05 if r_near else base_price * 1.15)
+            )
+            tp1 = tp_calc.get("tp1")
+            tp2 = tp_calc.get("tp2")
+            tp3 = tp_calc.get("tp3")
+            tp1_size = tp_calc.get("tp1_size", tp1_size)
+            tp2_size = tp_calc.get("tp2_size", tp2_size)
+            tp3_size = tp_calc.get("tp3_size", tp3_size)
+            risk_reward_tp1 = tp_calc.get("risk_reward_tp1", risk_reward_tp1)
+            risk_reward_tp2 = tp_calc.get("risk_reward_tp2", risk_reward_tp2)
+            risk_reward_tp3 = tp_calc.get("risk_reward_tp3", risk_reward_tp3)
     
     fair_value = fund.get("fair_value", {})
 
@@ -405,13 +444,8 @@ def _build_pick_rule_based(
     }
 
     target_1 = tp1
-    if target_1 is None:
-        try:
-            fallback_target = tech.get("target")
-            target_1 = float(fallback_target) if fallback_target is not None else None
-        except (ValueError, TypeError):
-            target_1 = None
-    target_2 = _calc_target_2(target_1)
+    target_2 = tp2
+    target_3 = tp3
     risk_reward = _calc_risk_reward(current_price, target_1, stop_loss, decision_label)
 
     return {
@@ -438,6 +472,7 @@ def _build_pick_rule_based(
         "tp3": tp3,
         "target_1": target_1,
         "target_2": target_2,
+        "target_3": target_3,
         "tp1_size": tp1_size,
         "tp2_size": tp2_size,
         "tp3_size": tp3_size,

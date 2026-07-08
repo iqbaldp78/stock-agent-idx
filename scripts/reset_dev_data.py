@@ -5,10 +5,11 @@ def reset_database():
     db = SessionLocal()
     try:
         # Menghapus data dari tabel operasional/development
-        # Harus menghapus performance & dca_transactions terlebih dahulu karena Foreign Key
+        # Harus menghapus performance, dca_transactions, paper_trades terlebih dahulu karena Foreign Key
         db.execute(text("DELETE FROM performance;"))
         db.execute(text("DELETE FROM dca_transactions;"))
         db.execute(text("DELETE FROM dca_strategy;"))
+        db.execute(text("DELETE FROM paper_trades;"))
         db.execute(text("DELETE FROM signals;"))
         db.execute(text("DELETE FROM agent_scores;"))
         db.execute(text("DELETE FROM debate_logs;"))
