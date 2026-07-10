@@ -16,6 +16,7 @@ import subprocess
 import signal
 
 import os
+from ui.login import render_login_page
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ st.set_page_config(
 )
 
 # === Premium UI Injection ===
+# (Keeping all the CSS intact)
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
@@ -140,9 +142,25 @@ def load_backtest_result(path=None):
         return None, result_path, str(e)
 
 
+# === Authentication Wrapper ===
+if 'authenticated' not in st.session_state:
+    st.session_state['authenticated'] = False
+
+if not st.session_state['authenticated']:
+    render_login_page(get_db_conn)
+    st.stop()
+
+
 # === Sidebar ===
 
 st.sidebar.title("🤖 Stock Agent IDX")
+
+if st.sidebar.button("Logout", use_container_width=True):
+    st.session_state['authenticated'] = False
+    st.rerun()
+
+st.sidebar.divider()
+
 page = st.sidebar.radio(
     "Navigation",
     ["📈 Top Picks", "💹 Paper Trading", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"]

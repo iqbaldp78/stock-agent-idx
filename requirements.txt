@@ -23,6 +23,7 @@ alembic==1.15.2
 # UI/
 streamlit==1.45.1
 plotly==6.1.2
+bcrypt==4.2.0
 
 # Machine Learning
 lightgbm==4.5.0
