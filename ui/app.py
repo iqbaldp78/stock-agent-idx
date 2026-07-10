@@ -2684,7 +2684,7 @@ elif page == "💼 Portfolio":
         from portfolio.manager import (
             get_all_holdings, update_current_prices, get_portfolio_summary,
             add_holding, record_buy, record_sell, get_transactions,
-            preview_avg_cost_after_buy
+            preview_avg_cost_after_buy, reset_all_holdings
         )
         from portfolio.dca_strategy import (
             get_active_strategies, create_dca_from_signal, create_dca_manual,
@@ -2879,6 +2879,20 @@ elif page == "💼 Portfolio":
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error: {e}")
+
+        # Always show Danger Zone at the bottom of Tab 1
+        st.divider()
+        with st.expander("⚠️ Danger Zone: Reset Portfolio"):
+            st.warning("Perhatian: Tindakan ini akan menghapus semua riwayat transaksi, DCA, dan data kepemilikan saham di portofolio secara permanen!")
+            if st.button("🚨 Reset All Data Holding", type="primary", use_container_width=True):
+                try:
+                    if reset_all_holdings():
+                        st.success("Seluruh data portofolio telah direset!")
+                        st.rerun()
+                    else:
+                        st.error("Gagal mereset data portofolio.")
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
     # === TAB 2: DCA Manager ===
     with tab2:
@@ -3594,6 +3608,26 @@ elif page == "⚙️ Settings":
         llm_on = os.getenv("LLM_ENABLED", "true").lower() in ("true", "1", "yes")
         st.metric("LLM Mode", "Enabled" if llm_on else "Rule-based only")
         st.caption(base_url[:40] + ("…" if len(base_url) > 40 else ""))
+
+    st.divider()
+
+    # ML Actions
+    st.subheader("🤖 Machine Learning")
+    ml_col1, ml_col2 = st.columns(2)
+    with ml_col1:
+        if st.button("🚀 Train ML Day-1 (--all)", use_container_width=True, help="Setara dengan 'make train-ml'"):
+            import sys
+            import subprocess
+            import os
+            subprocess.Popen([sys.executable, "scripts/train_day1_model.py", "--all"], preexec_fn=os.setsid)
+            st.success("Proses Train ML (Day-1) telah dijalankan di background!")
+    with ml_col2:
+        if st.button("✅ Validate ML Accuracy (--all)", use_container_width=True, help="Setara dengan 'make validate-ml'"):
+            import sys
+            import subprocess
+            import os
+            subprocess.Popen([sys.executable, "scripts/validate_ml_accuracy.py", "--all"], preexec_fn=os.setsid)
+            st.success("Proses Validate ML telah dijalankan di background!")
 
     st.divider()
 

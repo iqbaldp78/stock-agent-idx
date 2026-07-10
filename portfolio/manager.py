@@ -110,9 +110,22 @@ def delete_holding(ticker: str) -> bool:
     finally:
         db.close()
 
+def reset_all_holdings() -> bool:
+    """Reset all portfolio data including holdings, DCA transactions, and strategies."""
+    try:
+        with SessionLocal() as db:
+            from db.models import PortfolioHolding, DcaTransaction, DcaStrategy
+            db.query(DcaTransaction).delete()
+            db.query(DcaStrategy).delete()
+            db.query(PortfolioHolding).delete()
+            db.commit()
+            return True
+    except Exception as e:
+        logger.error(f"Error reset_all_holdings: {e}")
+        return False
 
 # ============================================================
-# Average Cost Calculator
+# Calculator & Helpers
 # ============================================================
 
 def calculate_new_avg_cost(
