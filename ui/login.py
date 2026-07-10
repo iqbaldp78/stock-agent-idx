@@ -2,6 +2,15 @@ import streamlit as st
 import time
 from services.auth import authenticate_user
 
+import extra_streamlit_components as stx
+import uuid
+
+def init_cookie_manager(key="init"):
+    # CookieManager injects an invisible widget, so we must instantiate it
+    # every time the script reruns without caching it. 
+    # extra_streamlit_components handles the deduplication internally.
+    return stx.CookieManager(key=key)
+
 def render_login_page(get_db_conn_func):
     """Renders the login page and handles authentication."""
     
@@ -44,9 +53,9 @@ def render_login_page(get_db_conn_func):
             </div>
         ''', unsafe_allow_html=True)
         
-        with st.form("login_form"):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+        with st.form("login_form", clear_on_submit=False):
+            username = st.text_input("Username", autocomplete="username")
+            password = st.text_input("Password", type="password", autocomplete="current-password")
             
             submitted = st.form_submit_button("Sign In", use_container_width=True)
             
@@ -59,6 +68,11 @@ def render_login_page(get_db_conn_func):
                         st.success(f"Welcome back, {username}!")
                         st.session_state['authenticated'] = True
                         st.session_state['username'] = username
+                        
+                        # Save to cookie for persistence
+                        cookie_manager = init_cookie_manager(key="login_cookie_mgr")
+                        cookie_manager.set("auth_token", username, max_age=86400 * 7) # 7 days
+                        
                         time.sleep(1) # Let the user see the success message
                         st.rerun()
                     else:

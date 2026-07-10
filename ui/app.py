@@ -16,7 +16,8 @@ import subprocess
 import signal
 
 import os
-from ui.login import render_login_page
+from ui.login import render_login_page, init_cookie_manager
+import extra_streamlit_components as stx
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -143,8 +144,15 @@ def load_backtest_result(path=None):
 
 
 # === Authentication Wrapper ===
+cookie_manager = init_cookie_manager(key="main_cookie_mgr")
+auth_token = cookie_manager.get("auth_token")
+
 if 'authenticated' not in st.session_state:
-    st.session_state['authenticated'] = False
+    if auth_token:
+        st.session_state['authenticated'] = True
+        st.session_state['username'] = auth_token
+    else:
+        st.session_state['authenticated'] = False
 
 if not st.session_state['authenticated']:
     render_login_page(get_db_conn)
