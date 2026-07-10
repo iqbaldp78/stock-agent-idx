@@ -16,6 +16,7 @@ import subprocess
 import signal
 
 import os
+import uuid
 from ui.login import render_login_page, init_cookie_manager
 import extra_streamlit_components as stx
 
@@ -145,16 +146,33 @@ def load_backtest_result(path=None):
 
 # === Authentication Wrapper ===
 cookie_manager = init_cookie_manager(key="main_cookie_mgr")
-auth_token = cookie_manager.get("auth_token")
+# Handle the race condition where the browser hasn't deleted the cookie yet after logout
+# We must do this BEFORE handling logout_requested, to avoid clearing deleted_token prematurely.
+raw_auth_token = cookie_manager.get("auth_token")
+auth_token = raw_auth_token
 
-if 'authenticated' not in st.session_state:
-    if auth_token:
-        st.session_state['authenticated'] = True
-        st.session_state['username'] = auth_token
-    else:
-        st.session_state['authenticated'] = False
+if auth_token and auth_token == st.session_state.get('deleted_token'):
+    auth_token = None
+elif 'deleted_token' in st.session_state:
+    # Clear the deleted token state once the token actually disappears or changes
+    if not auth_token:
+        del st.session_state['deleted_token']
 
-if not st.session_state['authenticated']:
+if st.session_state.get('logout_requested'):
+    if raw_auth_token:
+        st.session_state['deleted_token'] = raw_auth_token
+    # Using set with max_age=0 and a unique key guarantees the cookie is deleted across all paths
+    # and bypasses Streamlit's component caching which ignores repeated identical component calls.
+    cookie_manager.set("auth_token", "", max_age=0, key=str(uuid.uuid4()))
+    st.session_state['authenticated'] = False
+    del st.session_state['logout_requested']
+    auth_token = None
+
+if auth_token:
+    st.session_state['authenticated'] = True
+    st.session_state['username'] = auth_token
+
+if not st.session_state.get('authenticated'):
     render_login_page(get_db_conn)
     st.stop()
 
@@ -164,14 +182,14 @@ if not st.session_state['authenticated']:
 st.sidebar.title("🤖 Stock Agent IDX")
 
 if st.sidebar.button("Logout", use_container_width=True):
-    st.session_state['authenticated'] = False
+    st.session_state['logout_requested'] = True
     st.rerun()
 
 st.sidebar.divider()
 
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "💹 Paper Trading", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"]
+    ["📈 Top Picks", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"]
 )
 
 st.sidebar.divider()
@@ -869,10 +887,10 @@ if page == "📈 Top Picks":
         st.info("Belum ada data. Klik **Run Analysis Now** di sidebar untuk memulai.")
 
 
-# === PAGE: Paper Trading ===
+# === PAGE: Trading Engine ===
 
-elif page == "💹 Paper Trading":
-    st.title("💹 PAPER TRADING")
+elif page == "💹 Trading Engine":
+    st.title("💹 TRADING ENGINE")
     st.markdown("**Virtual Portfolio Validator** — Test trading strategy dengan modal virtual")
     
     # Import paper trading service
@@ -880,7 +898,7 @@ elif page == "💹 Paper Trading":
         from services.paper_trading import PaperTradingService
         pt_service = PaperTradingService()
     except ImportError as e:
-        st.error(f"Paper Trading service tidak tersedia: {e}")
+        st.error(f"Trading Engine service tidak tersedia: {e}")
         st.stop()
     
     # --- WALLET SECTION ---
@@ -1110,7 +1128,7 @@ elif page == "💹 Paper Trading":
                             signal_id=sig['id'],
                             tp1=float(sig.get('target_1')) if sig.get('target_1') else None,
                             stop_loss=float(sig.get('stop_loss')) if sig.get('stop_loss') else None,
-                            notes=f"Manual buy from Paper Trading UI"
+                            notes=f"Manual buy from Trading Engine UI"
                         )
                         if result["status"] == "success":
                             st.success(result["message"])
