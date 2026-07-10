@@ -109,19 +109,52 @@ class PaperTradingService:
         """Get wallet balance + unrealized P&L dari open positions (real-time price)."""
         wallet = self.get_or_create_wallet()
 
-        open_trades = self.session.query(PaperTrade).filter(
-            PaperTrade.status == "OPEN"
+        active_trades = self.session.query(PaperTrade).filter(
+            PaperTrade.status.in_(["OPEN", "PENDING_LIMIT", "PENDING_STOP"])
         ).all()
 
         unrealized_pnl = Decimal("0")
         positions = []
         auto_closed = []
 
-        for trade in open_trades:
+        for trade in active_trades:
             current_price = _get_current_price(trade.ticker)
             if not current_price:
                 current_price = float(trade.price)  # fallback ke buy price
 
+            # Auto evaluate pending order
+            if trade.status in ["PENDING_LIMIT", "PENDING_STOP"]:
+                matched = False
+                if trade.status == "PENDING_LIMIT" and current_price <= float(trade.price):
+                    matched = True
+                elif trade.status == "PENDING_STOP" and current_price >= float(trade.price):
+                    matched = True
+
+                if matched:
+                    # Order matched!
+                    trade.status = "OPEN"
+                    trade.opened_at = datetime.utcnow()
+                    self.session.commit()
+                else:
+                    # Still pending
+                    positions.append({
+                        "id": trade.id,
+                        "ticker": trade.ticker,
+                        "lot": trade.lot,
+                        "shares": trade.shares,
+                        "buy_price": float(trade.price),
+                        "current_price": float(current_price),
+                        "current_value": float(trade.amount), # keep original amount
+                        "unrealized_pnl": 0.0,
+                        "unrealized_pnl_pct": 0.0,
+                        "tp1": float(trade.tp1) if trade.tp1 else None,
+                        "stop_loss": float(trade.stop_loss) if trade.stop_loss else None,
+                        "opened_at": trade.opened_at.strftime("%Y-%m-%d %H:%M") if trade.opened_at else None,
+                        "status": trade.status,
+                    })
+                    continue
+
+            # Open position logic
             current_value = Decimal(str(current_price)) * trade.shares
             pnl = current_value - trade.amount
             pnl_pct = (pnl / trade.amount) * 100 if trade.amount > 0 else Decimal("0")
@@ -231,14 +264,23 @@ class PaperTradingService:
         amount = Decimal(str(price)) * shares
         fee = amount * Decimal(str(self.BUY_FEE_PCT))
         total_cost = amount + fee
-        
+
         # Check saldo
         if wallet.cash < total_cost:
             return {
                 "status": "error",
                 "message": f"Saldo tidak cukup. Butuh Rp {float(total_cost):,.0f}, tersedia Rp {float(wallet.cash):,.0f}"
             }
-        
+
+        # Check current price to determine status
+        current_price = _get_current_price(ticker)
+        trade_status = "OPEN"
+        if current_price:
+            if price < current_price:
+                trade_status = "PENDING_LIMIT"
+            elif price > current_price:
+                trade_status = "PENDING_STOP"
+
         # Deduct cash
         wallet.cash -= total_cost
         wallet.total_invested += amount
@@ -258,7 +300,7 @@ class PaperTradingService:
             tp2=Decimal(str(tp2)) if tp2 else None,
             tp3=Decimal(str(tp3)) if tp3 else None,
             stop_loss=Decimal(str(stop_loss)) if stop_loss else None,
-            status="OPEN",
+            status=trade_status,
             notes=notes,
             wallet_id=wallet.id
         )
@@ -284,7 +326,41 @@ class PaperTradingService:
             },
             "wallet": self.get_wallet_summary()
         }
-    
+    def cancel_pending_order(self, trade_id: int) -> dict:
+        """
+        Batalkan pending order dan kembalikan dana yang terkunci ke cash wallet.
+        """
+        trade = self.session.query(PaperTrade).filter(
+            PaperTrade.id == trade_id,
+            PaperTrade.status.in_(["PENDING_LIMIT", "PENDING_STOP"])
+        ).first()
+        
+        if not trade:
+            return {
+                "status": "error",
+                "message": f"Pending order ID {trade_id} tidak ditemukan atau sudah match"
+            }
+            
+        wallet = self.get_or_create_wallet()
+        
+        # Return locked cash (amount + fee)
+        total_cost = trade.amount + trade.fee
+        wallet.cash += total_cost
+        wallet.total_invested -= trade.amount
+        wallet.updated_at = datetime.utcnow()
+        
+        # Mark as cancelled
+        trade.status = "CANCELLED"
+        trade.closed_at = datetime.utcnow()
+        
+        self.session.commit()
+        
+        return {
+            "status": "success",
+            "message": f"Pending order {trade.ticker} dibatalkan. Cash Rp {float(total_cost):,.0f} dikembalikan."
+        }
+        
+
     def sell(self, trade_id: int, price: float, reason: str = "MANUAL") -> dict:
         """
         Execute sell order (close position).
@@ -413,20 +489,21 @@ class PaperTradingService:
     
     def check_tp_sl(self, current_prices: dict) -> list:
         """
-        Check semua open positions untuk TP/SL hit.
+        Check semua open positions untuk TP/SL hit, termasuk pending orders.
         
         Args:
             current_prices: dict {ticker: current_price}
         
         Returns:
-            list of trades yang auto-closed
+            list of trades yang auto-closed/dieksesusi
         """
+        # Handle OPEN positions: TP/SL
         open_trades = self.session.query(PaperTrade).filter(
             PaperTrade.status == "OPEN"
         ).all()
-        
+
         closed_trades = []
-        
+
         for trade in open_trades:
             current_price = current_prices.get(trade.ticker)
             if not current_price:
@@ -441,9 +518,56 @@ class PaperTradingService:
             elif trade.stop_loss and current_price <= float(trade.stop_loss):
                 result = self.sell(trade.id, current_price, reason="SL_HIT")
                 closed_trades.append(result)
-        
+
+        # Handle PENDING orders: limit buy/sell
+        pending_trades = self.session.query(PaperTrade).filter(
+            PaperTrade.status == "PENDING"
+        ).all()
+
+        executed_pending = []
+        for trade in pending_trades:
+            current_price = current_prices.get(trade.ticker)
+            if not current_price:
+                continue
+            
+            pending_price = float(trade.pending_price) if trade.pending_price else None
+            pending_type = trade.pending_type
+            
+            if not pending_price:
+                continue
+            
+            # PENDING BUY: execute when live price <= pending price
+            if pending_type == "limit_buy" and current_price <= pending_price:
+                trade.status = "OPEN"
+                opened_at = datetime.utcnow()
+                trade.opened_at = opened_at
+                trade.price = Decimal(str(current_price))
+                trade.amount = Decimal(str(current_price)) * trade.shares
+                fee = trade.amount * Decimal(str(self.BUY_FEE_PCT))
+                trade.fee = fee
+                
+                wallet = self.get_or_create_wallet()
+                total_cost = trade.amount + fee
+                if wallet.cash >= total_cost:
+                    wallet.cash -= total_cost
+                    wallet.total_invested += trade.amount
+                    wallet.updated_at = datetime.utcnow()
+                    self.session.commit()
+                    self.session.refresh(trade)
+                    executed_pending.append({
+                        "ticker": trade.ticker,
+                        "reason": "PENDING_BUY_FILLED",
+                        "price": float(current_price),
+                        "lot": trade.lot
+                    })
+            
+            # PENDING SELL: execute when live price >= pending price
+            elif pending_type == "limit_sell" and current_price >= pending_price:
+                result = self.sell(trade.id, current_price, reason="PENDING_SELL_FILLED")
+                executed_pending.append(result)
+
         return closed_trades
-    
+
     def get_trade_history(self, limit: int = 50) -> list:
         """Get semua trades (open + closed)."""
         trades = self.session.query(PaperTrade).order_by(
@@ -471,7 +595,7 @@ class PaperTradingService:
             }
             for t in trades
         ]
-    
+
     def get_equity_history(self) -> dict:
         """Generate equity curve dari trade history."""
         all_trades = self.session.query(PaperTrade).order_by(
@@ -584,16 +708,25 @@ class PaperTradingService:
         wallet = self.get_or_create_wallet()
 
         for sig in signals:
+            # Recommended entry price (entry_high or entry_low)
+            target_price = float(sig.get("entry_high") or sig.get("entry_low") or 0)
+            
             # Get current price
             current_price = _get_current_price(sig["ticker"])
-            if not current_price:
-                current_price = float(sig.get("entry_low") or 1000)
+            
+            # Default to target price, fallback to current price
+            if target_price > 0:
+                execute_price = target_price
+            elif current_price:
+                execute_price = current_price
+            else:
+                execute_price = 1000
 
             # Execute buy
             result = self.auto_execute_signal(
                 signal_id=sig["id"],
                 budget_pct=budget_pct_per_trade,
-                price=current_price
+                price=execute_price
             )
 
             if result["status"] == "success":

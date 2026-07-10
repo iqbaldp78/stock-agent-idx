@@ -347,39 +347,59 @@ def _build_pick_rule_based(
     pred_return = float(ml_prediction.get("pred_return", 0.0)) if ml_prediction else 0.0
     decision_label = _decision_label(pred_return, tech, bandarm)
     
-    # Fix Stop Loss and TP logic: if IM forces a BUY but Technical was SELL, stop_loss will be > current_price and TP will be < current_price.
-    if "BUY" in decision_label and current_price:
+    # Fix Stop Loss and TP logic: always ensure valid LONG setups for top picks
+    if current_price:
         entry_low_tech = tech.get("entry_low")
         try:
             base_price = float(entry_low_tech) if entry_low_tech else current_price
         except (ValueError, TypeError):
             base_price = current_price
             
-        if not stop_loss or stop_loss > current_price:
+        # 1. Coba ambil dari TradingView TA (Prioritas Utama)
+        tv_ta = tech.get("tradingview_ta", {})
+        tv_ind = tv_ta.get("indicators", {})
+        r_near = None
+        r_strong = None
+        tv_sl = None
+        
+        if tv_ind:
+            r_near = tv_ind.get("Pivot.M.Classic.R1")
+            r_strong = tv_ind.get("Pivot.M.Classic.R2")
+            tv_sl = tv_ind.get("Pivot.M.Classic.S1")
+        
+        # 2. Fallback ke hitungan teknikal manual jika TradingView tidak ada/error
+        if not r_near or not r_strong:
+            try:
+                r_near_manual = float(tech.get("resistance_near")) if tech.get("resistance_near") else None
+                r_near = r_near if r_near else r_near_manual
+            except (ValueError, TypeError):
+                pass
+                
+            try:
+                r_strong_manual = float(tech.get("resistance_strong")) if tech.get("resistance_strong") else None
+                r_strong = r_strong if r_strong else r_strong_manual
+            except (ValueError, TypeError):
+                pass
+
+        # Pastikan resistance valid di atas base_price
+        if r_near and r_near <= base_price:
+            r_near = None
+        if r_strong and r_strong <= base_price:
+            r_strong = None
+
+        # Tentukan Stop Loss (prioritas: TradingView S1 -> technical -> manual 0.95)
+        if tv_sl and tv_sl < base_price:
+            stop_loss = tv_sl
+        elif not stop_loss or stop_loss >= base_price:
             stop_loss = round(base_price * 0.95, 0)
             
+        # Kalkulasi ulang TP jika belum ada atau salah arah (short setup)
         if not tp1 or tp1 < current_price:
             from agents.technical import _calculate_tp_levels
-            res_near = tech.get("resistance_near")
-            res_strong = tech.get("resistance_strong")
-            try:
-                r_near = float(res_near) if res_near else None
-            except (ValueError, TypeError):
-                r_near = None
-            try:
-                r_strong = float(res_strong) if res_strong else None
-            except (ValueError, TypeError):
-                r_strong = None
-                
-            # Pastikan resistance valid di atas current_price
-            if r_near and r_near <= current_price:
-                r_near = None
-            if r_strong and r_strong <= current_price:
-                r_strong = None
-                
+            
             tp_calc = _calculate_tp_levels(
                 entry=base_price,
-                stop_loss=stop_loss if stop_loss else round(base_price * 0.95, 0),
+                stop_loss=stop_loss,
                 resistance_near=r_near or (base_price * 1.05),
                 resistance_strong=r_strong or (r_near * 1.05 if r_near else base_price * 1.15)
             )

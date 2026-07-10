@@ -287,13 +287,13 @@ class PaperTrade(Base):
     tp2 = Column(Numeric(12, 2))
     tp3 = Column(Numeric(12, 2))
     stop_loss = Column(Numeric(12, 2))
-    status = Column(String(20), default="OPEN")      # OPEN/CLOSED/TP_HIT/SL_HIT
+    status = Column(String(20), default="OPEN")      # PENDING/OPEN/CLOSED/TP_HIT/SL_HIT
     opened_at = Column(DateTime, server_default=func.now())
     closed_at = Column(DateTime)
     realized_pnl = Column(Numeric(15, 2), default=0)  # P&L setelah close
     realized_pnl_pct = Column(Numeric(6, 2), default=0)
     notes = Column(Text)
     exit_price = Column(Numeric(12, 2))              # harga jual/exit saat close
-    
+
     # Foreign key to wallet (optional, bisa dihitung aggregat)
     wallet_id = Column(Integer, ForeignKey("paper_wallet.id"), nullable=True)

@@ -185,8 +185,9 @@ def calculate_base_prediction(
 
     for day, factor in COMPOUND_FACTORS.items():
         if f"{day}d" in multiday_pcts:
-            # Real ML Prediction
-            day_pct = multiday_pcts[f"{day}d"]
+            # Real ML Prediction (probability 0-100)
+            prob = multiday_pcts[f"{day}d"] / 100.0
+            day_pct = (prob - 0.5) * 2 * (MAX_DAILY_MOVE_PCT * factor)
         else:
             # Fallback to legacy linear rule-based if ML not provided
             day_pct = base_daily_pct * factor

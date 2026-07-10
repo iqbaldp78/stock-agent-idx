@@ -601,21 +601,6 @@ if page == "📈 Top Picks":
                         with st.expander("📝 Investment Thesis", expanded=False):
                             st.markdown(thesis)
 
-                # Action: Set DCA button
-                st.divider()
-                if st.button(f"💰 Set DCA for {ticker}", key=f"dca_{ticker}", use_container_width=True):
-                    # Store signal info in session state and navigate to Portfolio page
-                    st.session_state["dca_from_signal"] = {
-                        "ticker": ticker,
-                        "signal_id": pick.get("signal_id"),
-                        "entry_low": pick.get("entry_low"),
-                        "entry_high": pick.get("entry_high"),
-                        "max_entry": pick.get("max_entry"),
-                        "conviction": conviction,
-                    }
-                    st.info(f"Navigate to 💼 Portfolio → DCA Manager to complete DCA setup for {ticker}")
-                    st.rerun()
-
         # Watchlist & Avoid
         col_w, col_a = st.columns(2)
         with col_w:
@@ -853,20 +838,7 @@ if page == "📈 Top Picks":
                         with st.expander("📝 Investment Thesis", expanded=False):
                             st.markdown(thesis)
 
-                # Action: Set DCA button (DB signals)
-                st.divider()
-                sig_ticker = sig.get("ticker")
-                if st.button(f"💰 Set DCA for {sig_ticker}", key=f"dca_db_{sig['id']}", use_container_width=True):
-                    st.session_state["dca_from_signal"] = {
-                        "ticker": sig_ticker,
-                        "signal_id": sig.get("id"),
-                        "entry_low": float(sig.get("entry_low")) if sig.get("entry_low") else None,
-                        "entry_high": float(sig.get("entry_high")) if sig.get("entry_high") else None,
-                        "max_entry": float(sig.get("max_entry")) if sig.get("max_entry") else None,
-                        "conviction": sig.get("conviction"),
-                    }
-                    st.info(f"Navigate to 💼 Portfolio → DCA Manager to complete DCA setup for {sig_ticker}")
-                    st.rerun()
+
     else:
         st.info("Belum ada data. Klik **Run Analysis Now** di sidebar untuk memulai.")
 
@@ -917,7 +889,7 @@ elif page == "💹 Paper Trading":
     with st.container(border=True):
         summary = pt_service.get_wallet_summary()
         
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
             st.metric(
                 "💵 Cash", 
@@ -926,17 +898,23 @@ elif page == "💹 Paper Trading":
             )
         with col2:
             st.metric(
+                "💼 Invested", 
+                f"Rp {summary['total_invested']:,.0f}",
+                help="Total dana yang sedang diinvestasikan di saham"
+            )
+        with col3:
+            st.metric(
                 "📊 Total Equity", 
                 f"Rp {summary['total_equity']:,.0f}",
                 f"{summary['total_return_pct']:+.2f}%"
             )
-        with col3:
+        with col4:
             st.metric(
                 "📈 Realized P&L", 
                 f"Rp {summary['realized_pnl']:,.0f}",
                 help="Profit/loss dari trades yang sudah closed"
             )
-        with col4:
+        with col5:
             st.metric(
                 "📊 Unrealized P&L", 
                 f"Rp {summary['unrealized_pnl']:,.0f}",
@@ -990,6 +968,42 @@ elif page == "💹 Paper Trading":
     else:
         st.info("Equity curve akan muncul setelah ada trades.")
     
+    def _fetch_live_prices_for_open(tickers: list[str]) -> dict:
+        prices = {}
+        for ticker in tickers:
+            try:
+                p = _get_current_price(ticker)
+                if p is not None:
+                    prices[ticker] = p
+            except Exception:
+                pass
+        return prices
+    
+    # --- CHECK ACTUAL TP/SL ---
+    st.header("🎯 CHECK ACTUAL TP/SL")
+    st.caption("Cek harga live dan tutup otomatis posisi yang sudah kena TP/SL.")
+    
+    col_check, col_info = st.columns([2, 6])
+    with col_check:
+        if st.button("🔍 Cek TP/SL Sekarang", type="primary", use_container_width=True):
+            try:
+                summary_now = pt_service.get_wallet_summary(auto_check_tpsl=False)
+                open_tickers = [p["ticker"] for p in summary_now.get("positions", [])]
+                if not open_tickers:
+                    st.info("Tidak ada open position untuk dicek.")
+                else:
+                    with st.spinner("Fetching live prices..."):
+                        live_prices = _fetch_live_prices_for_open(open_tickers)
+                    st.write("Live prices:", live_prices)
+                    results = pt_service.check_tp_sl(current_prices=live_prices)
+                    if results:
+                        st.success(f"Auto-closed {len(results)} position(s). Refresh untuk lihat perubahan.")
+                        st.rerun()
+                    else:
+                        st.success("Tidak ada posisi yang kena TP/SL.")
+            except Exception as e:
+                st.error(f"Check TP/SL failed: {e}")
+    
     # --- QUICK BUY FROM TOP PICKS ---
     st.header("🎯 QUICK BUY dari Top Picks")
     
@@ -1022,7 +1036,7 @@ elif page == "💹 Paper Trading":
     if signals:
         for sig in signals:
             with st.container(border=True):
-                col_info, col_buy, col_auto = st.columns([4, 2, 2])
+                col_info, col_buy, col_auto = st.columns([3, 3, 2])
                 
                 with col_info:
                     st.markdown(f"**{sig['ticker']}** — #{sig['rank']}")
@@ -1038,20 +1052,31 @@ elif page == "💹 Paper Trading":
                     current_price = float(sig.get('price_prediction', {}).get('current_price', 0)) or 1000
                     max_lot = max(1, pt_service.calculate_max_lot(current_price))
                     
-                    # Use signal id in the key to ensure uniqueness when the same
-                    # ticker appears multiple times in the signals list.
-                    lot = st.number_input(
-                        "Lot",
-                        min_value=1,
-                        max_value=max_lot,
-                        value=max(1, min(10, max_lot)),
-                        key=f"lot_{sig['ticker']}_{sig['id']}"
-                    )
+                    # Recommended entry (using entry_high or entry_low as default)
+                    default_price = float(sig.get('entry_high') or sig.get('entry_low') or current_price)
+                    
+                    # Layout Lot and Harga side-by-side
+                    col_lot, col_price_in = st.columns(2)
+                    with col_lot:
+                        lot = st.number_input(
+                            "Lot",
+                            min_value=1,
+                            max_value=max_lot,
+                            value=max(1, min(10, max_lot)),
+                            key=f"lot_{sig['ticker']}_{sig['id']}"
+                        )
+                    with col_price_in:
+                        input_price = st.number_input(
+                            "Harga",
+                            min_value=1,
+                            value=int(default_price) if default_price > 0 else int(current_price),
+                            key=f"price_{sig['ticker']}_{sig['id']}"
+                        )
                 
                 with col_auto:
                     # Buttons
                     if st.button(f"🛒 Buy {lot} lot", key=f"buy_{sig['ticker']}_{sig['id']}", use_container_width=True):
-                        price = current_price
+                        price = input_price
                         result = pt_service.buy(
                             ticker=sig['ticker'],
                             lot=lot,
@@ -1073,7 +1098,7 @@ elif page == "💹 Paper Trading":
                             result = pt_service.auto_execute_signal(
                                 signal_id=sig['id'],
                                 budget_pct=0.20,
-                                price=current_price
+                                price=input_price
                             )
                             if result["status"] == "success":
                                 st.success(result["message"])
@@ -1083,11 +1108,58 @@ elif page == "💹 Paper Trading":
     else:
         st.info("No top picks found. Run analysis first.")
     
+    # Split positions into active and pending
+    active_positions = [p for p in summary['positions'] if p['status'] == 'OPEN']
+    pending_orders = [p for p in summary['positions'] if p['status'] in ['PENDING', 'PENDING_LIMIT', 'PENDING_STOP']]
+
+    # --- PENDING ORDERS ---
+    st.header("⏳ PENDING ORDERS")
+    if pending_orders:
+        for pos in pending_orders:
+            with st.container(border=True):
+                col_ticker, col_stats, col_actions = st.columns([2, 6, 2])
+                with col_ticker:
+                    st.markdown(f"### {pos['ticker']}")
+                    st.markdown(f"{pos['lot']} lot ({pos['shares']:,} lembar)")
+                    if pos['status'] == 'PENDING_STOP':
+                        st.caption("📈 Buy Stop")
+                    else:
+                        st.caption("📉 Buy Limit")
+                with col_stats:
+                    col_price, col_value = st.columns(2)
+                    with col_price:
+                        st.caption(f"Target Bid: Rp {pos['buy_price']:,.0f}")
+                        st.caption(f"Current Now: Rp {pos['current_price']:,.0f}")
+                        
+                        diff_val = abs(pos['current_price'] - pos['buy_price'])
+                        diff_pct = (diff_val / pos['current_price'] * 100) if pos['current_price'] else 0
+                        
+                        if pos['status'] == 'PENDING_STOP':
+                            st.caption(f"Harus Naik: {diff_pct:.2f}% lagi")
+                        else:
+                            st.caption(f"Harus Turun: {diff_pct:.2f}% lagi")
+                    with col_value:
+                        st.caption(f"Locked Cash: Rp {pos['current_value']:,.0f}")
+                        if pos.get('tp1'):
+                            st.caption(f"Target TP1: Rp {pos['tp1']:,.0f}")
+                        if pos.get('stop_loss'):
+                            st.caption(f"Target SL: Rp {pos['stop_loss']:,.0f}")
+                with col_actions:
+                    if st.button("❌ CANCEL", key=f"cancel_{pos['id']}", use_container_width=True, type="primary"):
+                        result = pt_service.cancel_pending_order(pos['id'])
+                        if result["status"] == "success":
+                            st.success(result["message"])
+                            st.rerun()
+                        else:
+                            st.error(result["message"])
+    else:
+        st.info("No pending orders.")
+
     # --- OPEN POSITIONS ---
     st.header("📈 OPEN POSITIONS")
     
-    if summary['positions']:
-        for pos in summary['positions']:
+    if active_positions:
+        for pos in active_positions:
             with st.container(border=True):
                 col_ticker, col_stats, col_actions = st.columns([2, 6, 2])
                 

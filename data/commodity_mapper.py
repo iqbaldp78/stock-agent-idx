@@ -10,8 +10,8 @@ COMMODITY_TO_TICKERS = {
         "tickers": ["ANTM"],  # Antam = major gold producer
         "exposure": "high",
         "currency": "USD/Oz",
-        "symbol": "GC=F",  # Yahoo Finance
-        "name": "Gold Futures"
+        "symbol": "XAU",  # Stockbit
+        "name": "Gold"
     },
 
     # Coal
@@ -19,8 +19,8 @@ COMMODITY_TO_TICKERS = {
         "tickers": ["PTBA", "ADRO", "ITMG", "TOBA"],  # Coal producers
         "exposure": "high",
         "currency": "USD/ton",
-        "symbol": "^BCOM",  # Bloomberg Commodity Index proxy
-        "name": "Thermal Coal"
+        "symbol": "COAL-NEWCASTLE",  # Stockbit
+        "name": "Newcastle Coal"
     },
 
     # Oil & Gas
@@ -28,7 +28,7 @@ COMMODITY_TO_TICKERS = {
         "tickers": ["BRPT", "ADRO", "ENRG"],  # Oil/energy producers
         "exposure": "high",
         "currency": "USD/bbl",
-        "symbol": "CL=F",  # WTI Crude Oil
+        "symbol": "OIL",  # Stockbit
         "name": "Crude Oil"
     },
 
@@ -36,16 +36,16 @@ COMMODITY_TO_TICKERS = {
         "tickers": ["PGAS"],  # Perusahaan Gas Negara
         "exposure": "medium",
         "currency": "USD/MMBtu",
-        "symbol": "NG=F",  # Natural Gas Futures
+        "symbol": "GAS",  # Stockbit
         "name": "Natural Gas"
     },
 
     # Base Metals
     "copper": {
-        "tickers": ["INCO", "TBIG"],  # Copper producers (TBIG = Tycoon Group, diversified)
+        "tickers": ["INCO", "TBIG"],  # Copper producers
         "exposure": "medium",
         "currency": "USD/lb",
-        "symbol": "HG=F",  # Copper Futures
+        "symbol": "COPPER",  # Stockbit
         "name": "Copper"
     },
 
@@ -53,7 +53,7 @@ COMMODITY_TO_TICKERS = {
         "tickers": ["INCO"],  # Inco = nickel producer
         "exposure": "high",
         "currency": "USD/ton",
-        "symbol": "^NICKEL",  # Nickel proxy
+        "symbol": "NICKEL",  # Stockbit
         "name": "Nickel"
     },
 
@@ -61,7 +61,7 @@ COMMODITY_TO_TICKERS = {
         "tickers": ["TINS"],  # Timah (Tin producer)
         "exposure": "high",
         "currency": "USD/ton",
-        "symbol": "^LMEX",  # LME Tin proxy
+        "symbol": "TIN",  # Stockbit
         "name": "Tin"
     },
 
@@ -70,7 +70,7 @@ COMMODITY_TO_TICKERS = {
         "tickers": ["AALI", "LSIP", "SMAR"],  # Palm oil producers
         "exposure": "high",
         "currency": "USD/ton",
-        "symbol": "^PALM",  # Palm Oil Index proxy
+        "symbol": "CPO",  # Stockbit
         "name": "Palm Oil"
     },
 
@@ -78,27 +78,9 @@ COMMODITY_TO_TICKERS = {
         "tickers": ["GGRM"],  # Rubber producer
         "exposure": "medium",
         "currency": "USD/ton",
-        "symbol": "^RUBBER",  # Rubber Index proxy
+        "symbol": "RUBBER",  # Stockbit
         "name": "Rubber"
-    },
-
-    # Building Materials
-    "cement": {
-        "tickers": ["SMGR", "INTP", "WTON"],  # Cement producers
-        "exposure": "medium",
-        "currency": "USD/ton",
-        "symbol": "^CEMENT",  # Cement proxy
-        "name": "Cement"
-    },
-
-    # Food
-    "cocoa": {
-        "tickers": ["ASGR"],  # Agro-industry
-        "exposure": "low",
-        "currency": "USD/ton",
-        "symbol": "CC=F",  # Cocoa Futures
-        "name": "Cocoa"
-    },
+    }
 }
 
 # Reverse mapping: ticker → komoditi
