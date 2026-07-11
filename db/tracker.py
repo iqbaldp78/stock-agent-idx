@@ -118,6 +118,7 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
                 price_prediction=pick.get("price_prediction"),
                 broker_true_costs=pick.get("broker_true_costs"),
                 broker_distributors=pick.get("broker_distributors"),
+                fair_value=pick.get("fair_value"),
                 batch_id=batch_id,
             )
             db.add(record)

@@ -109,6 +109,7 @@ class Signal(Base):
     tp_position_sizing = Column(JSONB)
     broker_true_costs = Column(JSONB)
     broker_distributors = Column(JSONB)
+    fair_value = Column(JSONB)
     risk_reward_tp1 = Column(String(20))
     risk_reward_tp2 = Column(String(20))
     risk_reward_tp3 = Column(String(20))

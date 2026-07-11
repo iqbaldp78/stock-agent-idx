@@ -3,6 +3,7 @@ Stock Agent IDX — Scheduler
 APScheduler: end-of-day analysis + performance check.
 """
 import logging
+import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -195,7 +196,7 @@ def run_portfolio_analysis():
         finally:
             db.close()
 
-        transactions = get_transactions(start_date=date.today() - timedelta(days=30))
+        transactions = get_transactions(start_date=datetime.date.today() - datetime.timedelta(days=30))
 
         # Run AI analysis
         result = analyze_portfolio(

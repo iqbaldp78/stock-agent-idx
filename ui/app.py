@@ -294,7 +294,19 @@ if page == "📈 Top Picks":
 
     if latest_batch or latest_run_date:
         display_batch = latest_batch or f"no-batch-{latest_run_date}"
-        st.caption(f"Latest batch: `{display_batch}` | Updated: {latest_run_date}")
+        import datetime
+        if isinstance(latest_run_date, datetime.datetime):
+            display_lrd = (latest_run_date + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
+        elif isinstance(latest_run_date, str):
+            try:
+                parsed = datetime.datetime.strptime(latest_run_date[:19], "%Y-%m-%d %H:%M:%S")
+                display_lrd = (parsed + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
+            except:
+                display_lrd = latest_run_date
+        else:
+            display_lrd = str(latest_run_date)
+            
+        st.caption(f"Latest batch: `{display_batch}` | Updated: {display_lrd}")
 
     signals = []
     if latest_run_date is not None:
@@ -380,19 +392,12 @@ if page == "📈 Top Picks":
 
                     # Take-Profit Levels
                     tp1 = pick.get("tp1")
-                    tp1 = tp1 if tp1 is not None else "N/A"
                     tp2 = pick.get("tp2")
-                    tp2 = tp2 if tp2 is not None else "N/A"
                     tp3 = pick.get("tp3")
-                    tp3 = tp3 if tp3 is not None else "N/A"
-                    tp1_size = pick.get("tp1_size", 0.30)
-                    tp2_size = pick.get("tp2_size", 0.40)
-                    tp3_size = pick.get("tp3_size", 0.30)
                     sl = pick.get("stop_loss")
-                    sl = sl if sl is not None else "N/A"
 
                     # Display TP levels with position sizing
-                    if tp1 != "N/A" and tp2 != "N/A" and tp3 != "N/A":
+                    if tp1 and tp2 and tp3:
                         st.markdown("### 📊 Take-Profit Strategy")
                         col1, col2, col3 = st.columns(3)
                         with col1:
@@ -410,47 +415,26 @@ if page == "📈 Top Picks":
                         # Fallback to old target display if TP levels not available
                         t1 = pick.get("target_1", "N/A")
                         rr = pick.get("risk_reward", "N/A")
-                        st.markdown(f"Target: **{t1}** | SL: **{sl}** | R/R: **{rr}**")
-
-                    # Fundamental Fair Value
-                    fair_value = pick.get("fair_value", {})
-                    if fair_value:
-                        fv_base = fair_value.get("fair_value_base")
-                        fv_low = fair_value.get("fair_value_low")
-                        fv_high = fair_value.get("fair_value_high")
-                        upside = fair_value.get("upside_pct")
-                        label = fair_value.get("valuation_label", "N/A")
-                        confidence = fair_value.get("confidence", "N/A")
-
-                        if label in ("DEEP_UNDERVALUED", "UNDERVALUED"):
-                            fv_icon = "🟢"
-                        elif label in ("OVERVALUED", "EXPENSIVE"):
-                            fv_icon = "🔴"
-                        else:
-                            fv_icon = "🟡"
-
-                        fv_text = f"Rp {fv_base:,.0f}" if isinstance(fv_base, (int, float)) else "N/A"
-                        upside_text = f"{upside:+.2f}%" if isinstance(upside, (int, float)) else "N/A"
-                        st.markdown(f"💰 **Fair Value:** {fv_icon} **{fv_text}** | Upside: **{upside_text}** | {label} ({confidence})")
-
-                        with st.expander(f"📐 Detail Fair Value {ticker}", expanded=False):
-                            if fv_low and fv_high:
-                                st.markdown(f"**Range:** Rp {fv_low:,.0f} – Rp {fv_high:,.0f}")
-                            methods = fair_value.get("methods", {})
-                            for method_name, method_data in methods.items():
-                                if method_data.get("available"):
-                                    fv = method_data.get("fair_value")
-                                    st.markdown(f"- **{method_name}**: Rp {fv:,.0f}")
-                            notes = fair_value.get("notes", [])
-                            if notes:
-                                st.caption(" | ".join(notes[:3]))
+                        st.markdown(f"Target: **{t1}** | SL: **{sl if sl else 'N/A'}** | R/R: **{rr}**")
 
                     # ML Swing (5-Day) Prediction
                     ml_pred = pick.get("ml_prediction", {})
                     if ml_pred:
-                        pred_return = ml_pred.get("pred_return", 0)
+                        # Extract signal and confidence directly from ml_prediction dict
                         ml_signal = ml_pred.get("signal", "N/A")
                         ml_conf = ml_pred.get("confidence", "N/A")
+                        
+                        # Calculate pred_return based on day_5 prediction and current_price
+                        price_pred = pick.get("price_prediction", {})
+                        cp = price_pred.get('current_price', 1)
+                        predictions = price_pred.get("predictions", {})
+                        day_5 = predictions.get("day_5", {})
+                        day_5_price = day_5.get("price", cp)
+                        
+                        try:
+                            pred_return = ((float(day_5_price) - float(cp)) / float(cp)) * 100
+                        except (ValueError, TypeError, ZeroDivisionError):
+                            pred_return = 0.0
 
                         # Signal color
                         if ml_signal == "STRONG BUY":
@@ -562,6 +546,40 @@ if page == "📈 Top Picks":
                     st.markdown(f"⚡ **{signal}**")
                     if brokers:
                         st.caption(f"Broker: {', '.join(brokers[:2])}")
+                        
+                    # Fundamental Fair Value (moved here for UI alignment)
+                    fair_value = pick.get("fair_value", {})
+                    # Add defensive check to ensure fair_value is a dict, not None
+                    if fair_value and isinstance(fair_value, dict):
+                        fv_base = fair_value.get("fair_value_base")
+                        fv_low = fair_value.get("fair_value_low")
+                        fv_high = fair_value.get("fair_value_high")
+                        upside = fair_value.get("upside_pct")
+                        label = fair_value.get("valuation_label", "N/A")
+                        confidence = fair_value.get("confidence", "N/A")
+
+                        if label in ("DEEP_UNDERVALUED", "UNDERVALUED"):
+                            fv_icon = "🟢"
+                        elif label in ("OVERVALUED", "EXPENSIVE"):
+                            fv_icon = "🔴"
+                        else:
+                            fv_icon = "🟡"
+
+                        fv_text = f"Rp {fv_base:,.0f}" if isinstance(fv_base, (int, float)) else "N/A"
+                        upside_text = f"{upside:+.2f}%" if isinstance(upside, (int, float)) else "N/A"
+                        st.markdown(f"💰 **Fair Value:** {fv_icon} **{fv_text}** | Upside: **{upside_text}** | {label} ({confidence})")
+
+                        with st.expander(f"📐 Detail Fair Value {ticker}", expanded=False):
+                            if fv_low and fv_high:
+                                st.markdown(f"**Range:** Rp {fv_low:,.0f} – Rp {fv_high:,.0f}")
+                            methods = fair_value.get("methods", {})
+                            for method_name, method_data in methods.items():
+                                if method_data.get("available"):
+                                    fv = method_data.get("fair_value")
+                                    st.markdown(f"- **{method_name}**: Rp {fv:,.0f}")
+                            notes = fair_value.get("notes", [])
+                            if notes:
+                                st.caption(" | ".join(notes[:3]))
 
                     broker_true_costs = pick.get("broker_true_costs", {})
                     true_cost_rows = broker_true_costs.get("w1m") or broker_true_costs.get("w7") or []
@@ -659,7 +677,19 @@ if page == "📈 Top Picks":
     elif signals:
         # Show from database
         run_date = signals[0]["run_date"]
-        st.caption(f"Data from: {run_date}")
+        import datetime
+        if isinstance(run_date, datetime.datetime):
+            display_rd = (run_date + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
+        elif isinstance(run_date, str):
+            try:
+                parsed = datetime.datetime.strptime(run_date[:19], "%Y-%m-%d %H:%M:%S")
+                display_rd = (parsed + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
+            except:
+                display_rd = run_date
+        else:
+            display_rd = str(run_date)
+            
+        st.caption(f"Data from: {display_rd}")
 
         for sig in signals:
             with st.container(border=True):
@@ -780,6 +810,48 @@ if page == "📈 Top Picks":
                     broker = sig.get("broker_utama", "")
                     if broker:
                         st.caption(f"Broker: {broker}")
+
+                    # Fundamental Fair Value (moved here for UI alignment)
+                    fair_value = sig.get("fair_value")
+                    if isinstance(fair_value, str):
+                        import json
+                        try:
+                            fair_value = json.loads(fair_value)
+                        except Exception:
+                            fair_value = {}
+                    elif not fair_value:
+                        fair_value = {}
+
+                    if fair_value and isinstance(fair_value, dict):
+                        fv_base = fair_value.get("fair_value_base")
+                        fv_low = fair_value.get("fair_value_low")
+                        fv_high = fair_value.get("fair_value_high")
+                        upside = fair_value.get("upside_pct")
+                        label = fair_value.get("valuation_label", "N/A")
+                        confidence = fair_value.get("confidence", "N/A")
+
+                        if label in ("DEEP_UNDERVALUED", "UNDERVALUED"):
+                            fv_icon = "🟢"
+                        elif label in ("OVERVALUED", "EXPENSIVE"):
+                            fv_icon = "🔴"
+                        else:
+                            fv_icon = "🟡"
+
+                        fv_text = f"Rp {fv_base:,.0f}" if isinstance(fv_base, (int, float)) else "N/A"
+                        upside_text = f"{upside:+.2f}%" if isinstance(upside, (int, float)) else "N/A"
+                        st.markdown(f"💰 **Fair Value:** {fv_icon} **{fv_text}** | Upside: **{upside_text}** | {label} ({confidence})")
+
+                        with st.expander(f"📐 Detail Fair Value {sig['ticker']}", expanded=False):
+                            if fv_low and fv_high:
+                                st.markdown(f"**Range:** Rp {fv_low:,.0f} – Rp {fv_high:,.0f}")
+                            methods = fair_value.get("methods", {})
+                            for method_name, method_data in methods.items():
+                                if method_data.get("available"):
+                                    fv = method_data.get("fair_value")
+                                    st.markdown(f"- **{method_name}**: Rp {fv:,.0f}")
+                            notes = fair_value.get("notes", [])
+                            if notes:
+                                st.caption(" | ".join(notes[:3]))
 
                     # Broker True Costs from DB
                     broker_true_costs = sig.get("broker_true_costs")
