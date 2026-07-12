@@ -161,7 +161,7 @@ export default function Home() {
     setIhsgLoading(true);
     setIhsgError("");
     try {
-      const res = await fetch("/web/api/ihsg");
+      const res = await fetch("/api/ihsg");
       if (!res.ok) throw new Error("Gagal mengambil data IHSG");
       const data = await res.json();
       setIhsgData(data);
@@ -191,7 +191,7 @@ export default function Home() {
     setTradingLoading(true);
     setTradingError("");
     try {
-      const res = await fetch("/web/api/trading/summary");
+      const res = await fetch("/api/trading/summary");
       if (!res.ok) throw new Error("Gagal mengambil data Trading Engine");
       const data = await res.json();
       setTradingData(data);
@@ -204,7 +204,7 @@ export default function Home() {
 
   const fetchEquityData = async () => {
     try {
-      const res = await fetch("/web/api/trading/equity-history");
+      const res = await fetch("/api/trading/equity-history");
       if (res.ok) {
         const data = await res.json();
         setEquityData(data);
@@ -216,7 +216,7 @@ export default function Home() {
 
   const handleTopup = async (amount: number) => {
     try {
-      const res = await fetch("/web/api/trading/topup", {
+      const res = await fetch("/api/trading/topup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount })
@@ -237,7 +237,7 @@ export default function Home() {
   const handleResetPortfolio = async () => {
     if (!confirm("Apakah Anda yakin ingin mereset seluruh posisi dan transaksi virtual?")) return;
     try {
-      const res = await fetch("/web/api/trading/reset", { method: "POST" });
+      const res = await fetch("/api/trading/reset", { method: "POST" });
       const data = await res.json();
       showToast(data.message || "Portfolio berhasil direset", 'success');
       fetchTradingData();
@@ -249,7 +249,7 @@ export default function Home() {
 
   const handleBuy = async (ticker: string, lot: number, price: number, signalId: number | null, tp1: number, stopLoss: number) => {
     try {
-      const res = await fetch("/web/api/trading/buy", {
+      const res = await fetch("/api/trading/buy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -276,7 +276,7 @@ export default function Home() {
 
   const handleSell = async (tradeId: number, price: number) => {
     try {
-      const res = await fetch("/web/api/trading/sell", {
+      const res = await fetch("/api/trading/sell", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ trade_id: tradeId, price, reason: "MANUAL" })
@@ -296,7 +296,7 @@ export default function Home() {
 
   const handleCancelPending = async (tradeId: number) => {
     try {
-      const res = await fetch("/web/api/trading/cancel-pending", {
+      const res = await fetch("/api/trading/cancel-pending", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ trade_id: tradeId })
@@ -316,7 +316,7 @@ export default function Home() {
 
   const handleAutoInvestAll = async () => {
     try {
-      const res = await fetch("/web/api/trading/auto-invest-all", {
+      const res = await fetch("/api/trading/auto-invest-all", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ budget_pct: 0.15 })
@@ -332,7 +332,7 @@ export default function Home() {
 
   const handleAutoInvestSingle = async (signalId: number, price: number) => {
     try {
-      const res = await fetch("/web/api/trading/auto-invest-single", {
+      const res = await fetch("/api/trading/auto-invest-single", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signal_id: signalId, budget_pct: 0.20, price })
@@ -348,7 +348,7 @@ export default function Home() {
 
   const handleCheckTpsl = async () => {
     try {
-      const res = await fetch("/web/api/trading/check-tpsl", { method: "POST" });
+      const res = await fetch("/api/trading/check-tpsl", { method: "POST" });
       const data = await res.json();
       showToast(data.message || "Pengecekan TP/SL selesai", 'success');
       fetchTradingData();
