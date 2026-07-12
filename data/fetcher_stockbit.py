@@ -191,10 +191,10 @@ def _retry_on_rate_limit(max_attempts: int = 4, base_delay: float = 1.0):
                     status = exc.response.status_code
                     last_exception = exc
                     
-                    if status == 401:
-                        logger.warning(f"[{func.__name__}] HTTP 401 Unauthorized. Mencoba auto-refresh token...")
+                    if status in (401, 403):
+                        logger.warning(f"[{func.__name__}] HTTP {status}. Mencoba auto-refresh token...")
                         try:
-                            # Auto-refresh token jika expired
+                            # Auto-refresh token jika expired atau forbidden
                             refresh_stockbit_token()
                             logger.info(f"[{func.__name__}] Auto-refresh berhasil, melanjutkan retry...")
                             # Jeda sedikit sebelum retry
@@ -398,7 +398,10 @@ def get_marketdetector_broker_summary(
         "limit": str(limit),
     }
 
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+    }
     url = STOCKBIT_MARKETDETECTOR_URL.format(ticker=ticker)
 
     with httpx.Client(timeout=30.0) as client:
@@ -437,24 +440,28 @@ def get_current_price_stockbit(ticker: str) -> float:
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
 
-    url = STOCKBIT_ORDERBOOK_URL.format(ticker=ticker.lower())
-    headers = {"Authorization": f"Bearer {api_key}"}
+    url = f"https://exodus.stockbit.com/emitten/{ticker.upper()}/info"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+    }
 
     with httpx.Client(timeout=15.0) as client:
         response = client.get(url, headers=headers)
         response.raise_for_status()
         payload = response.json()
 
-    if payload.get("message"):
-        logger.info("Stockbit orderbook: %s", payload.get("message"))
+    if payload.get("message") and "Successfully" not in payload.get("message"):
+        logger.info("Stockbit info: %s", payload.get("message"))
 
-    bid_list = payload.get("bid", []) or payload.get("data", {}).get("bid", [])
-    if not bid_list:
-        logger.warning("Stockbit orderbook: empty bid list for %s", ticker)
+    price = payload.get("data", {}).get("price")
+    if not price:
+        logger.warning("Stockbit info: empty price for %s", ticker)
         return 0.0
-    price = _parse_number(bid_list[0].get("price"))
-    logger.info("Stockbit orderbook: %s bid[0]=%s", ticker, price)
-    return price
+        
+    price_val = _parse_number(price)
+    logger.info("Stockbit info: %s price=%s", ticker, price_val)
+    return price_val
 
 
 def _fetch_broker_daily_api(ticker: str, date: str) -> dict:
@@ -701,7 +708,10 @@ def _fetch_ohlcv_range_api(ticker: str, start_date: str, end_date: str, limit: i
         "limit": str(limit),
         "page": "1",
     }
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+    }
     all_data = []
     required_keys = ("date", "open", "high", "low", "close", "volume")
     page = 1
@@ -859,7 +869,10 @@ def _fetch_stock_info_api(ticker: str) -> dict:
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
     url = f"https://exodus.stockbit.com/keystats/ratio/v1/{ticker.upper()}?year_limit=10"
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+    }
     with httpx.Client(timeout=15.0) as client:
         response = client.get(url, headers=headers)
         response.raise_for_status()
@@ -945,7 +958,10 @@ def _fetch_stock_info_api(ticker: str) -> dict:
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
     url = f"https://exodus.stockbit.com/keystats/ratio/v1/{ticker.upper()}?year_limit=10"
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+    }
     with httpx.Client(timeout=15.0) as client:
         response = client.get(url, headers=headers)
         response.raise_for_status()

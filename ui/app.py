@@ -23,6 +23,15 @@ import extra_streamlit_components as stx
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@st.cache_data(ttl=300)
+def get_live_price(ticker: str):
+    try:
+        from data.fetcher_stockbit import get_current_price_stockbit
+        return get_current_price_stockbit(ticker)
+    except Exception as e:
+        logger.error(f"Error fetching live price from Stockbit for {ticker}: {e}")
+        return None
+
 st.set_page_config(
     page_title="Stock Agent IDX",
     page_icon="🤖",
@@ -426,7 +435,8 @@ if page == "📈 Top Picks":
                         
                         # Calculate pred_return based on day_5 prediction and current_price
                         price_pred = pick.get("price_prediction", {})
-                        cp = price_pred.get('current_price', 1)
+                        cp_live = get_live_price(ticker)
+                        cp = cp_live if cp_live else price_pred.get('current_price', 1)
                         predictions = price_pred.get("predictions", {})
                         day_5 = predictions.get("day_5", {})
                         day_5_price = day_5.get("price", cp)
@@ -452,8 +462,9 @@ if page == "📈 Top Picks":
                     price_pred = pick.get("price_prediction", {})
                     if price_pred:
                         with st.expander("📊 **Price Prediction (1/3/5/7 hari ke depan)**", expanded=True):
-                            # Current price
-                            cp = price_pred.get('current_price', 'N/A')
+                            # Current price (Live)
+                            cp_live = get_live_price(ticker)
+                            cp = cp_live if cp_live else price_pred.get('current_price', 'N/A')
                             st.metric("💰 Harga Sekarang", f"Rp {cp:,.0f}" if isinstance(cp, (int, float)) else cp)
                             
                             # Predictions in columns
@@ -742,7 +753,17 @@ if page == "📈 Top Picks":
                     # ML Swing (5-Day) Prediction from DB
                     ml_pred = sig.get("ml_prediction") or {}
                     if ml_pred:
-                        pred_return = ml_pred.get("pred_return", 0)
+                        price_pred_temp = sig.get("price_prediction") or {}
+                        cp_live_temp = get_live_price(sig['ticker'])
+                        cp_temp = cp_live_temp if cp_live_temp else price_pred_temp.get('current_price', 1)
+                        day_5_temp = price_pred_temp.get("predictions", {}).get("day_5", {})
+                        day_5_price_temp = day_5_temp.get("price", cp_temp)
+                        
+                        try:
+                            pred_return = ((float(day_5_price_temp) - float(cp_temp)) / float(cp_temp)) * 100
+                        except (ValueError, TypeError, ZeroDivisionError):
+                            pred_return = 0.0
+
                         ml_signal = ml_pred.get("signal", "N/A")
                         ml_conf = ml_pred.get("confidence", "N/A")
 
@@ -764,7 +785,8 @@ if page == "📈 Top Picks":
                     price_pred = sig.get("price_prediction") or {}
                     if price_pred:
                         with st.expander("📊 **Price Prediction (1/3/5/7 hari ke depan)**", expanded=True):
-                            cp = price_pred.get('current_price', 'N/A')
+                            cp_live = get_live_price(sig['ticker'])
+                            cp = cp_live if cp_live else price_pred.get('current_price', 'N/A')
                             st.metric("💰 Harga Sekarang", f"Rp {cp:,.0f}" if isinstance(cp, (int, float)) else cp)
 
                             predictions = price_pred.get("predictions", {})
@@ -1088,7 +1110,7 @@ elif page == "💹 Trading Engine":
         prices = {}
         for ticker in tickers:
             try:
-                p = _get_current_price(ticker)
+                p = get_live_price(ticker)
                 if p is not None:
                     prices[ticker] = p
             except Exception:

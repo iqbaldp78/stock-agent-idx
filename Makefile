@@ -46,6 +46,30 @@ db-shell: ## Open PostgreSQL shell
 	docker compose exec postgres psql -U stockuser -d stockagent
 
 # ============================================================
+# WEB APP COMMANDS
+# ============================================================
+
+.PHONY: web-up
+web-up: ## Start web-frontend and web-backend in docker
+	docker compose up -d web_api web_frontend
+
+.PHONY: web-down
+web-down: ## Stop web-frontend and web-backend containers
+	docker compose stop web_api web_frontend
+
+.PHONY: web-logs
+web-logs: ## Show logs for web-frontend and web-backend
+	docker compose logs -f web_api web_frontend
+
+.PHONY: web-frontend-dev
+web-frontend-dev: ## Run web-frontend locally (on host) in dev mode
+	cd web-frontend && npm install && npm run dev
+
+.PHONY: web-backend-dev
+web-backend-dev: ## Run web-backend locally (on host) in dev mode
+	cd web-backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8000
+
+# ============================================================
 # INDIVIDUAL AGENTS (run single agent analysis)
 # ============================================================
 

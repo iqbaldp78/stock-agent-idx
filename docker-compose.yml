@@ -64,6 +64,41 @@ services:
       - stock_net
     command: streamlit run ui/app.py --server.port=8501 --server.address=0.0.0.0
 
+  web_api:
+    build:
+      context: .
+      dockerfile: web-backend/Dockerfile
+    container_name: web_user_api
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - DB_HOST=stock_postgres
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASS=${POSTGRES_PASSWORD}
+      - DB_NAME=${POSTGRES_DB}
+    networks:
+      - stock_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web_frontend:
+    build:
+      context: ./web-frontend
+      dockerfile: Dockerfile
+    container_name: web_user_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - BACKEND_URL=http://web_api:8000
+    networks:
+      - stock_net
+    depends_on:
+      - web_api
+
 volumes:
   postgres_data:
 

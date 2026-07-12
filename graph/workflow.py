@@ -32,6 +32,8 @@ from agents.commodity_price_discovery import (
     analyze_with_price_discovery,
     calculate_adjusted_commodity_bonus,
 )
+from data.fetcher_commodity import preload_all_commodities
+from agents.commodity_analyst import analyze_from_cache
 
 import json
 import logging
@@ -75,6 +77,14 @@ def run_parallel_scoring(state: AgentState) -> dict:
     """Phase 2: Score semua candidates dengan 4 agent + composite."""
     candidates = state["candidates"]
     logger.info(f"[SCORING] Scoring {len(candidates)} candidates")
+
+    # === PRE-LOAD ALL COMMODITIES ONCE ===
+    logger.info("[SCORING] Pre-loading all commodities for per-ticker analysis...")
+    preload_result = preload_all_commodities()
+    logger.info(
+        f"[SCORING] Commodity pre-load: {preload_result['status']} "
+        f"({preload_result['count']}/{len(candidates)} tickers mapped)"
+    )
 
     # Macro data (shared for all tickers)
     macro_data = macro_analyze()
@@ -126,9 +136,10 @@ def run_parallel_scoring(state: AgentState) -> dict:
             }
             composite = calculate_composite(agent_scores, ticker, market_cap, is_volatile, macro_data)
 
-            # === COMMODITY ANALYSIS WITH PRICE DISCOVERY ===
+            # === COMMODITY ANALYSIS (FROM CACHE - NO API CALL) ===
             try:
-                commodity_analysis = analyze_with_price_discovery(ticker)
+                # Use cache-only analysis (preload sudah done di awal Phase 2)
+                commodity_analysis = analyze_from_cache(ticker)
 
                 if commodity_analysis.get("commodities") and not commodity_analysis.get("error"):
                     # Calculate adjusted bonus based on price discovery
