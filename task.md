@@ -921,11 +921,11 @@ Agent Accuracy:
 ```
 
 **Deliverable Phase 5:**
-- [ ] Halaman Top Picks dengan entry zone bandar-based
-- [ ] Halaman Bandarmologi: tabel 7H & 1M, avg price per broker, entry status
-- [ ] Halaman Performance Tracker per agent
-- [ ] On-demand trigger
-- [ ] Custom watchlist input
+- [x] Halaman Top Picks dengan entry zone bandar-based
+- [x] Halaman Bandarmologi: tabel 7H & 1M, avg price per broker, entry status
+- [x] Halaman Performance Tracker per agent
+- [x] On-demand trigger
+- [x] Custom watchlist input
 
 ---
 

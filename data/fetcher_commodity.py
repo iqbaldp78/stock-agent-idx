@@ -38,7 +38,10 @@ def _fetch_all_stockbit_commodities() -> None:
         logger.warning("STOCKBIT_API_KEY is not set. Cannot fetch commodities.")
         return
 
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+    }
     
     with httpx.Client(timeout=15.0) as client:
         response = client.get(_STOCKBIT_COMMODITY_URL, headers=headers)
@@ -212,7 +215,10 @@ def preload_all_commodities() -> dict:
             }
 
         # Fetch all commodities from API (single call)
-        headers = {"Authorization": f"Bearer {api_key}"}
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+        }
 
         with httpx.Client(timeout=15.0) as client:
             response = client.get(_STOCKBIT_COMMODITY_URL, headers=headers)

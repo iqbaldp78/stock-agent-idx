@@ -680,10 +680,10 @@ def analyze(ticker: str) -> dict:
                 "summary": tv_ta["summary"],
                 "indicators": tv_ta["indicators"]
             }
-            print(f"[TECHNICAL AGENT] 📊 TradingView TA Summary: {tv_ta['summary']}")
+            print(f"[TECHNICAL AGENT] 📊 {ticker} TradingView TA Summary: {tv_ta['summary']}")
         else:
             result["tradingview_ta"] = {"error": tv_ta.get("message")}
-            print(f"[TECHNICAL AGENT] ❌ Failed to fetch TradingView TA: {tv_ta.get('message')}")
+            print(f"[TECHNICAL AGENT] ❌ Failed to fetch TradingView TA for {ticker}: {tv_ta.get('message')}")
 
         # Add TP levels if calculated
         if tp_data:

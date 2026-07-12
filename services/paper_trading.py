@@ -71,6 +71,23 @@ class PaperTradingService:
             )
             self.session.add(wallet)
             self.session.commit()
+        else:
+            # Heal any existing None values in DB to prevent NoneType TypeError
+            dirty = False
+            if wallet.cash is None:
+                wallet.cash = Decimal("0")
+                dirty = True
+            if wallet.total_topup is None:
+                wallet.total_topup = Decimal("0")
+                dirty = True
+            if wallet.total_invested is None:
+                wallet.total_invested = Decimal("0")
+                dirty = True
+            if wallet.total_pnl is None:
+                wallet.total_pnl = Decimal("0")
+                dirty = True
+            if dirty:
+                self.session.commit()
         return wallet
     
     def topup(self, amount: float) -> dict:
@@ -189,6 +206,14 @@ class PaperTradingService:
 
         # Refresh wallet after potential TP/SL closes
         self.session.refresh(wallet)
+
+        # Fix out-of-sync invested amount by summing up all active/pending trades
+        dynamic_invested = sum([t.amount for t in active_trades if t.status in ["OPEN", "PENDING_LIMIT", "PENDING_STOP"]])
+        
+        # Self-healing logic
+        if wallet.total_invested != dynamic_invested:
+            wallet.total_invested = dynamic_invested
+            self.session.commit()
 
         total_equity = wallet.cash + wallet.total_invested + unrealized_pnl
         total_return_pct = (
