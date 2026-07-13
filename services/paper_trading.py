@@ -61,7 +61,7 @@ class PaperTradingService:
     
     def get_or_create_wallet(self) -> PaperWallet:
         """Get existing wallet or create new one (1 wallet per user)."""
-        wallet = self.session.query(PaperWallet).first()
+        wallet = self.session.query(PaperWallet).order_by(PaperWallet.id.asc()).first()
         if not wallet:
             wallet = PaperWallet(
                 cash=Decimal("0"),

@@ -1,4 +1,20 @@
 services:
+  vector_postgres:
+    image: pgvector/pgvector:pg16
+    container_name: vector_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: vectoragent
+      POSTGRES_USER: vectoruser
+      POSTGRES_PASSWORD: vectorpassword
+    ports:
+      - "5122:5432"
+    volumes:
+      - vector_postgres_data:/var/lib/postgresql/data
+      - ./db/vector_migrations:/docker-entrypoint-initdb.d
+    networks:
+      - stock_net
+
   postgres:
     image: postgres:16-alpine
     container_name: stock_postgres
@@ -29,7 +45,6 @@ services:
     env_file: .env
     environment:
       APP_ROOT: /app
-      PYTHONPATH: /app
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -101,6 +116,7 @@ services:
 
 volumes:
   postgres_data:
+  vector_postgres_data:
 
 networks:
   stock_net:

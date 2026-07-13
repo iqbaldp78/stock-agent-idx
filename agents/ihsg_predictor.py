@@ -233,6 +233,40 @@ def predict_ihsg() -> dict:
         sectors = get_sector_rotation()
         macro_data = macro_analyze()
 
+        # Fetch News Agent (RAG Context)
+        news_sentiment_score = 0.5
+        try:
+            from scripts.rag_retriever import search_by_ticker
+            # IHSG usually affected by global or macro news without specific ticker
+            # We search for empty ticker list to get general market news
+            recent_news = search_by_ticker("COMPOSITE", limit=5)
+            if not recent_news:
+                # Fallback check empty ticker
+                from scripts.rag_retriever import _execute_query
+                recent_news = _execute_query("SELECT stream_id, content, summary, sentiment FROM news_signals WHERE jsonb_array_length(tickers) = 0 ORDER BY created_at DESC LIMIT 5", ())
+            
+            if recent_news:
+                # Include Neutral but give it a slight positive skew if it contains macro keywords, or just count strictly
+                bullish_count = sum(1 for n in recent_news if n.get("sentiment") == "Bullish")
+                bearish_count = sum(1 for n in recent_news if n.get("sentiment") == "Bearish")
+                
+                # Treat some "Neutral" macro news as slightly bullish if it's actually good (like rating retained)
+                for n in recent_news:
+                    if n.get("sentiment") == "Neutral":
+                        text = (n.get("summary", "") + " " + n.get("content", "")).lower()
+                        if "pertahankan rating" in text or "stable" in text or "membaik" in text:
+                            bullish_count += 0.5
+                            
+                total_scored = bullish_count + bearish_count
+                if total_scored > 0:
+                    news_sentiment_score = 0.5 + ((bullish_count - bearish_count) / total_scored) * 0.3
+                    # Clamp between 0 and 1
+                    news_sentiment_score = max(0.0, min(1.0, news_sentiment_score))
+                
+                logger.info(f"[IHSG Predictor] News Sentiment Score: {news_sentiment_score:.2f} (Bullish: {bullish_count}, Bearish: {bearish_count})")
+        except Exception as e:
+            logger.warning(f"[IHSG Predictor] Failed to fetch news context: {e}")
+
         if ohlcv is None or ohlcv.empty:
             logger.error("[IHSG] No OHLCV data available")
             return _empty_prediction()
@@ -246,11 +280,13 @@ def predict_ihsg() -> dict:
         sector_score = _calculate_sector_score(sectors)
 
         # Weighted combination
+        # Incorporating News Sentiment Score (15% weight), reducing others slightly
         combined_score = (
-            momentum_score * 0.35 +
-            breadth_score * 0.30 +
-            macro_score * 0.20 +
-            sector_score * 0.15
+            momentum_score * 0.30 +
+            breadth_score * 0.25 +
+            macro_score * 0.15 +
+            sector_score * 0.15 +
+            news_sentiment_score * 0.15
         )
         combined_score = float(combined_score)
 

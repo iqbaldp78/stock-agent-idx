@@ -19,6 +19,7 @@ def _present_one(
     agent: str,
     analysis: dict,
     macro_data: dict,
+    news_context: str = "",
 ) -> dict | None:
     if agent == "macro":
         analysis_payload = macro_data
@@ -29,7 +30,7 @@ def _present_one(
         agent,
         1,
         system_prompt(agent, round_num=1),
-        round1_user_prompt(ticker, agent, analysis_payload, macro_data),
+        round1_user_prompt(ticker, agent, analysis_payload, macro_data, news_context),
         ticker=ticker if agent != "macro" else "MARKET",
     )
     turn = normalize_turn(
@@ -57,6 +58,8 @@ def _present_one(
     return entry
 
 
+from scripts.rag_retriever import search_by_ticker, format_for_prompt
+
 def present_all(
     ticker: str,
     scores: dict[str, dict],
@@ -65,6 +68,14 @@ def present_all(
     ticker_scores = scores.get(ticker, {})
     fund_score = ticker_scores.get("fundamental", {})
     fair_value = fund_score.get("fair_value", {})
+    
+    # Retrieve RAG News Context
+    try:
+        raw_news = search_by_ticker(ticker, limit=2)
+        news_context = format_for_prompt(raw_news)
+    except Exception as e:
+        logger.warning(f"Failed to fetch RAG news for {ticker}: {e}")
+        news_context = ""
 
     def run_agent(agent: str) -> tuple[str, dict | None]:
         if agent == "fundamental":
@@ -74,12 +85,12 @@ def present_all(
             if fair_value and isinstance(analysis, dict):
                 analysis = {**analysis, "fair_value": fair_value}
         elif agent == "bandarmologi":
-            analysis = ticker_scores.get("bandarm", {})
+            analysis = ticker_scores.get("bandarmologi", {})
             if fair_value and isinstance(analysis, dict):
                 analysis = {**analysis, "fair_value": fair_value}
         else:
             return agent, None
-        entry = _present_one(ticker, agent, analysis, macro_data)
+        entry = _present_one(ticker, agent, analysis, macro_data, news_context)
         return agent, entry
 
     entries: list[dict] = []

@@ -1,11 +1,23 @@
-from db.database import SessionLocal
+from db import SessionLocal
 from db.models import PaperTrade, PaperWallet
 from decimal import Decimal
 
 db = SessionLocal()
-wallet = db.query(PaperWallet).first()
+wallet = db.query(PaperWallet).order_by(PaperWallet.id.asc()).first()
 
 if wallet:
+    # Delete duplicate wallets
+    duplicates = db.query(PaperWallet).filter(PaperWallet.id > wallet.id).all()
+    if duplicates:
+        print(f"Moving trades from {len(duplicates)} duplicate wallets to primary wallet ID {wallet.id}...")
+        dup_ids = [d.id for d in duplicates]
+        db.query(PaperTrade).filter(PaperTrade.wallet_id.in_(dup_ids)).update({PaperTrade.wallet_id: wallet.id}, synchronize_session=False)
+        db.commit()
+        print(f"Deleting {len(duplicates)} duplicate wallets...")
+        for dup in duplicates:
+            db.delete(dup)
+        db.commit()
+
     active_trades = db.query(PaperTrade).filter(PaperTrade.status.in_(["OPEN", "PENDING_LIMIT", "PENDING_STOP"])).all()
     actual_invested = sum([t.amount for t in active_trades])
     

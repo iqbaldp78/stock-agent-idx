@@ -160,18 +160,24 @@ EXAMPLE OUTPUT:
 """
 
 
-def round1_user_prompt(ticker: str, agent: str, analysis: dict, macro_data: dict | None) -> str:
+def round1_user_prompt(ticker: str, agent: str, analysis: dict, macro_data: dict | None, news_context: str = "") -> str:
     if agent == "macro":
         payload = macro_data or {}
         label = "outlook makro global (semua saham)"
     else:
         payload = analysis
         label = f"analisis {agent} untuk {ticker}"
+        
+    news_text = ""
+    if news_context:
+        news_text = f"\n[RAG NEWS CONTEXT]\nBerita terbaru terkait {ticker}:\n{news_context}\nPerhatikan sentimen berita ini sebagai tambahan konteks.\n"
+        
     return (
         f"Ticker: {ticker}\n"
         f"Tugas: {label}. Berikan argumen Round 1.\n"
+        f"{news_text}"
         f"Output: satu objek JSON saja sesuai schema.\n\n"
-        f"DATA:\n{json.dumps(payload, ensure_ascii=False, default=str)}"
+        f"Data JSON:\n{json.dumps(payload, indent=2)}"
     )
 
 

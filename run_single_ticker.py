@@ -2,7 +2,7 @@
 Run analysis untuk single ticker untuk testing end-to-end.
 """
 import sys
-from datetime import date
+from datetime import date, datetime
 from db import SessionLocal
 from graph.workflow import run_full_analysis
 from db.tracker import save_full_result

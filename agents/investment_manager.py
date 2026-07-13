@@ -29,19 +29,31 @@ def synthesize(state: dict) -> dict:
     finalists = state.get("finalists", [])
     if not finalists:
         return {"top_picks": [], "final_report": _empty_report()}
+        
+    # Gather news context for finalists
+    try:
+        from scripts.rag_retriever import search_by_ticker, format_for_prompt
+        news_contexts = []
+        for f in finalists:
+            ticker = f.get("ticker")
+            if ticker:
+                news = search_by_ticker(ticker, limit=1)
+                if news:
+                    news_contexts.append(f"BERITA {ticker}: {format_for_prompt(news)}")
+        global_news = "\n".join(news_contexts)
+    except Exception as e:
+        logger.warning(f"Failed to fetch RAG news for IM: {e}")
+        global_news = ""
 
     if LLM_ENABLED and health_check():
         try:
-            result = synthesize_with_llm(state)
-            if result and result.get("top_picks"):
-                return result
+            return _synthesize_llm(state, global_news)
         except Exception as e:
-            logger.warning("[INVESTMENT_MANAGER] LLM failed, rule-based fallback: %s", e)
-
+            logger.error("LLM IM synthesis failed, falling back to rule-based: %s", e)
+            
     return synthesize_rule_based(state)
 
-
-def synthesize_with_llm(state: dict) -> dict | None:
+def _synthesize_llm(state: dict, global_news: str = "") -> dict:
     """Single LLM call for TOP 3 narrative; numbers from rule-based picks."""
     finalists = state.get("finalists", [])
     scores = state.get("scores", {})
@@ -64,8 +76,13 @@ def synthesize_with_llm(state: dict) -> dict | None:
         "debate_log": debate_summary,
         "ml_predictions": {t: ml_predictions.get(t) for t in finalist_tickers if t in ml_predictions},
     }
+    news_text = ""
+    if global_news:
+        news_text = f"\n[RAG NEWS CONTEXT]\nBerikut adalah berita terbaru dari Stockbit untuk dipertimbangkan sebagai Hak Veto atau Katalis Tambahan:\n{global_news}\nSilahkan gunakan konteks berita ini untuk mengeliminasi saham yang rawan, atau mem-boost saham yang punya katalis bagus.\n\n"
+
     user = (
         "Pilih TOP 3 dari finalis berikut. Rank 1 = conviction tertinggi.\n\n"
+        f"{news_text}"
         f"{json.dumps(context, ensure_ascii=False, default=str)}"
     )
 

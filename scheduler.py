@@ -127,6 +127,19 @@ def run_performance_check():
     logger.info("=== PERFORMANCE CHECK END ===")
 
 
+def run_news_ingester():
+    """Fetch real-time news from Stockbit and populate Vector DB."""
+    logger.info("=== NEWS INGESTER START ===")
+    try:
+        import subprocess
+        result = subprocess.run(["python", "scripts/news_ingester.py"], capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"News Ingester failed: {result.stderr}")
+        else:
+            logger.info("News Ingester completed successfully")
+    except Exception as e:
+        logger.error(f"News Ingester error: {e}")
+
 def run_dca_check():
     """Check DCA triggers harian — notify only, no auto-execute."""
     logger.info("=== DCA TRIGGER CHECK START ===")
@@ -243,47 +256,23 @@ def run_portfolio_analysis():
 
 def main():
     logger.info("Stock Agent IDX — Scheduler started")
-    logger.info("Jobs: daily_analysis@16:15, performance_check@16:30, dca_check@16:45, portfolio_analysis@17:00 WIB")
+    logger.info("Jobs: news_ingester@every 30 mins")
 
     scheduler = BlockingScheduler(timezone="Asia/Jakarta")
 
-    # End-of-day analysis: Mon-Fri at 16:15 WIB
+    # News Ingester: Every 30 minutes, 24/7
     scheduler.add_job(
-        run_daily_analysis,
-        CronTrigger(day_of_week="mon-fri", hour=16, minute=15),
-        id="daily_analysis",
-        name="Daily Stock Analysis",
+        run_news_ingester,
+        CronTrigger(minute="0,30"),
+        id="news_ingester",
+        name="News DB Ingester",
     )
-
-    # Performance check: Mon-Fri at 16:30 WIB
-    scheduler.add_job(
-        run_performance_check,
-        CronTrigger(day_of_week="mon-fri", hour=16, minute=30),
-        id="performance_check",
-        name="Performance Check",
-    )
-
-    # DCA trigger check: Mon-Fri at 16:45 WIB
-    scheduler.add_job(
-        run_dca_check,
-        CronTrigger(day_of_week="mon-fri", hour=16, minute=45),
-        id="dca_check",
-        name="DCA Trigger Check",
-    )
-
-    # Portfolio AI analysis: Mon-Fri at 17:00 WIB (after market close)
-    scheduler.add_job(
-        run_portfolio_analysis,
-        CronTrigger(day_of_week="mon-fri", hour=17, minute=0),
-        id="portfolio_analysis",
-        name="AI Portfolio Analysis",
-    )
-
-    logger.info("Scheduler running. Press Ctrl+C to exit.")
 
     try:
+        logger.info("Scheduler running. Press Ctrl+C to exit.")
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
+        logger.info("Scheduler stopped.")
         logger.info("Scheduler stopped.")
 
 

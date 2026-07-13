@@ -109,7 +109,7 @@ def get_paper_portfolio():
     try:
         with engine.connect() as conn:
             # Get Wallet
-            wallet_query = text("SELECT cash, total_invested, total_pnl FROM paper_wallet LIMIT 1")
+            wallet_query = text("SELECT cash, total_invested, total_pnl FROM paper_wallet ORDER BY id ASC LIMIT 1")
             wallet_res = conn.execute(wallet_query).fetchone()
             
             # If no wallet yet, return empty
@@ -157,7 +157,7 @@ def execute_trade(req: TradeRequest):
                 
                 # Cek saldo
                 if req.action == 'BUY':
-                    wallet = conn.execute(text("SELECT id, cash FROM paper_wallet LIMIT 1")).fetchone()
+                    wallet = conn.execute(text("SELECT id, cash FROM paper_wallet ORDER BY id ASC LIMIT 1")).fetchone()
                     if not wallet:
                         raise HTTPException(status_code=400, detail="Wallet not initialized")
                     if float(wallet[1]) < total_cost:
