@@ -3,6 +3,18 @@ from __future__ import annotations
 
 import json
 
+def debate_json_default(obj):
+    # Convert numpy/pandas scalar types and ndarrays to native Python types
+    if hasattr(obj, "item") and callable(obj.item):
+        try:
+            return obj.item()
+        except ValueError:
+            pass
+    if hasattr(obj, "tolist") and callable(obj.tolist):
+        return obj.tolist()
+    return str(obj)
+
+
 AGENT_NAMES = ("fundamental", "technical", "bandarmologi", "macro")
 
 DEBATE_JSON_SCHEMA = (
@@ -177,7 +189,7 @@ def round1_user_prompt(ticker: str, agent: str, analysis: dict, macro_data: dict
         f"Tugas: {label}. Berikan argumen Round 1.\n"
         f"{news_text}"
         f"Output: satu objek JSON saja sesuai schema.\n\n"
-        f"Data JSON:\n{json.dumps(payload, indent=2)}"
+        f"Data JSON:\n{json.dumps(payload, indent=2, default=debate_json_default)}"
     )
 
 
@@ -192,13 +204,13 @@ def round2_user_prompt(
         if t.get("agent") != agent and t.get("ticker") == ticker
     ]
     other_agents = ", ".join(t.get("agent", "?") for t in others) or "tidak ada"
-    others_text = json.dumps(others, ensure_ascii=False, indent=2)
+    others_text = json.dumps(others, ensure_ascii=False, indent=2, default=debate_json_default)
     return (
         f"Ticker: {ticker}\n"
         f"Round 2 — Anda adalah analis {agent}. Wajib merespons argumen dari: {other_agents}.\n"
         f"Setuju atau bantah dengan data Anda, lalu berikan vote final.\n"
         f"Output: satu objek JSON saja.\n\n"
-        f"DATA ANDA:\n{json.dumps(analysis, ensure_ascii=False, default=str)}\n\n"
+        f"DATA ANDA:\n{json.dumps(analysis, ensure_ascii=False, default=debate_json_default)}\n\n"
         f"ARGUMEN ROUND 1 AGENT LAIN:\n{others_text}"
     )
 

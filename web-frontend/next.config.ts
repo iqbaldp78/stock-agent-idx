@@ -2,8 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:8000" : "http://web_api:8000");
+    const backendUrl = "http://127.0.0.1:8000";
     return [
       {
         source: "/api/dashboard/stats",

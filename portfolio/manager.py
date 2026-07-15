@@ -22,6 +22,7 @@ def add_holding(
     ticker: str,
     total_shares: int,
     avg_cost: float,
+    user_id: Optional[int] = None,
     notes: str = "",
 ) -> dict:
     """
@@ -31,7 +32,10 @@ def add_holding(
     """
     db: Session = SessionLocal()
     try:
-        existing = db.query(PortfolioHolding).filter_by(ticker=ticker.upper()).first()
+        query = db.query(PortfolioHolding).filter_by(ticker=ticker.upper())
+        if user_id:
+            query = query.filter_by(user_id=user_id)
+        existing = query.first()
         total_invested = float(total_shares) * float(avg_cost)
 
         if existing:
@@ -50,6 +54,7 @@ def add_holding(
                 total_shares=total_shares,
                 total_invested=total_invested,
                 status="ACTIVE",
+                user_id=user_id,
                 notes=notes,
                 created_at=datetime.now(),
                 updated_at=datetime.now(),
@@ -67,13 +72,16 @@ def add_holding(
         db.close()
 
 
-def get_all_holdings() -> list[dict]:
-    """Ambil semua holdings aktif."""
+def get_all_holdings(user_id: Optional[int] = None) -> list:
+    """Ambil semua active holdings."""
     db: Session = SessionLocal()
     try:
+        query = db.query(PortfolioHolding).filter(PortfolioHolding.status == "ACTIVE")
+        if user_id:
+            query = query.filter(PortfolioHolding.user_id == user_id)
+        
         holdings = (
-            db.query(PortfolioHolding)
-            .filter(PortfolioHolding.status == "ACTIVE")
+            query
             .order_by(PortfolioHolding.ticker)
             .all()
         )
@@ -82,21 +90,27 @@ def get_all_holdings() -> list[dict]:
         db.close()
 
 
-def get_holding(ticker: str) -> Optional[dict]:
+def get_holding(ticker: str, user_id: Optional[int] = None) -> Optional[dict]:
     """Ambil satu holding by ticker."""
     db: Session = SessionLocal()
     try:
-        h = db.query(PortfolioHolding).filter_by(ticker=ticker.upper()).first()
+        query = db.query(PortfolioHolding).filter_by(ticker=ticker.upper())
+        if user_id:
+            query = query.filter_by(user_id=user_id)
+        h = query.first()
         return _holding_to_dict(h) if h else None
     finally:
         db.close()
 
 
-def delete_holding(ticker: str) -> bool:
+def delete_holding(ticker: str, user_id: Optional[int] = None) -> bool:
     """Soft delete: set status = CLOSED."""
     db: Session = SessionLocal()
     try:
-        h = db.query(PortfolioHolding).filter_by(ticker=ticker.upper()).first()
+        query = db.query(PortfolioHolding).filter_by(ticker=ticker.upper())
+        if user_id:
+            query = query.filter_by(user_id=user_id)
+        h = query.first()
         if not h:
             return False
         h.status = "CLOSED"
@@ -110,14 +124,17 @@ def delete_holding(ticker: str) -> bool:
     finally:
         db.close()
 
-def reset_all_holdings() -> bool:
+def reset_all_holdings(user_id: Optional[int] = None) -> bool:
     """Reset all portfolio data including holdings, DCA transactions, and strategies."""
     try:
         with SessionLocal() as db:
             from db.models import PortfolioHolding, DcaTransaction, DcaStrategy
-            db.query(DcaTransaction).delete()
-            db.query(DcaStrategy).delete()
-            db.query(PortfolioHolding).delete()
+            # Depending on if DCA also uses user_id, we might need to filter.
+            # But for holdings:
+            query = db.query(PortfolioHolding)
+            if user_id:
+                query = query.filter(PortfolioHolding.user_id == user_id)
+            query.delete()
             db.commit()
             return True
     except Exception as e:
@@ -150,13 +167,14 @@ def preview_avg_cost_after_buy(
     ticker: str,
     new_price: float,
     new_lots: int,
+    user_id: Optional[int] = None,
 ) -> dict:
     """
     Preview avg cost baru jika melakukan pembelian.
     Berguna di UI sebelum user execute buy.
     new_lots: jumlah lot (1 lot = 100 lembar)
     """
-    holding = get_holding(ticker)
+    holding = get_holding(ticker, user_id=user_id)
     new_shares = new_lots * 100
     new_amount = new_price * new_shares
 
@@ -212,11 +230,28 @@ def update_current_prices(holdings: list[dict]) -> list[dict]:
 
     db: Session = SessionLocal()
     updated = []
+    
+    # Pre-load fetcher yfinance if needed
+    try:
+        from data.fetcher_yfinance import get_stock_info
+    except ImportError:
+        get_stock_info = None
+
     try:
         for h in holdings:
-            ticker = h["ticker"]
+            ticker = h["ticker"].strip() # Bersihkan whitespace!
             try:
+                # 1. Coba fetch dari Stockbit
                 current_price = get_current_price_stockbit(ticker)
+                
+                # 2. Fallback fetch dari Yahoo Finance (jika gagal/0/None)
+                if (not current_price or current_price <= 0) and get_stock_info:
+                    try:
+                        info = get_stock_info(ticker)
+                        current_price = info.get("current_price") or 0
+                    except Exception as yf_err:
+                        logger.warning(f"[Portfolio] yfinance fallback failed for {ticker}: {yf_err}")
+
                 if not current_price or current_price <= 0:
                     updated.append(h)
                     continue
@@ -305,6 +340,7 @@ def record_buy(
     broker_fee: float = 0.0,
     transaction_date: Optional[date] = None,
     signal_id: Optional[int] = None,
+    user_id: Optional[int] = None,
     notes: str = "",
 ) -> dict:
     """
@@ -318,7 +354,10 @@ def record_buy(
     db: Session = SessionLocal()
     try:
         # Get or create holding
-        holding = db.query(PortfolioHolding).filter_by(ticker=ticker.upper()).first()
+        query = db.query(PortfolioHolding).filter_by(ticker=ticker.upper())
+        if user_id:
+            query = query.filter_by(user_id=user_id)
+        holding = query.first()
 
         if holding:
             new_avg = calculate_new_avg_cost(
@@ -339,6 +378,7 @@ def record_buy(
                 total_shares=shares,
                 total_invested=amount,
                 status="ACTIVE",
+                user_id=user_id,
                 created_at=datetime.now(),
                 updated_at=datetime.now(),
             )
@@ -389,6 +429,7 @@ def record_sell(
     price: float,
     broker_fee: float = 0.0,
     transaction_date: Optional[date] = None,
+    user_id: Optional[int] = None,
     notes: str = "",
 ) -> dict:
     """
@@ -400,7 +441,10 @@ def record_sell(
 
     db: Session = SessionLocal()
     try:
-        holding = db.query(PortfolioHolding).filter_by(ticker=ticker.upper()).first()
+        query = db.query(PortfolioHolding).filter_by(ticker=ticker.upper())
+        if user_id:
+            query = query.filter_by(user_id=user_id)
+        holding = query.first()
         if not holding:
             raise ValueError(f"Holding {ticker} tidak ditemukan")
 

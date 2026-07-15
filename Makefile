@@ -11,6 +11,12 @@ help: ## Show this help message
 .PHONY: up
 up: ## Start all services (postgres, app, streamlit)
 	docker compose up -d
+	@NET_ID=$$(docker network inspect stock-agent-idx_stock_net --format '{{.Id}}' 2>/dev/null | cut -c 1-12); \
+	if [ ! -z "$$NET_ID" ]; then \
+		echo "Allowing port 20128 traffic for bridge br-$$NET_ID..."; \
+		sudo iptables -C INPUT -i br-$$NET_ID -p tcp --dport 20128 -j ACCEPT 2>/dev/null || \
+		sudo iptables -A INPUT -i br-$$NET_ID -p tcp --dport 20128 -j ACCEPT; \
+	fi
 
 .PHONY: down
 down: ## Stop all services
@@ -36,6 +42,12 @@ rebuild: ## Rebuild and restart all services
 	docker compose down
 	docker compose build --no-cache
 	docker compose up -d
+	@NET_ID=$$(docker network inspect stock-agent-idx_stock_net --format '{{.Id}}' 2>/dev/null | cut -c 1-12); \
+	if [ ! -z "$$NET_ID" ]; then \
+		echo "Allowing port 20128 traffic for bridge br-$$NET_ID..."; \
+		sudo iptables -C INPUT -i br-$$NET_ID -p tcp --dport 20128 -j ACCEPT 2>/dev/null || \
+		sudo iptables -A INPUT -i br-$$NET_ID -p tcp --dport 20128 -j ACCEPT; \
+	fi
 
 .PHONY: shell
 shell: ## Open shell in app container

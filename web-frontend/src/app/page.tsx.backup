@@ -55,6 +55,11 @@ export default function Home() {
   const [toasts, setToasts] = useState<any[]>([]);
   const [batchId, setBatchId] = useState("");
   const [runDate, setRunDate] = useState("");
+  const [tokenStr, setTokenStr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTokenStr(localStorage.getItem("token"));
+  }, []);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Date.now();
@@ -68,7 +73,12 @@ export default function Home() {
   const [holdings, setHoldings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tradeStatus, setTradeStatus] = useState("");
-  const [isPro, setIsPro] = useState(true); // Hardcode VIP Pro
+  const [isPro, setIsPro] = useState(false);
+  useEffect(() => {
+    setIsPro(localStorage?.getItem("tier") === "pro");
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "/login";
+  }, []);
 
   const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'top-picks' | 'bandarmologi' | 'ihsg' | 'history' | 'settings'
   const [historyData, setHistoryData] = useState<any[]>([]);
@@ -191,7 +201,9 @@ export default function Home() {
     setTradingLoading(true);
     setTradingError("");
     try {
-      const res = await fetch("/api/trading/summary");
+      const res = await fetch("/api/trading/summary", {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+      });
       if (!res.ok) throw new Error("Gagal mengambil data Trading Engine");
       const data = await res.json();
       setTradingData(data);
@@ -204,7 +216,9 @@ export default function Home() {
 
   const fetchEquityData = async () => {
     try {
-      const res = await fetch("/api/trading/equity-history");
+      const res = await fetch("/api/trading/equity-history", {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setEquityData(data);
@@ -218,7 +232,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/trading/topup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ amount })
       });
       const data = await res.json();
@@ -237,7 +254,10 @@ export default function Home() {
   const handleResetPortfolio = async () => {
     if (!confirm("Apakah Anda yakin ingin mereset seluruh posisi dan transaksi virtual?")) return;
     try {
-      const res = await fetch("/api/trading/reset", { method: "POST" });
+      const res = await fetch("/api/trading/reset", { 
+        method: "POST",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       const data = await res.json();
       showToast(data.message || "Portfolio berhasil direset", 'success');
       fetchTradingData();
@@ -251,7 +271,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/trading/buy", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
           ticker: ticker.toUpperCase(),
           lot,
@@ -278,7 +301,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/trading/sell", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ trade_id: tradeId, price, reason: "MANUAL" })
       });
       const data = await res.json();
@@ -298,7 +324,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/trading/cancel-pending", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ trade_id: tradeId })
       });
       const data = await res.json();
@@ -318,7 +347,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/trading/auto-invest-all", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ budget_pct: 0.15 })
       });
       const data = await res.json();
@@ -334,7 +366,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/trading/auto-invest-single", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ signal_id: signalId, budget_pct: 0.20, price })
       });
       const data = await res.json();
@@ -348,7 +383,10 @@ export default function Home() {
 
   const handleCheckTpsl = async () => {
     try {
-      const res = await fetch("/api/trading/check-tpsl", { method: "POST" });
+      const res = await fetch("/api/trading/check-tpsl", { 
+        method: "POST",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       const data = await res.json();
       showToast(data.message || "Pengecekan TP/SL selesai", 'success');
       fetchTradingData();
@@ -362,7 +400,9 @@ export default function Home() {
     setPortfolioLoading(true);
     try {
       // 1. Load holdings & summary
-      const holdingsRes = await fetch("/api/portfolio/holdings");
+      const holdingsRes = await fetch("/api/portfolio/holdings", {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       if (holdingsRes.ok) {
         const data = await holdingsRes.json();
         setPortfolioHoldings(data.holdings || []);
@@ -375,14 +415,18 @@ export default function Home() {
       }
       
       // 2. Load DCA strategies
-      const dcaRes = await fetch("/api/portfolio/dca/strategies");
+      const dcaRes = await fetch("/api/portfolio/dca/strategies", {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       if (dcaRes.ok) {
         const data = await dcaRes.json();
         setDcaStrategies(data.strategies || []);
       }
       
       // 3. Load Transactions
-      const txnsRes = await fetch("/api/portfolio/transactions");
+      const txnsRes = await fetch("/api/portfolio/transactions", {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       if (txnsRes.ok) {
         const data = await txnsRes.json();
         setPortfolioTxns(data.transactions || []);
@@ -404,7 +448,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/portfolio/holdings/add", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
           ticker: newHoldingTicker.toUpperCase(),
           lot: newHoldingLots,
@@ -438,7 +485,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/portfolio/holdings/record-buy-sell", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
           ticker: tickerToUse.toUpperCase(),
           transaction_type: recordTxnType,
@@ -466,7 +516,9 @@ export default function Home() {
     const tickerToUse = recordTxnTicker || (portfolioHoldings[0]?.ticker);
     if (!tickerToUse) return;
     try {
-      const res = await fetch(`/api/portfolio/holdings/preview-buy?ticker=${tickerToUse.toUpperCase()}&price=${recordTxnPrice}&lot=${recordTxnLots}`);
+      const res = await fetch(`/api/portfolio/holdings/preview-buy?ticker=${tickerToUse.toUpperCase()}&price=${recordTxnPrice}&lot=${recordTxnLots}`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setBuyPreview(data);
@@ -481,7 +533,10 @@ export default function Home() {
       return;
     }
     try {
-      const res = await fetch("/api/portfolio/holdings/reset", { method: "POST" });
+      const res = await fetch("/api/portfolio/holdings/reset", { 
+        method: "POST",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       if (res.ok) {
         showToast("Seluruh data portofolio telah direset", "success");
         loadPortfolioData();
@@ -536,7 +591,10 @@ export default function Home() {
         }
         res = await fetch("/api/portfolio/dca/create-signal", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          },
           body: JSON.stringify({
             signal_id: selectedSignalId,
             total_budget: dcaBudget,
@@ -550,7 +608,10 @@ export default function Home() {
         }
         res = await fetch("/api/portfolio/dca/create-manual", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          },
           body: JSON.stringify({
             ticker: manualDcaTicker.toUpperCase(),
             total_budget: dcaBudget,
@@ -613,7 +674,10 @@ export default function Home() {
       
       const res = await fetch("/api/portfolio/dca/calculate-levels", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
           entry_low: entryLow,
           entry_high: entryHigh,
@@ -641,7 +705,9 @@ export default function Home() {
       return;
     }
     try {
-      const res = await fetch(`/api/portfolio/dca/ai-recommend-entry?ticker=${manualDcaTicker.toUpperCase()}`);
+      const res = await fetch(`/api/portfolio/dca/ai-recommend-entry?ticker=${manualDcaTicker.toUpperCase()}`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.recommendation) {
@@ -663,7 +729,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/portfolio/dca/deactivate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ strategy_id: id })
       });
       if (res.ok) {
@@ -685,7 +754,9 @@ export default function Home() {
     }
     setTimingLoading(true);
     try {
-      const res = await fetch(`/api/portfolio/dca/recommend-timing?ticker=${tickerToUse.toUpperCase()}`);
+      const res = await fetch(`/api/portfolio/dca/recommend-timing?ticker=${tickerToUse.toUpperCase()}`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setTimingResult(data.timing);
@@ -704,7 +775,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/portfolio/ai-analysis", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ monthly_budget: aiMonthlyBudget })
       });
       if (res.ok) {
@@ -777,7 +851,9 @@ export default function Home() {
       });
 
     // Fetch portfolio
-    fetch('/api/portfolio/paper')
+    fetch('/api/portfolio/paper', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+    })
       .then(res => res.json())
       .then(data => {
         if(data.wallet) setWallet(data.wallet);
@@ -808,9 +884,11 @@ export default function Home() {
     try {
       const res = await fetch('/api/portfolio/trade', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({
-          user_id: 1,
           ticker: ticker,
           action: action === "HOLD" ? "BUY" : action, // Simulate BUY for HOLD signals
           shares: 100, // 1 Lot standard
@@ -921,7 +999,7 @@ export default function Home() {
             <div className="flex items-center gap-4 text-sm font-medium">
               <div className="bg-[#030712] p-1 rounded-full border border-white/10 flex text-xs">
                 <button className={`px-4 py-1.5 rounded-full transition ${isPro ? 'text-slate-400 hover:text-white' : 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20'}`} onClick={() => setIsPro(false)}>Free</button>
-                <button className={`px-4 py-1.5 rounded-full transition flex items-center gap-1 ${isPro ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-purple-500/20' : 'text-slate-400 hover:text-white'}`} onClick={() => setIsPro(true)}>
+                <button className={`px-4 py-1.5 rounded-full transition flex items-center gap-1 ${isPro ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-purple-500/20' : 'text-slate-400 hover:text-white'}`} onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")}>
                   Pro <span className="text-[10px] bg-white/20 px-1.5 rounded-md">✨</span>
                 </button>
               </div>
@@ -1152,7 +1230,7 @@ export default function Home() {
                       </div>
                       <h4 className="text-2xl font-bold text-white mb-3">Pro Tier Required</h4>
                       <p className="text-slate-400 mb-8 max-w-sm">Upgrade ke akun Pro untuk membuka seluruh sinyal trading harian, deteksi algoritma bandarmologi, dan prediksi harga AI lanjutan.</p>
-                      <button onClick={() => setIsPro(true)} className="px-8 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg shadow-purple-500/25 hover:scale-105 transition transform">
+                      <button onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")} className="px-8 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg shadow-purple-500/25 hover:scale-105 transition transform">
                         Upgrade ke Pro ✨
                       </button>
                     </div>
@@ -1879,7 +1957,20 @@ export default function Home() {
 
               return (
                 <>
+                  
+                  {/* Accuracy Track Record */}
+                  {ihsgData.accuracy && ihsgData.accuracy.total > 0 && (
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-4 mt-6 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-indigo-500/20 rounded-full flex items-center justify-center text-xl">🎯</div>
+                      <div>
+                        <h4 className="text-sm font-bold text-indigo-300 tracking-wider uppercase mb-1">Track Record Akurasi</h4>
+                        <p className="text-white font-medium">Akurasi Arah (Historical): <span className="text-emerald-400 font-bold">{ihsgData.accuracy.percentage}%</span> ({ihsgData.accuracy.correct}/{ihsgData.accuracy.total} hari prediksi tepat)</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Header Metrics */}
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6 hover:bg-white/[0.05] transition duration-300">
                     <div>
                       <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Current Level</p>
@@ -2063,6 +2154,7 @@ export default function Home() {
                             <th className="py-3.5 px-6 text-right">D+1 Change</th>
                             <th className="py-3.5 px-6 text-center">Direction</th>
                             <th className="py-3.5 px-6 text-center">Confidence</th>
+                              <th className="py-3.5 px-6 text-center">Status Validasi</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5 text-slate-300 font-mono">
@@ -2092,11 +2184,16 @@ export default function Home() {
                                   {row.confidence}
                                 </span>
                               </td>
+                              <td className="py-3.5 px-6 text-center font-sans">
+                                {row.is_correct === true && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Benar ✅</span>}
+                                {row.is_correct === false && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">Salah ❌</span>}
+                                {row.is_correct === null && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-500/20 text-gray-400 border border-gray-500/30">Pending ⏳</span>}
+                              </td>
                             </tr>
                           ))}
                           {history.length === 0 && (
                             <tr>
-                              <td colSpan={6} className="py-10 text-center text-slate-500 font-sans">Belum ada riwayat prediksi.</td>
+                              <td colSpan={7} className="py-10 text-center text-slate-500 font-sans">Belum ada riwayat prediksi.</td>
                             </tr>
                           )}
                         </tbody>
@@ -3856,7 +3953,7 @@ export default function Home() {
                   </div>
                   <div className="flex bg-[#030712] p-1 rounded-xl border border-white/10">
                     <button className={`px-4 py-2 rounded-lg transition text-sm font-bold ${!isPro ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`} onClick={() => setIsPro(false)}>Free Tier</button>
-                    <button className={`px-4 py-2 rounded-lg transition text-sm font-bold flex items-center gap-2 ${isPro ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`} onClick={() => setIsPro(true)}>
+                    <button className={`px-4 py-2 rounded-lg transition text-sm font-bold flex items-center gap-2 ${isPro ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`} onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")}>
                       Pro Tier ✨
                     </button>
                   </div>

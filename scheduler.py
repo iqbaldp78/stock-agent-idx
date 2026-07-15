@@ -140,6 +140,34 @@ def run_news_ingester():
     except Exception as e:
         logger.error(f"News Ingester error: {e}")
 
+def run_train_and_validate_ml():
+    """Train ML Day-1 model sequentially followed by validation."""
+    logger.info("=== TRAIN AND VALIDATE ML MODEL PIPELINE START ===")
+    try:
+        import subprocess
+        
+        # 1. Train ML
+        logger.info("Step 1: Training ML Models")
+        result = subprocess.run(["python", "scripts/train_day1_model.py", "--all"], capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"Train ML failed, stopping pipeline. Error: {result.stderr}")
+            return
+        logger.info("Train ML completed successfully.")
+
+        import time
+        time.sleep(10)  # Brief pause before validation
+
+        # 2. Validate ML
+        logger.info("Step 2: Validating ML Models")
+        result = subprocess.run(["python", "scripts/validate_ml_accuracy.py", "--all"], capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"Validate ML failed: {result.stderr}")
+        else:
+            logger.info("Validate ML completed successfully")
+            
+    except Exception as e:
+        logger.error(f"ML Pipeline error: {e}")
+
 def run_dca_check():
     """Check DCA triggers harian — notify only, no auto-execute."""
     logger.info("=== DCA TRIGGER CHECK START ===")
@@ -254,6 +282,21 @@ def run_portfolio_analysis():
     logger.info("=== PORTFOLIO AI ANALYSIS END ===")
 
 
+
+def run_ihsg_performance_check():
+    logger.info("=== IHSG PERFORMANCE CHECK START ===")
+    try:
+        import subprocess
+        result = subprocess.run(["python", "scripts/validate_ihsg_performance.py"], capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"IHSG Performance Check failed: {result.stderr}")
+        else:
+            for line in result.stdout.split('\n'):
+                if line.strip(): logger.info(f"  {line}")
+    except Exception as e:
+        logger.error(f"IHSG Performance Check error: {e}")
+    logger.info("=== IHSG PERFORMANCE CHECK END ===")
+
 def main():
     logger.info("Stock Agent IDX — Scheduler started")
     logger.info("Jobs: news_ingester@every 30 mins")
@@ -266,6 +309,23 @@ def main():
         CronTrigger(minute="0,30"),
         id="news_ingester",
         name="News DB Ingester",
+    )
+    
+    # Train & Validate ML: Every Sunday at 04:00 AM
+    scheduler.add_job(
+        run_train_and_validate_ml,
+        CronTrigger(day_of_week="sun", hour=4, minute=0),
+        id="train_and_validate_ml",
+        name="Train & Validate ML Models",
+    )
+    
+    # Daily Analysis: Monday to Friday at 07:00 AM (Market Open Days)
+    # Note: Holidays will still run if on a weekday, but skipped on weekends.
+    scheduler.add_job(
+        run_daily_analysis,
+        CronTrigger(day_of_week="mon-fri", hour=7, minute=0),
+        id="daily_analysis",
+        name="Daily AI Portfolio Analysis",
     )
 
     try:

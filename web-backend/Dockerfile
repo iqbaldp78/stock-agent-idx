@@ -18,5 +18,9 @@ COPY services/ ./services/
 
 # Copy web-backend source files
 COPY web-backend/main.py .
+COPY web-backend/test_auth.py .
+
+COPY web-backend/test_auth.py .
+
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

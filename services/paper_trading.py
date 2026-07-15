@@ -56,18 +56,24 @@ class PaperTradingService:
     
     def __init__(self, session: Optional[Session] = None):
         self.session = session or SessionLocal()
+        self.user_id = None
     
     # === WALLET OPERATIONS ===
     
     def get_or_create_wallet(self) -> PaperWallet:
         """Get existing wallet or create new one (1 wallet per user)."""
-        wallet = self.session.query(PaperWallet).order_by(PaperWallet.id.asc()).first()
+        if self.user_id:
+            wallet = self.session.query(PaperWallet).filter(PaperWallet.user_id == self.user_id).order_by(PaperWallet.id.asc()).first()
+        else:
+            wallet = self.session.query(PaperWallet).order_by(PaperWallet.id.asc()).first()
+            
         if not wallet:
             wallet = PaperWallet(
                 cash=Decimal("0"),
                 total_topup=Decimal("0"),
                 total_invested=Decimal("0"),
-                total_pnl=Decimal("0")
+                total_pnl=Decimal("0"),
+                user_id=self.user_id
             )
             self.session.add(wallet)
             self.session.commit()
@@ -122,13 +128,24 @@ class PaperTradingService:
             }
         }
     
-    def get_wallet_summary(self, auto_check_tpsl: bool = True) -> dict:
+    def get_wallet_summary(self, auto_check_tpsl: bool = True, auto_create: bool = True) -> Optional[dict]:
         """Get wallet balance + unrealized P&L dari open positions (real-time price)."""
-        wallet = self.get_or_create_wallet()
+        if auto_create:
+            wallet = self.get_or_create_wallet()
+        else:
+            if self.user_id:
+                wallet = self.session.query(PaperWallet).filter(PaperWallet.user_id == self.user_id).order_by(PaperWallet.id.asc()).first()
+            else:
+                wallet = self.session.query(PaperWallet).order_by(PaperWallet.id.asc()).first()
+            if not wallet:
+                return None
 
-        active_trades = self.session.query(PaperTrade).filter(
-            PaperTrade.status.in_(["OPEN", "PENDING_LIMIT", "PENDING_STOP"])
-        ).all()
+
+        query = self.session.query(PaperTrade).filter(
+            PaperTrade.status.in_(["OPEN", "PENDING_LIMIT", "PENDING_STOP"]),
+            PaperTrade.wallet_id == wallet.id
+        )
+        active_trades = query.all()
 
         unrealized_pnl = Decimal("0")
         positions = []
@@ -296,6 +313,16 @@ class PaperTradingService:
                 "status": "error",
                 "message": f"Saldo tidak cukup. Butuh Rp {float(total_cost):,.0f}, tersedia Rp {float(wallet.cash):,.0f}"
             }
+            
+        # Validate TP / SL
+        if tp1 and tp1 <= price:
+            return {"status": "error", "message": f"Target TP1 ({tp1}) harus lebih besar dari harga beli ({price})"}
+        if tp2 and tp2 <= price:
+            return {"status": "error", "message": f"Target TP2 ({tp2}) harus lebih besar dari harga beli ({price})"}
+        if tp3 and tp3 <= price:
+            return {"status": "error", "message": f"Target TP3 ({tp3}) harus lebih besar dari harga beli ({price})"}
+        if stop_loss and stop_loss >= price:
+            return {"status": "error", "message": f"Stop Loss ({stop_loss}) harus lebih kecil dari harga beli ({price})"}
 
         # Check current price to determine status
         current_price = _get_current_price(ticker)
@@ -312,7 +339,9 @@ class PaperTradingService:
         wallet.updated_at = datetime.utcnow()
         
         # Create trade
+        # Create trade
         trade = PaperTrade(
+            user_id=self.user_id,
             ticker=ticker,
             action="BUY",
             lot=lot,
@@ -355,10 +384,14 @@ class PaperTradingService:
         """
         Batalkan pending order dan kembalikan dana yang terkunci ke cash wallet.
         """
-        trade = self.session.query(PaperTrade).filter(
+        query = self.session.query(PaperTrade).filter(
             PaperTrade.id == trade_id,
             PaperTrade.status.in_(["PENDING_LIMIT", "PENDING_STOP"])
-        ).first()
+        )
+        if self.user_id:
+            query = query.filter(PaperTrade.user_id == self.user_id)
+        
+        trade = query.first()
         
         if not trade:
             return {
@@ -398,10 +431,14 @@ class PaperTradingService:
         Returns:
             dict dengan status, trade info, dan realized P&L
         """
-        trade = self.session.query(PaperTrade).filter(
+        query = self.session.query(PaperTrade).filter(
             PaperTrade.id == trade_id,
             PaperTrade.status == "OPEN"
-        ).first()
+        )
+        if self.user_id:
+            query = query.filter(PaperTrade.user_id == self.user_id)
+            
+        trade = query.first()
         
         if not trade:
             return {
@@ -515,17 +552,12 @@ class PaperTradingService:
     def check_tp_sl(self, current_prices: dict) -> list:
         """
         Check semua open positions untuk TP/SL hit, termasuk pending orders.
-        
-        Args:
-            current_prices: dict {ticker: current_price}
-        
-        Returns:
-            list of trades yang auto-closed/dieksesusi
         """
         # Handle OPEN positions: TP/SL
-        open_trades = self.session.query(PaperTrade).filter(
-            PaperTrade.status == "OPEN"
-        ).all()
+        query = self.session.query(PaperTrade).filter(PaperTrade.status == "OPEN")
+        if self.user_id:
+            query = query.filter(PaperTrade.user_id == self.user_id)
+        open_trades = query.all()
 
         closed_trades = []
 
@@ -545,9 +577,10 @@ class PaperTradingService:
                 closed_trades.append(result)
 
         # Handle PENDING orders: limit buy/sell
-        pending_trades = self.session.query(PaperTrade).filter(
-            PaperTrade.status == "PENDING"
-        ).all()
+        query_pending = self.session.query(PaperTrade).filter(PaperTrade.status == "PENDING")
+        if self.user_id:
+            query_pending = query_pending.filter(PaperTrade.user_id == self.user_id)
+        pending_trades = query_pending.all()
 
         executed_pending = []
         for trade in pending_trades:
@@ -595,7 +628,10 @@ class PaperTradingService:
 
     def get_trade_history(self, limit: int = 50) -> list:
         """Get semua trades (open + closed)."""
-        trades = self.session.query(PaperTrade).order_by(
+        query = self.session.query(PaperTrade)
+        if self.user_id:
+            query = query.filter(PaperTrade.user_id == self.user_id)
+        trades = query.order_by(
             PaperTrade.opened_at.desc()
         ).limit(limit).all()
         return [
@@ -613,8 +649,8 @@ class PaperTradingService:
                 "stop_loss": float(t.stop_loss) if t.stop_loss is not None else None,
                 "amount": float(t.amount),
                 "status": t.status,
-                "realized_pnl": float(t.realized_pnl),
-                "realized_pnl_pct": float(t.realized_pnl_pct),
+                "realized_pnl": float(t.realized_pnl) if t.realized_pnl is not None else None,
+                "realized_pnl_pct": float(t.realized_pnl_pct) if t.realized_pnl_pct is not None else None,
                 "opened_at": t.opened_at.isoformat() if t.opened_at else None,
                 "closed_at": t.closed_at.isoformat() if t.closed_at else None
             }
@@ -623,7 +659,10 @@ class PaperTradingService:
 
     def get_equity_history(self) -> dict:
         """Generate equity curve dari trade history."""
-        all_trades = self.session.query(PaperTrade).order_by(
+        query = self.session.query(PaperTrade)
+        if self.user_id:
+            query = query.filter(PaperTrade.user_id == self.user_id)
+        all_trades = query.order_by(
             PaperTrade.opened_at
         ).all()
 
@@ -676,15 +715,27 @@ class PaperTradingService:
 
         # Add current snapshot
         summary = self.get_wallet_summary(auto_check_tpsl=False)
-        equity_points.append({
-            "date": datetime.utcnow().date().isoformat(),
-            "equity": float(summary["total_equity"]),
-            "cash": float(summary["cash"]),
-            "invested": float(summary["total_invested"]),
-            "pnl": float(summary["realized_pnl"] + summary["unrealized_pnl"]),
-            "event": "CURRENT"
-        })
-
+        
+        # Self-heal logic if wallet completely empty (new user)
+        if len(equity_points) == 0 and summary["total_equity"] == 0:
+             equity_points.append({
+                 "date": datetime.utcnow().date().isoformat(),
+                 "equity": 0.0,
+                 "cash": 0.0,
+                 "invested": 0.0,
+                 "pnl": 0.0,
+                 "event": "NO_DATA"
+             })
+        else:
+             equity_points.append({
+                 "date": datetime.utcnow().date().isoformat(),
+                 "equity": float(summary["total_equity"]),
+                 "cash": float(summary["cash"]),
+                 "invested": float(summary["total_invested"]),
+                 "pnl": float(summary["realized_pnl"] + summary["unrealized_pnl"]),
+                 "event": "CURRENT"
+             })
+            
         return {
             "points": equity_points,
             "start_equity": float(wallet.total_topup),
@@ -772,7 +823,10 @@ class PaperTradingService:
         wallet = self.get_or_create_wallet()
         
         # Delete all trades
-        self.session.query(PaperTrade).delete()
+        query = self.session.query(PaperTrade)
+        if self.user_id:
+            query = query.filter(PaperTrade.user_id == self.user_id)
+        query.delete()
         
         # Reset wallet
         wallet.cash = Decimal("0")

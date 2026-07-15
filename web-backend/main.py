@@ -1,10 +1,25 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, Depends, HTTPException, Depends, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 import os
 import sys
 import json
+import jwt
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, "hamboo_super_secret_key_for_testing", algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return payload
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, date
 
@@ -74,7 +89,7 @@ def fix_broker_utama(text):
 app = FastAPI(title="Hamboo AI API", version="1.0.0")
 
 class TradeRequest(BaseModel):
-    user_id: int
+    user_id: int | None = None
     ticker: str
     action: str
     shares: int
@@ -105,12 +120,13 @@ def read_root():
     return {"status": "online", "message": "Hamboo AI API is running"}
 
 @app.get("/api/portfolio/paper")
-def get_paper_portfolio():
+def get_paper_portfolio(current_user: dict = Depends(get_current_user)):
     try:
+        user_id = current_user.get("user_id")
         with engine.connect() as conn:
             # Get Wallet
-            wallet_query = text("SELECT cash, total_invested, total_pnl FROM paper_wallet ORDER BY id ASC LIMIT 1")
-            wallet_res = conn.execute(wallet_query).fetchone()
+            wallet_query = text("SELECT cash, total_invested, total_pnl FROM paper_wallet WHERE user_id = :uid ORDER BY id ASC LIMIT 1")
+            wallet_res = conn.execute(wallet_query, {"uid": user_id}).fetchone()
             
             # If no wallet yet, return empty
             if not wallet_res:
@@ -126,9 +142,9 @@ def get_paper_portfolio():
             holdings_query = text("""
                 SELECT ticker, avg_cost, total_shares, current_price, current_value, unrealized_pnl_pct
                 FROM portfolio_holdings 
-                WHERE status = 'ACTIVE' OR status = 'OPEN' OR total_shares > 0
+                WHERE user_id = :uid AND (status = 'ACTIVE' OR status = 'OPEN' OR total_shares > 0)
             """)
-            holdings_res = conn.execute(holdings_query).fetchall()
+            holdings_res = conn.execute(holdings_query, {"uid": user_id}).fetchall()
             
             holdings = []
             for row in holdings_res:
@@ -147,8 +163,9 @@ def get_paper_portfolio():
         return {"error": str(e), "wallet": {"cash": 0, "invested": 0, "pnl": 0}, "holdings": []}
 
 @app.post("/api/portfolio/trade")
-def execute_trade(req: TradeRequest):
+def execute_trade(req: TradeRequest, current_user: dict = Depends(get_current_user)):
     try:
+        user_id = current_user.get("user_id")
         with engine.connect() as conn:
             with conn.begin():
                 amount = req.price * req.shares
@@ -156,10 +173,11 @@ def execute_trade(req: TradeRequest):
                 total_cost = amount + fee
                 
                 # Cek saldo
+                wallet = conn.execute(text("SELECT id, cash FROM paper_wallet WHERE user_id = :uid ORDER BY id ASC LIMIT 1"), {"uid": user_id}).fetchone()
+                if not wallet:
+                    raise HTTPException(status_code=400, detail="Wallet not initialized")
+                    
                 if req.action == 'BUY':
-                    wallet = conn.execute(text("SELECT id, cash FROM paper_wallet ORDER BY id ASC LIMIT 1")).fetchone()
-                    if not wallet:
-                        raise HTTPException(status_code=400, detail="Wallet not initialized")
                     if float(wallet[1]) < total_cost:
                         raise HTTPException(status_code=400, detail="Insufficient funds")
                         
@@ -168,17 +186,20 @@ def execute_trade(req: TradeRequest):
                                  {"cost": total_cost, "id": wallet[0]})
                                  
                 # Record trade
+                # We need wallet ID
+                wallet_id = wallet[0] if req.action == 'BUY' else conn.execute(text("SELECT id FROM paper_wallet WHERE user_id = :uid LIMIT 1"), {"uid": user_id}).fetchone()[0]
+                
                 conn.execute(text("""
-                    INSERT INTO paper_trades (ticker, action, shares, price, amount, fee, status, opened_at, wallet_id)
-                    VALUES (:ticker, :action, :shares, :price, :amount, :fee, 'OPEN', NOW(), 1)
+                    INSERT INTO paper_trades (ticker, action, shares, lot, price, amount, fee, status, opened_at, wallet_id, user_id)
+                    VALUES (:ticker, :action, :shares, :lot, :price, :amount, :fee, 'OPEN', NOW(), :wid, :uid)
                 """), {
-                    "ticker": req.ticker, "action": req.action, "shares": req.shares, 
-                    "price": req.price, "amount": amount, "fee": fee
+                    "ticker": req.ticker, "action": req.action, "shares": req.shares, "lot": req.shares // 100,
+                    "price": req.price, "amount": amount, "fee": fee, "wid": wallet_id, "uid": user_id
                 })
                 
                 # Update holding
                 if req.action == 'BUY':
-                    holding = conn.execute(text("SELECT id FROM portfolio_holdings WHERE ticker = :ticker"), {"ticker": req.ticker}).fetchone()
+                    holding = conn.execute(text("SELECT id FROM portfolio_holdings WHERE ticker = :ticker AND user_id = :uid"), {"ticker": req.ticker, "uid": user_id}).fetchone()
                     if holding:
                         conn.execute(text("""
                             UPDATE portfolio_holdings 
@@ -190,9 +211,9 @@ def execute_trade(req: TradeRequest):
                         """), {"shares": req.shares, "amount": amount, "id": holding[0]})
                     else:
                         conn.execute(text("""
-                            INSERT INTO portfolio_holdings (ticker, avg_cost, total_shares, total_invested, current_price, current_value, status, created_at)
-                            VALUES (:ticker, :price, :shares, :amount, :price, :amount, 'ACTIVE', NOW())
-                        """), {"ticker": req.ticker, "price": req.price, "shares": req.shares, "amount": amount})
+                            INSERT INTO portfolio_holdings (ticker, avg_cost, total_shares, total_invested, current_price, current_value, status, created_at, user_id)
+                            VALUES (:ticker, :price, :shares, :amount, :price, :amount, 'ACTIVE', NOW(), :uid)
+                        """), {"ticker": req.ticker, "price": req.price, "shares": req.shares, "amount": amount, "uid": user_id})
                         
             return {"success": True, "message": f"{req.action} {req.shares} shares of {req.ticker} executed"}
     except Exception as e:
@@ -730,23 +751,48 @@ def get_ihsg_predictions():
                     "created_at": str(latest_res[18]) if latest_res[18] else None,
                 }
             
-            # 2. Fetch historical predictions (last 20)
-            hist_query = text("""
-                SELECT run_date, current_price, day_1_price, day_1_pct, direction, confidence
-                FROM ihsg_predictions
-                ORDER BY run_date DESC
+            
+            # 2. Fetch historical predictions (last 20) with actual outcome calculation
+            hist_query = text('''
+                WITH actuals AS (
+                    SELECT trade_date, close as actual_close
+                    FROM ihsg_ohlcv
+                )
+                SELECT 
+                    p.run_date, p.current_price, p.day_1_price, p.day_1_pct, p.direction, p.confidence,
+                    (SELECT a.actual_close FROM actuals a WHERE a.trade_date > p.run_date::date ORDER BY a.trade_date ASC LIMIT 1) as actual_price
+                FROM ihsg_predictions p
+                ORDER BY p.run_date DESC
                 LIMIT 20
-            """)
+            ''')
             hist_res = conn.execute(hist_query).fetchall()
             history = []
             for r in hist_res:
+                actual_price = float(r[6]) if r[6] else None
+                curr_price = float(r[1]) if r[1] else 0.0
+                dir_pred = r[4]
+                
+                is_correct = None
+                if actual_price and curr_price > 0:
+                    actual_pct = ((actual_price - curr_price) / curr_price) * 100
+                    if dir_pred == 'BULLISH' and actual_pct > 0:
+                        is_correct = True
+                    elif dir_pred == 'BEARISH' and actual_pct < 0:
+                        is_correct = True
+                    elif dir_pred == 'SIDEWAYS' and abs(actual_pct) < 0.5:
+                        is_correct = True
+                    else:
+                        is_correct = False
+
                 history.append({
                     "run_date": str(r[0]),
-                    "current_price": float(r[1]) if r[1] else 0.0,
+                    "current_price": curr_price,
                     "day_1_price": float(r[2]) if r[2] else 0.0,
                     "day_1_pct": float(r[3]) if r[3] else 0.0,
-                    "direction": r[4],
-                    "confidence": r[5]
+                    "direction": dir_pred,
+                    "confidence": r[5],
+                    "actual_price": actual_price,
+                    "is_correct": is_correct
                 })
                 
             return {
@@ -792,13 +838,18 @@ class AutoInvestAllRequest(BaseModel):
 from services.paper_trading import PaperTradingService
 
 @app.get("/api/trading/summary")
-def get_trading_summary():
+def get_trading_summary(current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
     service = PaperTradingService()
+    service.user_id = user_id
     try:
         service.session.expire_all()
-        summary = service.get_wallet_summary(auto_check_tpsl=False)
+        summary = service.get_wallet_summary(auto_check_tpsl=False, auto_create=False)
+        if not summary:
+            return {"status": "not_setup"}
         history = service.get_trade_history(limit=100)
         return {
+            "status": "success",
             "summary": summary,
             "history": history
         }
@@ -811,8 +862,9 @@ def get_trading_summary():
         service.session.close()
 
 @app.post("/api/trading/topup")
-def trading_topup(req: TopupRequest):
+def trading_topup(req: TopupRequest, current_user: dict = Depends(get_current_user)):
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         res = service.topup(req.amount)
         return res
@@ -822,8 +874,9 @@ def trading_topup(req: TopupRequest):
         service.session.close()
 
 @app.post("/api/trading/reset")
-def trading_reset():
+def trading_reset(current_user: dict = Depends(get_current_user)):
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         res = service.reset_wallet()
         return res
@@ -833,8 +886,9 @@ def trading_reset():
         service.session.close()
 
 @app.get("/api/trading/equity-history")
-def trading_equity_history():
+def trading_equity_history(current_user: dict = Depends(get_current_user)):
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         res = service.get_equity_history()
         return res
@@ -844,8 +898,9 @@ def trading_equity_history():
         service.session.close()
 
 @app.post("/api/trading/buy")
-def trading_buy(req: BuyRequest):
+def trading_buy(req: BuyRequest, current_user: dict = Depends(get_current_user)):
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         res = service.buy(
             ticker=req.ticker,
@@ -863,8 +918,9 @@ def trading_buy(req: BuyRequest):
         service.session.close()
 
 @app.post("/api/trading/sell")
-def trading_sell(req: SellRequest):
+def trading_sell(req: SellRequest, current_user: dict = Depends(get_current_user)):
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         res = service.sell(
             trade_id=req.trade_id,
@@ -878,8 +934,9 @@ def trading_sell(req: SellRequest):
         service.session.close()
 
 @app.post("/api/trading/cancel-pending")
-def trading_cancel_pending(req: CancelRequest):
+def trading_cancel_pending(req: CancelRequest, current_user: dict = Depends(get_current_user)):
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         res = service.cancel_pending_order(req.trade_id)
         return res
@@ -889,8 +946,9 @@ def trading_cancel_pending(req: CancelRequest):
         service.session.close()
 
 @app.post("/api/trading/auto-invest-all")
-def trading_auto_invest_all(req: AutoInvestAllRequest):
+def trading_auto_invest_all(req: AutoInvestAllRequest, current_user: dict = Depends(get_current_user)):
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         res = service.auto_execute_all_top_picks(budget_pct_per_trade=req.budget_pct)
         return res
@@ -900,8 +958,9 @@ def trading_auto_invest_all(req: AutoInvestAllRequest):
         service.session.close()
 
 @app.post("/api/trading/auto-invest-single")
-def trading_auto_invest_single(req: AutoInvestSingleRequest):
+def trading_auto_invest_single(req: AutoInvestSingleRequest, current_user: dict = Depends(get_current_user)):
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         res = service.auto_execute_signal(
             signal_id=req.signal_id,
@@ -915,9 +974,10 @@ def trading_auto_invest_single(req: AutoInvestSingleRequest):
         service.session.close()
 
 @app.post("/api/trading/check-tpsl")
-def trading_check_tpsl():
+def trading_check_tpsl(current_user: dict = Depends(get_current_user)):
     from services.paper_trading import _get_current_price
     service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
     try:
         summary_now = service.get_wallet_summary(auto_check_tpsl=False)
         open_tickers = [p["ticker"] for p in summary_now.get("positions", [])]
@@ -988,10 +1048,11 @@ class AiAnalysisRequest(BaseModel):
 # --- New Portfolio Endpoints ---
 
 @app.get("/api/portfolio/holdings")
-def get_portfolio_holdings():
+def get_portfolio_holdings(current_user: dict = Depends(get_current_user)):
     try:
+        user_id = current_user.get("user_id")
         from portfolio.manager import get_all_holdings, update_current_prices, get_portfolio_summary
-        holdings = get_all_holdings()
+        holdings = get_all_holdings(user_id)
         if holdings:
             holdings = update_current_prices(holdings)
             summary = get_portfolio_summary(holdings)
@@ -1031,40 +1092,44 @@ def get_portfolio_holdings():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/portfolio/holdings/add")
-def portfolio_holdings_add(req: AddHoldingRequest):
+def portfolio_holdings_add(req: AddHoldingRequest, current_user: dict = Depends(get_current_user)):
     try:
+        user_id = current_user.get("user_id")
         from portfolio.manager import add_holding
-        holding = add_holding(req.ticker, req.lot * 100, req.avg_cost, req.notes)
+        holding = add_holding(req.ticker, req.lot * 100, req.avg_cost, user_id=user_id, notes=req.notes)
         return {"success": True, "holding": holding}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/portfolio/holdings/record-buy-sell")
-def portfolio_holdings_record_buy_sell(req: RecordTransactionRequest):
+def portfolio_holdings_record_buy_sell(req: RecordTransactionRequest, current_user: dict = Depends(get_current_user)):
     try:
+        user_id = current_user.get("user_id")
         from portfolio.manager import record_buy, record_sell
         if req.transaction_type.upper() == "BUY":
-            result = record_buy(ticker=req.ticker, lots=req.lot, price=req.price, notes=req.notes)
+            result = record_buy(ticker=req.ticker, lots=req.lot, price=req.price, user_id=user_id, notes=req.notes)
         else:
-            result = record_sell(ticker=req.ticker, lots=req.lot, price=req.price, notes=req.notes)
+            result = record_sell(ticker=req.ticker, lots=req.lot, price=req.price, user_id=user_id, notes=req.notes)
         return {"success": True, "result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/portfolio/holdings/reset")
-def portfolio_holdings_reset():
+def portfolio_holdings_reset(current_user: dict = Depends(get_current_user)):
     try:
+        user_id = current_user.get("user_id")
         from portfolio.manager import reset_all_holdings
-        success = reset_all_holdings()
+        success = reset_all_holdings(user_id)
         return {"success": success}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/portfolio/holdings/preview-buy")
-def portfolio_holdings_preview_buy(ticker: str, price: float, lot: int):
+def portfolio_holdings_preview_buy(ticker: str, price: float, lot: int, current_user: dict = Depends(get_current_user)):
     try:
+        user_id = current_user.get("user_id")
         from portfolio.manager import preview_avg_cost_after_buy
-        preview = preview_avg_cost_after_buy(ticker, price, lot)
+        preview = preview_avg_cost_after_buy(ticker, price, lot, user_id)
         return preview
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1146,23 +1211,25 @@ def portfolio_dca_ai_recommend_entry(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/portfolio/transactions")
-def portfolio_transactions(ticker: str = None, txn_type: str = None):
+def portfolio_transactions(ticker: str = None, txn_type: str = None, current_user: dict = Depends(get_current_user)):
     try:
+        user_id = current_user.get("user_id")
         from portfolio.manager import get_transactions
-        transactions = get_transactions(ticker=ticker, txn_type=txn_type)
+        transactions = get_transactions(ticker=ticker, txn_type=txn_type, user_id=user_id)
         return {"transactions": transactions}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/portfolio/ai-analysis")
-def portfolio_ai_analysis(req: AiAnalysisRequest):
+def portfolio_ai_analysis(req: AiAnalysisRequest, current_user: dict = Depends(get_current_user)):
     try:
         from agents.portfolio_advisor import analyze_portfolio
         from portfolio.manager import get_all_holdings, update_current_prices, get_transactions
         from portfolio.dca_strategy import get_active_strategies
         from datetime import datetime, timedelta
 
-        h_list = get_all_holdings()
+        user_id = current_user.get("user_id")
+        h_list = get_all_holdings(user_id)
         if h_list:
             h_list = update_current_prices(h_list)
         strats = get_active_strategies()
@@ -1183,3 +1250,91 @@ def portfolio_ai_analysis(req: AiAnalysisRequest):
         return ai_result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=1440)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+
+# --- Auth Routes ---
+from pydantic import BaseModel
+class AuthRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/auth/register")
+def register_user(req: AuthRequest):
+    try:
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        
+        with engine.connect() as conn:
+            with conn.begin():
+                # Check if exists
+                user = conn.execute(text("SELECT id FROM users WHERE username = :u"), {"u": req.username}).fetchone()
+                if user:
+                    raise HTTPException(status_code=400, detail="Username already registered")
+                
+                hashed = pwd_context.hash(req.password)
+                res = conn.execute(text("INSERT INTO users (username, password_hash, tier) VALUES (:u, :p, 'free') RETURNING id"), 
+                                 {"u": req.username, "p": hashed})
+                new_id = res.fetchone()[0]
+                
+                # Also create paper wallet for new user
+                conn.execute(text("INSERT INTO paper_wallet (cash, total_topup, total_invested, total_pnl, user_id) VALUES (10000000, 10000000, 0, 0, :uid)"), {"uid": new_id})
+                
+                # Auto-generate token to login right after register
+                import jwt
+                from datetime import datetime, timedelta
+                SECRET_KEY = "hamboo_super_secret_key_for_testing"
+                to_encode = {"user_id": new_id, "sub": req.username}
+                to_encode.update({"exp": datetime.utcnow() + timedelta(minutes=1440)})
+                token = jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
+                
+                return {"access_token": token, "token_type": "bearer", "tier": "free"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/auth/login")
+def login_user(req: AuthRequest):
+    try:
+        from passlib.context import CryptContext
+        import jwt
+        from datetime import datetime, timedelta
+        
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        
+        with engine.connect() as conn:
+            user = conn.execute(text("SELECT id, username, password_hash, tier FROM users WHERE username = :u"), {"u": req.username}).fetchone()
+            
+            if not user or not pwd_context.verify(req.password, user[2]):
+                raise HTTPException(status_code=401, detail="Invalid username or password")
+                
+            # Create token
+            expire = datetime.utcnow() + timedelta(minutes=1440)
+            to_encode = {"sub": user[1], "user_id": user[0], "tier": user[3], "exp": expire}
+            encoded_jwt = jwt.encode(to_encode, "hamboo_super_secret_key_for_testing", algorithm="HS256")
+            
+            return {"access_token": encoded_jwt, "token_type": "bearer", "tier": user[3], "user_id": user[0]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/auth/me")
+def get_me(token: str = ""):
+    import jwt
+    try:
+        if not token:
+            raise HTTPException(status_code=401)
+        payload = jwt.decode(token, "hamboo_super_secret_key_for_testing", algorithms=["HS256"])
+        return payload
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+

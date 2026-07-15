@@ -12,6 +12,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String(50), nullable=False, unique=True)
+    tier = Column(String(20), default="free")
     password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
@@ -211,7 +212,7 @@ class PortfolioHolding(Base):
     __tablename__ = "portfolio_holdings"
 
     id = Column(Integer, primary_key=True)
-    ticker = Column(String(10), nullable=False, unique=True)
+    ticker = Column(String(10), nullable=False) # Removed unique=True to allow multiple users to hold the same ticker
     avg_cost = Column(Numeric(12, 2), nullable=False)
     total_shares = Column(Integer, nullable=False)
     total_invested = Column(Numeric(15, 2))
@@ -223,6 +224,7 @@ class PortfolioHolding(Base):
     notes = Column(Text)
     created_at = Column(Date, server_default=func.now())
     updated_at = Column(Date, server_default=func.now())
+    user_id = Column(Integer, nullable=True) # Added user_id to isolate holdings per user
 
 
 class DcaTransaction(Base):
@@ -280,6 +282,7 @@ class PaperWallet(Base):
     total_pnl = Column(Numeric(15, 2), default=0)    # total realized P&L
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now())
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
 
 class PaperTrade(Base):
@@ -308,3 +311,4 @@ class PaperTrade(Base):
 
     # Foreign key to wallet (optional, bisa dihitung aggregat)
     wallet_id = Column(Integer, ForeignKey("paper_wallet.id"), nullable=True)
+    user_id = Column(Integer, nullable=True)

@@ -148,7 +148,7 @@ def get_existing_stream_ids(stream_ids: list) -> set:
         logger.error(f"Failed to check existing ids: {e}")
         return set()
 
-def run(limit: int = 10):
+def run(limit: int = 50):
     logger.info("Fetching news stream...")
     
     try:
@@ -187,4 +187,4 @@ def run(limit: int = 10):
 if __name__ == "__main__":
     import logging
     logging.basicConfig(level=logging.INFO)
-    run(20)
+    run(50)
