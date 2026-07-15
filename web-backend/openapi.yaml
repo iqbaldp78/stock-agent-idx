@@ -1,0 +1,1022 @@
+openapi: 3.0.0
+info:
+  title: Hamboo AI Stock Trading API
+  description: API untuk sistem trading paper trading, analisis bandarmologi, dan prediksi IHSG
+  version: 1.0.0
+  contact:
+    name: Hamboo AI Team
+
+servers:
+  - url: http://localhost:8000
+    description: Development Server
+  - url: https://api.hamboo.app
+    description: Production Server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from /api/auth/login or /api/auth/register
+
+  schemas:
+    AuthRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "user123"
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: "bearer"
+        tier:
+          type: string
+          example: "free"
+        user_id:
+          type: integer
+
+    Wallet:
+      type: object
+      properties:
+        cash:
+          type: number
+          format: float
+        invested:
+          type: number
+          format: float
+        pnl:
+          type: number
+          format: float
+
+    Holding:
+      type: object
+      properties:
+        id:
+          type: integer
+        ticker:
+          type: string
+          example: "BBCA"
+        avg_cost:
+          type: number
+          format: float
+        shares:
+          type: integer
+        total_shares:
+          type: integer
+        current_price:
+          type: number
+          format: float
+        value:
+          type: number
+          format: float
+        pnl_pct:
+          type: number
+          format: float
+        status:
+          type: string
+          example: "ACTIVE"
+        created_at:
+          type: string
+          format: date-time
+
+    TradeRequest:
+      type: object
+      required:
+        - ticker
+        - action
+        - shares
+        - price
+      properties:
+        ticker:
+          type: string
+          example: "BBCA"
+        action:
+          type: string
+          enum: ["BUY", "SELL"]
+        shares:
+          type: integer
+          example: 100
+        price:
+          type: number
+          format: float
+          example: 9500.0
+        signal_id:
+          type: integer
+        user_id:
+          type: integer
+
+    BuyRequest:
+      type: object
+      required:
+        - ticker
+        - lot
+        - price
+      properties:
+        ticker:
+          type: string
+          example: "BBCA"
+        lot:
+          type: integer
+          example: 1
+        price:
+          type: number
+          format: float
+          example: 9500.0
+        signal_id:
+          type: integer
+        tp1:
+          type: number
+          format: float
+        stop_loss:
+          type: number
+          format: float
+
+    SellRequest:
+      type: object
+      required:
+        - trade_id
+        - price
+      properties:
+        trade_id:
+          type: integer
+        price:
+          type: number
+          format: float
+        reason:
+          type: string
+          example: "MANUAL"
+
+    CancelRequest:
+      type: object
+      required:
+        - trade_id
+      properties:
+        trade_id:
+          type: integer
+
+    TopupRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          format: float
+          example: 5000000.0
+
+    TopPick:
+      type: object
+      properties:
+        id:
+          type: integer
+        ticker:
+          type: string
+          example: "BBCA"
+        action:
+          type: string
+          enum: ["BUY", "SELL", "HOLD"]
+        confidence_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        current_price:
+          type: number
+          format: float
+        entry_price:
+          type: number
+          format: float
+        reasoning:
+          type: string
+        thesis:
+          type: string
+        fair_value:
+          type: number
+          format: float
+        target_1:
+          type: number
+          format: float
+        target_2:
+          type: number
+          format: float
+        target_3:
+          type: number
+          format: float
+        stop_loss:
+          type: number
+          format: float
+        entry_low:
+          type: number
+          format: float
+        entry_high:
+          type: number
+          format: float
+        max_entry:
+          type: number
+          format: float
+        run_date:
+          type: string
+          format: date-time
+
+    BandarBroker:
+      type: object
+      properties:
+        broker:
+          type: string
+          example: "SS"
+        broker_name:
+          type: string
+          example: "Shinhan Sekuritas"
+        total_buy_lot:
+          type: integer
+        total_buy_value:
+          type: integer
+        avg_price:
+          type: number
+          format: float
+        active_days:
+          type: string
+          example: "7/7 hari"
+        distance_pct:
+          type: number
+          format: float
+        status:
+          type: string
+          example: "⚡ KONSISTEN — PANTAU KETAT"
+
+    BandarmologiResponse:
+      type: object
+      properties:
+        ticker:
+          type: string
+        all_tickers:
+          type: array
+          items:
+            type: string
+        summary:
+          type: object
+          properties:
+            current_price:
+              type: number
+              format: float
+            weight_mode:
+              type: string
+            broker_utama:
+              type: string
+            signal:
+              type: string
+              enum: ["BUY", "SELL", "HOLD"]
+            entry_low:
+              type: number
+              format: float
+            entry_high:
+              type: number
+              format: float
+            stop_loss:
+              type: number
+              format: float
+            target_1:
+              type: number
+              format: float
+        accumulators_7d:
+          type: array
+          items:
+            $ref: '#/components/schemas/BandarBroker'
+        accumulators_1m:
+          type: array
+          items:
+            $ref: '#/components/schemas/BandarBroker'
+        distributors_7d:
+          type: array
+          items:
+            $ref: '#/components/schemas/BandarBroker'
+        distributors_1m:
+          type: array
+          items:
+            $ref: '#/components/schemas/BandarBroker'
+        window_7d_summary:
+          type: object
+        window_1m_summary:
+          type: object
+        score:
+          type: number
+          format: float
+        confidence:
+          type: string
+
+    PerformanceHistory:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        ticker:
+          type: string
+        signal:
+          type: string
+          enum: ["BUY", "SELL"]
+        result:
+          type: string
+          enum: ["PROFIT", "LOSS"]
+        return_pct:
+          type: number
+          format: float
+
+    StatsResponse:
+      type: object
+      properties:
+        market_outlook:
+          type: string
+          enum: ["Bullish", "Bearish", "Neutral"]
+        win_rate:
+          type: number
+          format: float
+        profit_factor:
+          type: number
+          format: float
+
+    IHSGPrediction:
+      type: object
+      properties:
+        id:
+          type: integer
+        run_date:
+          type: string
+          format: date-time
+        current_price:
+          type: number
+          format: float
+        day_1_price:
+          type: number
+          format: float
+        day_1_pct:
+          type: number
+          format: float
+        day_3_price:
+          type: number
+          format: float
+        day_3_pct:
+          type: number
+          format: float
+        day_5_price:
+          type: number
+          format: float
+        day_5_pct:
+          type: number
+          format: float
+        day_7_price:
+          type: number
+          format: float
+        day_7_pct:
+          type: number
+          format: float
+        direction:
+          type: string
+          enum: ["BULLISH", "BEARISH", "SIDEWAYS"]
+        confidence:
+          type: string
+          enum: ["HIGH", "MEDIUM", "LOW"]
+        volatility_level:
+          type: string
+        reasoning:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+
+paths:
+  /:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Cek status API
+      responses:
+        '200':
+          description: API is online
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register User
+      description: Daftar user baru
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Username already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login User
+      description: Login dengan username dan password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get Current User Info
+      description: Dapatkan informasi user yang sedang login
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User info
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/portfolio/paper:
+    get:
+      tags:
+        - Portfolio
+      summary: Get Paper Trading Portfolio
+      description: Dapatkan portfolio paper trading user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Portfolio data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wallet:
+                    $ref: '#/components/schemas/Wallet'
+                  holdings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Holding'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/portfolio/trade:
+    post:
+      tags:
+        - Portfolio
+      summary: Execute Trade
+      description: Eksekusi transaksi BUY atau SELL
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TradeRequest'
+      responses:
+        '200':
+          description: Trade executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Insufficient funds or invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/performance/history:
+    get:
+      tags:
+        - Performance
+      summary: Get Performance History
+      description: Dapatkan riwayat performa trading
+      responses:
+        '200':
+          description: Performance history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PerformanceHistory'
+
+  /api/stats:
+    get:
+      tags:
+        - Analytics
+      summary: Get Market Statistics
+      description: Dapatkan statistik pasar dan performa AI
+      responses:
+        '200':
+          description: Market statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+
+  /api/signals/top-picks:
+    get:
+      tags:
+        - Signals
+      summary: Get Top Picks
+      description: Dapatkan top picks sinyal trading dari AI
+      responses:
+        '200':
+          description: Top picks data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch_id:
+                    type: string
+                  run_date:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TopPick'
+
+  /api/bandarmologi/{ticker}:
+    get:
+      tags:
+        - Bandarmologi
+      summary: Get Bandarmologi Details
+      description: Dapatkan analisis bandarmologi untuk ticker tertentu
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "BBCA"
+      responses:
+        '200':
+          description: Bandarmologi details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BandarmologiResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/ihsg:
+    get:
+      tags:
+        - IHSG
+      summary: Get IHSG Predictions
+      description: Dapatkan prediksi IHSG terbaru
+      responses:
+        '200':
+          description: IHSG predictions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  latest:
+                    $ref: '#/components/schemas/IHSGPrediction'
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IHSGPrediction'
+
+  /api/trading/summary:
+    get:
+      tags:
+        - Trading
+      summary: Get Trading Summary
+      description: Ringkasan trading portfolio
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Trading summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  summary:
+                    type: object
+                  history:
+                    type: array
+
+  /api/trading/topup:
+    post:
+      tags:
+        - Trading
+      summary: Topup Trading Balance
+      description: Tambah saldo paper trading
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopupRequest'
+      responses:
+        '200':
+          description: Topup successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /api/trading/reset:
+    post:
+      tags:
+        - Trading
+      summary: Reset Trading Wallet
+      description: Reset wallet ke nilai awal
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/trading/buy:
+    post:
+      tags:
+        - Trading
+      summary: Buy Stock
+      description: Beli saham
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuyRequest'
+      responses:
+        '200':
+          description: Buy executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /api/trading/sell:
+    post:
+      tags:
+        - Trading
+      summary: Sell Stock
+      description: Jual saham
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SellRequest'
+      responses:
+        '200':
+          description: Sell executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/trading/cancel-pending:
+    post:
+      tags:
+        - Trading
+      summary: Cancel Pending Order
+      description: Batalkan order yang pending
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelRequest'
+      responses:
+        '200':
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/trading/equity-history:
+    get:
+      tags:
+        - Trading
+      summary: Get Equity History
+      description: Riwayat equity trading
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Equity history
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/trading/auto-invest-all:
+    post:
+      tags:
+        - Trading
+      summary: Auto Invest All Top Picks
+      description: Otomatis invest ke semua top picks
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                budget_pct:
+                  type: number
+                  example: 0.15
+      responses:
+        '200':
+          description: Auto invest executed
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/trading/auto-invest-single:
+    post:
+      tags:
+        - Trading
+      summary: Auto Invest Single Signal
+      description: Otomatis invest ke satu sinyal
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - signal_id
+                - budget_pct
+                - price
+              properties:
+                signal_id:
+                  type: integer
+                budget_pct:
+                  type: number
+                price:
+                  type: number
+                  format: float
+      responses:
+        '200':
+          description: Auto invest executed
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/trading/check-tpsl:
+    post:
+      tags:
+        - Trading
+      summary: Check TP/SL
+      description: Cek dan auto-close posisi yang mencapai TP/SL
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: TP/SL check completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  closed_count:
+                    type: integer
+
+  /api/portfolio/holdings:
+    get:
+      tags:
+        - Portfolio Holdings
+      summary: Get All Holdings
+      description: Dapatkan semua holdings portfolio user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Holdings list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  holdings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Holding'
+                  summary:
+                    type: object
+
+  /api/portfolio/holdings/add:
+    post:
+      tags:
+        - Portfolio Holdings
+      summary: Add Holding
+      description: Tambah holding baru
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ticker
+                - lot
+                - avg_cost
+              properties:
+                ticker:
+                  type: string
+                lot:
+                  type: integer
+                avg_cost:
+                  type: number
+                  format: float
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Holding added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  holding:
+                    $ref: '#/components/schemas/Holding'
+
+  /api/portfolio/dca/strategies:
+    get:
+      tags:
+        - DCA Strategy
+      summary: Get Active DCA Strategies
+      description: Dapatkan strategi DCA yang aktif
+      responses:
+        '200':
+          description: Active DCA strategies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  strategies:
+                    type: array
+                    items:
+                      type: object
+
+  /api/ai/performance-metrics:
+    get:
+      tags:
+        - AI Performance
+      summary: Get AI Performance Metrics
+      description: Metrik performa AI trading
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Performance metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: object
+                    properties:
+                      win_rate:
+                        type: number
+                      profit_factor:
+                        type: number
+                      cumulative_pnl:
+                        type: number
+                      total_trades:
+                        type: integer
+                  ihsg_predictor:
+                    $ref: '#/components/schemas/IHSGPrediction'

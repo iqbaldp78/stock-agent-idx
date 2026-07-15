@@ -3,16 +3,28 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '../context/AppContext';
+import {
+  HomeIcon,
+  TargetIcon,
+  BarChartIcon,
+  GearIcon,
+  ExitIcon,
+  CrossCircledIcon,
+  CheckCircledIcon,
+  InfoCircledIcon,
+  HamburgerMenuIcon
+} from '@radix-ui/react-icons';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { href: "/", label: "Home Dashboard", icon: "🏠", id: "dashboard" },
-  { href: "/top-picks", label: "AI Top Picks", icon: "🎯", id: "top-picks" },
-  { href: "/trading", label: "Trading Engine", icon: "💹", id: "trading" },
-  { href: "/bandarmologi", label: "Bandarmologi", icon: "🏛️", id: "bandarmologi" },
-  { href: "/ihsg", label: "IHSG Predictor", icon: "📈", id: "ihsg" },
-  { href: "/history", label: "AI Performance", icon: "📊", id: "history" },
-  { href: "/portfolio", label: "Portfolio Management", icon: "💼", id: "portfolio" },
-  { href: "/settings", label: "Preferences", icon: "⚙️", id: "settings" },
+  { href: "/", label: "Home Dashboard", icon: HomeIcon, id: "dashboard" },
+  { href: "/top-picks", label: "AI Top Picks", icon: TargetIcon, id: "top-picks" },
+  { href: "/trading", label: "Trading Engine", icon: BarChartIcon, id: "trading" },
+  { href: "/bandarmologi", label: "Bandarmologi", icon: BarChartIcon, id: "bandarmologi" },
+  { href: "/ihsg", label: "IHSG Predictor", icon: BarChartIcon, id: "ihsg" },
+  { href: "/history", label: "AI Performance", icon: BarChartIcon, id: "history" },
+  { href: "/portfolio", label: "Portfolio Management", icon: BarChartIcon, id: "portfolio" },
+  { href: "/settings", label: "Preferences", icon: GearIcon, id: "settings" },
 ];
 
 export default function AppShellLayout({ children }: { children: React.ReactNode }) {
@@ -52,27 +64,30 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
               </h1>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="text-secondary hover:text-text transition">
-              ✕
+              <CrossCircledIcon className="w-5 h-5" />
             </button>
           </div>
 
           <nav className="space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition ${
-                  isActive(item.href)
-                    ? 'bg-white/10 text-text border border-border shadow-[0_0_15px_rgba(255,255,255,0.05)]'
-                    : 'text-secondary hover:text-text hover:bg-white/5'
-                }`}
-              >
-                <span className="text-lg">{item.icon}</span> {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition ${
+                    isActive(item.href)
+                      ? 'bg-white/10 text-text border border-border shadow-[0_0_15px_rgba(255,255,255,0.05)]'
+                      : 'text-secondary hover:text-text hover:bg-white/5'
+                  }`}
+                >
+                  <IconComponent className="w-5 h-5" /> {item.label}
+                </Link>
+              );
+            })}
             <a href="https://admin.hamboo.me" target="_blank" className="flex items-center gap-4 px-4 py-3 text-secondary hover:text-text hover:bg-white/5 rounded-xl transition font-medium">
-              <span className="text-lg">👨‍💻</span> Admin Panel
+              <GearIcon className="w-5 h-5" /> Admin Panel
             </a>
           </nav>
 
@@ -89,7 +104,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
               }}
               className="flex items-center gap-4 px-4 py-3 text-loss hover:text-red-300 hover:bg-loss/10 rounded-xl transition font-medium w-full"
             >
-              <span>🚪</span> Sign Out
+              <ExitIcon className="w-5 h-5" /> Sign Out
             </button>
           </div>
         </div>
@@ -100,7 +115,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="mr-2 p-2 rounded-lg text-secondary hover:text-text hover:bg-white/10 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+              <HamburgerMenuIcon className="w-6 h-6" />
             </button>
             <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shadow-lg shadow-accent/20 text-text font-bold text-sm">
               H
@@ -159,14 +174,22 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
               'border-accent/20 text-accent'
             }`}
           >
-            <span className="text-lg">
-              {toast.type === 'success' ? '🟢' : toast.type === 'error' ? '🔴' : '🔵'}
-            </span>
+            <div className="text-lg flex-shrink-0">
+              {toast.type === 'success' ? (
+                <CheckCircledIcon className="w-5 h-5" />
+              ) : toast.type === 'error' ? (
+                <CrossCircledIcon className="w-5 h-5" />
+              ) : (
+                <InfoCircledIcon className="w-5 h-5" />
+              )}
+            </div>
             <div className="flex-1 text-xs font-bold leading-snug">{toast.message}</div>
             <button
               onClick={() => dismissToast(toast.id)}
-              className="text-secondary hover:text-text transition text-xs font-mono px-1 cursor-pointer"
-            >✕</button>
+              className="text-secondary hover:text-text transition text-xs font-mono px-1 cursor-pointer flex-shrink-0"
+            >
+              <CrossCircledIcon className="w-4 h-4" />
+            </button>
           </div>
         ))}
       </div>

@@ -1,0 +1,916 @@
+{
+  "info": {
+    "_postman_id": "hamboo-ai-api-collection",
+    "name": "Hamboo AI Stock Trading API",
+    "description": "API untuk sistem trading paper trading, analisis bandarmologi, dan prediksi IHSG",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user123\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user123\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me?token={{token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Portfolio",
+      "item": [
+        {
+          "name": "Get Paper Trading Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/paper",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "paper"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Trade",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticker\": \"BBCA\",\n  \"action\": \"BUY\",\n  \"shares\": 100,\n  \"price\": 9500.0,\n  \"signal_id\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/trade",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "trade"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio Holdings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/holdings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "holdings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Holding",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticker\": \"BBCA\",\n  \"lot\": 10,\n  \"avg_cost\": 9500.0,\n  \"notes\": \"Holding awal\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/holdings/add",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "holdings",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/transactions?ticker=BBCA&txn_type=BUY",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "ticker",
+                  "value": "BBCA",
+                  "disabled": true
+                },
+                {
+                  "key": "txn_type",
+                  "value": "BUY",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Trading",
+      "item": [
+        {
+          "name": "Get Trading Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/trading/summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Topup Balance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000000.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trading/topup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "topup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trading/reset",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "reset"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buy Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticker\": \"BBCA\",\n  \"lot\": 1,\n  \"price\": 9500.0,\n  \"signal_id\": null,\n  \"tp1\": 10000.0,\n  \"stop_loss\": 9000.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trading/buy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "buy"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sell Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trade_id\": 1,\n  \"price\": 10000.0,\n  \"reason\": \"MANUAL\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trading/sell",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "sell"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Pending Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trade_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trading/cancel-pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "cancel-pending"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equity History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/trading/equity-history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "equity-history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Auto Invest All Top Picks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"budget_pct\": 0.15\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trading/auto-invest-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "auto-invest-all"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Auto Invest Single Signal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signal_id\": 1,\n  \"budget_pct\": 0.15,\n  \"price\": 9500.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trading/auto-invest-single",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "auto-invest-single"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check TP/SL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/trading/check-tpsl",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "trading",
+                "check-tpsl"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Signals & Analytics",
+      "item": [
+        {
+          "name": "Get Top Picks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/signals/top-picks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "signals",
+                "top-picks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Performance History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/performance/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "performance",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Market Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get AI Performance Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ai/performance-metrics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ai",
+                "performance-metrics"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bandarmologi",
+      "item": [
+        {
+          "name": "Get Bandarmologi Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bandarmologi/BBCA",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bandarmologi",
+                "BBCA"
+              ]
+            },
+            "description": "Dapatkan analisis bandarmologi untuk ticker tertentu. Ganti BBCA dengan ticker yang diinginkan."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "IHSG",
+      "item": [
+        {
+          "name": "Get IHSG Predictions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ihsg",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ihsg"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "DCA Strategy",
+      "item": [
+        {
+          "name": "Get Active DCA Strategies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/dca/strategies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "dca",
+                "strategies"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create DCA from Signal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signal_id\": 1,\n  \"total_budget\": 10000000.0,\n  \"dca_count\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/dca/create-signal",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "dca",
+                "create-signal"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create DCA Manual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticker\": \"BBCA\",\n  \"total_budget\": 10000000.0,\n  \"entry_low\": 8500.0,\n  \"entry_high\": 9500.0,\n  \"max_entry\": 10000.0,\n  \"dca_count\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/dca/create-manual",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "dca",
+                "create-manual"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Calculate DCA Levels",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entry_low\": 8500.0,\n  \"entry_high\": 9500.0,\n  \"max_entry\": 10000.0,\n  \"total_budget\": 10000000.0,\n  \"dca_count\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/dca/calculate-levels",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "dca",
+                "calculate-levels"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate DCA Strategy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"strategy_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/dca/deactivate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "dca",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get DCA Recommended Timing",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/dca/recommend-timing?ticker=BBCA",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "dca",
+                "recommend-timing"
+              ],
+              "query": [
+                {
+                  "key": "ticker",
+                  "value": "BBCA"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get AI Recommended Entry",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/portfolio/dca/ai-recommend-entry?ticker=BBCA",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "portfolio",
+                "dca",
+                "ai-recommend-entry"
+              ],
+              "query": [
+                {
+                  "key": "ticker",
+                  "value": "BBCA"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

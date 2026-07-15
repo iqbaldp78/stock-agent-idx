@@ -1,5 +1,8 @@
 "use client";
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,7 +15,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const res = await fetch(endpoint, {
@@ -20,9 +23,9 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('tier', data.tier || 'free');
@@ -40,60 +43,66 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background text-text flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-card backdrop-blur-md border border-border rounded-3xl p-8 shadow-2xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-text mb-2">Hamboo.ai <span className="text-accent">Agent</span></h1>
-          <p className="text-secondary">{isLogin ? 'Sign in to your account' : 'Create a new account'}</p>
-        </div>
-        
-        {error && (
-          <div className="bg-loss/10 border border-loss/20 text-loss p-4 rounded-xl mb-6 text-sm">
-            {error}
+      <Card className="max-w-md w-full shadow-2xl backdrop-blur-md">
+        <CardHeader>
+          <div className="text-center space-y-2">
+            <CardTitle className="text-3xl font-black">
+              Hamboo.ai <span className="text-accent">Agent</span>
+            </CardTitle>
+            <p className="text-secondary">{isLogin ? 'Sign in to your account' : 'Create a new account'}</p>
           </div>
-        )}
+        </CardHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-accent transition"
-              required
-            />
+        <CardContent>
+          {error && (
+            <div className="bg-loss/10 border border-loss/20 text-loss p-4 rounded-xl mb-6 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Username</label>
+              <Input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Password</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-secondary">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-accent font-bold hover:text-accent transition"
+            >
+              {isLogin ? 'Sign Up' : 'Sign In'}
+            </button>
           </div>
-          
-          <div>
-            <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-accent transition"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-accent text-text font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
-          >
-            {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center text-sm text-secondary">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button 
-            onClick={() => setIsLogin(!isLogin)} 
-            className="text-accent font-bold hover:text-accent transition"
-          >
-            {isLogin ? 'Sign Up' : 'Sign In'}
-          </button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
