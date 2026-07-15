@@ -39,38 +39,38 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-8 shadow-2xl">
+    <div className="min-h-screen bg-background text-text flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-card backdrop-blur-md border border-border rounded-3xl p-8 shadow-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-white mb-2">Hamboo.ai <span className="text-indigo-400">Agent</span></h1>
-          <p className="text-slate-400">{isLogin ? 'Sign in to your account' : 'Create a new account'}</p>
+          <h1 className="text-3xl font-black text-text mb-2">Hamboo.ai <span className="text-accent">Agent</span></h1>
+          <p className="text-secondary">{isLogin ? 'Sign in to your account' : 'Create a new account'}</p>
         </div>
         
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 text-sm">
+          <div className="bg-loss/10 border border-loss/20 text-loss p-4 rounded-xl mb-6 text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Username</label>
+            <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Username</label>
             <input 
               type="text" 
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition"
+              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-[#7C3AED] transition"
               required
             />
           </div>
           
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password</label>
+            <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Password</label>
             <input 
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition"
+              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-[#7C3AED] transition"
               required
             />
           </div>
@@ -78,17 +78,17 @@ export default function Login() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
           >
             {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-slate-400">
+        <div className="mt-6 text-center text-sm text-secondary">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button 
             onClick={() => setIsLogin(!isLogin)} 
-            className="text-indigo-400 font-bold hover:text-indigo-300 transition"
+            className="text-accent font-bold hover:text-accent transition"
           >
             {isLogin ? 'Sign Up' : 'Sign In'}
           </button>

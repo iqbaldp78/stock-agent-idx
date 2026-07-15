@@ -136,7 +136,14 @@ def run_news_ingester():
         if result.returncode != 0:
             logger.error(f"News Ingester failed: {result.stderr}")
         else:
-            logger.info("News Ingester completed successfully")
+            # Echo the output so it appears in docker logs
+            output = result.stdout.strip() or result.stderr.strip()
+            lines = [l for l in output.split("\n") if l.strip()]
+            if lines:
+                for line in lines[-3:]:
+                    logger.info(line.strip())
+            else:
+                logger.info("News Ingester completed successfully (no logs)")
     except Exception as e:
         logger.error(f"News Ingester error: {e}")
 

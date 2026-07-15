@@ -234,15 +234,15 @@ export default function PortfolioPage() {
   return (
     <div className="space-y-8 animate-fade-in">
       <div>
-        <h2 className="text-3xl font-bold text-white mb-2">💼 Portfolio <span className="text-indigo-400">Management</span></h2>
-        <p className="text-slate-400">Manajemen holdings aktif, strategi Dollar Cost Averaging (DCA), riwayat transaksi, dan analisis portofolio bertenaga AI.</p>
+        <h2 className="text-3xl font-bold text-text mb-2">💼 Portfolio <span className="text-accent">Management</span></h2>
+        <p className="text-secondary">Manajemen holdings aktif, strategi Dollar Cost Averaging (DCA), riwayat transaksi, dan analisis portofolio bertenaga AI.</p>
       </div>
 
       {/* Sub-Tabs Nav */}
-      <div className="flex bg-white/[0.03] backdrop-blur-md p-1.5 rounded-2xl border border-white/5 overflow-x-auto max-w-max">
+      <div className="flex bg-card backdrop-blur-md p-1.5 rounded-2xl border border-border overflow-x-auto max-w-max">
         {PORTFOLIO_TABS.map((tab) => (
           <button key={tab.id} onClick={() => setPortfolioTab(tab.id)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition whitespace-nowrap ${portfolioTab === tab.id ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}`}>
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition whitespace-nowrap ${portfolioTab === tab.id ? "bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text shadow-lg shadow-indigo-500/20" : "text-secondary hover:text-text hover:bg-white/5"}`}>
             {tab.label}
           </button>
         ))}
@@ -254,23 +254,23 @@ export default function PortfolioPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: "Total Invested", value: `Rp ${(portfolioSummary.total_invested || 0).toLocaleString("id-ID")}` },
-              { label: "Current Value", value: `Rp ${(portfolioSummary.total_current_value || 0).toLocaleString("id-ID")}`, sub: portfolioSummary.total_pnl !== 0 ? `${portfolioSummary.total_pnl > 0 ? "▲ +" : "▼ "}Rp ${Math.abs(portfolioSummary.total_pnl || 0).toLocaleString("id-ID")}` : undefined, subColor: portfolioSummary.total_pnl > 0 ? "text-emerald-400" : "text-red-400" },
-              { label: "Total P&L", value: `${portfolioSummary.total_pnl_pct > 0 ? "+" : ""}${(portfolioSummary.total_pnl_pct || 0).toFixed(2)}%`, valueColor: portfolioSummary.total_pnl_pct > 0 ? "text-emerald-400" : portfolioSummary.total_pnl_pct < 0 ? "text-red-400" : "text-white" },
-              { label: "Best Performer", value: portfolioSummary.best_performer || "N/A", sub: portfolioSummary.best_performer ? `+${(portfolioSummary.best_pnl_pct || 0).toFixed(2)}%` : undefined, subColor: "text-emerald-400" },
+              { label: "Current Value", value: `Rp ${(portfolioSummary.total_current_value || 0).toLocaleString("id-ID")}`, sub: portfolioSummary.total_pnl !== 0 ? `${portfolioSummary.total_pnl > 0 ? "▲ +" : "▼ "}Rp ${Math.abs(portfolioSummary.total_pnl || 0).toLocaleString("id-ID")}` : undefined, subColor: portfolioSummary.total_pnl > 0 ? "text-[#22C55E]" : "text-loss" },
+              { label: "Total P&L", value: `${portfolioSummary.total_pnl_pct > 0 ? "+" : ""}${(portfolioSummary.total_pnl_pct || 0).toFixed(2)}%`, valueColor: portfolioSummary.total_pnl_pct > 0 ? "text-[#22C55E]" : portfolioSummary.total_pnl_pct < 0 ? "text-loss" : "text-text" },
+              { label: "Best Performer", value: portfolioSummary.best_performer || "N/A", sub: portfolioSummary.best_performer ? `+${(portfolioSummary.best_pnl_pct || 0).toFixed(2)}%` : undefined, subColor: "text-[#22C55E]" },
             ].map((card, i) => (
-              <div key={i} className="bg-white/[0.03] border border-white/5 rounded-2xl p-5">
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">{card.label}</p>
-                <p className={`text-2xl font-black font-mono ${card.valueColor || "text-white"}`}>{card.value}</p>
+              <div key={i} className="bg-card border border-border rounded-2xl p-5">
+                <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">{card.label}</p>
+                <p className={`text-2xl font-black font-mono ${card.valueColor || "text-text"}`}>{card.value}</p>
                 {card.sub && <p className={`text-xs font-mono font-bold mt-1 ${card.subColor}`}>{card.sub}</p>}
               </div>
             ))}
           </div>
 
-          <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">📋 Holdings</h3>
+          <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
+            <h3 className="text-lg font-bold text-text mb-4">📋 Holdings</h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left text-slate-300">
-                <thead className="text-xs text-slate-400 uppercase bg-white/5 border-b border-white/5">
+              <table className="w-full text-sm text-left text-secondary">
+                <thead className="text-xs text-secondary uppercase bg-white/5 border-b border-border">
                   <tr>
                     <th className="px-4 py-4 rounded-tl-lg">Ticker</th><th className="px-4 py-4 text-right">Lot</th><th className="px-4 py-4 text-right">Avg Cost</th><th className="px-4 py-4 text-right">Current</th><th className="px-4 py-4 text-right">Value</th><th className="px-4 py-4 text-right">P&L (Rp)</th><th className="px-4 py-4 text-right">P&L (%)</th><th className="px-4 py-4 text-center rounded-tr-lg">Status</th>
                   </tr>
@@ -280,71 +280,71 @@ export default function PortfolioPage() {
                     const totalInvested = h.avg_cost * h.shares;
                     const pnlValue = h.value - totalInvested;
                     return (
-                      <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition">
-                        <td className="px-4 py-4 font-bold text-white text-base">{h.ticker}</td>
+                      <tr key={i} className="border-b border-border hover:bg-white/5 transition">
+                        <td className="px-4 py-4 font-bold text-text text-base">{h.ticker}</td>
                         <td className="px-4 py-4 text-right font-mono">{(h.shares / 100).toFixed(0)}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {h.avg_cost.toLocaleString("id-ID")}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {h.current_price.toLocaleString("id-ID")}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {h.value.toLocaleString("id-ID")}</td>
-                        <td className={`px-4 py-4 text-right font-mono font-bold ${pnlValue > 0 ? "text-emerald-400" : pnlValue < 0 ? "text-red-400" : "text-slate-400"}`}>{pnlValue > 0 ? "+" : ""}{pnlValue.toLocaleString("id-ID")}</td>
-                        <td className={`px-4 py-4 text-right font-mono font-bold ${h.pnl_pct > 0 ? "text-emerald-400" : h.pnl_pct < 0 ? "text-red-400" : "text-slate-400"}`}>{h.pnl_pct > 0 ? "+" : ""}{h.pnl_pct.toFixed(2)}%</td>
-                        <td className="px-4 py-4 text-center"><span className="px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-semibold uppercase">Active</span></td>
+                        <td className={`px-4 py-4 text-right font-mono font-bold ${pnlValue > 0 ? "text-[#22C55E]" : pnlValue < 0 ? "text-loss" : "text-secondary"}`}>{pnlValue > 0 ? "+" : ""}{pnlValue.toLocaleString("id-ID")}</td>
+                        <td className={`px-4 py-4 text-right font-mono font-bold ${h.pnl_pct > 0 ? "text-[#22C55E]" : h.pnl_pct < 0 ? "text-loss" : "text-secondary"}`}>{h.pnl_pct > 0 ? "+" : ""}{h.pnl_pct.toFixed(2)}%</td>
+                        <td className="px-4 py-4 text-center"><span className="px-2.5 py-1 rounded bg-accent/10 text-accent border border-[#7C3AED]/20 text-xs font-semibold uppercase">Active</span></td>
                       </tr>
                     );
                   })}
-                  {portfolioHoldings.length === 0 && <tr><td colSpan={8} className="px-4 py-12 text-center text-slate-500">Belum ada holdings aktif. Tambahkan holdings pertama di bawah.</td></tr>}
+                  {portfolioHoldings.length === 0 && <tr><td colSpan={8} className="px-4 py-12 text-center text-secondary">Belum ada holdings aktif. Tambahkan holdings pertama di bawah.</td></tr>}
                 </tbody>
               </table>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">➕ Add New Holding</h3>
+            <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
+              <h3 className="text-lg font-bold text-text mb-4">➕ Add New Holding</h3>
               <form onSubmit={handleAddHolding} className="space-y-4">
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Ticker</label><input type="text" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" placeholder="TLKM" value={newHoldingTicker} onChange={(e) => setNewHoldingTicker(e.target.value)} /></div>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Ticker</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" placeholder="TLKM" value={newHoldingTicker} onChange={(e) => setNewHoldingTicker(e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Lot</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={newHoldingLots} onChange={(e) => setNewHoldingLots(Number(e.target.value))} /></div>
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Avg Cost (Rp/share)</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={newHoldingAvg} onChange={(e) => setNewHoldingAvg(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Lot</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={newHoldingLots} onChange={(e) => setNewHoldingLots(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Avg Cost (Rp/share)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={newHoldingAvg} onChange={(e) => setNewHoldingAvg(Number(e.target.value))} /></div>
                 </div>
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes</label><input type="text" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" placeholder="Catatan tambahan..." value={newHoldingNotes} onChange={(e) => setNewHoldingNotes(e.target.value)} /></div>
-                <button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-3 px-4 rounded-xl transition hover:opacity-90 shadow-lg shadow-indigo-500/20">Add Holding</button>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Notes</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" placeholder="Catatan tambahan..." value={newHoldingNotes} onChange={(e) => setNewHoldingNotes(e.target.value)} /></div>
+                <button type="submit" className="w-full bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text font-bold py-3 px-4 rounded-xl transition hover:opacity-90 shadow-lg shadow-indigo-500/20">Add Holding</button>
               </form>
             </div>
 
-            <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">💵 Record Buy / Sell</h3>
+            <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
+              <h3 className="text-lg font-bold text-text mb-4">💵 Record Buy / Sell</h3>
               <form onSubmit={handleRecordTransaction} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Type</label>
-                  <div className="flex bg-[#030712] p-1 rounded-xl border border-white/10 max-w-max">
-                    <button type="button" onClick={() => setRecordTxnType("BUY")} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${recordTxnType === "BUY" ? "bg-emerald-500 text-white" : "text-slate-400 hover:text-white"}`}>BUY</button>
-                    <button type="button" onClick={() => setRecordTxnType("SELL")} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${recordTxnType === "SELL" ? "bg-red-500 text-white" : "text-slate-400 hover:text-white"}`}>SELL</button>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Type</label>
+                  <div className="flex bg-background p-1 rounded-xl border border-border max-w-max">
+                    <button type="button" onClick={() => setRecordTxnType("BUY")} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${recordTxnType === "BUY" ? "bg-[#22C55E] text-text" : "text-secondary hover:text-text"}`}>BUY</button>
+                    <button type="button" onClick={() => setRecordTxnType("SELL")} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${recordTxnType === "SELL" ? "bg-[#EF4444] text-text" : "text-secondary hover:text-text"}`}>SELL</button>
                   </div>
                 </div>
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Ticker</label><select className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={recordTxnTicker} onChange={(e) => setRecordTxnTicker(e.target.value)}><option value="">-- Pilih Saham --</option>{portfolioHoldings.map(h => <option key={h.ticker} value={h.ticker}>{h.ticker}</option>)}</select></div>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Ticker</label><select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={recordTxnTicker} onChange={(e) => setRecordTxnTicker(e.target.value)}><option value="">-- Pilih Saham --</option>{portfolioHoldings.map(h => <option key={h.ticker} value={h.ticker}>{h.ticker}</option>)}</select></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Lot</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={recordTxnLots} onChange={(e) => setRecordTxnLots(Number(e.target.value))} /></div>
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Price (Rp/share)</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={recordTxnPrice} onChange={(e) => setRecordTxnPrice(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Lot</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={recordTxnLots} onChange={(e) => setRecordTxnLots(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Price (Rp/share)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={recordTxnPrice} onChange={(e) => setRecordTxnPrice(Number(e.target.value))} /></div>
                 </div>
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes</label><input type="text" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" placeholder="Catatan..." value={recordTxnNotes} onChange={(e) => setRecordTxnNotes(e.target.value)} /></div>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Notes</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" placeholder="Catatan..." value={recordTxnNotes} onChange={(e) => setRecordTxnNotes(e.target.value)} /></div>
                 {recordTxnType === "BUY" && buyPreview && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 p-4 rounded-xl text-xs font-mono space-y-1">
-                    <p className="font-bold text-white uppercase text-[10px] tracking-wider mb-1">Preview New Avg Cost</p>
-                    <p>Avg Cost Saat Ini: <span className="text-white font-bold">Rp {buyPreview.current_avg?.toLocaleString("id-ID")}</span></p>
-                    <p>Avg Cost Baru: <span className="text-white font-bold">Rp {buyPreview.new_avg_cost?.toLocaleString("id-ID")}</span></p>
-                    <p>Total Lot Setelah Trx: <span className="text-white font-bold">{buyPreview.total_lots_after} Lot</span></p>
+                  <div className="bg-[#22C55E]/10 border border-[#22C55E]/20 text-emerald-300 p-4 rounded-xl text-xs font-mono space-y-1">
+                    <p className="font-bold text-text uppercase text-[10px] tracking-wider mb-1">Preview New Avg Cost</p>
+                    <p>Avg Cost Saat Ini: <span className="text-text font-bold">Rp {buyPreview.current_avg?.toLocaleString("id-ID")}</span></p>
+                    <p>Avg Cost Baru: <span className="text-text font-bold">Rp {buyPreview.new_avg_cost?.toLocaleString("id-ID")}</span></p>
+                    <p>Total Lot Setelah Trx: <span className="text-text font-bold">{buyPreview.total_lots_after} Lot</span></p>
                   </div>
                 )}
-                <button type="submit" className={`w-full text-white font-bold py-3 px-4 rounded-xl transition hover:opacity-90 shadow-lg ${recordTxnType === "BUY" ? "bg-emerald-600 shadow-emerald-600/20" : "bg-red-600 shadow-red-600/20"}`}>Record {recordTxnType}</button>
+                <button type="submit" className={`w-full text-text font-bold py-3 px-4 rounded-xl transition hover:opacity-90 shadow-lg ${recordTxnType === "BUY" ? "bg-emerald-600 shadow-emerald-600/20" : "bg-[#EF4444] shadow-red-600/20"}`}>Record {recordTxnType}</button>
               </form>
             </div>
           </div>
 
-          <div className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6 mt-8">
-            <h4 className="text-lg font-bold text-red-400 mb-2">⚠️ Danger Zone: Reset Portfolio</h4>
-            <p className="text-sm text-slate-400 mb-4">Tindakan ini akan menghapus semua riwayat transaksi, DCA, dan data kepemilikan saham di portofolio secara permanen!</p>
-            <button onClick={handleResetHoldings} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm transition">🚨 Reset All Data Holding</button>
+          <div className="bg-[#EF4444]/5 border border-[#EF4444]/10 rounded-3xl p-6 mt-8">
+            <h4 className="text-lg font-bold text-loss mb-2">⚠️ Danger Zone: Reset Portfolio</h4>
+            <p className="text-sm text-secondary mb-4">Tindakan ini akan menghapus semua riwayat transaksi, DCA, dan data kepemilikan saham di portofolio secara permanen!</p>
+            <button onClick={handleResetHoldings} className="bg-[#EF4444] hover:bg-red-700 text-text font-bold py-2.5 px-6 rounded-xl text-sm transition">🚨 Reset All Data Holding</button>
           </div>
         </div>
       )}
@@ -352,11 +352,11 @@ export default function PortfolioPage() {
       {/* SUB-TAB: DCA MANAGER */}
       {portfolioTab === "dca" && (
         <div className="space-y-8">
-          <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">📋 Active DCA Strategies</h3>
+          <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
+            <h3 className="text-lg font-bold text-text mb-4">📋 Active DCA Strategies</h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left text-slate-300">
-                <thead className="text-xs text-slate-400 uppercase bg-white/5 border-b border-white/5">
+              <table className="w-full text-sm text-left text-secondary">
+                <thead className="text-xs text-secondary uppercase bg-white/5 border-b border-border">
                   <tr>
                     <th className="px-4 py-4 rounded-tl-lg">Ticker</th><th className="px-4 py-4 text-right">Budget</th><th className="px-4 py-4 text-right">Used</th><th className="px-4 py-4 text-right">Remaining</th><th className="px-4 py-4">Progress</th><th className="px-4 py-4 text-center">Levels</th><th className="px-4 py-4 text-right">Next Buy</th><th className="px-4 py-4 text-center">Status</th><th className="px-4 py-4 text-center rounded-tr-lg">Action</th>
                   </tr>
@@ -365,74 +365,74 @@ export default function PortfolioPage() {
                   {dcaStrategies.map((strat, i) => {
                     const usedPct = (strat.used_budget / strat.total_budget) * 100;
                     return (
-                      <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition">
-                        <td className="px-4 py-4 font-bold text-white">{strat.ticker}</td>
+                      <tr key={i} className="border-b border-border hover:bg-white/5 transition">
+                        <td className="px-4 py-4 font-bold text-text">{strat.ticker}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {strat.total_budget.toLocaleString("id-ID")}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {strat.used_budget.toLocaleString("id-ID")}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {strat.remaining_budget.toLocaleString("id-ID")}</td>
-                        <td className="px-4 py-4 min-w-[120px]"><div className="flex items-center gap-2"><div className="h-2 w-20 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" style={{ width: `${Math.min(usedPct, 100)}%` }}></div></div><span className="text-xs font-mono">{usedPct.toFixed(0)}%</span></div></td>
+                        <td className="px-4 py-4 min-w-[120px]"><div className="flex items-center gap-2"><div className="h-2 w-20 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] rounded-full" style={{ width: `${Math.min(usedPct, 100)}%` }}></div></div><span className="text-xs font-mono">{usedPct.toFixed(0)}%</span></div></td>
                         <td className="px-4 py-4 text-center font-mono">{strat.dca_count}</td>
-                        <td className="px-4 py-4 text-right font-mono text-indigo-300">{strat.next_buy_price ? `Rp ${strat.next_buy_price.toLocaleString("id-ID")}` : "-"}</td>
-                        <td className="px-4 py-4 text-center"><span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">{strat.status}</span></td>
-                        <td className="px-4 py-4 text-center"><button onClick={() => handleDeactivateDca(strat.id)} className="text-red-400 hover:text-red-300 text-xs font-bold uppercase transition">Deactivate</button></td>
+                        <td className="px-4 py-4 text-right font-mono text-accent">{strat.next_buy_price ? `Rp ${strat.next_buy_price.toLocaleString("id-ID")}` : "-"}</td>
+                        <td className="px-4 py-4 text-center"><span className="px-2 py-0.5 rounded bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 text-xs font-semibold">{strat.status}</span></td>
+                        <td className="px-4 py-4 text-center"><button onClick={() => handleDeactivateDca(strat.id)} className="text-loss hover:text-red-300 text-xs font-bold uppercase transition">Deactivate</button></td>
                       </tr>
                     );
                   })}
-                  {dcaStrategies.length === 0 && <tr><td colSpan={9} className="px-4 py-10 text-center text-slate-500">Belum ada DCA strategy aktif.</td></tr>}
+                  {dcaStrategies.length === 0 && <tr><td colSpan={9} className="px-4 py-10 text-center text-secondary">Belum ada DCA strategy aktif.</td></tr>}
                 </tbody>
               </table>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">➕ Create New DCA Strategy</h3>
-              <div className="flex bg-[#030712] p-1 rounded-xl border border-white/10 max-w-max mb-6">
-                <button type="button" onClick={() => { setDcaMode("signal"); setPreviewDcaLevels([]); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${dcaMode === "signal" ? "bg-indigo-500 text-white" : "text-slate-400 hover:text-white"}`}>From TOP PICKS Signal</button>
-                <button type="button" onClick={() => { setDcaMode("manual"); setPreviewDcaLevels([]); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${dcaMode === "manual" ? "bg-indigo-500 text-white" : "text-slate-400 hover:text-white"}`}>Manual Input</button>
+            <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
+              <h3 className="text-lg font-bold text-text mb-4">➕ Create New DCA Strategy</h3>
+              <div className="flex bg-background p-1 rounded-xl border border-border max-w-max mb-6">
+                <button type="button" onClick={() => { setDcaMode("signal"); setPreviewDcaLevels([]); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${dcaMode === "signal" ? "bg-accent text-text" : "text-secondary hover:text-text"}`}>From TOP PICKS Signal</button>
+                <button type="button" onClick={() => { setDcaMode("manual"); setPreviewDcaLevels([]); }} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${dcaMode === "manual" ? "bg-accent text-text" : "text-secondary hover:text-text"}`}>Manual Input</button>
               </div>
               <form onSubmit={handleCreateDca} className="space-y-4">
                 {dcaMode === "signal" ? (
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Pilih Sinyal Top Picks</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Pilih Sinyal Top Picks</label>
                     {picks.length > 0 ? (
-                      <select className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={selectedSignalId || ""} onChange={(e) => { setSelectedSignalId(Number(e.target.value)); setPreviewDcaLevels([]); }}>
+                      <select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={selectedSignalId || ""} onChange={(e) => { setSelectedSignalId(Number(e.target.value)); setPreviewDcaLevels([]); }}>
                         <option value="">-- Pilih Rekomendasi Sinyal --</option>
                         {picks.map(p => <option key={p.id} value={p.id}>{p.ticker} (Entry: {p.entry_low} - {p.max_entry} | Conviction: {p.conviction})</option>)}
                       </select>
-                    ) : <div className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl">⚠️ Belum ada TOP PICKS signal. Run analysis dulu di tab Top Picks.</div>}
+                    ) : <div className="text-xs text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/20 p-3 rounded-xl">⚠️ Belum ada TOP PICKS signal. Run analysis dulu di tab Top Picks.</div>}
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Ticker</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Ticker</label>
                       <div className="flex gap-2">
-                        <input type="text" className="flex-1 bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" placeholder="TLKM" value={manualDcaTicker} onChange={(e) => setManualDcaTicker(e.target.value)} />
-                        <button type="button" onClick={handleAiDcaRecommend} className="bg-slate-800 border border-white/10 hover:bg-slate-700 text-white font-bold px-3 rounded-xl text-xs transition">🤖 AI Entry</button>
+                        <input type="text" className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" placeholder="TLKM" value={manualDcaTicker} onChange={(e) => setManualDcaTicker(e.target.value)} />
+                        <button type="button" onClick={handleAiDcaRecommend} className="bg-slate-800 border border-border hover:bg-slate-700 text-text font-bold px-3 rounded-xl text-xs transition">🤖 AI Entry</button>
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Entry Low</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-slate-100 font-mono focus:outline-none focus:border-indigo-500" value={manualEntryLow} onChange={(e) => setManualEntryLow(Number(e.target.value))} /></div>
-                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Entry High</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-slate-100 font-mono focus:outline-none focus:border-indigo-500" value={manualEntryHigh} onChange={(e) => setManualEntryHigh(Number(e.target.value))} /></div>
-                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Max Entry</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-slate-100 font-mono focus:outline-none focus:border-indigo-500" value={manualMaxEntry} onChange={(e) => setManualMaxEntry(Number(e.target.value))} /></div>
+                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Entry Low</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-[#7C3AED]" value={manualEntryLow} onChange={(e) => setManualEntryLow(Number(e.target.value))} /></div>
+                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Entry High</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-[#7C3AED]" value={manualEntryHigh} onChange={(e) => setManualEntryHigh(Number(e.target.value))} /></div>
+                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Max Entry</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-[#7C3AED]" value={manualMaxEntry} onChange={(e) => setManualMaxEntry(Number(e.target.value))} /></div>
                     </div>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Total Budget (Rp)</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={dcaBudget} onChange={(e) => setDcaBudget(Number(e.target.value))} /></div>
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">DCA Levels (2 - 5)</label><input type="number" min={2} max={5} className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={dcaCount} onChange={(e) => setDcaCount(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Total Budget (Rp)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={dcaBudget} onChange={(e) => setDcaBudget(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">DCA Levels (2 - 5)</label><input type="number" min={2} max={5} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={dcaCount} onChange={(e) => setDcaCount(Number(e.target.value))} /></div>
                 </div>
                 <div className="flex gap-3">
-                  <button type="button" onClick={handlePreviewDcaLevels} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-sm transition">{dcaLevelsLoading ? "Calculating..." : "Preview DCA Levels"}</button>
-                  <button type="submit" className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-3 rounded-xl text-sm transition hover:opacity-90 shadow-lg shadow-indigo-500/20">✅ Activate DCA</button>
+                  <button type="button" onClick={handlePreviewDcaLevels} className="flex-1 bg-slate-800 hover:bg-slate-700 text-text font-bold py-3 rounded-xl text-sm transition">{dcaLevelsLoading ? "Calculating..." : "Preview DCA Levels"}</button>
+                  <button type="submit" className="flex-1 bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text font-bold py-3 rounded-xl text-sm transition hover:opacity-90 shadow-lg shadow-indigo-500/20">✅ Activate DCA</button>
                 </div>
               </form>
               {previewDcaLevels.length > 0 && (
-                <div className="mt-6 bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Preview Levels:</h4>
+                <div className="mt-6 bg-card border border-border rounded-2xl p-4 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-secondary">Preview Levels:</h4>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left text-slate-300">
-                      <thead><tr className="border-b border-white/10 text-slate-400"><th className="pb-2">Level</th><th className="pb-2 text-right">Price</th><th className="pb-2 text-right">Budget</th><th className="pb-2 text-right">Actual</th><th className="pb-2 text-right">Lot</th></tr></thead>
+                    <table className="w-full text-xs text-left text-secondary">
+                      <thead><tr className="border-b border-border text-secondary"><th className="pb-2">Level</th><th className="pb-2 text-right">Price</th><th className="pb-2 text-right">Budget</th><th className="pb-2 text-right">Actual</th><th className="pb-2 text-right">Lot</th></tr></thead>
                       <tbody>{previewDcaLevels.map((lvl, idx) => (<tr key={idx} className="border-b border-white/[0.02]"><td className="py-2 font-bold">{lvl.level}</td><td className="py-2 text-right font-mono">Rp {lvl.price.toLocaleString("id-ID")}</td><td className="py-2 text-right font-mono">Rp {lvl.amount_budget.toLocaleString("id-ID")}</td><td className="py-2 text-right font-mono">Rp {lvl.actual_amount.toLocaleString("id-ID")}</td><td className="py-2 text-right font-mono">{lvl.lots} Lot</td></tr>))}</tbody>
                     </table>
                   </div>
@@ -440,28 +440,28 @@ export default function PortfolioPage() {
               )}
             </div>
 
-            <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">🕐 DCA Timing Recommendation</h3>
+            <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
+              <h3 className="text-lg font-bold text-text mb-4">🕐 DCA Timing Recommendation</h3>
               <div className="space-y-4">
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Select Ticker</label><select className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none focus:border-indigo-500" value={timingTicker} onChange={(e) => setTimingTicker(e.target.value)}><option value="">-- Pilih Saham Anda --</option>{portfolioHoldings.map(h => <option key={h.ticker} value={h.ticker}>{h.ticker}</option>)}</select></div>
-                <button onClick={handleCheckTiming} disabled={timingLoading} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-sm transition">{timingLoading ? "Checking..." : "Check Timing"}</button>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Select Ticker</label><select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={timingTicker} onChange={(e) => setTimingTicker(e.target.value)}><option value="">-- Pilih Saham Anda --</option>{portfolioHoldings.map(h => <option key={h.ticker} value={h.ticker}>{h.ticker}</option>)}</select></div>
+                <button onClick={handleCheckTiming} disabled={timingLoading} className="w-full bg-slate-800 hover:bg-slate-700 text-text font-bold py-3 rounded-xl text-sm transition">{timingLoading ? "Checking..." : "Check Timing"}</button>
                 {timingResult && (
-                  <div className="bg-[#030712] border border-white/10 rounded-2xl p-5 space-y-4">
+                  <div className="bg-background border border-border rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400 font-bold uppercase">Status</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${timingResult.status === "IDEAL" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : timingResult.status === "ACCEPTABLE" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" : timingResult.status === "CAUTION" ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+                      <span className="text-xs text-secondary font-bold uppercase">Status</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${timingResult.status === "IDEAL" ? "bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20" : timingResult.status === "ACCEPTABLE" ? "bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20" : timingResult.status === "CAUTION" ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" : "bg-loss/10 text-loss border border-loss/20"}`}>
                         {timingResult.status === "IDEAL" ? "🟢 IDEAL" : timingResult.status === "ACCEPTABLE" ? "🟡 ACCEPTABLE" : timingResult.status === "CAUTION" ? "🟠 CAUTION" : "🔴 AVOID"}
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-center border-t border-b border-white/5 py-4">
-                      <div><p className="text-[10px] text-slate-400 font-bold uppercase">Current Price</p><p className="font-mono font-bold text-white mt-1">Rp {timingResult.current_price?.toLocaleString("id-ID")}</p></div>
-                      <div><p className="text-[10px] text-slate-400 font-bold uppercase">True Cost 1M</p><p className="font-mono font-bold text-white mt-1">Rp {timingResult.true_cost_1m?.toLocaleString("id-ID")}</p></div>
-                      <div><p className="text-[10px] text-slate-400 font-bold uppercase">Distance</p><p className={`font-mono font-bold mt-1 ${timingResult.distance_pct > 0 ? "text-red-400" : "text-emerald-400"}`}>{timingResult.distance_pct > 0 ? "+" : ""}{timingResult.distance_pct?.toFixed(2)}%</p></div>
+                    <div className="grid grid-cols-3 gap-2 text-center border-t border-b border-border py-4">
+                      <div><p className="text-[10px] text-secondary font-bold uppercase">Current Price</p><p className="font-mono font-bold text-text mt-1">Rp {timingResult.current_price?.toLocaleString("id-ID")}</p></div>
+                      <div><p className="text-[10px] text-secondary font-bold uppercase">True Cost 1M</p><p className="font-mono font-bold text-text mt-1">Rp {timingResult.true_cost_1m?.toLocaleString("id-ID")}</p></div>
+                      <div><p className="text-[10px] text-secondary font-bold uppercase">Distance</p><p className={`font-mono font-bold mt-1 ${timingResult.distance_pct > 0 ? "text-loss" : "text-[#22C55E]"}`}>{timingResult.distance_pct > 0 ? "+" : ""}{timingResult.distance_pct?.toFixed(2)}%</p></div>
                     </div>
-                    <div className="text-xs text-slate-300 leading-relaxed bg-white/[0.02] border border-white/5 p-3 rounded-xl">{timingResult.reason}</div>
+                    <div className="text-xs text-secondary leading-relaxed bg-card border border-border p-3 rounded-xl">{timingResult.reason}</div>
                     {timingResult.recommended_buy && (
-                      <div className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl flex items-center justify-between">
-                        <span>💡 Recommended Buy Price:</span><span className="font-mono text-white text-sm">Rp {timingResult.recommended_buy.toLocaleString("id-ID")}</span>
+                      <div className="text-xs font-bold text-[#22C55E] bg-[#22C55E]/10 border border-[#22C55E]/20 p-3.5 rounded-xl flex items-center justify-between">
+                        <span>💡 Recommended Buy Price:</span><span className="font-mono text-text text-sm">Rp {timingResult.recommended_buy.toLocaleString("id-ID")}</span>
                       </div>
                     )}
                   </div>
@@ -474,34 +474,34 @@ export default function PortfolioPage() {
 
       {/* SUB-TAB: TRANSACTION HISTORY */}
       {portfolioTab === "history" && (
-        <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6 space-y-6">
-          <div className="flex justify-between items-center flex-wrap gap-4 border-b border-white/5 pb-4">
-            <h3 className="text-lg font-bold text-white">📜 Transaction History</h3>
+        <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 space-y-6">
+          <div className="flex justify-between items-center flex-wrap gap-4 border-b border-border pb-4">
+            <h3 className="text-lg font-bold text-text">📜 Transaction History</h3>
             {portfolioTxns.length > 0 && (
               <button onClick={() => { const csv = "data:text/csv;charset=utf-8,Date,Ticker,Type,Lots,Price,Amount,Notes\n" + portfolioTxns.map(t => `${t.transaction_date},${t.ticker},${t.transaction_type},${t.lots},${t.price},${t.amount},"${t.notes || ""}"`).join("\n"); const link = document.createElement("a"); link.href = encodeURI(csv); link.download = `transactions_${new Date().toISOString()}.csv`; document.body.appendChild(link); link.click(); document.body.removeChild(link); }}
-                className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-xl text-xs transition">📥 Export to CSV</button>
+                className="bg-accent hover:bg-indigo-600 text-text font-bold py-2 px-4 rounded-xl text-xs transition">📥 Export to CSV</button>
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Filter Ticker</label><select className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none" value={txnFilterTicker} onChange={(e) => setTxnFilterTicker(e.target.value)}><option value="ALL">ALL</option>{Array.from(new Set(portfolioTxns.map(t => t.ticker))).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-            <div><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Filter Type</label><select className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none" value={txnFilterType} onChange={(e) => setTxnFilterType(e.target.value)}><option value="ALL">ALL</option><option value="BUY">BUY</option><option value="SELL">SELL</option></select></div>
+            <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Filter Ticker</label><select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none" value={txnFilterTicker} onChange={(e) => setTxnFilterTicker(e.target.value)}><option value="ALL">ALL</option>{Array.from(new Set(portfolioTxns.map(t => t.ticker))).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+            <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Filter Type</label><select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none" value={txnFilterType} onChange={(e) => setTxnFilterType(e.target.value)}><option value="ALL">ALL</option><option value="BUY">BUY</option><option value="SELL">SELL</option></select></div>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-slate-300">
-              <thead className="text-xs text-slate-400 uppercase bg-white/5 border-b border-white/5"><tr><th className="px-4 py-4">Date</th><th className="px-4 py-4">Ticker</th><th className="px-4 py-4">Type</th><th className="px-4 py-4 text-right">Lot</th><th className="px-4 py-4 text-right">Price</th><th className="px-4 py-4 text-right">Amount</th><th className="px-4 py-4">Notes</th></tr></thead>
+            <table className="w-full text-sm text-left text-secondary">
+              <thead className="text-xs text-secondary uppercase bg-white/5 border-b border-border"><tr><th className="px-4 py-4">Date</th><th className="px-4 py-4">Ticker</th><th className="px-4 py-4">Type</th><th className="px-4 py-4 text-right">Lot</th><th className="px-4 py-4 text-right">Price</th><th className="px-4 py-4 text-right">Amount</th><th className="px-4 py-4">Notes</th></tr></thead>
               <tbody>
                 {portfolioTxns.filter(t => txnFilterTicker === "ALL" || t.ticker === txnFilterTicker).filter(t => txnFilterType === "ALL" || t.transaction_type === txnFilterType).map((t, idx) => (
-                  <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition">
+                  <tr key={idx} className="border-b border-border hover:bg-white/5 transition">
                     <td className="px-4 py-4">{t.transaction_date}</td>
-                    <td className="px-4 py-4 font-bold text-white">{t.ticker}</td>
-                    <td className="px-4 py-4"><span className={`px-2.5 py-1 rounded text-xs font-bold border ${t.transaction_type === "BUY" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>{t.transaction_type}</span></td>
+                    <td className="px-4 py-4 font-bold text-text">{t.ticker}</td>
+                    <td className="px-4 py-4"><span className={`px-2.5 py-1 rounded text-xs font-bold border ${t.transaction_type === "BUY" ? "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20" : "bg-loss/10 text-loss border-loss/20"}`}>{t.transaction_type}</span></td>
                     <td className="px-4 py-4 text-right font-mono">{t.lots}</td>
                     <td className="px-4 py-4 text-right font-mono">Rp {t.price.toLocaleString("id-ID")}</td>
                     <td className="px-4 py-4 text-right font-mono">Rp {t.amount.toLocaleString("id-ID")}</td>
-                    <td className="px-4 py-4 text-slate-400 italic text-xs max-w-xs truncate">{t.notes}</td>
+                    <td className="px-4 py-4 text-secondary italic text-xs max-w-xs truncate">{t.notes}</td>
                   </tr>
                 ))}
-                {portfolioTxns.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-slate-500">Belum ada riwayat transaksi.</td></tr>}
+                {portfolioTxns.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-secondary">Belum ada riwayat transaksi.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -511,12 +511,12 @@ export default function PortfolioPage() {
       {/* SUB-TAB: PERFORMANCE REPORT */}
       {portfolioTab === "performance" && (
         <div className="space-y-6">
-          <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6">
-            <h3 className="text-lg font-bold text-white mb-2">📊 Monthly Transaction Flow</h3>
-            <p className="text-xs text-slate-400 mb-6">Distribusi pergerakan dana bersih (Total SELL - Total BUY) per bulan.</p>
+          <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
+            <h3 className="text-lg font-bold text-text mb-2">📊 Monthly Transaction Flow</h3>
+            <p className="text-xs text-secondary mb-6">Distribusi pergerakan dana bersih (Total SELL - Total BUY) per bulan.</p>
             {(() => {
               const flows = getMonthlyFlow();
-              if (flows.length === 0) return <div className="text-center py-10 text-slate-500 text-sm">Belum ada transaksi untuk memetakan bulanan.</div>;
+              if (flows.length === 0) return <div className="text-center py-10 text-secondary text-sm">Belum ada transaksi untuk memetakan bulanan.</div>;
               const maxAbs = Math.max(...flows.map(f => Math.abs(f.net_flow))) || 1;
               return (
                 <div className="space-y-4">
@@ -525,10 +525,10 @@ export default function PortfolioPage() {
                     const isPos = flow.net_flow >= 0;
                     return (
                       <div key={idx} className="flex items-center gap-4 text-xs font-mono">
-                        <span className="w-16 font-bold text-slate-400">{flow.month}</span>
+                        <span className="w-16 font-bold text-secondary">{flow.month}</span>
                         <div className="flex-1 h-6 bg-slate-900 rounded-lg relative overflow-hidden flex items-center px-2">
-                          <div className={`h-full absolute top-0 transition-all ${isPos ? "bg-emerald-500/20 border-l border-emerald-500" : "bg-red-500/20 border-r border-red-500"}`} style={{ width: `${ratio * 50}%`, left: isPos ? "50%" : "auto", right: isPos ? "auto" : "50%" }}></div>
-                          <span className={`relative z-10 font-bold ml-auto font-mono ${isPos ? "text-emerald-400" : "text-red-400"}`}>{isPos ? "+" : "-"}Rp {Math.abs(flow.net_flow).toLocaleString("id-ID")}</span>
+                          <div className={`h-full absolute top-0 transition-all ${isPos ? "bg-[#22C55E]/20 border-l border-[#22C55E]" : "bg-[#EF4444]/20 border-r border-[#EF4444]"}`} style={{ width: `${ratio * 50}%`, left: isPos ? "50%" : "auto", right: isPos ? "auto" : "50%" }}></div>
+                          <span className={`relative z-10 font-bold ml-auto font-mono ${isPos ? "text-[#22C55E]" : "text-loss"}`}>{isPos ? "+" : "-"}Rp {Math.abs(flow.net_flow).toLocaleString("id-ID")}</span>
                         </div>
                       </div>
                     );
@@ -539,19 +539,19 @@ export default function PortfolioPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">📋 Per-Ticker Transaction Summary</h3>
-              <table className="w-full text-sm text-left text-slate-300">
-                <thead><tr className="border-b border-white/10 text-xs text-slate-400 uppercase"><th className="pb-3">Ticker</th><th className="pb-3 text-right">Total Amount</th><th className="pb-3 text-right">Total Lot</th><th className="pb-3 text-center">Txns</th></tr></thead>
-                <tbody>{getTickerStats().map((stat, idx) => (<tr key={idx} className="border-b border-white/5"><td className="py-3 font-bold text-white">{stat.ticker}</td><td className="py-3 text-right font-mono">Rp {stat.amount.toLocaleString("id-ID")}</td><td className="py-3 text-right font-mono">{stat.lots} Lot</td><td className="py-3 text-center font-mono">{stat.count}</td></tr>))}{getTickerStats().length === 0 && <tr><td colSpan={4} className="py-10 text-center text-slate-500 text-xs">Belum ada transaksi.</td></tr>}</tbody>
+            <div className="bg-card border border-border rounded-3xl p-6">
+              <h3 className="text-lg font-bold text-text mb-4">📋 Per-Ticker Transaction Summary</h3>
+              <table className="w-full text-sm text-left text-secondary">
+                <thead><tr className="border-b border-border text-xs text-secondary uppercase"><th className="pb-3">Ticker</th><th className="pb-3 text-right">Total Amount</th><th className="pb-3 text-right">Total Lot</th><th className="pb-3 text-center">Txns</th></tr></thead>
+                <tbody>{getTickerStats().map((stat, idx) => (<tr key={idx} className="border-b border-border"><td className="py-3 font-bold text-text">{stat.ticker}</td><td className="py-3 text-right font-mono">Rp {stat.amount.toLocaleString("id-ID")}</td><td className="py-3 text-right font-mono">{stat.lots} Lot</td><td className="py-3 text-center font-mono">{stat.count}</td></tr>))}{getTickerStats().length === 0 && <tr><td colSpan={4} className="py-10 text-center text-secondary text-xs">Belum ada transaksi.</td></tr>}</tbody>
               </table>
             </div>
 
-            <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">💼 Current Holdings P&L</h3>
-              <table className="w-full text-sm text-left text-slate-300">
-                <thead><tr className="border-b border-white/10 text-xs text-slate-400 uppercase"><th className="pb-3">Ticker</th><th className="pb-3 text-right">P&L (Rp)</th><th className="pb-3 text-right">P&L (%)</th></tr></thead>
-                <tbody>{portfolioHoldings.map((h, idx) => { const pnlValue = h.value - (h.avg_cost * h.shares); return (<tr key={idx} className="border-b border-white/5"><td className="py-3 font-bold text-white">{h.ticker}</td><td className={`py-3 text-right font-mono font-bold ${pnlValue > 0 ? "text-emerald-400" : pnlValue < 0 ? "text-red-400" : "text-slate-400"}`}>{pnlValue > 0 ? "+" : ""}{pnlValue.toLocaleString("id-ID")}</td><td className={`py-3 text-right font-mono font-bold ${h.pnl_pct > 0 ? "text-emerald-400" : h.pnl_pct < 0 ? "text-red-400" : "text-slate-400"}`}>{h.pnl_pct > 0 ? "+" : ""}{h.pnl_pct.toFixed(2)}%</td></tr>); })}{portfolioHoldings.length === 0 && <tr><td colSpan={3} className="py-10 text-center text-slate-500 text-xs">Belum ada holdings aktif.</td></tr>}</tbody>
+            <div className="bg-card border border-border rounded-3xl p-6">
+              <h3 className="text-lg font-bold text-text mb-4">💼 Current Holdings P&L</h3>
+              <table className="w-full text-sm text-left text-secondary">
+                <thead><tr className="border-b border-border text-xs text-secondary uppercase"><th className="pb-3">Ticker</th><th className="pb-3 text-right">P&L (Rp)</th><th className="pb-3 text-right">P&L (%)</th></tr></thead>
+                <tbody>{portfolioHoldings.map((h, idx) => { const pnlValue = h.value - (h.avg_cost * h.shares); return (<tr key={idx} className="border-b border-border"><td className="py-3 font-bold text-text">{h.ticker}</td><td className={`py-3 text-right font-mono font-bold ${pnlValue > 0 ? "text-[#22C55E]" : pnlValue < 0 ? "text-loss" : "text-secondary"}`}>{pnlValue > 0 ? "+" : ""}{pnlValue.toLocaleString("id-ID")}</td><td className={`py-3 text-right font-mono font-bold ${h.pnl_pct > 0 ? "text-[#22C55E]" : h.pnl_pct < 0 ? "text-loss" : "text-secondary"}`}>{h.pnl_pct > 0 ? "+" : ""}{h.pnl_pct.toFixed(2)}%</td></tr>); })}{portfolioHoldings.length === 0 && <tr><td colSpan={3} className="py-10 text-center text-secondary text-xs">Belum ada holdings aktif.</td></tr>}</tbody>
               </table>
             </div>
           </div>
@@ -561,59 +561,59 @@ export default function PortfolioPage() {
       {/* SUB-TAB: AI ANALYSIS */}
       {portfolioTab === "ai" && (
         <div className="space-y-6">
-          <div className="bg-white/[0.03] backdrop-blur-md border border-white/5 rounded-3xl p-6">
-            <h3 className="text-lg font-bold text-white mb-2">🤖 AI Portfolio Analysis</h3>
-            <p className="text-xs text-slate-400 mb-6">Analisis portofolio komprehensif: rebalancing target, prioritas DCA bulan ini, analisis risiko diversifikasi, serta atribusi performa.</p>
+          <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
+            <h3 className="text-lg font-bold text-text mb-2">🤖 AI Portfolio Analysis</h3>
+            <p className="text-xs text-secondary mb-6">Analisis portofolio komprehensif: rebalancing target, prioritas DCA bulan ini, analisis risiko diversifikasi, serta atribusi performa.</p>
             <div className="flex flex-col sm:flex-row items-end gap-4">
-              <div className="flex-1"><label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Monthly DCA Budget (Rp)</label><input type="number" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-3 text-slate-100 font-medium focus:outline-none" value={aiMonthlyBudget} onChange={(e) => setAiMonthlyBudget(Number(e.target.value))} /></div>
-              <button onClick={handleRunAiAnalysis} disabled={aiAnalysisLoading} className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-3 px-6 rounded-xl transition hover:opacity-90 shadow-lg shadow-indigo-500/20 disabled:opacity-50">{aiAnalysisLoading ? "🤖 AI sedang menganalisis..." : "🤖 Get AI Portfolio Analysis"}</button>
+              <div className="flex-1"><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Monthly DCA Budget (Rp)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none" value={aiMonthlyBudget} onChange={(e) => setAiMonthlyBudget(Number(e.target.value))} /></div>
+              <button onClick={handleRunAiAnalysis} disabled={aiAnalysisLoading} className="bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text font-bold py-3 px-6 rounded-xl transition hover:opacity-90 shadow-lg shadow-indigo-500/20 disabled:opacity-50">{aiAnalysisLoading ? "🤖 AI sedang menganalisis..." : "🤖 Get AI Portfolio Analysis"}</button>
             </div>
           </div>
 
           {aiAnalysisLoading && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-12 text-center space-y-4">
-              <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="text-slate-400 font-medium text-sm">AI sedang menganalisis portfolio... (proses LLM & perdebatan bisa memakan waktu 30-60 detik)</p>
+            <div className="bg-card border border-border rounded-3xl p-12 text-center space-y-4">
+              <div className="w-10 h-10 border-4 border-[#7C3AED] border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-secondary font-medium text-sm">AI sedang menganalisis portfolio... (proses LLM & perdebatan bisa memakan waktu 30-60 detik)</p>
             </div>
           )}
 
           {!aiAnalysisLoading && aiAnalysisResult && (
             <div className="space-y-6 animate-fade-in">
-              {aiAnalysisResult.generated_at && <p className="text-xs text-slate-500 font-mono">Generated: {aiAnalysisResult.generated_at.substring(0, 19).replace("T", " ")} WIB</p>}
-              {aiAnalysisResult.summary && <div className="bg-indigo-500/10 border border-indigo-500/20 p-5 rounded-2xl text-indigo-300 text-sm leading-relaxed"><span className="font-bold text-white block mb-1">📋 AI Summary:</span>{aiAnalysisResult.summary}</div>}
+              {aiAnalysisResult.generated_at && <p className="text-xs text-secondary font-mono">Generated: {aiAnalysisResult.generated_at.substring(0, 19).replace("T", " ")} WIB</p>}
+              {aiAnalysisResult.summary && <div className="bg-accent/10 border border-[#7C3AED]/20 p-5 rounded-2xl text-accent text-sm leading-relaxed"><span className="font-bold text-text block mb-1">📋 AI Summary:</span>{aiAnalysisResult.summary}</div>}
               
-              <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-6 space-y-4">
-                <h4 className="text-base font-bold text-white">⚖️ Rebalancing Recommendations</h4>
+              <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
+                <h4 className="text-base font-bold text-text">⚖️ Rebalancing Recommendations</h4>
                 {aiAnalysisResult.rebalancing?.needed ? (
-                  <div className="text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 p-3.5 rounded-xl text-xs font-semibold">⚠️ Rebalancing diperlukan agar sesuai target diversifikasi profil Anda.</div>
+                  <div className="text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/20 p-3.5 rounded-xl text-xs font-semibold">⚠️ Rebalancing diperlukan agar sesuai target diversifikasi profil Anda.</div>
                 ) : (
-                  <div className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl text-xs font-semibold">✅ Portfolio saat ini sudah terdistribusi dengan seimbang.</div>
+                  <div className="text-[#22C55E] bg-[#22C55E]/10 border border-[#22C55E]/20 p-3.5 rounded-xl text-xs font-semibold">✅ Portfolio saat ini sudah terdistribusi dengan seimbang.</div>
                 )}
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-[#030712] p-4 rounded-xl border border-white/5"><p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-2">🔴 Overweight:</p>{aiAnalysisResult.rebalancing?.overweight?.length > 0 ? <ul className="list-disc pl-5 text-slate-300 space-y-1">{aiAnalysisResult.rebalancing.overweight.map((t: string) => <li key={t}>{t}</li>)}</ul> : <p className="text-slate-500 text-xs italic">Tidak ada</p>}</div>
-                  <div className="bg-[#030712] p-4 rounded-xl border border-white/5"><p className="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-2">🟡 Underweight:</p>{aiAnalysisResult.rebalancing?.underweight?.length > 0 ? <ul className="list-disc pl-5 text-slate-300 space-y-1">{aiAnalysisResult.rebalancing.underweight.map((t: string) => <li key={t}>{t}</li>)}</ul> : <p className="text-slate-500 text-xs italic">Tidak ada</p>}</div>
+                  <div className="bg-background p-4 rounded-xl border border-border"><p className="text-xs font-bold text-loss uppercase tracking-wider mb-2">🔴 Overweight:</p>{aiAnalysisResult.rebalancing?.overweight?.length > 0 ? <ul className="list-disc pl-5 text-secondary space-y-1">{aiAnalysisResult.rebalancing.overweight.map((t: string) => <li key={t}>{t}</li>)}</ul> : <p className="text-secondary text-xs italic">Tidak ada</p>}</div>
+                  <div className="bg-background p-4 rounded-xl border border-border"><p className="text-xs font-bold text-[#F59E0B] uppercase tracking-wider mb-2">🟡 Underweight:</p>{aiAnalysisResult.rebalancing?.underweight?.length > 0 ? <ul className="list-disc pl-5 text-secondary space-y-1">{aiAnalysisResult.rebalancing.underweight.map((t: string) => <li key={t}>{t}</li>)}</ul> : <p className="text-secondary text-xs italic">Tidak ada</p>}</div>
                 </div>
               </div>
 
-              <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-6 space-y-4">
-                <h4 className="text-base font-bold text-white">💰 DCA Priority This Month (Budget: Rp {aiMonthlyBudget.toLocaleString("id-ID")})</h4>
+              <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
+                <h4 className="text-base font-bold text-text">💰 DCA Priority This Month (Budget: Rp {aiMonthlyBudget.toLocaleString("id-ID")})</h4>
                 <div className="space-y-3">
                   {aiAnalysisResult.dca_priority?.map((p: any, idx: number) => (
-                    <div key={idx} className="bg-[#030712] border border-white/5 p-4 rounded-xl flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                    <div key={idx} className="bg-background border border-border p-4 rounded-xl flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                       <div className="flex items-center gap-3">
-                        <span className="text-lg font-black text-indigo-400 font-mono">#{p.rank}</span>
+                        <span className="text-lg font-black text-accent font-mono">#{p.rank}</span>
                         <div>
-                          <h5 className="font-bold text-white">{p.ticker}</h5>
-                          <p className="text-[10px] text-slate-400">Timing: <span className="text-slate-300 font-mono font-bold">{p.timing_status}</span> | Conviction: <span className="text-slate-300 font-mono font-bold">{p.conviction}</span></p>
+                          <h5 className="font-bold text-text">{p.ticker}</h5>
+                          <p className="text-[10px] text-secondary">Timing: <span className="text-secondary font-mono font-bold">{p.timing_status}</span> | Conviction: <span className="text-secondary font-mono font-bold">{p.conviction}</span></p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-mono font-bold text-white">Rp {p.suggested_amount?.toLocaleString("id-ID")}</p>
-                        <p className="text-[10px] text-slate-400 italic">{p.reason}</p>
+                        <p className="font-mono font-bold text-text">Rp {p.suggested_amount?.toLocaleString("id-ID")}</p>
+                        <p className="text-[10px] text-secondary italic">{p.reason}</p>
                       </div>
                     </div>
                   ))}
-                  {!aiAnalysisResult.dca_priority?.length && <p className="text-slate-500 text-sm">Tidak ada prioritas DCA yang disarankan.</p>}
+                  {!aiAnalysisResult.dca_priority?.length && <p className="text-secondary text-sm">Tidak ada prioritas DCA yang disarankan.</p>}
                 </div>
               </div>
             </div>

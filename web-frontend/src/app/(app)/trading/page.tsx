@@ -1,11 +1,15 @@
 "use client";
+
+
+
+import dynamic from "next/dynamic";
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 
 const CustomEquityChart = ({ points }: { points: any[] }) => {
   if (!points || points.length === 0) {
     return (
-      <div className="relative w-full h-[220px] bg-white/[0.02] border border-white/5 rounded-3xl p-6 flex items-center justify-center text-slate-500 text-sm">
+      <div className="relative w-full h-[220px] bg-card border border-border rounded-3xl p-6 flex items-center justify-center text-secondary text-sm">
         Equity curve akan muncul setelah ada trades.
       </div>
     );
@@ -25,16 +29,16 @@ const CustomEquityChart = ({ points }: { points: any[] }) => {
   const fillD = svgPoints.length > 0 ? `${pathD} L ${svgPoints[svgPoints.length - 1].x} ${height - paddingY} L ${svgPoints[0].x} ${height - paddingY} Z` : "";
 
   return (
-    <div className="relative w-full h-[220px] bg-white/[0.02] border border-white/5 rounded-3xl p-6">
+    <div className="relative w-full h-[220px] bg-card border border-border rounded-3xl p-6">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Equity Growth</h4>
-          <p className="text-[10px] text-slate-500 font-medium">Virtual portfolio value progression</p>
+          <h4 className="text-sm font-bold text-secondary uppercase tracking-wider">Equity Growth</h4>
+          <p className="text-[10px] text-secondary font-medium">Virtual portfolio value progression</p>
         </div>
         <div className="flex gap-4 text-xs font-mono">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#00d4aa]"></span>
-            <span className="text-slate-300">Total Equity</span>
+            <span className="text-secondary">Total Equity</span>
           </div>
         </div>
       </div>
@@ -227,14 +231,14 @@ export default function TradingPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white mb-2">Trading <span className="text-indigo-400">Engine</span></h2>
-          <p className="text-slate-400">Virtual Portfolio Validator — Uji strategi trading Anda dengan modal virtual secara real-time.</p>
+          <h2 className="text-3xl font-bold text-text mb-2">Trading <span className="text-accent">Engine</span></h2>
+          <p className="text-secondary">Virtual Portfolio Validator — Uji strategi trading Anda dengan modal virtual secara real-time.</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleCheckTpsl} className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+          <button onClick={handleCheckTpsl} className="px-4 py-2.5 bg-indigo-600 hover:bg-accent text-text font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
             🔍 Cek TP/SL Sekarang
           </button>
-          <button onClick={handleResetPortfolio} className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-semibold rounded-xl text-sm transition">
+          <button onClick={handleResetPortfolio} className="px-4 py-2.5 bg-loss/10 hover:bg-[#EF4444]/20 border border-loss/20 text-loss font-semibold rounded-xl text-sm transition">
             🔄 Reset Portfolio
           </button>
         </div>
@@ -242,43 +246,43 @@ export default function TradingPage() {
 
       {tradingLoading && !tradingData && (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <span className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></span>
-          <span className="text-slate-400 font-medium">Memuat data portfolio virtual...</span>
+          <span className="w-10 h-10 border-4 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></span>
+          <span className="text-secondary font-medium">Memuat data portfolio virtual...</span>
         </div>
       )}
 
-      {tradingError && <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-300 rounded-2xl text-center">⚠️ {tradingError}</div>}
+      {tradingError && <div className="p-4 bg-loss/10 border border-loss/20 text-red-300 rounded-2xl text-center">⚠️ {tradingError}</div>}
 
       {!tradingLoading && tradingData && (() => {
         if (tradingData.status === 'not_setup') {
           return (
             <div className="flex flex-col items-center justify-center py-24 gap-6 text-center animate-fade-in">
-              <div className="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mb-2">
+              <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-2">
                 <span className="text-4xl">🚀</span>
               </div>
-              <h3 className="text-3xl font-bold text-white">Trading Engine Belum Aktif</h3>
-              <p className="text-slate-400 max-w-md text-sm leading-relaxed">
+              <h3 className="text-3xl font-bold text-text">Trading Engine Belum Aktif</h3>
+              <p className="text-secondary max-w-md text-sm leading-relaxed">
                 Anda belum memiliki portfolio virtual. Silakan setup akun virtual trading Anda dengan melakukan deposit dana awal untuk mulai simulasi.
               </p>
-              <div className="bg-[#030712] border border-white/10 p-8 rounded-3xl flex flex-col items-center gap-5 w-full max-w-md mt-4 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+              <div className="bg-background border border-border p-8 rounded-3xl flex flex-col items-center gap-5 w-full max-w-md mt-4 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7C3AED] to-[#7C3AED]"></div>
                 <div className="w-full text-left">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Pilih Modal Awal (Rp)</label>
+                  <label className="text-xs font-bold text-secondary uppercase tracking-wider mb-2 block">Pilih Modal Awal (Rp)</label>
                   <input 
                     type="number" 
                     value={topupAmount} 
                     onChange={(e) => setTopupAmount(Number(e.target.value))} 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono font-bold text-white text-lg focus:outline-none focus:border-indigo-500 transition" 
+                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3 font-mono font-bold text-text text-lg focus:outline-none focus:border-[#7C3AED] transition" 
                   />
                 </div>
                 <div className="flex flex-wrap gap-2 w-full justify-center">
                   {[10000000, 50000000, 100000000, 250000000].map((amt) => (
-                    <button key={amt} onClick={() => setTopupAmount(amt)} className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${topupAmount === amt ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300' : 'bg-transparent border-white/10 text-slate-500 hover:text-slate-300'}`}>
+                    <button key={amt} onClick={() => setTopupAmount(amt)} className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${topupAmount === amt ? 'bg-indigo-600/20 border-[#7C3AED] text-accent' : 'bg-transparent border-border text-secondary hover:text-secondary'}`}>
                       {amt >= 1e6 ? `${amt / 1e6}jt` : amt.toLocaleString('id-ID')}
                     </button>
                   ))}
                 </div>
-                <button onClick={() => handleTopup(topupAmount)} className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition text-sm shadow-lg shadow-indigo-600/20 mt-2">
+                <button onClick={() => handleTopup(topupAmount)} className="w-full py-4 bg-indigo-600 hover:bg-accent text-text font-bold rounded-xl transition text-sm shadow-lg shadow-indigo-600/20 mt-2">
                   Mulai Simulasi Trading
                 </button>
               </div>
@@ -300,32 +304,32 @@ export default function TradingPage() {
               {[
                 { label: '💵 Cash', value: `Rp ${summary.cash?.toLocaleString('id-ID')}`, sub: 'Sisa saldo untuk membeli' },
                 { label: '💼 Invested', value: `Rp ${summary.total_invested?.toLocaleString('id-ID')}`, sub: 'Dana terinvestasi di saham' },
-                { label: '📊 Total Equity', value: `Rp ${summary.total_equity?.toLocaleString('id-ID')}`, sub: `${summary.total_return_pct >= 0 ? '+' : ''}${summary.total_return_pct?.toFixed(2)}%`, subColor: summary.total_return_pct >= 0 ? 'text-emerald-400' : 'text-red-400' },
-                { label: '📈 Realized P&L', value: `Rp ${summary.realized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi tertutup', valueColor: summary.realized_pnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
-                { label: '📊 Unrealized P&L', value: `Rp ${summary.unrealized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi terbuka', valueColor: summary.unrealized_pnl >= 0 ? 'text-emerald-400' : 'text-red-400' },
+                { label: '📊 Total Equity', value: `Rp ${summary.total_equity?.toLocaleString('id-ID')}`, sub: `${summary.total_return_pct >= 0 ? '+' : ''}${summary.total_return_pct?.toFixed(2)}%`, subColor: summary.total_return_pct >= 0 ? 'text-[#22C55E]' : 'text-loss' },
+                { label: '📈 Realized P&L', value: `Rp ${summary.realized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi tertutup', valueColor: summary.realized_pnl >= 0 ? 'text-[#22C55E]' : 'text-loss' },
+                { label: '📊 Unrealized P&L', value: `Rp ${summary.unrealized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi terbuka', valueColor: summary.unrealized_pnl >= 0 ? 'text-[#22C55E]' : 'text-loss' },
               ].map((card, idx) => (
-                <div key={idx} className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 hover:bg-white/[0.05] transition duration-300">
-                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-2">{card.label}</p>
-                  <p className={`text-lg font-black font-mono ${card.valueColor || 'text-white'}`}>{card.value}</p>
-                  <p className={`text-xs mt-1 ${card.subColor || 'text-slate-500'}`}>{card.sub}</p>
+                <div key={idx} className="bg-card border border-border rounded-2xl p-5 hover:bg-white/[0.05] transition duration-300">
+                  <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">{card.label}</p>
+                  <p className={`text-lg font-black font-mono ${card.valueColor || 'text-text'}`}>{card.value}</p>
+                  <p className={`text-xs mt-1 ${card.subColor || 'text-secondary'}`}>{card.sub}</p>
                 </div>
               ))}
             </div>
 
             {/* Topup + Equity Chart */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-6 flex flex-col justify-between">
+              <div className="bg-card border border-border rounded-3xl p-6 flex flex-col justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2">💸 Topup Modal Virtual</h4>
-                  <p className="text-xs text-slate-400 mb-4">Tambahkan modal virtual untuk melakukan simulasi transaksi pembelian saham.</p>
+                  <h4 className="text-sm font-bold text-text uppercase tracking-wider mb-2">💸 Topup Modal Virtual</h4>
+                  <p className="text-xs text-secondary mb-4">Tambahkan modal virtual untuk melakukan simulasi transaksi pembelian saham.</p>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1.5 font-bold uppercase">Jumlah Topup (Rp)</label>
-                      <input type="number" value={topupAmount} onChange={(e) => setTopupAmount(Number(e.target.value))} min={10000000} className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-2 font-mono font-bold text-white focus:outline-none focus:border-indigo-500" />
+                      <label className="text-[10px] text-secondary block mb-1.5 font-bold uppercase">Jumlah Topup (Rp)</label>
+                      <input type="number" value={topupAmount} onChange={(e) => setTopupAmount(Number(e.target.value))} min={10000000} className="w-full bg-background border border-border rounded-xl px-4 py-2 font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {[10000000, 50000000, 100000000, 250000000].map((amt) => (
-                        <button key={amt} onClick={() => setTopupAmount(amt)} className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${topupAmount === amt ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/5 border-white/5 text-slate-400 hover:text-white'}`}>
+                        <button key={amt} onClick={() => setTopupAmount(amt)} className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${topupAmount === amt ? 'bg-indigo-600 border-[#7C3AED] text-text' : 'bg-white/5 border-border text-secondary hover:text-text'}`}>
                           {amt >= 1e6 ? `${amt / 1e6}jt` : amt.toLocaleString('id-ID')}
                         </button>
                       ))}
@@ -343,34 +347,34 @@ export default function TradingPage() {
 
             {/* Manual Order Form + Quick Buy */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-6 lg:col-span-1">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>🛒</span> Place Order (Buy)</h3>
+              <div className="bg-card border border-border rounded-3xl p-6 lg:col-span-1">
+                <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><span>🛒</span> Place Order (Buy)</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase">Ticker Saham</label>
-                    <input type="text" value={buyTicker} onChange={(e) => { setBuyTicker(e.target.value); setBuySignalId(null); }} placeholder="e.g. BBCA, MEDC" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm font-mono font-bold text-white uppercase focus:outline-none focus:border-indigo-500" />
+                    <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Ticker Saham</label>
+                    <input type="text" value={buyTicker} onChange={(e) => { setBuyTicker(e.target.value); setBuySignalId(null); }} placeholder="e.g. BBCA, MEDC" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text uppercase focus:outline-none focus:border-[#7C3AED]" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase">Jumlah Lot</label>
-                      <input type="number" value={buyLot} onChange={(e) => setBuyLot(Number(e.target.value))} min={1} className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm font-mono font-bold text-white focus:outline-none focus:border-indigo-500" />
+                      <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Jumlah Lot</label>
+                      <input type="number" value={buyLot} onChange={(e) => setBuyLot(Number(e.target.value))} min={1} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase">Harga Bid (Rp)</label>
-                      <input type="number" value={buyPrice} onChange={(e) => setBuyPrice(Number(e.target.value))} min={1} className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm font-mono font-bold text-white focus:outline-none focus:border-indigo-500" />
+                      <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Harga Bid (Rp)</label>
+                      <input type="number" value={buyPrice} onChange={(e) => setBuyPrice(Number(e.target.value))} min={1} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase">Target TP1 (Optional)</label>
-                      <input type="number" value={buyTp} onChange={(e) => setBuyTp(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm font-mono font-bold text-white focus:outline-none focus:border-indigo-500" />
+                      <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Target TP1 (Optional)</label>
+                      <input type="number" value={buyTp} onChange={(e) => setBuyTp(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase">Target SL (Optional)</label>
-                      <input type="number" value={buySl} onChange={(e) => setBuySl(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-[#030712] border border-white/10 rounded-xl px-4 py-2 text-sm font-mono font-bold text-white focus:outline-none focus:border-indigo-500" />
+                      <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Target SL (Optional)</label>
+                      <input type="number" value={buySl} onChange={(e) => setBuySl(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
                     </div>
                   </div>
-                  <button onClick={() => handleBuy(buyTicker, buyLot, buyPrice, buySignalId, buyTp, buySl)} className="w-full py-3 mt-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl transition text-sm shadow-lg shadow-emerald-500/20">
+                  <button onClick={() => handleBuy(buyTicker, buyLot, buyPrice, buySignalId, buyTp, buySl)} className="w-full py-3 mt-2 bg-[#22C55E] hover:bg-emerald-400 text-text font-bold rounded-xl transition text-sm shadow-lg shadow-emerald-500/20">
                     🛒 Kirim Order Buy
                   </button>
                 </div>
@@ -379,8 +383,8 @@ export default function TradingPage() {
               {/* Quick Buy from Top Picks */}
               <div className="lg:col-span-2 space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2"><span>🎯</span> Quick Buy dari Top Picks</h3>
-                  <button onClick={handleAutoInvestAll} className="px-3.5 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 text-indigo-400 font-bold rounded-xl text-xs transition">
+                  <h3 className="text-lg font-bold text-text flex items-center gap-2"><span>🎯</span> Quick Buy dari Top Picks</h3>
+                  <button onClick={handleAutoInvestAll} className="px-3.5 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-[#7C3AED]/20 text-accent font-bold rounded-xl text-xs transition">
                     ⚡ Invest Semua (15% each)
                   </button>
                 </div>
@@ -388,113 +392,113 @@ export default function TradingPage() {
                   {picks.slice(0, 4).map((pick: any) => {
                     const defaultPrice = pick.entry_high || pick.entry_low || pick.current_price || 1000;
                     return (
-                      <div key={pick.ticker} className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 hover:bg-white/[0.05] transition duration-300 flex flex-col justify-between gap-3">
+                      <div key={pick.ticker} className="bg-card border border-border rounded-2xl p-4 hover:bg-white/[0.05] transition duration-300 flex flex-col justify-between gap-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-extrabold text-white">{pick.ticker}</h4>
-                            <p className="text-[10px] text-slate-500">Rank #{pick.rank || '-'}</p>
+                            <h4 className="font-extrabold text-text">{pick.ticker}</h4>
+                            <p className="text-[10px] text-secondary">Rank #{pick.rank || '-'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs text-slate-400 font-mono">Entry: Rp {pick.entry_low?.toLocaleString('id-ID')}–{pick.entry_high?.toLocaleString('id-ID')}</p>
-                            <p className="text-[10px] text-slate-500">TP1: Rp {pick.target_1?.toLocaleString('id-ID')} | SL: Rp {pick.stop_loss?.toLocaleString('id-ID')}</p>
+                            <p className="text-xs text-secondary font-mono">Entry: Rp {pick.entry_low?.toLocaleString('id-ID')}–{pick.entry_high?.toLocaleString('id-ID')}</p>
+                            <p className="text-[10px] text-secondary">TP1: Rp {pick.target_1?.toLocaleString('id-ID')} | SL: Rp {pick.stop_loss?.toLocaleString('id-ID')}</p>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <button
                             onClick={() => { setBuyTicker(pick.ticker); setBuyPrice(defaultPrice); setBuyTp(pick.target_1 || 0); setBuySl(pick.stop_loss || 0); setBuySignalId(pick.id || null); }}
-                            className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold transition border border-white/5"
+                            className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-text rounded-lg text-xs font-bold transition border border-border"
                           >Prefill Form</button>
-                          <button onClick={() => handleAutoInvestSingle(pick.id, defaultPrice)} className="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition">
+                          <button onClick={() => handleAutoInvestSingle(pick.id, defaultPrice)} className="flex-1 py-1.5 bg-indigo-600 hover:bg-accent text-text rounded-lg text-xs font-bold transition">
                             ⚡ Auto 20%
                           </button>
                         </div>
                       </div>
                     );
                   })}
-                  {picks.length === 0 && <div className="col-span-2 py-10 text-center text-slate-500 text-sm">Tidak ada rekomendasi Top Picks aktif.</div>}
+                  {picks.length === 0 && <div className="col-span-2 py-10 text-center text-secondary text-sm">Tidak ada rekomendasi Top Picks aktif.</div>}
                 </div>
               </div>
             </div>
 
             {/* Pending Orders */}
             <div>
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>⏳</span> Pending Orders</h3>
+              <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><span>⏳</span> Pending Orders</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {pendingOrders.map((pos: any) => {
                   const diffVal = Math.abs(pos.current_price - pos.buy_price);
                   const diffPct = pos.current_price ? (diffVal / pos.current_price * 100) : 0;
                   return (
-                    <div key={pos.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 flex justify-between items-center gap-4">
+                    <div key={pos.id} className="bg-card border border-border rounded-2xl p-5 flex justify-between items-center gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-bold text-white">{pos.ticker}</h4>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400 font-mono">
+                          <h4 className="font-bold text-text">{pos.ticker}</h4>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-border text-secondary font-mono">
                             {pos.status === 'PENDING_STOP' ? '📈 Buy Stop' : '📉 Buy Limit'}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 font-mono">{pos.lot} lot ({pos.shares?.toLocaleString('id-ID')} lembar)</p>
-                        <div className="grid grid-cols-2 gap-x-4 mt-2 text-xs font-mono text-slate-400">
+                        <p className="text-xs text-secondary font-mono">{pos.lot} lot ({pos.shares?.toLocaleString('id-ID')} lembar)</p>
+                        <div className="grid grid-cols-2 gap-x-4 mt-2 text-xs font-mono text-secondary">
                           <span>Target: Rp {pos.buy_price?.toLocaleString('id-ID')}</span>
                           <span>Live: Rp {pos.current_price?.toLocaleString('id-ID')}</span>
-                          <span className="col-span-2 text-slate-500 mt-1">
+                          <span className="col-span-2 text-secondary mt-1">
                             {pos.status === 'PENDING_STOP' ? `Harus Naik: ${diffPct.toFixed(2)}% lagi` : `Harus Turun: ${diffPct.toFixed(2)}% lagi`}
                           </span>
                         </div>
                       </div>
-                      <button onClick={() => handleCancelPending(pos.id)} className="px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold rounded-lg transition">Batal</button>
+                      <button onClick={() => handleCancelPending(pos.id)} className="px-3.5 py-2 bg-loss/10 hover:bg-[#EF4444]/20 border border-loss/20 text-loss text-xs font-bold rounded-lg transition">Batal</button>
                     </div>
                   );
                 })}
-                {pendingOrders.length === 0 && <div className="col-span-2 py-8 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-2xl text-slate-500 text-sm">Tidak ada pending orders.</div>}
+                {pendingOrders.length === 0 && <div className="col-span-2 py-8 text-center bg-white/[0.01] border border-dashed border-border rounded-2xl text-secondary text-sm">Tidak ada pending orders.</div>}
               </div>
             </div>
 
             {/* Open Positions */}
             <div>
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>📈</span> Open Positions</h3>
+              <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><span>📈</span> Open Positions</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activePositions.map((pos: any) => {
                   const isProfit = pos.unrealized_pnl >= 0;
                   const pctToTp = (pos.tp1 && pos.current_price && pos.tp1 > pos.current_price) ? ((pos.tp1 - pos.current_price) / pos.current_price * 100).toFixed(2) : null;
                   const pctToSl = (pos.stop_loss && pos.current_price && pos.stop_loss < pos.current_price) ? ((pos.current_price - pos.stop_loss) / pos.current_price * 100).toFixed(2) : null;
                   return (
-                    <div key={pos.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 flex justify-between items-center gap-4">
+                    <div key={pos.id} className="bg-card border border-border rounded-2xl p-5 flex justify-between items-center gap-4">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-extrabold text-white text-lg">{pos.ticker}</h4>
-                          <span className={`font-mono font-bold text-sm ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>{isProfit ? '▲' : '▼'} {pos.unrealized_pnl_pct?.toFixed(2)}%</span>
+                          <h4 className="font-extrabold text-text text-lg">{pos.ticker}</h4>
+                          <span className={`font-mono font-bold text-sm ${isProfit ? 'text-[#22C55E]' : 'text-loss'}`}>{isProfit ? '▲' : '▼'} {pos.unrealized_pnl_pct?.toFixed(2)}%</span>
                         </div>
-                        <p className="text-xs text-slate-400 font-mono mb-2">{pos.lot} lot ({pos.shares?.toLocaleString('id-ID')} lembar)</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-2 font-mono text-[11px] text-slate-400 mt-1">
-                          <div><span className="text-[10px] text-slate-500 block">Buy Price</span>Rp {pos.buy_price?.toLocaleString('id-ID')}</div>
-                          <div><span className="text-[10px] text-slate-500 block">Cur. Price</span>Rp {pos.current_price?.toLocaleString('id-ID')}</div>
-                          <div><span className="text-[10px] text-slate-500 block">Unrealized P&L</span><span className={isProfit ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>Rp {pos.unrealized_pnl?.toLocaleString('id-ID')}</span></div>
-                          <div><span className="text-[10px] text-slate-500 block">Invested</span>Rp {((pos.buy_price || 0) * (pos.shares || 0)).toLocaleString('id-ID')}</div>
-                          <div><span className="text-[10px] text-slate-500 block">Cur. Value</span><span className={isProfit ? 'text-emerald-400' : 'text-red-400'}>Rp {((pos.current_price || 0) * (pos.shares || 0)).toLocaleString('id-ID')}</span></div>
+                        <p className="text-xs text-secondary font-mono mb-2">{pos.lot} lot ({pos.shares?.toLocaleString('id-ID')} lembar)</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-2 font-mono text-[11px] text-secondary mt-1">
+                          <div><span className="text-[10px] text-secondary block">Buy Price</span>Rp {pos.buy_price?.toLocaleString('id-ID')}</div>
+                          <div><span className="text-[10px] text-secondary block">Cur. Price</span>Rp {pos.current_price?.toLocaleString('id-ID')}</div>
+                          <div><span className="text-[10px] text-secondary block">Unrealized P&L</span><span className={isProfit ? 'text-[#22C55E] font-bold' : 'text-loss font-bold'}>Rp {pos.unrealized_pnl?.toLocaleString('id-ID')}</span></div>
+                          <div><span className="text-[10px] text-secondary block">Invested</span>Rp {((pos.buy_price || 0) * (pos.shares || 0)).toLocaleString('id-ID')}</div>
+                          <div><span className="text-[10px] text-secondary block">Cur. Value</span><span className={isProfit ? 'text-[#22C55E]' : 'text-loss'}>Rp {((pos.current_price || 0) * (pos.shares || 0)).toLocaleString('id-ID')}</span></div>
                           <div>
-                            <span className="text-[10px] text-slate-500 block mb-0.5">Target TP / SL</span>
+                            <span className="text-[10px] text-secondary block mb-0.5">Target TP / SL</span>
                             <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-1"><span className="text-emerald-400">{pos.tp1 ? `Rp ${pos.tp1.toLocaleString('id-ID')}` : '-'}</span>{pctToTp && <span className="text-[9px] text-emerald-500/70">(+{pctToTp}%)</span>}</div>
-                              <div className="flex items-center gap-1"><span className="text-red-400">{pos.stop_loss ? `Rp ${pos.stop_loss.toLocaleString('id-ID')}` : '-'}</span>{pctToSl && <span className="text-[9px] text-red-500/70">(-{pctToSl}%)</span>}</div>
+                              <div className="flex items-center gap-1"><span className="text-[#22C55E]">{pos.tp1 ? `Rp ${pos.tp1.toLocaleString('id-ID')}` : '-'}</span>{pctToTp && <span className="text-[9px] text-[#22C55E]/70">(+{pctToTp}%)</span>}</div>
+                              <div className="flex items-center gap-1"><span className="text-loss">{pos.stop_loss ? `Rp ${pos.stop_loss.toLocaleString('id-ID')}` : '-'}</span>{pctToSl && <span className="text-[9px] text-loss/70">(-{pctToSl}%)</span>}</div>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <button onClick={() => handleSell(pos.id, pos.current_price)} className="px-4 py-3 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition">SELL</button>
+                      <button onClick={() => handleSell(pos.id, pos.current_price)} className="px-4 py-3 bg-[#EF4444] hover:bg-[#EF4444] text-text text-xs font-bold rounded-lg transition">SELL</button>
                     </div>
                   );
                 })}
-                {activePositions.length === 0 && <div className="col-span-2 py-10 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-2xl text-slate-500 text-sm">Tidak ada posisi aktif yang terbuka.</div>}
+                {activePositions.length === 0 && <div className="col-span-2 py-10 text-center bg-white/[0.01] border border-dashed border-border rounded-2xl text-secondary text-sm">Tidak ada posisi aktif yang terbuka.</div>}
               </div>
             </div>
 
             {/* Closed Trades */}
             <div>
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><span>📜</span> Trade History (Closed)</h3>
-              <div className="overflow-x-auto rounded-2xl border border-white/5 bg-[#030712]/40">
+              <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><span>📜</span> Trade History (Closed)</h3>
+              <div className="overflow-x-auto rounded-2xl border border-border bg-background/40">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="border-b border-white/10 text-xs font-bold uppercase tracking-wider text-slate-400 bg-white/5">
+                    <tr className="border-b border-border text-xs font-bold uppercase tracking-wider text-secondary bg-white/5">
                       <th className="py-3 px-6">Tanggal</th>
                       <th className="py-3 px-6">Ticker</th>
                       <th className="py-3 px-6 text-center">Status</th>
@@ -505,27 +509,27 @@ export default function TradingPage() {
                       <th className="py-3 px-6 text-right">Return</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-slate-300 font-mono">
+                  <tbody className="divide-y divide-white/5 text-secondary font-mono">
                     {closedTrades.map((row: any, idx: number) => {
                       const isProfit = row.realized_pnl >= 0;
                       return (
                         <tr key={idx} className="hover:bg-white/5 transition">
-                          <td className="py-3 px-6 font-sans text-slate-400">{row.closed_at ? row.closed_at.split('T')[0] : row.opened_at?.split('T')[0]}</td>
-                          <td className="py-3 px-6 font-sans font-bold text-white">{row.ticker}</td>
+                          <td className="py-3 px-6 font-sans text-secondary">{row.closed_at ? row.closed_at.split('T')[0] : row.opened_at?.split('T')[0]}</td>
+                          <td className="py-3 px-6 font-sans font-bold text-text">{row.ticker}</td>
                           <td className="py-3 px-6 text-center">
-                            <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${row.status === 'TP_HIT' ? 'bg-emerald-500/10 text-emerald-400' : row.status === 'SL_HIT' ? 'bg-red-500/10 text-red-400' : 'bg-slate-500/10 text-slate-400'}`}>
+                            <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${row.status === 'TP_HIT' ? 'bg-[#22C55E]/10 text-[#22C55E]' : row.status === 'SL_HIT' ? 'bg-loss/10 text-loss' : 'bg-slate-500/10 text-secondary'}`}>
                               {row.status?.replace('_', ' ') || 'CLOSED'}
                             </span>
                           </td>
                           <td className="py-3 px-6 text-right">{row.lot} lot</td>
                           <td className="py-3 px-6 text-right">Rp {row.price?.toLocaleString('id-ID')}</td>
                           <td className="py-3 px-6 text-right">Rp {row.exit_price?.toLocaleString('id-ID') || '-'}</td>
-                          <td className={`py-3 px-6 text-right font-bold ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>{isProfit ? '+' : ''}{row.realized_pnl?.toLocaleString('id-ID')}</td>
-                          <td className={`py-3 px-6 text-right font-bold ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>{isProfit ? '+' : ''}{row.realized_pnl_pct?.toFixed(2)}%</td>
+                          <td className={`py-3 px-6 text-right font-bold ${isProfit ? 'text-[#22C55E]' : 'text-loss'}`}>{isProfit ? '+' : ''}{row.realized_pnl?.toLocaleString('id-ID')}</td>
+                          <td className={`py-3 px-6 text-right font-bold ${isProfit ? 'text-[#22C55E]' : 'text-loss'}`}>{isProfit ? '+' : ''}{row.realized_pnl_pct?.toFixed(2)}%</td>
                         </tr>
                       );
                     })}
-                    {closedTrades.length === 0 && <tr><td colSpan={8} className="py-10 text-center text-slate-500 font-sans">Belum ada riwayat transaksi ditutup.</td></tr>}
+                    {closedTrades.length === 0 && <tr><td colSpan={8} className="py-10 text-center text-secondary font-sans">Belum ada riwayat transaksi ditutup.</td></tr>}
                   </tbody>
                 </table>
               </div>

@@ -303,7 +303,6 @@ if page == "📈 Top Picks":
 
     if latest_batch or latest_run_date:
         display_batch = latest_batch or f"no-batch-{latest_run_date}"
-        import datetime
         if isinstance(latest_run_date, datetime.datetime):
             display_lrd = (latest_run_date + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
         elif isinstance(latest_run_date, str):
@@ -688,7 +687,6 @@ if page == "📈 Top Picks":
     elif signals:
         # Show from database
         run_date = signals[0]["run_date"]
-        import datetime
         if isinstance(run_date, datetime.datetime):
             display_rd = (run_date + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
         elif isinstance(run_date, str):
