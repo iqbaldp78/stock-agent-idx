@@ -44,7 +44,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
         <div className="p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#7C3AED] to-[#7C3AED] flex items-center justify-center shadow-lg shadow-indigo-500/20 text-text font-bold text-sm">
+              <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shadow-lg shadow-accent/20 text-text font-bold text-sm">
                 H
               </div>
               <h1 className="font-bold text-xl tracking-wide">
@@ -77,7 +77,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
           </nav>
 
           <div className="mt-auto pt-6 border-t border-border">
-            <div className="bg-accent/10 border border-[#7C3AED]/20 rounded-xl p-4 mb-4">
+            <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 mb-4">
               <p className="text-xs text-accent font-bold mb-1">PRO ACCOUNT AKTIF</p>
               <p className="text-[10px] text-secondary">Akses sinyal unlimited dan AI reasoning detail menyala.</p>
             </div>
@@ -102,7 +102,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
             <button onClick={() => setSidebarOpen(true)} className="mr-2 p-2 rounded-lg text-secondary hover:text-text hover:bg-white/10 transition">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#7C3AED] to-[#7C3AED] flex items-center justify-center shadow-lg shadow-indigo-500/20 text-text font-bold text-sm">
+            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shadow-lg shadow-accent/20 text-text font-bold text-sm">
               H
             </div>
             <h1 className="font-bold text-xl tracking-wide">
@@ -117,7 +117,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
                 onClick={() => setIsPro(false)}
               >Free</button>
               <button
-                className={`px-4 py-1.5 rounded-full transition flex items-center gap-1 ${isPro ? 'bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text shadow-lg shadow-purple-500/20' : 'text-secondary hover:text-text'}`}
+                className={`px-4 py-1.5 rounded-full transition flex items-center gap-1 ${isPro ? 'bg-accent text-text shadow-lg shadow-accent/20' : 'text-secondary hover:text-text'}`}
                 onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")}
               >
                 Pro <span className="text-[10px] bg-white/20 px-1.5 rounded-md">✨</span>
@@ -129,14 +129,14 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
                   <span className="text-secondary text-sm hidden sm:inline-block">Hi, <strong className="text-text">{currentUser}</strong></span>
                 </div>
               )}
-              <button 
+              <button
                 onClick={logout}
-                className="px-3 py-1.5 rounded-full bg-loss/10 border border-loss/20 text-loss hover:bg-[#EF4444]/20 transition flex items-center gap-1 font-semibold text-sm"
+                className="px-3 py-1.5 rounded-full bg-loss/10 border border-loss/20 text-loss hover:bg-loss/20 transition flex items-center gap-1 font-semibold text-sm"
               >
                 Logout
               </button>
             </div>
-            <span className="px-3 py-1 rounded-full bg-white/5 border border-border text-[#22C55E] font-mono">
+            <span className="px-3 py-1 rounded-full bg-white/5 border border-border text-profit font-mono">
               Cash: Rp {(wallet.cash || 0).toLocaleString('id-ID')}
             </span>
           </div>
@@ -153,10 +153,10 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
         {toasts.map(toast => (
           <div
             key={toast.id}
-            className={`p-4 rounded-2xl border shadow-2xl flex items-start gap-3 pointer-events-auto transition-all duration-300 bg-[#0f172a]/95 backdrop-blur-md ${
-              toast.type === 'success' ? 'border-[#22C55E]/20 text-[#22C55E]' :
+            className={`p-4 rounded-2xl border shadow-2xl flex items-start gap-3 pointer-events-auto transition-all duration-300 bg-card/95 backdrop-blur-md ${
+              toast.type === 'success' ? 'border-profit/20 text-profit' :
               toast.type === 'error' ? 'border-loss/20 text-loss' :
-              'border-[#7C3AED]/20 text-accent'
+              'border-accent/20 text-accent'
             }`}
           >
             <span className="text-lg">

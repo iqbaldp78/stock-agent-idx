@@ -34,7 +34,7 @@ export default function IhsgPage() {
 
       {ihsgLoading && (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <span className="w-10 h-10 border-4 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></span>
+          <span className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></span>
           <span className="text-secondary font-medium">Menganalisis pergerakan IHSG...</span>
         </div>
       )}
@@ -53,11 +53,11 @@ export default function IhsgPage() {
         return (
           <>
             {ihsgData.accuracy && ihsgData.accuracy.total > 0 && (
-              <div className="bg-accent/10 border border-[#7C3AED]/20 rounded-2xl p-4 mt-6 flex items-center gap-4">
+              <div className="bg-accent/10 border border-accent/20 rounded-2xl p-4 mt-6 flex items-center gap-4">
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center text-xl">🎯</div>
                 <div>
                   <h4 className="text-sm font-bold text-accent tracking-wider uppercase mb-1">Track Record Akurasi</h4>
-                  <p className="text-text font-medium">Akurasi Arah (Historical): <span className="text-[#22C55E] font-bold">{ihsgData.accuracy.percentage}%</span> ({ihsgData.accuracy.correct}/{ihsgData.accuracy.total} hari prediksi tepat)</p>
+                  <p className="text-text font-medium">Akurasi Arah (Historical): <span className="text-profit font-bold">{ihsgData.accuracy.percentage}%</span> ({ihsgData.accuracy.correct}/{ihsgData.accuracy.total} hari prediksi tepat)</p>
                 </div>
               </div>
             )}
@@ -76,7 +76,7 @@ export default function IhsgPage() {
               </div>
               <div>
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-2">Direction</p>
-                <p className={`text-xl md:text-2xl font-black uppercase tracking-wide ${latest.direction === 'BULLISH' ? 'text-[#22C55E]' : latest.direction === 'BEARISH' ? 'text-loss' : 'text-secondary'}`}>{latest.direction}</p>
+                <p className={`text-xl md:text-2xl font-black uppercase tracking-wide ${latest.direction === 'BULLISH' ? 'text-profit' : latest.direction === 'BEARISH' ? 'text-loss' : 'text-secondary'}`}>{latest.direction}</p>
               </div>
               <div>
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-2">Volatility</p>
@@ -96,7 +96,7 @@ export default function IhsgPage() {
                   <div key={idx} className="bg-card border border-border rounded-2xl p-5 font-mono">
                     <p className="text-xs text-secondary font-bold font-sans uppercase mb-2">{item.label} Prediction</p>
                     <p className="text-xl font-bold text-text">{item.price?.toLocaleString('id-ID')}</p>
-                    <p className={`text-xs mt-1 font-bold ${item.pct >= 0 ? 'text-[#22C55E]' : 'text-loss'}`}>
+                    <p className={`text-xs mt-1 font-bold ${item.pct >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {item.pct >= 0 ? '+' : ''}{item.pct?.toFixed(2)}%
                     </p>
                   </div>
@@ -125,9 +125,9 @@ export default function IhsgPage() {
               </div>
               <div className="space-y-6">
                 <div className="bg-card border border-border rounded-3xl p-6">
-                  <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><span className="text-[#22C55E]">✓</span> Key Drivers</h3>
+                  <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><span className="text-profit">✓</span> Key Drivers</h3>
                   {drivers.length > 0 ? (
-                    <ul className="space-y-2.5">{drivers.map((driver: string, i: number) => (<li key={i} className="flex items-start gap-3 text-secondary text-sm"><span className="text-[#22C55E] mt-0.5">•</span><span>{driver}</span></li>))}</ul>
+                    <ul className="space-y-2.5">{drivers.map((driver: string, i: number) => (<li key={i} className="flex items-start gap-3 text-secondary text-sm"><span className="text-profit mt-0.5">•</span><span>{driver}</span></li>))}</ul>
                   ) : <p className="text-secondary text-sm">No drivers identified.</p>}
                 </div>
                 <div className="bg-card border border-border rounded-3xl p-6">
@@ -160,16 +160,16 @@ export default function IhsgPage() {
                         <td className="py-3.5 px-6 font-sans text-text font-medium">{row.run_date}</td>
                         <td className="py-3.5 px-6 text-right">{row.current_price?.toLocaleString('id-ID')}</td>
                         <td className="py-3.5 px-6 text-right">{row.day_1_price?.toLocaleString('id-ID')}</td>
-                        <td className={`py-3.5 px-6 text-right font-bold ${row.day_1_pct >= 0 ? 'text-[#22C55E]' : 'text-loss'}`}>{row.day_1_pct >= 0 ? '+' : ''}{row.day_1_pct?.toFixed(2)}%</td>
+                        <td className={`py-3.5 px-6 text-right font-bold ${row.day_1_pct >= 0 ? 'text-profit' : 'text-loss'}`}>{row.day_1_pct >= 0 ? '+' : ''}{row.day_1_pct?.toFixed(2)}%</td>
                         <td className="py-3.5 px-6 text-center">
-                          <span className={`px-2.5 py-0.5 rounded text-[11px] font-sans font-bold uppercase tracking-wider ${row.direction === 'BULLISH' ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20' : row.direction === 'BEARISH' ? 'bg-loss/10 text-loss border border-loss/20' : 'bg-slate-500/10 text-secondary border border-slate-500/20'}`}>{row.direction}</span>
+                          <span className={`px-2.5 py-0.5 rounded text-[11px] font-sans font-bold uppercase tracking-wider ${row.direction === 'BULLISH' ? 'bg-profit/10 text-profit border border-profit/20' : row.direction === 'BEARISH' ? 'bg-loss/10 text-loss border border-loss/20' : 'bg-slate-500/10 text-secondary border border-slate-500/20'}`}>{row.direction}</span>
                         </td>
                         <td className="py-3.5 px-6 text-center">
-                          <span className={`px-2.5 py-0.5 rounded text-[11px] font-sans font-bold uppercase tracking-wider ${row.confidence === 'HIGH' ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20' : row.confidence === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-loss/10 text-loss border border-loss/20'}`}>{row.confidence}</span>
+                          <span className={`px-2.5 py-0.5 rounded text-[11px] font-sans font-bold uppercase tracking-wider ${row.confidence === 'HIGH' ? 'bg-profit/10 text-profit border border-profit/20' : row.confidence === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-loss/10 text-loss border border-loss/20'}`}>{row.confidence}</span>
                         </td>
                         <td className="py-3.5 px-6 text-center font-sans">
-                          {row.is_correct === true && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#22C55E]/20 text-[#22C55E] border border-[#22C55E]/30">Benar ✅</span>}
-                          {row.is_correct === false && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EF4444]/20 text-loss border border-[#EF4444]/30">Salah ❌</span>}
+                          {row.is_correct === true && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-profit/20 text-profit border border-profit/30">Benar ✅</span>}
+                          {row.is_correct === false && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-loss/20 text-loss border border-loss/30">Salah ❌</span>}
                           {row.is_correct === null && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-500/20 text-gray-400 border border-gray-500/30">Pending ⏳</span>}
                         </td>
                       </tr>

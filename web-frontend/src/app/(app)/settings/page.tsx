@@ -26,7 +26,7 @@ export default function SettingsPage() {
                 onClick={() => setIsPro(false)}
               >Free Tier</button>
               <button
-                className={`px-4 py-2 rounded-lg transition text-sm font-bold flex items-center gap-2 ${isPro ? 'bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text shadow-lg' : 'text-secondary hover:text-text'}`}
+                className={`px-4 py-2 rounded-lg transition text-sm font-bold flex items-center gap-2 ${isPro ? 'bg-accent text-text shadow-lg' : 'text-secondary hover:text-text'}`}
                 onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")}
               >Pro Tier ✨</button>
             </div>
@@ -46,7 +46,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex justify-between items-center p-2">
               <p className="text-secondary">Notifikasi WhatsApp</p>
-              <button className="w-12 h-6 bg-[#22C55E] rounded-full relative transition">
+              <button className="w-12 h-6 bg-profit rounded-full relative transition">
                 <span className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></span>
               </button>
             </div>
@@ -61,7 +61,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-[#EF4444]/5 border border-[#EF4444]/10 rounded-3xl p-6">
+      <div className="bg-loss/5 border border-loss/10 rounded-3xl p-6">
         <h4 className="text-lg font-bold text-loss mb-2">🚪 Sign Out</h4>
         <p className="text-sm text-secondary mb-4">Keluar dari akun Hamboo.ai Anda.</p>
         <button
@@ -70,7 +70,7 @@ export default function SettingsPage() {
             localStorage.removeItem("tier");
             window.location.href = "/login";
           }}
-          className="bg-[#EF4444] hover:bg-red-700 text-text font-bold py-2.5 px-6 rounded-xl text-sm transition"
+          className="bg-loss hover:bg-red-700 text-text font-bold py-2.5 px-6 rounded-xl text-sm transition"
         >
           Sign Out
         </button>

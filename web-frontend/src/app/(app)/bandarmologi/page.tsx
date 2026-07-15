@@ -41,7 +41,7 @@ export default function BandarmologiPage() {
           <select
             value={bandarmologiTicker}
             onChange={(e) => setBandarmologiTicker(e.target.value)}
-            className="bg-background text-text border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-[#7C3AED] font-mono font-bold"
+            className="bg-background text-text border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-accent font-mono font-bold"
           >
             {bandarmologiData?.all_tickers?.map((t: string) => (
               <option key={t} value={t}>{t}</option>
@@ -69,7 +69,7 @@ export default function BandarmologiPage() {
           <div>
             <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-2">Signal</p>
             <p className={`text-2xl md:text-3xl font-black uppercase tracking-tight ${
-              bandarmologiData.summary.signal === 'BUY' || bandarmologiData.summary.signal?.includes('ACCUMULATION') ? 'text-[#22C55E]' :
+              bandarmologiData.summary.signal === 'BUY' || bandarmologiData.summary.signal?.includes('ACCUMULATION') ? 'text-profit' :
               bandarmologiData.summary.signal === 'SELL' || bandarmologiData.summary.signal?.includes('DISTRIBUTION') ? 'text-loss' : 'text-accent'
             }`}>
               {bandarmologiData.summary.signal?.replace('_', ' ') || 'HOLD'}
@@ -106,14 +106,14 @@ export default function BandarmologiPage() {
       {bandarmologiData && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Accumulators Table */}
-          <div className="bg-[#22C55E]/[0.02] hover:bg-[#22C55E]/[0.04] border border-[#22C55E]/20 rounded-2xl p-6 transition duration-300">
-            <h3 className="text-lg font-bold text-[#22C55E] mb-4 flex items-center gap-2">
+          <div className="bg-profit/[0.02] hover:bg-profit/[0.04] border border-profit/20 rounded-2xl p-6 transition duration-300">
+            <h3 className="text-lg font-bold text-profit mb-4 flex items-center gap-2">
               <span>🏛️</span> Top {(bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d)?.length || 0} Broker Akumulasi ({bandarTimeframe.toUpperCase()})
             </h3>
-            <div className="overflow-x-auto rounded-xl border border-[#22C55E]/10 bg-background/40">
+            <div className="overflow-x-auto rounded-xl border border-profit/10 bg-background/40">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-[#22C55E]/10 text-[11px] font-bold uppercase tracking-wider text-emerald-300/70 bg-emerald-950/10">
+                  <tr className="border-b border-profit/10 text-[11px] font-bold uppercase tracking-wider text-emerald-300/70 bg-emerald-950/10">
                     <th className="py-3 px-4 whitespace-nowrap">Broker</th>
                     <th className="py-3 px-4 whitespace-nowrap">Avg Price</th>
                     <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
@@ -123,12 +123,12 @@ export default function BandarmologiPage() {
                 </thead>
                 <tbody className="divide-y divide-emerald-500/5 text-secondary font-mono">
                   {(bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d)?.map((row: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-[#22C55E]/5 transition">
+                    <tr key={idx} className="hover:bg-profit/5 transition">
                       <td className="py-3 px-4 font-bold text-text whitespace-nowrap">{row.broker}</td>
                       <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_buy_lot)}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_buy_value)}</td>
-                      <td className={`py-3 px-4 font-bold whitespace-nowrap ${row.distance_pct === null ? 'text-secondary' : row.distance_pct >= 0 ? 'text-[#22C55E]' : 'text-loss'}`}>
+                      <td className={`py-3 px-4 font-bold whitespace-nowrap ${row.distance_pct === null ? 'text-secondary' : row.distance_pct >= 0 ? 'text-profit' : 'text-loss'}`}>
                         {row.distance_pct !== null ? `${row.distance_pct >= 0 ? '+' : ''}${row.distance_pct.toFixed(2)}%` : '-'}
                       </td>
                     </tr>
@@ -142,14 +142,14 @@ export default function BandarmologiPage() {
           </div>
 
           {/* Distributors Table */}
-          <div className="bg-[#EF4444]/[0.02] hover:bg-[#EF4444]/[0.04] border border-loss/20 rounded-2xl p-6 transition duration-300">
+          <div className="bg-loss/[0.02] hover:bg-loss/[0.04] border border-loss/20 rounded-2xl p-6 transition duration-300">
             <h3 className="text-lg font-bold text-loss mb-4 flex items-center gap-2">
               <span>📉</span> Top {(bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d)?.length || 0} Broker Distribusi ({bandarTimeframe.toUpperCase()})
             </h3>
-            <div className="overflow-x-auto rounded-xl border border-[#EF4444]/10 bg-background/40">
+            <div className="overflow-x-auto rounded-xl border border-loss/10 bg-background/40">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-[#EF4444]/10 text-[11px] font-bold uppercase tracking-wider text-red-300/70 bg-red-950/10">
+                  <tr className="border-b border-loss/10 text-[11px] font-bold uppercase tracking-wider text-red-300/70 bg-red-950/10">
                     <th className="py-3 px-4 whitespace-nowrap">Broker</th>
                     <th className="py-3 px-4 whitespace-nowrap">Avg Sell</th>
                     <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
@@ -159,12 +159,12 @@ export default function BandarmologiPage() {
                 </thead>
                 <tbody className="divide-y divide-red-500/5 text-secondary font-mono">
                   {(bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d)?.map((row: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-[#EF4444]/5 transition">
+                    <tr key={idx} className="hover:bg-loss/5 transition">
                       <td className="py-3 px-4 font-bold text-text whitespace-nowrap">{row.broker}</td>
                       <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_sell_lot)}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_sell_value)}</td>
-                      <td className={`py-3 px-4 font-bold whitespace-nowrap ${row.distance_pct === null ? 'text-secondary' : row.distance_pct >= 0 ? 'text-[#22C55E]' : 'text-loss'}`}>
+                      <td className={`py-3 px-4 font-bold whitespace-nowrap ${row.distance_pct === null ? 'text-secondary' : row.distance_pct >= 0 ? 'text-profit' : 'text-loss'}`}>
                         {row.distance_pct !== null ? `${row.distance_pct >= 0 ? '+' : ''}${row.distance_pct.toFixed(2)}%` : '-'}
                       </td>
                     </tr>

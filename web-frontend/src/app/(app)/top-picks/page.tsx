@@ -46,7 +46,7 @@ export default function TopPicksPage() {
               <div>
                 <h2 className="text-4xl font-black text-text mb-1">{selectedStock.ticker}</h2>
                 <p className="text-secondary font-medium text-sm mb-3">Saham Tbk.</p>
-                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${selectedStock.action === 'BUY' ? 'bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20' : selectedStock.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
+                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${selectedStock.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : selectedStock.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
                   {selectedStock.action}
                 </span>
               </div>
@@ -67,7 +67,7 @@ export default function TopPicksPage() {
               </div>
               <div className="bg-white/5 rounded-xl p-4 border border-border">
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">Target Fair Value</p>
-                <p className="text-xl font-bold text-[#22C55E]">{selectedStock.fair_value ? `Rp ${selectedStock.fair_value.toLocaleString('id-ID')}` : "-"}</p>
+                <p className="text-xl font-bold text-profit">{selectedStock.fair_value ? `Rp ${selectedStock.fair_value.toLocaleString('id-ID')}` : "-"}</p>
               </div>
               <div className="bg-white/5 rounded-xl p-4 border border-border">
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">Bandar Avg Cost</p>
@@ -101,7 +101,7 @@ export default function TopPicksPage() {
               </div>
               <div className="bg-white/5 rounded-xl p-4 border border-border flex flex-col justify-center">
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">Take Profit Targets</p>
-                <p className="text-base font-bold text-[#22C55E] font-mono">{formatTP(selectedStock)}</p>
+                <p className="text-base font-bold text-profit font-mono">{formatTP(selectedStock)}</p>
               </div>
               <div className="bg-white/5 rounded-xl p-4 border border-border flex flex-col justify-center">
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">Stop Loss</p>
@@ -115,11 +115,11 @@ export default function TopPicksPage() {
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-border">
                   <div className="flex items-center gap-2 text-base font-semibold text-text">
                     <span>💰 Fair Value:</span>
-                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${selectedStock.fair_value_details.valuation_label?.includes('UNDERVALUED') ? 'bg-[#22C55E] shadow-[0_0_10px_rgba(16,185,129,0.5)]' : selectedStock.fair_value_details.valuation_label?.includes('OVERVALUED') ? 'bg-[#EF4444] shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-[#F59E0B] shadow-[0_0_10px_rgba(245,158,11,0.5)]'}`}></span>
-                    <span className="font-bold text-[#22C55E]">Rp {(selectedStock.fair_value_details.fair_value_base || selectedStock.fair_value_details.fair_value || 0).toLocaleString('id-ID')}</span>
+                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${selectedStock.fair_value_details.valuation_label?.includes('UNDERVALUED') ? 'bg-profit shadow-[0_0_10px_rgba(34,197,94,0.5)]' : selectedStock.fair_value_details.valuation_label?.includes('OVERVALUED') ? 'bg-loss shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-warning shadow-[0_0_10px_rgba(245,158,11,0.5)]'}`}></span>
+                    <span className="font-bold text-profit">Rp {(selectedStock.fair_value_details.fair_value_base || selectedStock.fair_value_details.fair_value || 0).toLocaleString('id-ID')}</span>
                     <span className="text-secondary">|</span>
                     <span className="text-secondary">Upside:</span>
-                    <span className={`font-mono font-bold ${selectedStock.fair_value_details.upside_pct >= 0 ? 'text-[#22C55E]' : 'text-loss'}`}>
+                    <span className={`font-mono font-bold ${selectedStock.fair_value_details.upside_pct >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {selectedStock.fair_value_details.upside_pct >= 0 ? '+' : ''}{selectedStock.fair_value_details.upside_pct?.toFixed(2)}%
                     </span>
                     <span className="text-secondary">|</span>
@@ -170,7 +170,7 @@ export default function TopPicksPage() {
                       <div key={idx} className="bg-white/5 rounded-xl p-4 text-center border border-border">
                         <p className="text-xs text-secondary font-mono mb-1">T+{day.split('_')[1]}</p>
                         <p className="font-extrabold text-text text-lg font-mono">{selectedStock.predictions[day].price}</p>
-                        <p className={`text-xs font-bold font-mono mt-1 ${String(selectedStock.predictions[day].pct_change).includes('-') ? 'text-loss' : 'text-[#22C55E]'}`}>
+                        <p className={`text-xs font-bold font-mono mt-1 ${String(selectedStock.predictions[day].pct_change).includes('-') ? 'text-loss' : 'text-profit'}`}>
                           {selectedStock.predictions[day].pct_change}
                         </p>
                       </div>
@@ -187,8 +187,8 @@ export default function TopPicksPage() {
                   <p className="text-sm text-secondary leading-relaxed">{selectedStock.reasoning}</p>
                 </div>
                 {selectedStock.thesis && (
-                  <div className="bg-accent/5 border border-[#7C3AED]/10 rounded-2xl p-6">
-                    <h4 className="text-sm font-bold text-accent uppercase tracking-widest mb-4 border-b border-[#7C3AED]/10 pb-2 flex items-center gap-2"><span>📜</span> Investment Thesis</h4>
+                  <div className="bg-accent/5 border border-accent/10 rounded-2xl p-6">
+                    <h4 className="text-sm font-bold text-accent uppercase tracking-widest mb-4 border-b border-accent/10 pb-2 flex items-center gap-2"><span>📜</span> Investment Thesis</h4>
                     <p className="text-sm text-secondary leading-relaxed">{selectedStock.thesis}</p>
                   </div>
                 )}
@@ -200,7 +200,7 @@ export default function TopPicksPage() {
                     <ul className="space-y-3">
                       {selectedStock.key_drivers.map((driver: string, idx: number) => (
                         <li key={idx} className="text-sm text-secondary flex items-start gap-3">
-                          <span className="text-[#22C55E] shrink-0 mt-0.5 text-lg leading-none">✓</span>
+                          <span className="text-profit shrink-0 mt-0.5 text-lg leading-none">✓</span>
                           <span>{driver}</span>
                         </li>
                       ))}
@@ -208,8 +208,8 @@ export default function TopPicksPage() {
                   </div>
                 )}
                 {selectedStock.risks && selectedStock.risks.length > 0 && (
-                  <div className="bg-[#EF4444]/5 border border-[#EF4444]/10 rounded-2xl p-6">
-                    <h4 className="text-sm font-bold text-red-300 uppercase tracking-widest mb-4 border-b border-[#EF4444]/10 pb-2 flex items-center gap-2"><span>⚠️</span> Risk Factors</h4>
+                  <div className="bg-loss/5 border border-loss/10 rounded-2xl p-6">
+                    <h4 className="text-sm font-bold text-red-300 uppercase tracking-widest mb-4 border-b border-loss/10 pb-2 flex items-center gap-2"><span>⚠️</span> Risk Factors</h4>
                     <ul className="space-y-3">
                       {selectedStock.risks.map((risk: string, idx: number) => (
                         <li key={idx} className="text-sm text-secondary flex items-start gap-3">
@@ -253,7 +253,7 @@ export default function TopPicksPage() {
                             <td className="py-3 px-4 text-text">Rp {(row.true_cost || 0).toLocaleString('id-ID')}</td>
                             <td className="py-3 px-4">{formatLot(row.total_buy_lot)}</td>
                             <td className="py-3 px-4">{formatValue(row.total_buy_value)}</td>
-                            <td className={`py-3 px-4 font-bold ${row.distance_pct >= 0 ? 'text-[#22C55E]' : 'text-loss'}`}>{formatPercentage(row.distance_pct)}</td>
+                            <td className={`py-3 px-4 font-bold ${row.distance_pct >= 0 ? 'text-profit' : 'text-loss'}`}>{formatPercentage(row.distance_pct)}</td>
                             <td className="py-3 px-4 text-right">{row.active_days || '-'}</td>
                           </tr>
                         ))}
@@ -294,7 +294,7 @@ export default function TopPicksPage() {
                             <td className="py-3 px-4 text-text">Rp {(row.avg_sell || 0).toLocaleString('id-ID')}</td>
                             <td className="py-3 px-4">{formatLot(row.total_sell_lot)}</td>
                             <td className="py-3 px-4">{formatValue(row.total_sell_value)}</td>
-                            <td className={`py-3 px-4 font-bold ${row.distance_pct >= 0 ? 'text-[#22C55E]' : 'text-loss'}`}>{formatPercentage(row.distance_pct)}</td>
+                            <td className={`py-3 px-4 font-bold ${row.distance_pct >= 0 ? 'text-profit' : 'text-loss'}`}>{formatPercentage(row.distance_pct)}</td>
                             <td className="py-3 px-4 text-right">{row.active_days || '-'}</td>
                           </tr>
                         ))}
@@ -338,7 +338,7 @@ export default function TopPicksPage() {
           </div>
 
           {/* 1st Top Pick (Featured) */}
-          <div className="bg-gradient-to-b from-[#7C3AED]/10 to-transparent border border-[#7C3AED]/20 rounded-3xl p-1 shadow-[0_0_50px_rgba(99,102,241,0.05)] relative overflow-hidden">
+          <div className="bg-gradient-to-b from-accent/10 to-transparent border border-accent/20 rounded-3xl p-1 shadow-[0_0_50px_rgba(124,58,237,0.05)] relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
             <div className="bg-background/80 backdrop-blur-xl rounded-[23px] p-8 h-full flex flex-col relative z-10">
               <div className="flex justify-between items-start mb-6">
@@ -347,7 +347,7 @@ export default function TopPicksPage() {
                     {picks[0].ticker}
                   </h4>
                   <p className="text-secondary font-medium text-sm mb-3">Saham Tbk.</p>
-                  <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${picks[0].action === 'BUY' ? 'bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20' : picks[0].action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
+                  <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${picks[0].action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : picks[0].action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
                     {picks[0].action}
                   </span>
                 </div>
@@ -371,7 +371,7 @@ export default function TopPicksPage() {
               </div>
               <div className="grid grid-cols-3 gap-4 mb-8">
                 <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Entry Range</p><p className="text-sm font-bold text-text font-mono">{formatEntry(picks[0])}</p></div>
-                <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Take Profit</p><p className="text-sm font-bold text-[#22C55E] font-mono">{formatTP(picks[0])}</p></div>
+                <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Take Profit</p><p className="text-sm font-bold text-profit font-mono">{formatTP(picks[0])}</p></div>
                 <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Stop Loss</p><p className="text-sm font-bold text-loss font-mono">{formatSL(picks[0])}</p></div>
               </div>
               <div className="mt-auto">
@@ -390,7 +390,7 @@ export default function TopPicksPage() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h4 className="text-2xl font-black text-text mb-1 hover:text-accent cursor-pointer transition-colors" onClick={() => setSelectedStock(pick)}>{pick.ticker}</h4>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${pick.action === 'BUY' ? 'bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20' : pick.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>{pick.action}</span>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${pick.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : pick.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>{pick.action}</span>
                   </div>
                   <div className="text-right">
                     <div className="text-xl font-bold text-text font-mono">{pick.current_price || pick.entry_price}</div>
@@ -399,7 +399,7 @@ export default function TopPicksPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">Entry</p><p className="text-[11px] font-bold text-text font-mono truncate">{formatEntry(pick)}</p></div>
-                  <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">TP</p><p className="text-[11px] font-bold text-[#22C55E] font-mono truncate">{formatTP(pick)}</p></div>
+                  <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">TP</p><p className="text-[11px] font-bold text-profit font-mono truncate">{formatTP(pick)}</p></div>
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">SL</p><p className="text-[11px] font-bold text-loss font-mono truncate">{formatSL(pick)}</p></div>
                 </div>
                 <div className="mt-auto">
@@ -412,12 +412,12 @@ export default function TopPicksPage() {
             ))}
             {!isPro && picks.length > 1 && (
               <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] rounded-3xl flex flex-col justify-center items-center text-center p-8 z-20 border border-border">
-                <div className="w-16 h-16 bg-gradient-to-tr from-[#7C3AED] to-[#7C3AED] rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-500/20">
+                <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-accent/20">
                   <span className="text-3xl">🔒</span>
                 </div>
                 <h4 className="text-2xl font-bold text-text mb-3">Pro Tier Required</h4>
                 <p className="text-secondary mb-8 max-w-sm">Upgrade ke akun Pro untuk membuka seluruh sinyal trading harian, deteksi algoritma bandarmologi, dan prediksi harga AI lanjutan.</p>
-                <button onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")} className="px-8 py-4 rounded-xl font-bold text-text bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] shadow-lg shadow-purple-500/25 hover:scale-105 transition transform">
+                <button onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")} className="px-8 py-4 rounded-xl font-bold text-text bg-accent shadow-lg shadow-accent/25 hover:scale-105 transition transform">
                   Upgrade ke Pro ✨
                 </button>
               </div>

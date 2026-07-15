@@ -55,30 +55,30 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Username</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-[#7C3AED] transition"
+              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-accent transition"
               required
             />
           </div>
           
           <div>
             <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Password</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-[#7C3AED] transition"
+              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-accent transition"
               required
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
+            className="w-full bg-accent text-text font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
           >
             {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
           </button>

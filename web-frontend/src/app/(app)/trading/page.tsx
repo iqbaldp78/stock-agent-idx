@@ -238,7 +238,7 @@ export default function TradingPage() {
           <button onClick={handleCheckTpsl} className="px-4 py-2.5 bg-indigo-600 hover:bg-accent text-text font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
             🔍 Cek TP/SL Sekarang
           </button>
-          <button onClick={handleResetPortfolio} className="px-4 py-2.5 bg-loss/10 hover:bg-[#EF4444]/20 border border-loss/20 text-loss font-semibold rounded-xl text-sm transition">
+          <button onClick={handleResetPortfolio} className="px-4 py-2.5 bg-loss/10 hover:bg-loss/20 border border-loss/20 text-loss font-semibold rounded-xl text-sm transition">
             🔄 Reset Portfolio
           </button>
         </div>
@@ -246,7 +246,7 @@ export default function TradingPage() {
 
       {tradingLoading && !tradingData && (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <span className="w-10 h-10 border-4 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></span>
+          <span className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></span>
           <span className="text-secondary font-medium">Memuat data portfolio virtual...</span>
         </div>
       )}
@@ -265,19 +265,19 @@ export default function TradingPage() {
                 Anda belum memiliki portfolio virtual. Silakan setup akun virtual trading Anda dengan melakukan deposit dana awal untuk mulai simulasi.
               </p>
               <div className="bg-background border border-border p-8 rounded-3xl flex flex-col items-center gap-5 w-full max-w-md mt-4 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7C3AED] to-[#7C3AED]"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-accent"></div>
                 <div className="w-full text-left">
                   <label className="text-xs font-bold text-secondary uppercase tracking-wider mb-2 block">Pilih Modal Awal (Rp)</label>
                   <input 
                     type="number" 
                     value={topupAmount} 
                     onChange={(e) => setTopupAmount(Number(e.target.value))} 
-                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3 font-mono font-bold text-text text-lg focus:outline-none focus:border-[#7C3AED] transition" 
+                    className="w-full bg-white/5 border border-border rounded-xl px-4 py-3 font-mono font-bold text-text text-lg focus:outline-none focus:border-accent transition" 
                   />
                 </div>
                 <div className="flex flex-wrap gap-2 w-full justify-center">
                   {[10000000, 50000000, 100000000, 250000000].map((amt) => (
-                    <button key={amt} onClick={() => setTopupAmount(amt)} className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${topupAmount === amt ? 'bg-indigo-600/20 border-[#7C3AED] text-accent' : 'bg-transparent border-border text-secondary hover:text-secondary'}`}>
+                    <button key={amt} onClick={() => setTopupAmount(amt)} className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${topupAmount === amt ? 'bg-accent/20 border-accent text-accent' : 'bg-transparent border-border text-secondary hover:text-secondary'}`}>
                       {amt >= 1e6 ? `${amt / 1e6}jt` : amt.toLocaleString('id-ID')}
                     </button>
                   ))}
@@ -304,9 +304,9 @@ export default function TradingPage() {
               {[
                 { label: '💵 Cash', value: `Rp ${summary.cash?.toLocaleString('id-ID')}`, sub: 'Sisa saldo untuk membeli' },
                 { label: '💼 Invested', value: `Rp ${summary.total_invested?.toLocaleString('id-ID')}`, sub: 'Dana terinvestasi di saham' },
-                { label: '📊 Total Equity', value: `Rp ${summary.total_equity?.toLocaleString('id-ID')}`, sub: `${summary.total_return_pct >= 0 ? '+' : ''}${summary.total_return_pct?.toFixed(2)}%`, subColor: summary.total_return_pct >= 0 ? 'text-[#22C55E]' : 'text-loss' },
-                { label: '📈 Realized P&L', value: `Rp ${summary.realized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi tertutup', valueColor: summary.realized_pnl >= 0 ? 'text-[#22C55E]' : 'text-loss' },
-                { label: '📊 Unrealized P&L', value: `Rp ${summary.unrealized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi terbuka', valueColor: summary.unrealized_pnl >= 0 ? 'text-[#22C55E]' : 'text-loss' },
+                { label: '📊 Total Equity', value: `Rp ${summary.total_equity?.toLocaleString('id-ID')}`, sub: `${summary.total_return_pct >= 0 ? '+' : ''}${summary.total_return_pct?.toFixed(2)}%`, subColor: summary.total_return_pct >= 0 ? 'text-profit' : 'text-loss' },
+                { label: '📈 Realized P&L', value: `Rp ${summary.realized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi tertutup', valueColor: summary.realized_pnl >= 0 ? 'text-profit' : 'text-loss' },
+                { label: '📊 Unrealized P&L', value: `Rp ${summary.unrealized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi terbuka', valueColor: summary.unrealized_pnl >= 0 ? 'text-profit' : 'text-loss' },
               ].map((card, idx) => (
                 <div key={idx} className="bg-card border border-border rounded-2xl p-5 hover:bg-white/[0.05] transition duration-300">
                   <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">{card.label}</p>
@@ -325,11 +325,11 @@ export default function TradingPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="text-[10px] text-secondary block mb-1.5 font-bold uppercase">Jumlah Topup (Rp)</label>
-                      <input type="number" value={topupAmount} onChange={(e) => setTopupAmount(Number(e.target.value))} min={10000000} className="w-full bg-background border border-border rounded-xl px-4 py-2 font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
+                      <input type="number" value={topupAmount} onChange={(e) => setTopupAmount(Number(e.target.value))} min={10000000} className="w-full bg-white/5 border border-border rounded-xl px-4 py-2 font-mono font-bold text-text focus:outline-none focus:border-accent" />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {[10000000, 50000000, 100000000, 250000000].map((amt) => (
-                        <button key={amt} onClick={() => setTopupAmount(amt)} className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${topupAmount === amt ? 'bg-indigo-600 border-[#7C3AED] text-text' : 'bg-white/5 border-border text-secondary hover:text-text'}`}>
+                        <button key={amt} onClick={() => setTopupAmount(amt)} className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${topupAmount === amt ? 'bg-accent border-accent text-text' : 'bg-white/5 border-border text-secondary hover:text-text'}`}>
                           {amt >= 1e6 ? `${amt / 1e6}jt` : amt.toLocaleString('id-ID')}
                         </button>
                       ))}
@@ -352,29 +352,29 @@ export default function TradingPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Ticker Saham</label>
-                    <input type="text" value={buyTicker} onChange={(e) => { setBuyTicker(e.target.value); setBuySignalId(null); }} placeholder="e.g. BBCA, MEDC" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text uppercase focus:outline-none focus:border-[#7C3AED]" />
+                    <input type="text" value={buyTicker} onChange={(e) => { setBuyTicker(e.target.value); setBuySignalId(null); }} placeholder="e.g. BBCA, MEDC" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text uppercase focus:outline-none focus:border-accent" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Jumlah Lot</label>
-                      <input type="number" value={buyLot} onChange={(e) => setBuyLot(Number(e.target.value))} min={1} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
+                      <input type="number" value={buyLot} onChange={(e) => setBuyLot(Number(e.target.value))} min={1} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-accent" />
                     </div>
                     <div>
                       <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Harga Bid (Rp)</label>
-                      <input type="number" value={buyPrice} onChange={(e) => setBuyPrice(Number(e.target.value))} min={1} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
+                      <input type="number" value={buyPrice} onChange={(e) => setBuyPrice(Number(e.target.value))} min={1} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-accent" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Target TP1 (Optional)</label>
-                      <input type="number" value={buyTp} onChange={(e) => setBuyTp(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
+                      <input type="number" value={buyTp} onChange={(e) => setBuyTp(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-accent" />
                     </div>
                     <div>
                       <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Target SL (Optional)</label>
-                      <input type="number" value={buySl} onChange={(e) => setBuySl(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-[#7C3AED]" />
+                      <input type="number" value={buySl} onChange={(e) => setBuySl(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-accent" />
                     </div>
                   </div>
-                  <button onClick={() => handleBuy(buyTicker, buyLot, buyPrice, buySignalId, buyTp, buySl)} className="w-full py-3 mt-2 bg-[#22C55E] hover:bg-emerald-400 text-text font-bold rounded-xl transition text-sm shadow-lg shadow-emerald-500/20">
+                  <button onClick={() => handleBuy(buyTicker, buyLot, buyPrice, buySignalId, buyTp, buySl)} className="w-full py-3 mt-2 bg-profit hover:bg-emerald-400 text-text font-bold rounded-xl transition text-sm shadow-lg shadow-emerald-500/20">
                     🛒 Kirim Order Buy
                   </button>
                 </div>
@@ -384,7 +384,7 @@ export default function TradingPage() {
               <div className="lg:col-span-2 space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-bold text-text flex items-center gap-2"><span>🎯</span> Quick Buy dari Top Picks</h3>
-                  <button onClick={handleAutoInvestAll} className="px-3.5 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-[#7C3AED]/20 text-accent font-bold rounded-xl text-xs transition">
+                  <button onClick={handleAutoInvestAll} className="px-3.5 py-1.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent font-bold rounded-xl text-xs transition">
                     ⚡ Invest Semua (15% each)
                   </button>
                 </div>
@@ -445,7 +445,7 @@ export default function TradingPage() {
                           </span>
                         </div>
                       </div>
-                      <button onClick={() => handleCancelPending(pos.id)} className="px-3.5 py-2 bg-loss/10 hover:bg-[#EF4444]/20 border border-loss/20 text-loss text-xs font-bold rounded-lg transition">Batal</button>
+                      <button onClick={() => handleCancelPending(pos.id)} className="px-3.5 py-2 bg-loss/10 hover:bg-loss/20 border border-loss/20 text-loss text-xs font-bold rounded-lg transition">Batal</button>
                     </div>
                   );
                 })}
@@ -466,7 +466,7 @@ export default function TradingPage() {
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-extrabold text-text text-lg">{pos.ticker}</h4>
-                          <span className={`font-mono font-bold text-sm ${isProfit ? 'text-[#22C55E]' : 'text-loss'}`}>{isProfit ? '▲' : '▼'} {pos.unrealized_pnl_pct?.toFixed(2)}%</span>
+                          <span className={`font-mono font-bold text-sm ${isProfit ? 'text-profit' : 'text-loss'}`}>{isProfit ? '▲' : '▼'} {pos.unrealized_pnl_pct?.toFixed(2)}%</span>
                         </div>
                         <p className="text-xs text-secondary font-mono mb-2">{pos.lot} lot ({pos.shares?.toLocaleString('id-ID')} lembar)</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-2 font-mono text-[11px] text-secondary mt-1">
@@ -478,13 +478,13 @@ export default function TradingPage() {
                           <div>
                             <span className="text-[10px] text-secondary block mb-0.5">Target TP / SL</span>
                             <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-1"><span className="text-[#22C55E]">{pos.tp1 ? `Rp ${pos.tp1.toLocaleString('id-ID')}` : '-'}</span>{pctToTp && <span className="text-[9px] text-[#22C55E]/70">(+{pctToTp}%)</span>}</div>
+                              <div className="flex items-center gap-1"><span className="text-profit">{pos.tp1 ? `Rp ${pos.tp1.toLocaleString('id-ID')}` : '-'}</span>{pctToTp && <span className="text-[9px] text-profit/70">(+{pctToTp}%)</span>}</div>
                               <div className="flex items-center gap-1"><span className="text-loss">{pos.stop_loss ? `Rp ${pos.stop_loss.toLocaleString('id-ID')}` : '-'}</span>{pctToSl && <span className="text-[9px] text-loss/70">(-{pctToSl}%)</span>}</div>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <button onClick={() => handleSell(pos.id, pos.current_price)} className="px-4 py-3 bg-[#EF4444] hover:bg-[#EF4444] text-text text-xs font-bold rounded-lg transition">SELL</button>
+                      <button onClick={() => handleSell(pos.id, pos.current_price)} className="px-4 py-3 bg-loss hover:bg-red-600 text-text text-xs font-bold rounded-lg transition">SELL</button>
                     </div>
                   );
                 })}
@@ -517,7 +517,7 @@ export default function TradingPage() {
                           <td className="py-3 px-6 font-sans text-secondary">{row.closed_at ? row.closed_at.split('T')[0] : row.opened_at?.split('T')[0]}</td>
                           <td className="py-3 px-6 font-sans font-bold text-text">{row.ticker}</td>
                           <td className="py-3 px-6 text-center">
-                            <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${row.status === 'TP_HIT' ? 'bg-[#22C55E]/10 text-[#22C55E]' : row.status === 'SL_HIT' ? 'bg-loss/10 text-loss' : 'bg-slate-500/10 text-secondary'}`}>
+                            <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${row.status === 'TP_HIT' ? 'bg-profit/10 text-profit' : row.status === 'SL_HIT' ? 'bg-loss/10 text-loss' : 'bg-slate-500/10 text-secondary'}`}>
                               {row.status?.replace('_', ' ') || 'CLOSED'}
                             </span>
                           </td>

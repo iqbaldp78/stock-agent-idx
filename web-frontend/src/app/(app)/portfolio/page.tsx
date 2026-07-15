@@ -242,7 +242,7 @@ export default function PortfolioPage() {
       <div className="flex bg-card backdrop-blur-md p-1.5 rounded-2xl border border-border overflow-x-auto max-w-max">
         {PORTFOLIO_TABS.map((tab) => (
           <button key={tab.id} onClick={() => setPortfolioTab(tab.id)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition whitespace-nowrap ${portfolioTab === tab.id ? "bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text shadow-lg shadow-indigo-500/20" : "text-secondary hover:text-text hover:bg-white/5"}`}>
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition whitespace-nowrap ${portfolioTab === tab.id ? "bg-accent text-text shadow-lg shadow-accent/20" : "text-secondary hover:text-text hover:bg-white/5"}`}>
             {tab.label}
           </button>
         ))}
@@ -254,9 +254,9 @@ export default function PortfolioPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: "Total Invested", value: `Rp ${(portfolioSummary.total_invested || 0).toLocaleString("id-ID")}` },
-              { label: "Current Value", value: `Rp ${(portfolioSummary.total_current_value || 0).toLocaleString("id-ID")}`, sub: portfolioSummary.total_pnl !== 0 ? `${portfolioSummary.total_pnl > 0 ? "▲ +" : "▼ "}Rp ${Math.abs(portfolioSummary.total_pnl || 0).toLocaleString("id-ID")}` : undefined, subColor: portfolioSummary.total_pnl > 0 ? "text-[#22C55E]" : "text-loss" },
-              { label: "Total P&L", value: `${portfolioSummary.total_pnl_pct > 0 ? "+" : ""}${(portfolioSummary.total_pnl_pct || 0).toFixed(2)}%`, valueColor: portfolioSummary.total_pnl_pct > 0 ? "text-[#22C55E]" : portfolioSummary.total_pnl_pct < 0 ? "text-loss" : "text-text" },
-              { label: "Best Performer", value: portfolioSummary.best_performer || "N/A", sub: portfolioSummary.best_performer ? `+${(portfolioSummary.best_pnl_pct || 0).toFixed(2)}%` : undefined, subColor: "text-[#22C55E]" },
+              { label: "Current Value", value: `Rp ${(portfolioSummary.total_current_value || 0).toLocaleString("id-ID")}`, sub: portfolioSummary.total_pnl !== 0 ? `${portfolioSummary.total_pnl > 0 ? "▲ +" : "▼ "}Rp ${Math.abs(portfolioSummary.total_pnl || 0).toLocaleString("id-ID")}` : undefined, subColor: portfolioSummary.total_pnl > 0 ? "text-profit" : "text-loss" },
+              { label: "Total P&L", value: `${portfolioSummary.total_pnl_pct > 0 ? "+" : ""}${(portfolioSummary.total_pnl_pct || 0).toFixed(2)}%`, valueColor: portfolioSummary.total_pnl_pct > 0 ? "text-profit" : portfolioSummary.total_pnl_pct < 0 ? "text-loss" : "text-text" },
+              { label: "Best Performer", value: portfolioSummary.best_performer || "N/A", sub: portfolioSummary.best_performer ? `+${(portfolioSummary.best_pnl_pct || 0).toFixed(2)}%` : undefined, subColor: "text-profit" },
             ].map((card, i) => (
               <div key={i} className="bg-card border border-border rounded-2xl p-5">
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">{card.label}</p>
@@ -286,9 +286,9 @@ export default function PortfolioPage() {
                         <td className="px-4 py-4 text-right font-mono">Rp {h.avg_cost.toLocaleString("id-ID")}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {h.current_price.toLocaleString("id-ID")}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {h.value.toLocaleString("id-ID")}</td>
-                        <td className={`px-4 py-4 text-right font-mono font-bold ${pnlValue > 0 ? "text-[#22C55E]" : pnlValue < 0 ? "text-loss" : "text-secondary"}`}>{pnlValue > 0 ? "+" : ""}{pnlValue.toLocaleString("id-ID")}</td>
-                        <td className={`px-4 py-4 text-right font-mono font-bold ${h.pnl_pct > 0 ? "text-[#22C55E]" : h.pnl_pct < 0 ? "text-loss" : "text-secondary"}`}>{h.pnl_pct > 0 ? "+" : ""}{h.pnl_pct.toFixed(2)}%</td>
-                        <td className="px-4 py-4 text-center"><span className="px-2.5 py-1 rounded bg-accent/10 text-accent border border-[#7C3AED]/20 text-xs font-semibold uppercase">Active</span></td>
+                        <td className={`px-4 py-4 text-right font-mono font-bold ${pnlValue > 0 ? "text-profit" : pnlValue < 0 ? "text-loss" : "text-secondary"}`}>{pnlValue > 0 ? "+" : ""}{pnlValue.toLocaleString("id-ID")}</td>
+                        <td className={`px-4 py-4 text-right font-mono font-bold ${h.pnl_pct > 0 ? "text-profit" : h.pnl_pct < 0 ? "text-loss" : "text-secondary"}`}>{h.pnl_pct > 0 ? "+" : ""}{h.pnl_pct.toFixed(2)}%</td>
+                        <td className="px-4 py-4 text-center"><span className="px-2.5 py-1 rounded bg-accent/10 text-accent border border-accent/20 text-xs font-semibold uppercase">Active</span></td>
                       </tr>
                     );
                   })}
@@ -302,13 +302,13 @@ export default function PortfolioPage() {
             <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
               <h3 className="text-lg font-bold text-text mb-4">➕ Add New Holding</h3>
               <form onSubmit={handleAddHolding} className="space-y-4">
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Ticker</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" placeholder="TLKM" value={newHoldingTicker} onChange={(e) => setNewHoldingTicker(e.target.value)} /></div>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Ticker</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" placeholder="TLKM" value={newHoldingTicker} onChange={(e) => setNewHoldingTicker(e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Lot</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={newHoldingLots} onChange={(e) => setNewHoldingLots(Number(e.target.value))} /></div>
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Avg Cost (Rp/share)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={newHoldingAvg} onChange={(e) => setNewHoldingAvg(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Lot</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" value={newHoldingLots} onChange={(e) => setNewHoldingLots(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Avg Cost (Rp/share)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" value={newHoldingAvg} onChange={(e) => setNewHoldingAvg(Number(e.target.value))} /></div>
                 </div>
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Notes</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" placeholder="Catatan tambahan..." value={newHoldingNotes} onChange={(e) => setNewHoldingNotes(e.target.value)} /></div>
-                <button type="submit" className="w-full bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text font-bold py-3 px-4 rounded-xl transition hover:opacity-90 shadow-lg shadow-indigo-500/20">Add Holding</button>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Notes</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" placeholder="Catatan tambahan..." value={newHoldingNotes} onChange={(e) => setNewHoldingNotes(e.target.value)} /></div>
+                <button type="submit" className="w-full bg-accent text-text font-bold py-3 px-4 rounded-xl transition hover:opacity-90 shadow-lg shadow-accent/20">Add Holding</button>
               </form>
             </div>
 
@@ -322,21 +322,21 @@ export default function PortfolioPage() {
                     <button type="button" onClick={() => setRecordTxnType("SELL")} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${recordTxnType === "SELL" ? "bg-[#EF4444] text-text" : "text-secondary hover:text-text"}`}>SELL</button>
                   </div>
                 </div>
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Ticker</label><select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={recordTxnTicker} onChange={(e) => setRecordTxnTicker(e.target.value)}><option value="">-- Pilih Saham --</option>{portfolioHoldings.map(h => <option key={h.ticker} value={h.ticker}>{h.ticker}</option>)}</select></div>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Ticker</label><select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" value={recordTxnTicker} onChange={(e) => setRecordTxnTicker(e.target.value)}><option value="">-- Pilih Saham --</option>{portfolioHoldings.map(h => <option key={h.ticker} value={h.ticker}>{h.ticker}</option>)}</select></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Lot</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={recordTxnLots} onChange={(e) => setRecordTxnLots(Number(e.target.value))} /></div>
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Price (Rp/share)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={recordTxnPrice} onChange={(e) => setRecordTxnPrice(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Lot</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" value={recordTxnLots} onChange={(e) => setRecordTxnLots(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Price (Rp/share)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" value={recordTxnPrice} onChange={(e) => setRecordTxnPrice(Number(e.target.value))} /></div>
                 </div>
-                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Notes</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" placeholder="Catatan..." value={recordTxnNotes} onChange={(e) => setRecordTxnNotes(e.target.value)} /></div>
+                <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Notes</label><input type="text" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" placeholder="Catatan..." value={recordTxnNotes} onChange={(e) => setRecordTxnNotes(e.target.value)} /></div>
                 {recordTxnType === "BUY" && buyPreview && (
-                  <div className="bg-[#22C55E]/10 border border-[#22C55E]/20 text-emerald-300 p-4 rounded-xl text-xs font-mono space-y-1">
+                  <div className="bg-profit/10 border border-profit/20 text-emerald-300 p-4 rounded-xl text-xs font-mono space-y-1">
                     <p className="font-bold text-text uppercase text-[10px] tracking-wider mb-1">Preview New Avg Cost</p>
                     <p>Avg Cost Saat Ini: <span className="text-text font-bold">Rp {buyPreview.current_avg?.toLocaleString("id-ID")}</span></p>
                     <p>Avg Cost Baru: <span className="text-text font-bold">Rp {buyPreview.new_avg_cost?.toLocaleString("id-ID")}</span></p>
                     <p>Total Lot Setelah Trx: <span className="text-text font-bold">{buyPreview.total_lots_after} Lot</span></p>
                   </div>
                 )}
-                <button type="submit" className={`w-full text-text font-bold py-3 px-4 rounded-xl transition hover:opacity-90 shadow-lg ${recordTxnType === "BUY" ? "bg-emerald-600 shadow-emerald-600/20" : "bg-[#EF4444] shadow-red-600/20"}`}>Record {recordTxnType}</button>
+                <button type="submit" className={`w-full text-text font-bold py-3 px-4 rounded-xl transition hover:opacity-90 shadow-lg ${recordTxnType === "BUY" ? "bg-emerald-600 shadow-emerald-600/20" : "bg-loss shadow-loss/20"}`}>Record {recordTxnType}</button>
               </form>
             </div>
           </div>
@@ -370,10 +370,10 @@ export default function PortfolioPage() {
                         <td className="px-4 py-4 text-right font-mono">Rp {strat.total_budget.toLocaleString("id-ID")}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {strat.used_budget.toLocaleString("id-ID")}</td>
                         <td className="px-4 py-4 text-right font-mono">Rp {strat.remaining_budget.toLocaleString("id-ID")}</td>
-                        <td className="px-4 py-4 min-w-[120px]"><div className="flex items-center gap-2"><div className="h-2 w-20 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] rounded-full" style={{ width: `${Math.min(usedPct, 100)}%` }}></div></div><span className="text-xs font-mono">{usedPct.toFixed(0)}%</span></div></td>
+                        <td className="px-4 py-4 min-w-[120px]"><div className="flex items-center gap-2"><div className="h-2 w-20 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-accent rounded-full" style={{ width: `${Math.min(usedPct, 100)}%` }}></div></div><span className="text-xs font-mono">{usedPct.toFixed(0)}%</span></div></td>
                         <td className="px-4 py-4 text-center font-mono">{strat.dca_count}</td>
                         <td className="px-4 py-4 text-right font-mono text-accent">{strat.next_buy_price ? `Rp ${strat.next_buy_price.toLocaleString("id-ID")}` : "-"}</td>
-                        <td className="px-4 py-4 text-center"><span className="px-2 py-0.5 rounded bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 text-xs font-semibold">{strat.status}</span></td>
+                        <td className="px-4 py-4 text-center"><span className="px-2 py-0.5 rounded bg-profit/10 text-profit border border-profit/20 text-xs font-semibold">{strat.status}</span></td>
                         <td className="px-4 py-4 text-center"><button onClick={() => handleDeactivateDca(strat.id)} className="text-loss hover:text-red-300 text-xs font-bold uppercase transition">Deactivate</button></td>
                       </tr>
                     );
@@ -396,35 +396,35 @@ export default function PortfolioPage() {
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Pilih Sinyal Top Picks</label>
                     {picks.length > 0 ? (
-                      <select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={selectedSignalId || ""} onChange={(e) => { setSelectedSignalId(Number(e.target.value)); setPreviewDcaLevels([]); }}>
+                      <select className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" value={selectedSignalId || ""} onChange={(e) => { setSelectedSignalId(Number(e.target.value)); setPreviewDcaLevels([]); }}>
                         <option value="">-- Pilih Rekomendasi Sinyal --</option>
                         {picks.map(p => <option key={p.id} value={p.id}>{p.ticker} (Entry: {p.entry_low} - {p.max_entry} | Conviction: {p.conviction})</option>)}
                       </select>
-                    ) : <div className="text-xs text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/20 p-3 rounded-xl">⚠️ Belum ada TOP PICKS signal. Run analysis dulu di tab Top Picks.</div>}
+                    ) : <div className="text-xs text-warning bg-warning/10 border border-warning/20 p-3 rounded-xl">⚠️ Belum ada TOP PICKS signal. Run analysis dulu di tab Top Picks.</div>}
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Ticker</label>
                       <div className="flex gap-2">
-                        <input type="text" className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" placeholder="TLKM" value={manualDcaTicker} onChange={(e) => setManualDcaTicker(e.target.value)} />
+                        <input type="text" className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" placeholder="TLKM" value={manualDcaTicker} onChange={(e) => setManualDcaTicker(e.target.value)} />
                         <button type="button" onClick={handleAiDcaRecommend} className="bg-slate-800 border border-border hover:bg-slate-700 text-text font-bold px-3 rounded-xl text-xs transition">🤖 AI Entry</button>
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Entry Low</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-[#7C3AED]" value={manualEntryLow} onChange={(e) => setManualEntryLow(Number(e.target.value))} /></div>
-                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Entry High</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-[#7C3AED]" value={manualEntryHigh} onChange={(e) => setManualEntryHigh(Number(e.target.value))} /></div>
-                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Max Entry</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-[#7C3AED]" value={manualMaxEntry} onChange={(e) => setManualMaxEntry(Number(e.target.value))} /></div>
+                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Entry Low</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-accent" value={manualEntryLow} onChange={(e) => setManualEntryLow(Number(e.target.value))} /></div>
+                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Entry High</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-accent" value={manualEntryHigh} onChange={(e) => setManualEntryHigh(Number(e.target.value))} /></div>
+                      <div><label className="block text-[10px] font-bold uppercase tracking-wider text-secondary mb-1">Max Entry</label><input type="number" className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs text-text font-mono focus:outline-none focus:border-accent" value={manualMaxEntry} onChange={(e) => setManualMaxEntry(Number(e.target.value))} /></div>
                     </div>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Total Budget (Rp)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={dcaBudget} onChange={(e) => setDcaBudget(Number(e.target.value))} /></div>
-                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">DCA Levels (2 - 5)</label><input type="number" min={2} max={5} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-[#7C3AED]" value={dcaCount} onChange={(e) => setDcaCount(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Total Budget (Rp)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" value={dcaBudget} onChange={(e) => setDcaBudget(Number(e.target.value))} /></div>
+                  <div><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">DCA Levels (2 - 5)</label><input type="number" min={2} max={5} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent" value={dcaCount} onChange={(e) => setDcaCount(Number(e.target.value))} /></div>
                 </div>
                 <div className="flex gap-3">
                   <button type="button" onClick={handlePreviewDcaLevels} className="flex-1 bg-slate-800 hover:bg-slate-700 text-text font-bold py-3 rounded-xl text-sm transition">{dcaLevelsLoading ? "Calculating..." : "Preview DCA Levels"}</button>
-                  <button type="submit" className="flex-1 bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text font-bold py-3 rounded-xl text-sm transition hover:opacity-90 shadow-lg shadow-indigo-500/20">✅ Activate DCA</button>
+                  <button type="submit" className="flex-1 bg-accent text-text font-bold py-3 rounded-xl text-sm transition hover:opacity-90 shadow-lg shadow-accent/20">✅ Activate DCA</button>
                 </div>
               </form>
               {previewDcaLevels.length > 0 && (
@@ -566,7 +566,7 @@ export default function PortfolioPage() {
             <p className="text-xs text-secondary mb-6">Analisis portofolio komprehensif: rebalancing target, prioritas DCA bulan ini, analisis risiko diversifikasi, serta atribusi performa.</p>
             <div className="flex flex-col sm:flex-row items-end gap-4">
               <div className="flex-1"><label className="block text-xs font-bold uppercase tracking-wider text-secondary mb-2">Monthly DCA Budget (Rp)</label><input type="number" className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text font-medium focus:outline-none" value={aiMonthlyBudget} onChange={(e) => setAiMonthlyBudget(Number(e.target.value))} /></div>
-              <button onClick={handleRunAiAnalysis} disabled={aiAnalysisLoading} className="bg-gradient-to-r from-[#7C3AED] to-[#7C3AED] text-text font-bold py-3 px-6 rounded-xl transition hover:opacity-90 shadow-lg shadow-indigo-500/20 disabled:opacity-50">{aiAnalysisLoading ? "🤖 AI sedang menganalisis..." : "🤖 Get AI Portfolio Analysis"}</button>
+              <button onClick={handleRunAiAnalysis} disabled={aiAnalysisLoading} className="bg-accent text-text font-bold py-3 px-6 rounded-xl transition hover:opacity-90 shadow-lg shadow-accent/20 disabled:opacity-50">{aiAnalysisLoading ? "🤖 AI sedang menganalisis..." : "🤖 Get AI Portfolio Analysis"}</button>
             </div>
           </div>
 

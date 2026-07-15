@@ -15,6 +15,13 @@
 :root {
   --background: #09090B;
   --foreground: #f8fafc;
+  /* Semantic color aliases for inline SVG / non-Tailwind usage */
+  --profit: #22C55E;
+  --loss: #EF4444;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  --accent: #7C3AED;
+  --card: #111827;
   color-scheme: dark;
 }
 
