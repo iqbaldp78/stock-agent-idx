@@ -33,7 +33,7 @@ def _assess_accumulation(top_accumulators: list, window_days: int) -> tuple[floa
 
 
 def _format_broker_detail(broker_code: str, broker_data: dict,
-                          window_days: int) -> dict:
+                          window_days: int, current_price: float = 0) -> dict:
     """Format detail broker untuk output."""
     consistency = broker_data["active_days"] / window_days
     if consistency >= 0.8:
@@ -45,14 +45,20 @@ def _format_broker_detail(broker_code: str, broker_data: dict,
     else:
         status = "⚠️ TIDAK KONSISTEN"
 
+    avg_price = broker_data["avg_price"]
+    distance_pct = None
+    if current_price > 0 and avg_price > 0:
+        distance_pct = ((current_price - avg_price) / avg_price) * 100
+
     return {
         "broker": broker_code,
         "broker_name": broker_data["broker_name"],
         "total_buy_lot": broker_data["total_buy_lot"],
         "total_buy_value": broker_data["total_buy_value"],
-        "avg_price": broker_data["avg_price"],
+        "avg_price": avg_price,
         "active_days": f"{broker_data['active_days']}/{window_days} hari",
         "status": status,
+        "distance_pct": distance_pct,
     }
 
 
@@ -242,9 +248,9 @@ def analyze(ticker: str) -> dict:
         signal = "DISTRIBUTION"
 
     # === Format top accumulators ===
-    top_7d = [_format_broker_detail(code, data, BROKER_WATCH_SHORT)
+    top_7d = [_format_broker_detail(code, data, BROKER_WATCH_SHORT, current_price)
               for code, data in w7["top_accumulators"][:5]]
-    top_30d = [_format_broker_detail(code, data, BROKER_WATCH_LONG)
+    top_30d = [_format_broker_detail(code, data, BROKER_WATCH_LONG, current_price)
                for code, data in w30["top_accumulators"][:5]]
 
     top_dist_7d = [_format_distribution_detail(code, data, BROKER_WATCH_SHORT)
