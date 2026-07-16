@@ -82,6 +82,88 @@ web-backend-dev: ## Run web-backend locally (on host) in dev mode
 	cd web-backend && pip install -r requirements.txt && uvicorn main:app --reload --port 8000
 
 # ============================================================
+# SSH TUNNEL & REMOTE BACKEND
+# ============================================================
+
+.PHONY: ssh-tunnel
+ssh-tunnel: ## Start SSH tunnel to VM (port 8000 forwarding)
+	@echo "🔗 Starting SSH tunnel to gcp-vm-hamboo..."
+	@ssh -L 8000:localhost:8000 gcp-vm-hamboo -N -f
+	@sleep 1
+	@if ss -tuln | grep -q ":8000"; then \
+		echo "✓ SSH tunnel active on port 8000"; \
+	else \
+		echo "✗ Failed to start SSH tunnel"; \
+		exit 1; \
+	fi
+
+.PHONY: ssh-tunnel-check
+ssh-tunnel-check: ## Check if SSH tunnel is running
+	@if ps aux | grep -q "ssh -L 8000" | grep -v grep; then \
+		echo "✓ SSH tunnel is running"; \
+		ss -tuln | grep 8000; \
+	else \
+		echo "✗ SSH tunnel is NOT running"; \
+		echo "Run: make ssh-tunnel"; \
+		exit 1; \
+	fi
+
+.PHONY: ssh-tunnel-stop
+ssh-tunnel-stop: ## Stop SSH tunnel
+	@echo "Stopping SSH tunnel..."
+	@pkill -f "ssh -L 8000" || echo "No SSH tunnel found"
+	@sleep 1
+	@if ! ss -tuln | grep -q ":8000"; then \
+		echo "✓ SSH tunnel stopped"; \
+	else \
+		echo "⚠ Port 8000 still in use"; \
+	fi
+
+.PHONY: web-frontend-dev-with-tunnel
+web-frontend-dev-with-tunnel: ## Run web-frontend with SSH tunnel (auto-setup)
+	@echo "🚀 Starting web frontend with SSH tunnel..."
+	@if ! ps aux | grep -q "ssh -L 8000" | grep -v grep; then \
+		echo "🔗 SSH tunnel not running, starting..."; \
+		make ssh-tunnel; \
+	else \
+		echo "✓ SSH tunnel already running"; \
+	fi
+	@echo "Starting Next.js dev server..."
+	cd web-frontend && BACKEND_URL=http://localhost:8000 npm run dev
+
+.PHONY: web-frontend-stop
+web-frontend-stop: ## Stop Next.js dev server
+	@echo "Stopping Next.js..."
+	@pkill -f "next dev" || echo "No Next.js process found"
+	@sleep 1
+	@echo "✓ Next.js stopped"
+
+.PHONY: web-tunnel-status
+web-tunnel-status: ## Show SSH tunnel and web services status
+	@echo "=== SSH Tunnel Status ==="
+	@if ps aux | grep -q "ssh -L 8000" | grep -v grep; then \
+		echo "✓ SSH tunnel: RUNNING"; \
+		ss -tuln | grep 8000 || echo "(port check failed)"; \
+	else \
+		echo "✗ SSH tunnel: NOT RUNNING"; \
+	fi
+	@echo ""
+	@echo "=== Next.js Status ==="
+	@if ps aux | grep -q "next dev" | grep -v grep; then \
+		echo "✓ Next.js: RUNNING on port 3000"; \
+		ss -tuln | grep 3000 || echo "(port check failed)"; \
+	else \
+		echo "✗ Next.js: NOT RUNNING"; \
+	fi
+	@echo ""
+	@echo "=== Backend Status ==="
+	@if curl -s http://localhost:8000/docs > /dev/null 2>&1; then \
+		echo "✓ Backend: ACCESSIBLE on port 8000"; \
+	else \
+		echo "✗ Backend: NOT ACCESSIBLE on port 8000"; \
+	fi
+
+# ============================================================
 # INDIVIDUAL AGENTS (run single agent analysis)
 # ============================================================
 
