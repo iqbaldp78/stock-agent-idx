@@ -330,7 +330,7 @@ def main():
     # Note: Holidays will still run if on a weekday, but skipped on weekends.
     scheduler.add_job(
         run_daily_analysis,
-        CronTrigger(day_of_week="mon-fri", hour=7, minute=0),
+        CronTrigger(day_of_week="mon-fri", hour=7, minute=0, timezone="Asia/Jakarta"),
         id="daily_analysis",
         name="Daily AI Portfolio Analysis",
     )
