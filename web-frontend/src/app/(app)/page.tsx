@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUpIcon, TrendingDownIcon, TargetIcon, BarChartIcon } from '@radix-ui/react-icons';
+import { ArrowUpIcon, ArrowDownIcon, TargetIcon, BarChartIcon } from '@radix-ui/react-icons';
 
 export default function DashboardPage() {
   const { stats, wallet, holdings, loading } = useApp();
@@ -49,9 +49,9 @@ export default function DashboardPage() {
             <div className="flex justify-between items-start mb-4">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${stats.market_outlook === 'Bullish' ? 'bg-profit/10 text-profit' : stats.market_outlook === 'Bearish' ? 'bg-loss/10 text-loss' : 'bg-secondary/10 text-secondary'}`}>
                 {stats.market_outlook === 'Bullish' ? (
-                  <TrendingUpIcon className="w-6 h-6" />
+                  <ArrowUpIcon className="w-6 h-6" />
                 ) : stats.market_outlook === 'Bearish' ? (
-                  <TrendingDownIcon className="w-6 h-6" />
+                  <ArrowDownIcon className="w-6 h-6" />
                 ) : (
                   <TargetIcon className="w-6 h-6" />
                 )}

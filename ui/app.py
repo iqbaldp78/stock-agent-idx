@@ -303,12 +303,12 @@ if page == "📈 Top Picks":
 
     if latest_batch or latest_run_date:
         display_batch = latest_batch or f"no-batch-{latest_run_date}"
-        if isinstance(latest_run_date, datetime.datetime):
-            display_lrd = (latest_run_date + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
+        if isinstance(latest_run_date, datetime):
+            display_lrd = (latest_run_date + timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
         elif isinstance(latest_run_date, str):
             try:
-                parsed = datetime.datetime.strptime(latest_run_date[:19], "%Y-%m-%d %H:%M:%S")
-                display_lrd = (parsed + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
+                parsed = datetime.strptime(latest_run_date[:19], "%Y-%m-%d %H:%M:%S")
+                display_lrd = (parsed + timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
             except:
                 display_lrd = latest_run_date
         else:
@@ -687,12 +687,12 @@ if page == "📈 Top Picks":
     elif signals:
         # Show from database
         run_date = signals[0]["run_date"]
-        if isinstance(run_date, datetime.datetime):
-            display_rd = (run_date + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
+        if isinstance(run_date, datetime):
+            display_rd = (run_date + timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
         elif isinstance(run_date, str):
             try:
-                parsed = datetime.datetime.strptime(run_date[:19], "%Y-%m-%d %H:%M:%S")
-                display_rd = (parsed + datetime.timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
+                parsed = datetime.strptime(run_date[:19], "%Y-%m-%d %H:%M:%S")
+                display_rd = (parsed + timedelta(hours=7)).strftime("%d %b %Y, %H:%M WIB")
             except:
                 display_rd = run_date
         else:

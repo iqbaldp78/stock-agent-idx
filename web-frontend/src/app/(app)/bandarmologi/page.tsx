@@ -12,6 +12,27 @@ export default function BandarmologiPage() {
   const [bandarLoading, setBandarLoading] = useState(false);
   const [bandarTimeframe, setBandarTimeframe] = useState("1m");
 
+  const getCurrentPrice = () => {
+    const fromSummary = Number(bandarmologiData?.summary?.current_price);
+    if (Number.isFinite(fromSummary) && fromSummary > 0) return fromSummary;
+
+    const fromAnalysis = Number(bandarmologiData?.price_analysis?.current_price);
+    if (Number.isFinite(fromAnalysis) && fromAnalysis > 0) return fromAnalysis;
+
+    return null;
+  };
+
+  const getDistancePct = (row: any) => {
+    const direct = Number(row?.distance_pct);
+    if (Number.isFinite(direct)) return direct;
+
+    const avgPrice = Number(row?.avg_price);
+    const currentPrice = getCurrentPrice();
+    if (!Number.isFinite(avgPrice) || avgPrice <= 0 || currentPrice === null) return null;
+
+    return ((currentPrice - avgPrice) / avgPrice) * 100;
+  };
+
   const fetchBandarmologiData = async (ticker: string) => {
     setBandarLoading(true);
     try {
@@ -123,15 +144,20 @@ export default function BandarmologiPage() {
                 </thead>
                 <tbody className="divide-y divide-emerald-500/5 text-secondary font-mono">
                   {(bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d)?.map((row: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-profit/5 transition">
-                      <td className="py-3 px-4 font-bold text-text whitespace-nowrap">{row.broker}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_buy_lot)}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_buy_value)}</td>
-                      <td className={`py-3 px-4 font-bold whitespace-nowrap ${row.distance_pct === null ? 'text-secondary' : row.distance_pct >= 0 ? 'text-profit' : 'text-loss'}`}>
-                        {row.distance_pct !== null ? `${row.distance_pct >= 0 ? '+' : ''}${row.distance_pct.toFixed(2)}%` : '-'}
-                      </td>
-                    </tr>
+                    (() => {
+                      const distancePct = getDistancePct(row);
+                      return (
+                        <tr key={idx} className="hover:bg-profit/5 transition">
+                          <td className="py-3 px-4 font-bold text-text whitespace-nowrap">{row.broker}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_buy_lot)}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_buy_value)}</td>
+                          <td className={`py-3 px-4 font-bold whitespace-nowrap ${distancePct === null ? 'text-secondary' : distancePct >= 0 ? 'text-profit' : 'text-loss'}`}>
+                            {distancePct !== null ? `${distancePct >= 0 ? '+' : ''}${distancePct.toFixed(2)}%` : '-'}
+                          </td>
+                        </tr>
+                      );
+                    })()
                   ))}
                   {!(bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d)?.length && (
                     <tr><td colSpan={5} className="py-10 text-center text-secondary font-sans">Tidak ada data akumulasi terdeteksi.</td></tr>
@@ -159,15 +185,20 @@ export default function BandarmologiPage() {
                 </thead>
                 <tbody className="divide-y divide-red-500/5 text-secondary font-mono">
                   {(bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d)?.map((row: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-loss/5 transition">
-                      <td className="py-3 px-4 font-bold text-text whitespace-nowrap">{row.broker}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_sell_lot)}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_sell_value)}</td>
-                      <td className={`py-3 px-4 font-bold whitespace-nowrap ${row.distance_pct === null ? 'text-secondary' : row.distance_pct >= 0 ? 'text-profit' : 'text-loss'}`}>
-                        {row.distance_pct !== null ? `${row.distance_pct >= 0 ? '+' : ''}${row.distance_pct.toFixed(2)}%` : '-'}
-                      </td>
-                    </tr>
+                    (() => {
+                      const distancePct = getDistancePct(row);
+                      return (
+                        <tr key={idx} className="hover:bg-loss/5 transition">
+                          <td className="py-3 px-4 font-bold text-text whitespace-nowrap">{row.broker}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_sell_lot)}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_sell_value)}</td>
+                          <td className={`py-3 px-4 font-bold whitespace-nowrap ${distancePct === null ? 'text-secondary' : distancePct >= 0 ? 'text-profit' : 'text-loss'}`}>
+                            {distancePct !== null ? `${distancePct >= 0 ? '+' : ''}${distancePct.toFixed(2)}%` : '-'}
+                          </td>
+                        </tr>
+                      );
+                    })()
                   ))}
                   {!(bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d)?.length && (
                     <tr><td colSpan={5} className="py-10 text-center text-secondary font-sans">Tidak ada data distribusi terdeteksi.</td></tr>
