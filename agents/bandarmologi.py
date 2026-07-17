@@ -3,6 +3,7 @@ Agent — Bandarmologi (Bobot 40%)
 Analisis akumulasi/distribusi bandar berdasarkan broker summary.
 Core agent — penentu utama scoring di IDX market.
 """
+from data.fetcher_stockbit import get_current_price_stockbit
 from data.fetcher_stockbit import get_full_bandarm_data
 from data.fetcher_stockbit import get_stock_info
 from graph.scoring import assess_entry_vs_bandar
@@ -191,7 +192,10 @@ def analyze(ticker: str) -> dict:
     """
     bandarm_data = get_full_bandarm_data(ticker)
     info = get_stock_info(ticker)
-    current_price = info.get("current_price") or 0
+    try:
+        current_price = get_current_price_stockbit(ticker) or 0
+    except Exception:
+        current_price = info.get("current_price") or 0
 
     w7 = bandarm_data["w7"]
     w30 = bandarm_data["w30"]

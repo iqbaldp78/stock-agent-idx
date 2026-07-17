@@ -1103,10 +1103,18 @@ def get_stock_info(ticker: str) -> dict:
     cached = get_cached_stock_info(ticker, today_str)
     if cached is not None:
         logger.info(f"[cache hit] stock_info {ticker} {today_str}")
-        return cached
+        data = cached
+    else:
+        data = _fetch_stock_info_api(ticker)
+        save_stock_info(ticker, today_str, data)
 
-    data = _fetch_stock_info_api(ticker)
-    save_stock_info(ticker, today_str, data)
+    try:
+        live_price = get_current_price_stockbit(ticker)
+        if live_price and live_price > 0:
+            data["current_price"] = round(float(live_price), 0)
+    except Exception as e:
+        logger.warning("Failed to refresh live current price for %s: %s", ticker, e)
+
     return data
 
 

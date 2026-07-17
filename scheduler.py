@@ -335,6 +335,14 @@ def main():
         name="Daily AI Portfolio Analysis",
     )
 
+    # Performance Check (TP/SL validation): Every day at 17:00 WIB
+    scheduler.add_job(
+        run_performance_check,
+        CronTrigger(hour=17, minute=0, timezone="Asia/Jakarta"),
+        id="performance_check",
+        name="Check TP/SL for All Signals",
+    )
+
     try:
         logger.info("Scheduler running. Press Ctrl+C to exit.")
         scheduler.start()

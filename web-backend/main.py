@@ -247,10 +247,59 @@ def get_performance_history():
                     {"date": "2026-07-07", "ticker": "BREN", "signal": "BUY", "result": "LOSS", "return_pct": -3.2},
                     {"date": "2026-07-06", "ticker": "AMMN", "signal": "BUY", "result": "PROFIT", "return_pct": 8.7}
                 ]
+
+            total_signals = len(history)
+            winning_signals = sum(1 for row in history if row["result"] == "PROFIT")
+            losing_signals = sum(1 for row in history if row["result"] == "LOSS")
+            total_return_pct = sum(float(row.get("return_pct", 0) or 0) for row in history)
+
+            best_pick = None
+            worst_pick = None
+            if history:
+                best_row = max(history, key=lambda row: float(row.get("return_pct", 0) or 0))
+                worst_row = min(history, key=lambda row: float(row.get("return_pct", 0) or 0))
+                best_pick = {
+                    "date": best_row["date"],
+                    "ticker": best_row["ticker"],
+                    "signal": best_row["signal"],
+                    "result": best_row["result"],
+                    "return_pct": float(best_row.get("return_pct", 0) or 0),
+                }
+                worst_pick = {
+                    "date": worst_row["date"],
+                    "ticker": worst_row["ticker"],
+                    "signal": worst_row["signal"],
+                    "result": worst_row["result"],
+                    "return_pct": float(worst_row.get("return_pct", 0) or 0),
+                }
+
+            current_streak = 0
+            for row in history:
+                if row["result"] == "PROFIT":
+                    current_streak += 1
+                else:
+                    break
+
+            recent_window = history[:5]
+            recent_win_count = sum(1 for row in recent_window if row["result"] == "PROFIT")
+            recent_total_return = sum(float(row.get("return_pct", 0) or 0) for row in recent_window)
+
+            summary = {
+                "total_signals": total_signals,
+                "winning_signals": winning_signals,
+                "losing_signals": losing_signals,
+                "win_rate": round((winning_signals / total_signals * 100) if total_signals else 0, 2),
+                "avg_return_pct": round((total_return_pct / total_signals) if total_signals else 0, 2),
+                "best_pick": best_pick,
+                "worst_pick": worst_pick,
+                "current_streak": current_streak,
+                "recent_win_rate": round((recent_win_count / len(recent_window) * 100) if recent_window else 0, 2),
+                "recent_avg_return_pct": round((recent_total_return / len(recent_window)) if recent_window else 0, 2),
+            }
             
-            return {"history": history}
+            return {"history": history, "summary": summary}
     except Exception as e:
-        return {"history": []}
+        return {"history": [], "summary": {"total_signals": 0, "winning_signals": 0, "losing_signals": 0, "win_rate": 0, "avg_return_pct": 0, "best_pick": None, "worst_pick": None, "current_streak": 0, "recent_win_rate": 0, "recent_avg_return_pct": 0}}
 
 @app.get("/api/stats")
 def get_stats():
@@ -475,6 +524,17 @@ def get_bandarmologi_details(ticker: str):
                     "bandar_avg_1m": None,
                 }
 
+            # Selalu ambil harga terakhir dari sumber live agar summary tidak
+            # bergantung pada snapshot lama di tabel signals.
+            try:
+                from data.fetcher_stockbit import get_current_price_stockbit
+
+                live_price = get_current_price_stockbit(ticker)
+                if live_price and live_price > 0:
+                    summary["current_price"] = float(live_price)
+            except Exception as e:
+                print(f"Error fetching live current price for {ticker}: {e}")
+
             # 3. Query Top Accumulators (7D)
             acc_7d_query = text("""
                 SELECT broker_code, broker_name, total_buy_lot, total_buy_value, avg_price_7d, active_days
@@ -660,6 +720,9 @@ def get_bandarmologi_details(ticker: str):
 
             w7_summary = bandarm_res.get("window_7d", {}) if bandarm_res else {}
             w1m_summary = bandarm_res.get("window_1m", {}) if bandarm_res else {}
+            live_current_price = (bandarm_res.get("price_analysis", {}) or {}).get("current_price") if bandarm_res else None
+            if live_current_price and live_current_price > 0:
+                summary["current_price"] = float(live_current_price)
 
             return {
                 "ticker": ticker,
