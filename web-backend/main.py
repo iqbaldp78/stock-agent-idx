@@ -302,6 +302,7 @@ def get_performance_history():
         return {"history": [], "summary": {"total_signals": 0, "winning_signals": 0, "losing_signals": 0, "win_rate": 0, "avg_return_pct": 0, "best_pick": None, "worst_pick": None, "current_streak": 0, "recent_win_rate": 0, "recent_avg_return_pct": 0}}
 
 @app.get("/api/stats")
+@app.get("/api/dashboard/stats")
 def get_stats():
     try:
         with engine.connect() as conn:

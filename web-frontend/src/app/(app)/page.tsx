@@ -419,7 +419,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Mock Log Terminal */}
-          <div className="bg-black/60 border border-white/5 rounded-2xl p-5 font-mono text-[10px] text-accent space-y-2 relative shadow-inner h-36 flex flex-col justify-center">
+          <div className="bg-black/60 border border-white/5 rounded-2xl p-5 font-mono text-[10px] text-emerald-400 space-y-2 relative shadow-inner h-36 flex flex-col justify-center">
             <div className="absolute top-3 right-4 flex gap-1">
               <span className="w-2 h-2 rounded-full bg-loss/40" />
               <span className="w-2 h-2 rounded-full bg-warning/40" />
