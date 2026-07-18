@@ -154,16 +154,16 @@ const CustomEquityVsIhsgChart = ({ points }: { points: any[] }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h4 className="text-sm font-bold text-text uppercase tracking-wider">Equity Curve vs IHSG Benchmark</h4>
-          <p className="text-xs text-secondary mt-0.5">Pertumbuhan persentase portofolio Anda dibandingkan pergerakan IHSG.</p>
+          <p className="text-xs text-secondary mt-0.5">Pertumbuhan persentase Rekomendasi AI Top Picks dibandingkan pergerakan IHSG.</p>
         </div>
         
         <div className="flex items-center gap-6 text-xs font-semibold">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-accent/20 border border-accent"></span>
-            <span className="text-text font-mono">Portfolio: {lastPoint.portfolio_return >= 0 ? '+' : ''}{lastPoint.portfolio_return.toFixed(2)}%</span>
+            <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500"></span>
+            <span className="text-text font-mono">AI Picks: {lastPoint.portfolio_return >= 0 ? '+' : ''}{lastPoint.portfolio_return.toFixed(2)}%</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-indigo-500/20 border border-indigo-500"></span>
+            <span className="w-3.5 h-0.5 border-t-2 border-dashed border-gray-400"></span>
             <span className="text-text font-mono">IHSG: {lastPoint.ihsg_return >= 0 ? '+' : ''}{lastPoint.ihsg_return.toFixed(2)}%</span>
           </div>
         </div>
@@ -185,24 +185,24 @@ const CustomEquityVsIhsgChart = ({ points }: { points: any[] }) => {
           {portFill && <path d={portFill} fill="url(#portGrad)" opacity="0.1" />}
           {ihsgFill && <path d={ihsgFill} fill="url(#ihsgGrad)" opacity="0.05" />}
 
-          {ihsgPath && <path d={ihsgPath} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_2px_8px_rgba(99,102,241,0.2)]" />}
-          {portPath && <path d={portPath} fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_2px_10px_rgba(var(--accent-rgb),0.3)]" />}
+          {ihsgPath && <path d={ihsgPath} fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="5,4" strokeLinecap="round" strokeLinejoin="round" />}
+          {portPath && <path d={portPath} fill="none" stroke="#10b981" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_2px_10px_rgba(16,185,129,0.4)]" />}
 
           {portCoords.length > 0 && (
-            <circle cx={portCoords[portCoords.length - 1].x} cy={portCoords[portCoords.length - 1].y} r="5" fill="var(--accent)" className="animate-pulse" />
+            <circle cx={portCoords[portCoords.length - 1].x} cy={portCoords[portCoords.length - 1].y} r="5" fill="#10b981" className="animate-pulse" />
           )}
           {ihsgCoords.length > 0 && (
-            <circle cx={ihsgCoords[ihsgCoords.length - 1].x} cy={ihsgCoords[ihsgCoords.length - 1].y} r="4" fill="#6366f1" />
+            <circle cx={ihsgCoords[ihsgCoords.length - 1].x} cy={ihsgCoords[ihsgCoords.length - 1].y} r="4" fill="#64748b" />
           )}
 
           <defs>
             <linearGradient id="portGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
             </linearGradient>
             <linearGradient id="ihsgGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#64748b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#64748b" stopOpacity="0.0" />
             </linearGradient>
           </defs>
         </svg>
