@@ -42,7 +42,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-text flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] bg-background text-text flex items-center justify-center p-4">
       <Card className="max-w-md w-full shadow-2xl backdrop-blur-md">
         <CardHeader>
           <div className="text-center space-y-2">
@@ -60,7 +60,7 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             <div>
               <label className="block text-xs font-bold text-secondary uppercase tracking-wider mb-2">Username</label>
               <Input

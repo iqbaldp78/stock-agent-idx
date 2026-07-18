@@ -23,6 +23,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Jakarta
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -45,6 +46,7 @@ services:
     env_file: .env
     environment:
       APP_ROOT: /app
+      TZ: Asia/Jakarta
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -95,6 +97,7 @@ services:
       - DB_USER=${POSTGRES_USER}
       - DB_PASS=${POSTGRES_PASSWORD}
       - DB_NAME=${POSTGRES_DB}
+      - TZ=Asia/Jakarta
     networks:
       - stock_net
     depends_on:
@@ -113,6 +116,7 @@ services:
       - "3000:3000"
     environment:
       - BACKEND_URL=http://web_api:8000
+      - TZ=Asia/Jakarta
     networks:
       - stock_net
     depends_on:

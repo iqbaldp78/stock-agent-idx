@@ -98,14 +98,136 @@ const deriveSummary = (rows: HistoryRow[]): HistorySummary => {
   };
 };
 
+const CustomEquityVsIhsgChart = ({ points }: { points: any[] }) => {
+  if (!points || points.length === 0) {
+    return (
+      <div className="relative w-full h-[260px] bg-card border border-border rounded-3xl p-6 flex flex-col items-center justify-center text-secondary text-sm">
+        <p className="font-semibold text-text">Belum ada transaksi</p>
+        <p className="text-xs text-secondary mt-1">Lakukan topup dan order pertama Anda di Trading Engine untuk memicu kurva pertumbuhan ekuitas.</p>
+      </div>
+    );
+  }
+
+  const portReturns = points.map(p => p.portfolio_return);
+  const ihsgReturns = points.map(p => p.ihsg_return);
+  const allReturns = [...portReturns, ...ihsgReturns];
+  
+  const minVal = Math.min(...allReturns) - 2;
+  const maxVal = Math.max(...allReturns) + 2;
+  const range = maxVal - minVal || 1;
+
+  const width = 600;
+  const height = 200;
+  const paddingX = 40;
+  const paddingY = 20;
+  const pointsCount = points.length;
+
+  const getSvgCoordinates = (values: number[]) => {
+    return values.map((val, idx) => {
+      const x = paddingX + (idx / (pointsCount - 1 || 1)) * (width - 2 * paddingX);
+      const y = height - paddingY - ((val - minVal) / range) * (height - 2 * paddingY);
+      return { x, y };
+    });
+  };
+
+  const portCoords = getSvgCoordinates(portReturns);
+  const ihsgCoords = getSvgCoordinates(ihsgReturns);
+
+  const getPathD = (coords: { x: number, y: number }[]) => {
+    return coords.reduce((acc, p, idx) => acc + `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`, "");
+  };
+
+  const getFillD = (coords: { x: number, y: number }[]) => {
+    if (coords.length === 0) return "";
+    return `${getPathD(coords)} L ${coords[coords.length - 1].x} ${height - paddingY} L ${coords[0].x} ${height - paddingY} Z`;
+  };
+
+  const portPath = getPathD(portCoords);
+  const portFill = getFillD(portCoords);
+  const ihsgPath = getPathD(ihsgCoords);
+  const ihsgFill = getFillD(ihsgCoords);
+
+  const lastPoint = points[points.length - 1];
+
+  return (
+    <div className="relative w-full bg-card border border-border rounded-3xl p-6 shadow-xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+          <h4 className="text-sm font-bold text-text uppercase tracking-wider">Equity Curve vs IHSG Benchmark</h4>
+          <p className="text-xs text-secondary mt-0.5">Pertumbuhan persentase portofolio Anda dibandingkan pergerakan IHSG.</p>
+        </div>
+        
+        <div className="flex items-center gap-6 text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded bg-accent/20 border border-accent"></span>
+            <span className="text-text font-mono">Portfolio: {lastPoint.portfolio_return >= 0 ? '+' : ''}{lastPoint.portfolio_return.toFixed(2)}%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded bg-indigo-500/20 border border-indigo-500"></span>
+            <span className="text-text font-mono">IHSG: {lastPoint.ihsg_return >= 0 ? '+' : ''}{lastPoint.ihsg_return.toFixed(2)}%</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative w-full overflow-hidden">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+            const y = paddingY + ratio * (height - 2 * paddingY);
+            const val = maxVal - ratio * range;
+            return (
+              <g key={i} className="opacity-20">
+                <line x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="var(--border)" strokeWidth="1" strokeDasharray="3,3" />
+                <text x={paddingX - 10} y={y + 3} fill="currentColor" className="text-[9px] font-mono font-bold text-right text-secondary" textAnchor="end">{val.toFixed(1)}%</text>
+              </g>
+            );
+          })}
+
+          {portFill && <path d={portFill} fill="url(#portGrad)" opacity="0.1" />}
+          {ihsgFill && <path d={ihsgFill} fill="url(#ihsgGrad)" opacity="0.05" />}
+
+          {ihsgPath && <path d={ihsgPath} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_2px_8px_rgba(99,102,241,0.2)]" />}
+          {portPath && <path d={portPath} fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_2px_10px_rgba(var(--accent-rgb),0.3)]" />}
+
+          {portCoords.length > 0 && (
+            <circle cx={portCoords[portCoords.length - 1].x} cy={portCoords[portCoords.length - 1].y} r="5" fill="var(--accent)" className="animate-pulse" />
+          )}
+          {ihsgCoords.length > 0 && (
+            <circle cx={ihsgCoords[ihsgCoords.length - 1].x} cy={ihsgCoords[ihsgCoords.length - 1].y} r="4" fill="#6366f1" />
+          )}
+
+          <defs>
+            <linearGradient id="portGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
+            </linearGradient>
+            <linearGradient id="ihsgGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <div className="flex justify-between items-center mt-3 px-8 text-[10px] text-secondary font-mono">
+        <span>{points[0]?.date}</span>
+        {pointsCount > 2 && <span>{points[Math.floor(pointsCount / 2)]?.date}</span>}
+        <span>{lastPoint?.date}</span>
+      </div>
+    </div>
+  );
+};
+
 export default function AIPerformancePage() {
   const { logout } = useApp();
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [ihsg, setIhsg] = useState<IhsgPredictor | null>(null);
   const [historyRows, setHistoryRows] = useState<HistoryRow[]>([]);
   const [historySummary, setHistorySummary] = useState<HistorySummary | null>(null);
+  const [comparisonPoints, setComparisonPoints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     async function fetchData() {
@@ -126,13 +248,18 @@ export default function AIPerformancePage() {
           throw new Error('Gagal mengambil data dari server');
         }
 
-        const [metricsRes, historyRes] = await Promise.all([
+        const [metricsRes, historyRes, comparisonRes] = await Promise.all([
           fetch('/api/ai/performance-metrics', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           }),
-          fetch('/api/performance/history')
+          fetch('/api/performance/history'),
+          fetch('/api/performance/equity-vs-ihsg', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
         ]);
 
         if (!metricsRes.ok) {
@@ -157,6 +284,11 @@ export default function AIPerformancePage() {
         } else {
           setHistoryRows([]);
           setHistorySummary(deriveSummary([]));
+        }
+
+        if (comparisonRes.ok) {
+          const compData = await comparisonRes.json();
+          setComparisonPoints(compData.points || []);
         }
       } catch (err: any) {
         setError(err.message);
@@ -187,6 +319,9 @@ export default function AIPerformancePage() {
   const summary = historySummary || deriveSummary(historyRows);
   const bestPick = summary.best_pick;
   const worstPick = summary.worst_pick;
+
+  const totalPages = Math.ceil(historyRows.length / itemsPerPage) || 1;
+  const paginatedRows = historyRows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -221,25 +356,54 @@ export default function AIPerformancePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-lg">
-          <p className="text-sm text-secondary mb-1">Cum. Return</p>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-lg relative">
+          <p className="text-sm text-secondary mb-1 flex items-center gap-1 group/tooltip relative">
+            Cum. Return
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/10 text-[9px] cursor-help font-bold">?</span>
+            <span className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-border bg-background p-3 text-xs text-secondary opacity-0 shadow-2xl transition-opacity group-hover/tooltip:opacity-100 z-50 leading-relaxed normal-case font-normal">
+              <strong className="text-text block mb-1">Cumulative Return</strong>
+              Total profit/loss bersih yang telah direalisasikan dari transaksi virtual trading yang posisinya sudah ditutup (realized PnL).
+              <span className="block mt-1.5 text-accent font-semibold">Sumber: Histori transaksi virtual trading akun Anda.</span>
+            </span>
+          </p>
           <h3 className={`text-2xl font-bold ${(metrics?.cumulative_pnl || 0) >= 0 ? 'text-profit' : 'text-loss'}`}>{formatCurrency(metrics?.cumulative_pnl || 0)}</h3>
           <p className="mt-1 text-xs text-secondary">Akumulasi realized PnL dari trade tertutup.</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-lg">
-          <p className="text-sm text-secondary mb-1">Win Rate</p>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-lg relative">
+          <p className="text-sm text-secondary mb-1 flex items-center gap-1 group/tooltip relative">
+            Win Rate
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/10 text-[9px] cursor-help font-bold">?</span>
+            <span className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-border bg-background p-3 text-xs text-secondary opacity-0 shadow-2xl transition-opacity group-hover/tooltip:opacity-100 z-50 leading-relaxed normal-case font-normal">
+              <strong className="text-text block mb-1">Win Rate</strong>
+              Persentase keberhasilan sinyal rekomendasi atau transaksi yang menghasilkan profit dibanding total keseluruhan sinyal/transaksi.
+              <span className="block mt-1.5 text-accent font-semibold">Sumber: Akumulasi seluruh riwayat transaksi virtual dan validasi rekomendasi AI.</span>
+            </span>
+          </p>
           <h3 className="text-2xl font-bold text-text">{(metrics?.win_rate ?? summary.win_rate).toFixed(2)}%</h3>
           <p className="mt-1 text-xs text-secondary">{metrics?.total_trades || summary.total_signals} trade / validasi</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-lg">
-          <p className="text-sm text-secondary mb-1">Average Return</p>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-lg relative">
+          <p className="text-sm text-secondary mb-1 flex items-center gap-1 group/tooltip relative">
+            Average Return
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/10 text-[9px] cursor-help font-bold">?</span>
+            <span className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-border bg-background p-3 text-xs text-secondary opacity-0 shadow-2xl transition-opacity group-hover/tooltip:opacity-100 z-50 leading-relaxed normal-case font-normal">
+              <strong className="text-text block mb-1">Average Return</strong>
+              Rata-rata persentase keuntungan atau kerugian per transaksi/sinyal yang dihitung secara matematis.
+              <span className="block mt-1.5 text-accent font-semibold">Sumber: Rata-rata imbal hasil dari riwayat rekomendasi AI terdahulu.</span>
+            </span>
+          </p>
           <h3 className={`text-2xl font-bold ${summary.avg_return_pct >= 0 ? 'text-profit' : 'text-loss'}`}>{formatPct(summary.avg_return_pct)}</h3>
           <p className="mt-1 text-xs text-secondary">Rata-rata return dari riwayat top pick yang sudah selesai.</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-lg relative group">
-          <p className="text-sm text-secondary mb-1 flex items-center gap-1">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-lg relative">
+          <p className="text-sm text-secondary mb-1 flex items-center gap-1 group/tooltip relative">
             Profit Factor
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/10 text-[10px]">?</span>
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/10 text-[9px] cursor-help font-bold">?</span>
+            <span className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-border bg-background p-3 text-xs text-secondary opacity-0 shadow-2xl transition-opacity group-hover/tooltip:opacity-100 z-50 leading-relaxed normal-case font-normal">
+              <strong className="text-text block mb-1">Profit Factor</strong>
+              Rasio total kotor laba (gross profit) dibagi total kotor rugi (gross loss). Angka di atas 1.0x menandakan strategi/sistem menghasilkan profit bersih.
+              <span className="block mt-1.5 text-accent font-semibold">Sumber: Akumulasi total keuntungan kotor dibagi total kerugian kotor transaksi virtual Anda.</span>
+            </span>
           </p>
           <h3 className="text-2xl font-bold text-amber-400">{(metrics?.profit_factor ?? 0).toFixed(2)}x</h3>
           <p className="mt-1 text-xs text-secondary">Gross profit dibanding gross loss.</p>
@@ -290,7 +454,7 @@ export default function AIPerformancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 font-mono text-secondary">
-              {historyRows.map((row: HistoryRow, idx: number) => (
+              {paginatedRows.map((row: HistoryRow, idx: number) => (
                 <tr key={`${row.date}-${row.ticker}-${idx}`} className="transition hover:bg-white/5">
                   <td className="px-6 py-3.5 font-sans text-text font-medium">{row.date}</td>
                   <td className="px-6 py-3.5 font-bold text-text">{row.ticker}</td>
@@ -309,7 +473,7 @@ export default function AIPerformancePage() {
                   </td>
                 </tr>
               ))}
-              {historyRows.length === 0 && (
+              {paginatedRows.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-10 text-center text-secondary font-sans">Belum ada riwayat prediksi yang bisa divalidasi.</td>
                 </tr>
@@ -317,6 +481,28 @@ export default function AIPerformancePage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4 px-1 text-xs">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3.5 py-2 rounded-xl bg-white/5 border border-border text-text font-bold hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition"
+            >
+              Sebelumnya
+            </button>
+            <span className="text-secondary font-mono">
+              Halaman <span className="text-text font-bold">{currentPage}</span> dari <span className="text-text font-bold">{totalPages}</span>
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3.5 py-2 rounded-xl bg-white/5 border border-border text-text font-bold hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition"
+            >
+              Berikutnya
+            </button>
+          </div>
+        )}
       </div>
 
       {ihsg && (
@@ -326,8 +512,19 @@ export default function AIPerformancePage() {
               <h3 className="text-xl font-bold text-text">IHSG Predictor <span className="ml-2 rounded bg-accent/20 px-2 py-1 text-xs text-accent">v2</span></h3>
               <p className="text-sm text-secondary">Prediksi Harian: {ihsg.date}</p>
             </div>
-            <div className={`rounded-xl border px-4 py-2 font-bold ${ihsg.direction === 'BULLISH' ? 'border-profit/30 bg-profit/10 text-profit' : ihsg.direction === 'BEARISH' ? 'border-loss/30 bg-loss/10 text-loss' : 'border-amber-500/30 bg-amber-500/10 text-amber-400'}`}>
-              {ihsg.direction} (Confidence: {ihsg.confidence})
+            <div className={`flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider border ${
+              ihsg.direction === 'BULLISH'
+                ? 'bg-profit/10 text-profit border-profit/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+                : ihsg.direction === 'BEARISH'
+                ? 'bg-loss/10 text-loss border-loss/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
+                : 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                ihsg.direction === 'BULLISH' ? 'bg-profit animate-pulse' : ihsg.direction === 'BEARISH' ? 'bg-loss animate-pulse' : 'bg-amber-400 animate-pulse'
+              }`}></span>
+              <span>{ihsg.direction}</span>
+              <span className="text-secondary/50 font-normal">|</span>
+              <span className="text-secondary font-mono text-[10px] lowercase tracking-normal">confidence: <span className="font-bold text-text">{ihsg.confidence}</span></span>
             </div>
           </div>
 
@@ -373,13 +570,7 @@ export default function AIPerformancePage() {
         </div>
       )}
 
-      <div className="rounded-3xl border border-border bg-card p-6 shadow-lg">
-        <h3 className="text-xl font-bold text-text mb-2">Equity Curve (Coming Soon)</h3>
-        <p className="text-sm text-secondary mb-6">Visualisasi pertumbuhan portofolio vs IHSG Benchmark sedang dalam pengembangan.</p>
-        <div className="flex h-48 items-center justify-center rounded-xl border border-dashed border-gray-700 text-gray-500">
-          Chart Area
-        </div>
-      </div>
+      <CustomEquityVsIhsgChart points={comparisonPoints} />
     </div>
   );
 }

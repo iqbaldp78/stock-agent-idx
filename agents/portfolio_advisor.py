@@ -4,13 +4,45 @@ All-in-one portfolio analysis: rebalancing, DCA priority, risk analysis, perform
 """
 import logging
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from agents.llm_client import invoke_json
 from config import LLM_MODEL_IM_FALLBACK
 
 logger = logging.getLogger(__name__)
+
+
+def _get_realtime_prices(tickers: list[str]) -> dict[str, float]:
+    """
+    Fetch realtime prices untuk multiple tickers dari Stockbit.
+    Parallel fetch untuk kecepatan.
+    Returns: {ticker: price}
+    """
+    try:
+        from data.fetcher_stockbit import get_current_price_stockbit
+    except ImportError:
+        logger.warning("[Portfolio AI] Stockbit fetcher not available")
+        return {}
+
+    prices = {}
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {
+            executor.submit(get_current_price_stockbit, ticker): ticker
+            for ticker in tickers if ticker
+        }
+        for future in as_completed(futures):
+            ticker = futures[future]
+            try:
+                price = future.result()
+                if price and price > 0:
+                    prices[ticker] = price
+                    logger.info(f"[Portfolio AI] Realtime price: {ticker}={price}")
+            except Exception as e:
+                logger.warning(f"[Portfolio AI] Failed to get realtime price for {ticker}: {e}")
+
+    return prices
 
 
 def analyze_portfolio(
@@ -21,15 +53,35 @@ def analyze_portfolio(
     transactions: list[dict],
 ) -> dict:
     """
-    AI Portfolio analysis menggunakan LLM.
+    AI Portfolio analysis menggunakan LLM dengan realtime prices dari Stockbit.
 
     Returns structured JSON dengan rebalancing, DCA priority, risk analysis, performance attribution.
     """
 
     # Build context
     logger.info(f"[Portfolio AI] Processing holdings: {holdings}")
+
+    # Fetch realtime prices untuk semua tickers
+    all_tickers = [h.get("ticker") for h in holdings if h.get("ticker")]
+    all_tickers.extend([p.get("ticker") for p in top_picks if p.get("ticker")])
+    all_tickers = list(set(all_tickers))  # Remove duplicates
+
+    realtime_prices = _get_realtime_prices(all_tickers)
+    logger.info(f"[Portfolio AI] Fetched realtime prices for {len(realtime_prices)} tickers")
+
+    # Update holdings dan top_picks dengan realtime prices
+    for h in holdings:
+        ticker = h.get("ticker")
+        if ticker in realtime_prices:
+            h["current_price"] = realtime_prices[ticker]
+
+    for p in top_picks:
+        ticker = p.get("ticker")
+        if ticker in realtime_prices:
+            p["current_price"] = realtime_prices[ticker]
+
     context = _build_portfolio_context(holdings, active_strategies, top_picks, monthly_budget, transactions)
-    
+
     # Retrieve RAG news context for holdings tickers
     news_context = _get_rag_news_context(holdings)
     
@@ -85,16 +137,16 @@ Penting:
 - Untuk DCA Priority, sertakan "target_price" (harga ideal pembelian) dan "target_lots" (jumlah lot berdasarkan alokasi dan target_price; 1 lot = 100 lembar).
 """
 
-    user_prompt = f"""PORTFOLIO SAAT INI:
+    user_prompt = f"""PORTFOLIO SAAT INI (dengan harga realtime dari Stockbit):
 {context['portfolio_summary']}
 
-DETAIL HOLDINGS:
+DETAIL HOLDINGS (HARGA DIUPDATE REALTIME):
 {context['holdings_detail']}
 
 STRATEGI DCA AKTIF:
 {context['dca_strategies']}
 
-TOP PICKS TERBARU (Peluang Investasi):
+TOP PICKS TERBARU (Peluang Investasi - HARGA REALTIME):
 {context['top_picks_detail']}
 
 ANGGARAN DCA BULANAN: Rp {monthly_budget:,.0f}
@@ -111,7 +163,10 @@ Berikan analisis portofolio komprehensif yang mencakup:
 3. Analisis Risiko: Konsentrasi sektor, skor diversifikasi, tingkat risiko, rekomendasi.
 4. Atribusi Kinerja: Peraih untung/rugi terbaik, kualitas sinyal, pelajaran yang dipetik.
 
-Output harus berupa JSON ketat sesuai skema yang disediakan.
+CATATAN PENTING:
+- Semua harga di atas adalah harga REALTIME terbaru dari Stockbit (bukan cache/stale data).
+- Gunakan harga realtime ini untuk menghitung target allocation, target price, dan target lots yang akurat.
+- Output harus berupa JSON ketat sesuai skema yang disediakan.
 """
 
     try:
@@ -128,7 +183,7 @@ Output harus berupa JSON ketat sesuai skema yang disediakan.
             logger.error("[Portfolio AI] invoke_json returned None")
             return _error_response("LLM returned no valid JSON response")
 
-        result["generated_at"] = datetime.now().isoformat()
+        result["generated_at"] = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=7))).strftime("%Y-%m-%d %H:%M:%S WIB")
         
         # Post-process dca_priority to guarantee target_price and target_lots
         try:
@@ -313,6 +368,9 @@ def _is_recent(date_str: Optional[str], days: int = 30) -> bool:
 
 def _error_response(error_msg: str) -> dict:
     """Return error response in expected schema."""
+    wib_tz = timezone(timedelta(hours=7))
+    now_wib = datetime.now(wib_tz).strftime("%Y-%m-%d %H:%M:%S WIB")
+
     return {
         "summary": f"Analysis failed: {error_msg}",
         "rebalancing": {
@@ -333,6 +391,6 @@ def _error_response(error_msg: str) -> dict:
             "worst_performer": None,
             "signal_quality": "N/A",
         },
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": now_wib,
         "error": error_msg,
     }

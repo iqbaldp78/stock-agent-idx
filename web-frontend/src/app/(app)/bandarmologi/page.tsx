@@ -5,6 +5,30 @@ import { useApp } from '../../context/AppContext';
 const formatLot = (lots: number) => { if (!lots) return "0"; if (lots >= 1000) return `${(lots / 1000).toFixed(1)}K`; return lots.toLocaleString('id-ID'); };
 const formatValue = (val: number) => { if (!val) return "0"; if (val >= 1e9) return `${(val / 1e9).toFixed(2)}B`; if (val >= 1e6) return `${(val / 1e6).toFixed(2)}M`; return val.toLocaleString('id-ID'); };
 
+const getBrokerColorClass = (brokerCode: string) => {
+  const code = brokerCode.toUpperCase().trim();
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG"];
+  const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL"];
+  
+  if (foreign.includes(code)) return "text-red-400 font-extrabold";
+  if (retail.includes(code)) return "text-green-400 font-extrabold";
+  if (institusi.includes(code)) return "text-purple-400 font-extrabold";
+  return "text-secondary font-bold"; // Fallback/default style for unclassified brokers
+};
+
+const getBrokerTitle = (brokerCode: string) => {
+  const code = brokerCode.toUpperCase().trim();
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG"];
+  const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL"];
+  
+  if (foreign.includes(code)) return "Broker Asing (Foreign)";
+  if (retail.includes(code)) return "Broker Ritel (Retail)";
+  if (institusi.includes(code)) return "Broker Institusi (Institution)";
+  return "Broker Tidak Terklasifikasi";
+};
+
 export default function BandarmologiPage() {
   const { showToast } = useApp();
   const [bandarmologiTicker, setBandarmologiTicker] = useState("MEDC");
@@ -100,6 +124,23 @@ export default function BandarmologiPage() {
         </div>
       </div>
 
+      {/* Broker Legend */}
+      <div className="flex flex-wrap items-center gap-4 text-xs bg-white/5 px-4 py-2.5 rounded-2xl border border-border w-fit mb-6">
+        <span className="text-secondary font-bold">Kategori Broker:</span>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+          <span className="text-red-400 font-bold">Foreign (Asing)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+          <span className="text-green-400 font-bold">Retail (Ritel)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+          <span className="text-purple-400 font-bold">Institusi</span>
+        </div>
+      </div>
+
       {/* Top Metrics Cards */}
       {bandarmologiData && bandarmologiData.summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8">
@@ -152,6 +193,7 @@ export default function BandarmologiPage() {
                 <thead>
                   <tr className="border-b border-profit/10 text-[11px] font-bold uppercase tracking-wider text-emerald-300/70 bg-emerald-950/10">
                     <th className="py-3 px-4 whitespace-nowrap">Broker</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Keaktifan</th>
                     <th className="py-3 px-4 whitespace-nowrap">Avg Price</th>
                     <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
                     <th className="py-3 px-4 whitespace-nowrap">Value</th>
@@ -164,7 +206,8 @@ export default function BandarmologiPage() {
                       const distancePct = getDistancePct(row);
                       return (
                         <tr key={idx} className="hover:bg-profit/5 transition">
-                          <td className="py-3 px-4 font-bold text-text whitespace-nowrap">{row.broker}</td>
+                          <td className={`py-3 px-4 whitespace-nowrap ${getBrokerColorClass(row.broker)}`} title={getBrokerTitle(row.broker)}>{row.broker}</td>
+                          <td className="py-3 px-4 whitespace-nowrap text-secondary font-medium">{row.active_days}</td>
                           <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_buy_lot)}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_buy_value)}</td>
@@ -176,7 +219,7 @@ export default function BandarmologiPage() {
                     })()
                   ))}
                   {!(bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d)?.length && (
-                    <tr><td colSpan={5} className="py-10 text-center text-secondary font-sans">Tidak ada data akumulasi terdeteksi.</td></tr>
+                    <tr><td colSpan={6} className="py-10 text-center text-secondary font-sans">Tidak ada data akumulasi terdeteksi.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -193,6 +236,7 @@ export default function BandarmologiPage() {
                 <thead>
                   <tr className="border-b border-loss/10 text-[11px] font-bold uppercase tracking-wider text-red-300/70 bg-red-950/10">
                     <th className="py-3 px-4 whitespace-nowrap">Broker</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Keaktifan</th>
                     <th className="py-3 px-4 whitespace-nowrap">Avg Sell</th>
                     <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
                     <th className="py-3 px-4 whitespace-nowrap">Value</th>
@@ -205,7 +249,8 @@ export default function BandarmologiPage() {
                       const distancePct = getDistancePct(row);
                       return (
                         <tr key={idx} className="hover:bg-loss/5 transition">
-                          <td className="py-3 px-4 font-bold text-text whitespace-nowrap">{row.broker}</td>
+                          <td className={`py-3 px-4 whitespace-nowrap ${getBrokerColorClass(row.broker)}`} title={getBrokerTitle(row.broker)}>{row.broker}</td>
+                          <td className="py-3 px-4 whitespace-nowrap text-secondary font-medium">{row.active_days}</td>
                           <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_sell_lot)}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_sell_value)}</td>
@@ -217,7 +262,7 @@ export default function BandarmologiPage() {
                     })()
                   ))}
                   {!(bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d)?.length && (
-                    <tr><td colSpan={5} className="py-10 text-center text-secondary font-sans">Tidak ada data distribusi terdeteksi.</td></tr>
+                    <tr><td colSpan={6} className="py-10 text-center text-secondary font-sans">Tidak ada data distribusi terdeteksi.</td></tr>
                   )}
                 </tbody>
               </table>

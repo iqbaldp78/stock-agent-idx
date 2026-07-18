@@ -267,7 +267,13 @@ export default function PortfolioPage() {
           </div>
 
           <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6">
-            <h3 className="text-lg font-bold text-text mb-4">📋 Holdings</h3>
+            <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+              <h3 className="text-lg font-bold text-text">📋 Holdings</h3>
+              <div className="bg-accent/20 border border-accent/30 rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-semibold text-accent whitespace-nowrap">
+                <span className="inline-block w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+                📡 Realtime Prices
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left text-secondary">
                 <thead className="text-xs text-secondary uppercase bg-white/5 border-b border-border">
@@ -596,7 +602,14 @@ export default function PortfolioPage() {
               </div>
 
               <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
-                <h4 className="text-base font-bold text-text">💰 DCA Priority This Month (Budget: Rp {aiMonthlyBudget.toLocaleString("id-ID")})</h4>
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <h4 className="text-base font-bold text-text">💰 DCA Priority This Month (Budget: Rp {aiMonthlyBudget.toLocaleString("id-ID")})</h4>
+                  <div className="bg-accent/20 border border-accent/30 rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-semibold text-accent whitespace-nowrap">
+                    <span className="inline-block w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+                    📡 Realtime Prices (Stockbit)
+                  </div>
+                </div>
+                <p className="text-xs text-secondary">Semua harga target berbasis data realtime terbaru dari Stockbit. Rekomendasi DCA diperhitungkan dengan market condition terkini.</p>
                 <div className="space-y-3">
                   {aiAnalysisResult.dca_priority?.map((p: any, idx: number) => {
                     const amount = p.allocation || p.suggested_amount;

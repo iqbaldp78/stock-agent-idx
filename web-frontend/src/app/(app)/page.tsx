@@ -27,14 +27,14 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="space-y-10 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Hero Section */}
       <div className="text-center space-y-4 py-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-widest mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
           AI Model is Active
         </div>
-        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-text">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-text">
           Selamat Datang, {username || "Trader"}! <br />
           <span className="bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">Hamboo AI Terminal.</span>
         </h2>
@@ -42,7 +42,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 3 Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Market Outlook */}
         <Card className="backdrop-blur-md hover:bg-white/5 transition duration-300">
           <CardContent className="p-6">

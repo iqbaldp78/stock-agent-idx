@@ -26,12 +26,18 @@ logger = logging.getLogger(__name__)
 # === OHLCV ===
 
 def _fetch_ihsg_ohlcv_api(period: str = "8y") -> pd.DataFrame | None:
-    """Fetch IHSG OHLCV langsung dari yfinance (no cache)."""
+    """Fetch IHSG OHLCV langsung dari Stockbit, fallback ke yfinance."""
     try:
+        from data.fetcher_stockbit import get_ohlcv
+        hist = get_ohlcv("IHSG", period=period)
+        if hist is not None and not hist.empty:
+            return hist
+        
+        logger.warning("[IHSG OHLCV] Empty history from Stockbit, trying yfinance fallback")
         ticker = yf.Ticker("^JKSE")
         hist = ticker.history(period=period)
         if hist.empty:
-            logger.warning("[IHSG OHLCV] Empty history, return None")
+            logger.warning("[IHSG OHLCV] Empty history from yfinance, return None")
             return None
         hist.index.name = "Date"
         # Flatten MultiIndex jika ada
@@ -70,12 +76,17 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
         logger.info(f"[cache hit] IHSG OHLCV {start_date_str}..{end_date_str} (all missing dates are holidays)")
         return cached if not cached.empty else None
 
-    # Fetch hanya rentang yang belum ada dari yfinance
+    # Fetch hanya rentang yang belum ada dari Stockbit (fallback yfinance)
     new_frames = [cached] if not cached.empty else []
     for range_start, range_end in group_into_ranges(missing):
         try:
-            ticker = yf.Ticker("^JKSE")
-            hist = ticker.history(start=range_start.isoformat(), end=(range_end + timedelta(days=1)).isoformat())
+            from data.fetcher_stockbit import get_ohlcv_range
+            hist = get_ohlcv_range("IHSG", range_start.isoformat(), range_end.isoformat())
+            if hist is None or hist.empty:
+                logger.info(f"[fetcher_ihsg] Stockbit empty for {range_start}..{range_end}, falling back to yfinance")
+                ticker = yf.Ticker("^JKSE")
+                hist = ticker.history(start=range_start.isoformat(), end=(range_end + timedelta(days=1)).isoformat())
+            
             if hist.empty:
                 # Mark all dates in this range as no-data (IDX holidays)
                 from datetime import timedelta as _td
@@ -93,7 +104,7 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
             # Remove timezone before saving
             if hist.index.tz is not None:
                 hist.index = hist.index.tz_localize(None)
-            # Mark any expected weekdays NOT returned by yfinance as holidays
+            # Mark any expected weekdays NOT returned by yfinance/stockbit as holidays
             from datetime import timedelta as _td
             returned_dates = {d.date() if hasattr(d, 'date') else d for d in hist.index}
             expected_dates = [
@@ -112,7 +123,7 @@ def get_ihsg_ohlcv(period: str = "8y") -> pd.DataFrame | None:
 
     if not new_frames:
         # Fallback ke full fetch jika tidak ada data sama sekali
-        logger.info("[IHSG OHLCV] No cache, fetching full history from yfinance")
+        logger.info("[IHSG OHLCV] No cache, fetching full history from Stockbit/yfinance")
         full = _fetch_ihsg_ohlcv_api(period)
         if full is not None:
             # Remove timezone before saving

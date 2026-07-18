@@ -339,7 +339,19 @@ def predict_ihsg() -> dict:
             logger.error("[IHSG] No OHLCV data available")
             return _empty_prediction()
 
-        current_price = float(ohlcv["Close"].iloc[-1])
+        # Get current price from Stockbit realtime if available, fallback to ohlcv
+        try:
+            from data.fetcher_stockbit import get_ihsg_realtime_price_stockbit
+            realtime = get_ihsg_realtime_price_stockbit()
+            if realtime and realtime.get("price", 0) > 0:
+                current_price = float(realtime["price"])
+                logger.info(f"[IHSG Predictor] Using realtime price from Stockbit: {current_price}")
+            else:
+                current_price = float(ohlcv["Close"].iloc[-1])
+                logger.info(f"[IHSG Predictor] Using last close price from OHLCV: {current_price}")
+        except Exception as e:
+            logger.warning(f"[IHSG Predictor] Failed to get realtime price, falling back to OHLCV: {e}")
+            current_price = float(ohlcv["Close"].iloc[-1])
 
         # Calculate component scores
         momentum_score = _calculate_momentum_score(ohlcv, macro_data)

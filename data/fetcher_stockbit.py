@@ -458,10 +458,91 @@ def get_current_price_stockbit(ticker: str) -> float:
     if not price:
         logger.warning("Stockbit info: empty price for %s", ticker)
         return 0.0
-        
+
     price_val = _parse_number(price)
     logger.info("Stockbit info: %s price=%s", ticker, price_val)
     return price_val
+
+
+@_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
+def get_ihsg_realtime_price_stockbit() -> dict:
+    """
+    Fetch IHSG realtime price dan market info dari Stockbit API.
+    Returns: {
+        "price": float,
+        "prev_close": float,
+        "change": float,
+        "change_pct": float,
+        "timestamp": str (WIB format),
+        "currency": str
+    }
+    """
+    api_key = os.getenv("STOCKBIT_API_KEY")
+    if not api_key:
+        logger.warning("[IHSG Realtime] STOCKBIT_API_KEY not set, using fallback")
+        return _ihsg_realtime_fallback()
+
+    try:
+        url = "https://exodus.stockbit.com/emitten/IHSG/info"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+        }
+
+        with httpx.Client(timeout=15.0) as client:
+            response = client.get(url, headers=headers)
+            response.raise_for_status()
+            payload = response.json()
+
+        data = payload.get("data", {})
+        price = _parse_number(data.get("price", 0))
+        prev_close = _parse_number(data.get("prev_close", 0))
+        change = price - prev_close if prev_close > 0 else 0
+        change_pct = (change / prev_close * 100) if prev_close > 0 else 0
+
+        # Format timestamp ke WIB (UTC+7)
+        from datetime import datetime, timezone, timedelta
+        now_utc = datetime.now(timezone.utc)
+        wib_tz = timezone(timedelta(hours=7))
+        now_wib = now_utc.astimezone(wib_tz)
+        timestamp_wib = now_wib.strftime("%Y-%m-%d %H:%M:%S WIB")
+
+        result = {
+            "price": price,
+            "prev_close": prev_close,
+            "change": round(change, 2),
+            "change_pct": round(change_pct, 2),
+            "timestamp": timestamp_wib,
+            "currency": "IDR",
+            "source": "stockbit"
+        }
+
+        logger.info(f"[IHSG Realtime] Price={price}, Change={change_pct:.2f}%, Time={timestamp_wib}")
+        return result
+
+    except Exception as e:
+        logger.warning(f"[IHSG Realtime] Stockbit fetch failed: {e}, using fallback")
+        return _ihsg_realtime_fallback()
+
+
+def _ihsg_realtime_fallback() -> dict:
+    """Fallback data jika Stockbit API tidak tersedia."""
+    from datetime import datetime, timezone, timedelta
+    now_utc = datetime.now(timezone.utc)
+    wib_tz = timezone(timedelta(hours=7))
+    now_wib = now_utc.astimezone(wib_tz)
+    timestamp_wib = now_wib.strftime("%Y-%m-%d %H:%M:%S WIB")
+
+    return {
+        "price": 0.0,
+        "prev_close": 0.0,
+        "change": 0.0,
+        "change_pct": 0.0,
+        "timestamp": timestamp_wib,
+        "currency": "IDR",
+        "source": "fallback",
+        "error": "Stockbit API unavailable"
+    }
 
 
 def _fetch_broker_daily_api(ticker: str, date: str) -> dict:

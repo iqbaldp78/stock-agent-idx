@@ -226,15 +226,15 @@ def get_performance_history():
                 SELECT p.check_date, s.ticker, s.signal, p.result, p.return_pct 
                 FROM performance p 
                 JOIN signals s ON p.signal_id = s.id 
-                WHERE p.result IN ('PROFIT', 'LOSS')
-                ORDER BY p.check_date DESC LIMIT 20
+                WHERE p.result IN ('PROFIT', 'LOSS', 'HIT_TP1', 'HIT_TP2', 'HIT_TP3', 'HIT_TARGET_1', 'HIT_TARGET_2', 'HIT_SL')
+                ORDER BY p.check_date DESC LIMIT 100
             """)
             res = conn.execute(query).fetchall()
             history = [{
                 "date": r[0].strftime("%Y-%m-%d") if r[0] else "",
                 "ticker": r[1],
                 "signal": r[2],
-                "result": r[3],
+                "result": "PROFIT" if r[3] in ('PROFIT', 'HIT_TP1', 'HIT_TP2', 'HIT_TP3', 'HIT_TARGET_1', 'HIT_TARGET_2') else "LOSS",
                 "return_pct": float(r[4]) if r[4] else 0.0
             } for r in res]
             
@@ -347,8 +347,9 @@ def get_stats():
         }
 
 @app.get("/api/signals/top-picks")
-def get_top_picks():
+def get_top_picks(current_user: dict = Depends(get_current_user)):
     try:
+        tier = current_user.get("tier", "free")
         with engine.connect() as conn:
             # Mengambil batch_id terbaru yang tidak NULL
             batch_query = text("SELECT batch_id, run_date FROM signals WHERE batch_id IS NOT NULL ORDER BY run_date DESC LIMIT 1")
@@ -380,7 +381,8 @@ def get_top_picks():
                        stop_loss,
                        weight_mode,
                        broker_utama,
-                       max_entry
+                       max_entry,
+                       rank
                 FROM signals 
                 WHERE batch_id = :batch_id
                   AND price_prediction IS NOT NULL 
@@ -459,8 +461,19 @@ def get_top_picks():
                     "target_3": float(r[17]) if r[17] is not None else None,
                     "stop_loss": float(r[18]) if r[18] is not None else None,
                     "weight_mode": r[19],
-                    "broker_utama": fix_broker_utama(r[20])
+                    "broker_utama": fix_broker_utama(r[20]),
+                    "rank": int(r[22]) if r[22] is not None else None
                 })
+            
+            if tier == "free":
+                for item in data:
+                    item["entry_low"] = None
+                    item["entry_high"] = None
+                    item["max_entry"] = None
+                    item["target_1"] = None
+                    item["target_2"] = None
+                    item["target_3"] = None
+                    item["stop_loss"] = None
             
             return {"batch_id": latest_batch, "run_date": latest_run_date, "data": data}
     except Exception as e:
@@ -511,21 +524,26 @@ def get_bandarmologi_details(ticker: str):
 @app.get("/api/ihsg")
 def get_ihsg_predictions():
     import json
+    from data.fetcher_stockbit import get_ihsg_realtime_price_stockbit
+
     try:
+        # 0. Fetch realtime IHSG price from Stockbit
+        realtime_data = get_ihsg_realtime_price_stockbit()
+
         with engine.connect() as conn:
             # 1. Fetch latest IHSG prediction
             latest_query = text("""
-                SELECT id, run_date, current_price, day_1_price, day_1_pct, 
-                       day_3_price, day_3_pct, day_5_price, day_5_pct, 
-                       day_7_price, day_7_pct, direction, confidence, 
-                       volatility_level, component_scores, reasoning, 
+                SELECT id, run_date, current_price, day_1_price, day_1_pct,
+                       day_3_price, day_3_pct, day_5_price, day_5_pct,
+                       day_7_price, day_7_pct, direction, confidence,
+                       volatility_level, component_scores, reasoning,
                        key_drivers, risks, created_at
                 FROM ihsg_predictions
                 WHERE run_date = (SELECT MAX(run_date) FROM ihsg_predictions)
                 LIMIT 1
             """)
             latest_res = conn.execute(latest_query).fetchone()
-            
+
             latest = {}
             if latest_res:
                 # helper to parse json fields safely
@@ -560,20 +578,18 @@ def get_ihsg_predictions():
                     "risks": parse_json_field(latest_res[17]),
                     "created_at": str(latest_res[18]) if latest_res[18] else None,
                 }
-            
-            
-            # 2. Fetch historical predictions (last 20) with actual outcome calculation
+
             hist_query = text('''
                 WITH actuals AS (
                     SELECT trade_date, close as actual_close
                     FROM ihsg_ohlcv
                 )
-                SELECT 
+                SELECT
                     p.run_date, p.current_price, p.day_1_price, p.day_1_pct, p.direction, p.confidence,
                     (SELECT a.actual_close FROM actuals a WHERE a.trade_date > p.run_date::date ORDER BY a.trade_date ASC LIMIT 1) as actual_price
                 FROM ihsg_predictions p
                 ORDER BY p.run_date DESC
-                LIMIT 20
+                LIMIT 100
             ''')
             hist_res = conn.execute(hist_query).fetchall()
             history = []
@@ -581,7 +597,7 @@ def get_ihsg_predictions():
                 actual_price = float(r[6]) if r[6] else None
                 curr_price = float(r[1]) if r[1] else 0.0
                 dir_pred = r[4]
-                
+
                 is_correct = None
                 if actual_price and curr_price > 0:
                     actual_pct = ((actual_price - curr_price) / curr_price) * 100
@@ -604,10 +620,11 @@ def get_ihsg_predictions():
                     "actual_price": actual_price,
                     "is_correct": is_correct
                 })
-                
+
             return {
                 "latest": latest,
-                "history": history
+                "history": history,
+                "realtime": realtime_data
             }
     except Exception as e:
         import traceback
@@ -703,6 +720,68 @@ def trading_equity_history(current_user: dict = Depends(get_current_user)):
         res = service.get_equity_history()
         return res
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        service.session.close()
+
+@app.get("/api/performance/equity-vs-ihsg")
+def performance_equity_vs_ihsg(current_user: dict = Depends(get_current_user)):
+    service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
+    try:
+        res = service.get_equity_history()
+        points = res.get("points", [])
+        if not points:
+            return {"points": []}
+            
+        dates = [p["date"] for p in points]
+        start_date = min(dates)
+        
+        from db.models import IhsgOhlcv
+        from datetime import datetime
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+        
+        ihsg_records = service.session.query(IhsgOhlcv).filter(
+            IhsgOhlcv.trade_date >= start_dt
+        ).order_by(IhsgOhlcv.trade_date.asc()).all()
+        
+        ihsg_map = {r.trade_date.isoformat(): float(r.close) for r in ihsg_records if r.close}
+        
+        first_ihsg_val = None
+        if ihsg_records:
+            first_ihsg_val = float(ihsg_records[0].close) if ihsg_records[0].close else 1.0
+            
+        mapped_points = []
+        initial_topup = res.get("total_topup", 100000000.0) or 100000000.0
+        sorted_ihsg_dates = sorted(ihsg_map.keys())
+        
+        for p in points:
+            p_date = p["date"]
+            p_equity = p["equity"]
+            
+            ihsg_val = first_ihsg_val
+            for d in sorted_ihsg_dates:
+                if d <= p_date:
+                    ihsg_val = ihsg_map[d]
+                else:
+                    break
+                    
+            port_ret = ((p_equity - initial_topup) / initial_topup) * 100
+            ihsg_ret = (((ihsg_val - first_ihsg_val) / first_ihsg_val) * 100) if first_ihsg_val else 0.0
+            
+            mapped_points.append({
+                "date": p_date,
+                "portfolio_equity": p_equity,
+                "portfolio_return": round(port_ret, 2),
+                "ihsg_value": ihsg_val,
+                "ihsg_return": round(ihsg_ret, 2),
+                "event": p.get("event", "")
+            })
+            
+        return {"points": mapped_points}
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         service.session.close()
@@ -945,36 +1024,54 @@ def portfolio_holdings_preview_buy(ticker: str, price: float, lot: int, current_
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/portfolio/dca/strategies")
-def portfolio_dca_strategies():
+def portfolio_dca_strategies(current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
     try:
         from portfolio.dca_strategy import get_active_strategies
-        strategies = get_active_strategies()
+        strategies = get_active_strategies(user_id=user_id)
         return {"strategies": strategies}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/portfolio/dca/create-signal")
-def portfolio_dca_create_signal(req: CreateDcaSignalRequest):
+def portfolio_dca_create_signal(req: CreateDcaSignalRequest, current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
+    tier = current_user.get("tier", "free")
     try:
-        from portfolio.dca_strategy import create_dca_from_signal
-        result = create_dca_from_signal(req.signal_id, req.total_budget, req.dca_count)
+        from portfolio.dca_strategy import get_active_strategies, create_dca_from_signal
+        if tier == "free":
+            active_strategies = get_active_strategies(user_id=user_id)
+            if len(active_strategies) >= 1:
+                raise HTTPException(status_code=403, detail="Free tier users are limited to 1 active DCA strategy. Please upgrade to Pro.")
+        result = create_dca_from_signal(req.signal_id, req.total_budget, req.dca_count, user_id=user_id)
         return {"success": True, "strategy": result}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/portfolio/dca/create-manual")
-def portfolio_dca_create_manual(req: CreateDcaManualRequest):
+def portfolio_dca_create_manual(req: CreateDcaManualRequest, current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
+    tier = current_user.get("tier", "free")
     try:
-        from portfolio.dca_strategy import create_dca_manual
+        from portfolio.dca_strategy import get_active_strategies, create_dca_manual
+        if tier == "free":
+            active_strategies = get_active_strategies(user_id=user_id)
+            if len(active_strategies) >= 1:
+                raise HTTPException(status_code=403, detail="Free tier users are limited to 1 active DCA strategy. Please upgrade to Pro.")
         result = create_dca_manual(
             ticker=req.ticker,
             total_budget=req.total_budget,
             entry_low=req.entry_low,
             entry_high=req.entry_high,
             max_entry=req.max_entry,
-            dca_count=req.dca_count
+            dca_count=req.dca_count,
+            user_id=user_id
         )
         return {"success": True, "strategy": result}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1107,10 +1204,19 @@ def portfolio_dca_preview(req: DcaPreviewRequest):
 
 @app.post("/api/portfolio/dca")
 def portfolio_dca_create_unified(req: CreateDcaUnifiedRequest, current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
+    tier = current_user.get("tier", "free")
+    
+    from portfolio.dca_strategy import get_active_strategies
+    if tier == "free":
+        active_strategies = get_active_strategies(user_id=user_id)
+        if len(active_strategies) >= 1:
+            raise HTTPException(status_code=403, detail="Free tier users are limited to 1 active DCA strategy. Please upgrade to Pro.")
+            
     if req.signal_id is not None:
         from portfolio.dca_strategy import create_dca_from_signal
         try:
-            result = create_dca_from_signal(req.signal_id, req.total_budget, req.dca_count)
+            result = create_dca_from_signal(req.signal_id, req.total_budget, req.dca_count, user_id=user_id)
             return {"success": True, "strategy": result}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -1123,7 +1229,8 @@ def portfolio_dca_create_unified(req: CreateDcaUnifiedRequest, current_user: dic
                 entry_low=req.entry_low,
                 entry_high=req.entry_high,
                 max_entry=req.max_entry,
-                dca_count=req.dca_count
+                dca_count=req.dca_count,
+                user_id=user_id
             )
             return {"success": True, "strategy": result}
         except Exception as e:

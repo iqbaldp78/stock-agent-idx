@@ -23,6 +23,7 @@ def create_dca_from_signal(
     signal_id: int,
     total_budget: float,
     dca_count: int = 3,
+    user_id: Optional[int] = None,
 ) -> dict:
     """
     Buat DCA strategy dari TOP PICK signal.
@@ -55,8 +56,28 @@ def create_dca_from_signal(
         # next_buy_price = level terendah (harga terbaik)
         next_buy_price = levels_data["levels"][0]["price"] if levels_data["levels"] else entry_low
 
+        holding_id = None
+        if user_id is not None:
+            from db.models import PortfolioHolding
+            holding = db.query(PortfolioHolding).filter_by(user_id=user_id, ticker=signal.ticker).first()
+            if not holding:
+                holding = PortfolioHolding(
+                    ticker=signal.ticker,
+                    avg_cost=0.0,
+                    total_shares=0,
+                    total_invested=0.0,
+                    status="ACTIVE",
+                    user_id=user_id,
+                    created_at=datetime.now(),
+                    updated_at=datetime.now(),
+                )
+                db.add(holding)
+                db.flush()
+            holding_id = holding.id
+
         strategy = DcaStrategy(
             ticker=signal.ticker,
+            holding_id=holding_id,
             total_budget=total_budget,
             remaining_budget=total_budget,
             dca_count=dca_count,
@@ -101,6 +122,7 @@ def create_dca_manual(
     tp2: Optional[float] = None,
     tp3: Optional[float] = None,
     stop_loss: Optional[float] = None,
+    user_id: Optional[int] = None,
 ) -> dict:
     """Buat DCA strategy secara manual tanpa signal."""
     if not entry_high:
@@ -116,8 +138,28 @@ def create_dca_manual(
 
     db: Session = SessionLocal()
     try:
+        holding_id = None
+        if user_id is not None:
+            from db.models import PortfolioHolding
+            holding = db.query(PortfolioHolding).filter_by(user_id=user_id, ticker=ticker.upper()).first()
+            if not holding:
+                holding = PortfolioHolding(
+                    ticker=ticker.upper(),
+                    avg_cost=0.0,
+                    total_shares=0,
+                    total_invested=0.0,
+                    status="ACTIVE",
+                    user_id=user_id,
+                    created_at=datetime.now(),
+                    updated_at=datetime.now(),
+                )
+                db.add(holding)
+                db.flush()
+            holding_id = holding.id
+
         strategy = DcaStrategy(
             ticker=ticker.upper(),
+            holding_id=holding_id,
             total_budget=total_budget,
             remaining_budget=total_budget,
             dca_count=dca_count,

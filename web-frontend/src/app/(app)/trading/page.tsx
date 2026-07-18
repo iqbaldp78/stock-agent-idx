@@ -5,6 +5,18 @@
 import dynamic from "next/dynamic";
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import {
+  DoubleArrowUpIcon,
+  ReloadIcon,
+  CardStackIcon,
+  BackpackIcon,
+  ValueIcon,
+  ArrowTopRightIcon,
+  PlusCircledIcon,
+  PlusIcon,
+  TargetIcon,
+  ClockIcon
+} from '@radix-ui/react-icons';
 
 const CustomEquityChart = ({ points }: { points: any[] }) => {
   if (!points || points.length === 0) {
@@ -236,10 +248,10 @@ export default function TradingPage() {
         </div>
         <div className="flex gap-3">
           <button onClick={handleCheckTpsl} className="px-4 py-2.5 bg-indigo-600 hover:bg-accent text-text font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-            🔍 Cek TP/SL Sekarang
+            <DoubleArrowUpIcon className="w-4 h-4" /> Cek TP/SL Sekarang
           </button>
-          <button onClick={handleResetPortfolio} className="px-4 py-2.5 bg-loss/10 hover:bg-loss/20 border border-loss/20 text-loss font-semibold rounded-xl text-sm transition">
-            🔄 Reset Portfolio
+          <button onClick={handleResetPortfolio} className="px-4 py-2.5 bg-loss/10 hover:bg-loss/20 border border-loss/20 text-loss font-semibold rounded-xl text-sm transition flex items-center gap-2">
+            <ReloadIcon className="w-4 h-4" /> Reset Portfolio
           </button>
         </div>
       </div>
@@ -302,14 +314,17 @@ export default function TradingPage() {
             {/* Wallet Metrics Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               {[
-                { label: '💵 Cash', value: `Rp ${summary.cash?.toLocaleString('id-ID')}`, sub: 'Sisa saldo untuk membeli' },
-                { label: '💼 Invested', value: `Rp ${summary.total_invested?.toLocaleString('id-ID')}`, sub: 'Dana terinvestasi di saham' },
-                { label: '📊 Total Equity', value: `Rp ${summary.total_equity?.toLocaleString('id-ID')}`, sub: `${summary.total_return_pct >= 0 ? '+' : ''}${summary.total_return_pct?.toFixed(2)}%`, subColor: summary.total_return_pct >= 0 ? 'text-profit' : 'text-loss' },
-                { label: '📈 Realized P&L', value: `Rp ${summary.realized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi tertutup', valueColor: summary.realized_pnl >= 0 ? 'text-profit' : 'text-loss' },
-                { label: '📊 Unrealized P&L', value: `Rp ${summary.unrealized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi terbuka', valueColor: summary.unrealized_pnl >= 0 ? 'text-profit' : 'text-loss' },
+                { label: 'Cash', icon: <CardStackIcon className="w-3.5 h-3.5 text-indigo-400" />, value: `Rp ${summary.cash?.toLocaleString('id-ID')}`, sub: 'Sisa saldo untuk membeli' },
+                { label: 'Invested', icon: <BackpackIcon className="w-3.5 h-3.5 text-amber-400" />, value: `Rp ${summary.total_invested?.toLocaleString('id-ID')}`, sub: 'Dana terinvestasi di saham' },
+                { label: 'Total Equity', icon: <ValueIcon className="w-3.5 h-3.5 text-purple-400" />, value: `Rp ${summary.total_equity?.toLocaleString('id-ID')}`, sub: `${summary.total_return_pct >= 0 ? '+' : ''}${summary.total_return_pct?.toFixed(2)}%`, subColor: summary.total_return_pct >= 0 ? 'text-profit' : 'text-loss' },
+                { label: 'Realized P&L', icon: <ArrowTopRightIcon className="w-3.5 h-3.5 text-emerald-400" />, value: `Rp ${summary.realized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi tertutup', valueColor: summary.realized_pnl >= 0 ? 'text-profit' : 'text-loss' },
+                { label: 'Unrealized P&L', icon: <ArrowTopRightIcon className="w-3.5 h-3.5 text-blue-400" />, value: `Rp ${summary.unrealized_pnl?.toLocaleString('id-ID')}`, sub: 'Profit/Loss posisi terbuka', valueColor: summary.unrealized_pnl >= 0 ? 'text-profit' : 'text-loss' },
               ].map((card, idx) => (
                 <div key={idx} className="bg-card border border-border rounded-2xl p-5 hover:bg-white/[0.05] transition duration-300">
-                  <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">{card.label}</p>
+                  <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    {card.icon}
+                    <span>{card.label}</span>
+                  </p>
                   <p className={`text-lg font-black font-mono ${card.valueColor || 'text-text'}`}>{card.value}</p>
                   <p className={`text-xs mt-1 ${card.subColor || 'text-secondary'}`}>{card.sub}</p>
                 </div>
@@ -320,7 +335,7 @@ export default function TradingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="bg-card border border-border rounded-3xl p-6 flex flex-col justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-text uppercase tracking-wider mb-2">💸 Topup Modal Virtual</h4>
+                  <h4 className="text-sm font-bold text-text uppercase tracking-wider mb-2 flex items-center gap-1.5"><PlusCircledIcon className="w-4 h-4 text-accent animate-pulse" /> Topup Modal Virtual</h4>
                   <p className="text-xs text-secondary mb-4">Tambahkan modal virtual untuk melakukan simulasi transaksi pembelian saham.</p>
                   <div className="space-y-4">
                     <div>
@@ -336,8 +351,8 @@ export default function TradingPage() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => handleTopup(topupAmount)} className="mt-6 w-full py-3 bg-white hover:bg-slate-200 text-black font-bold rounded-xl transition text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                  💸 Eksekusi Topup
+                <button onClick={() => handleTopup(topupAmount)} className="mt-6 w-full py-3 bg-white hover:bg-slate-200 text-black font-bold rounded-xl transition text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2">
+                  <PlusCircledIcon className="w-4 h-4" /> Eksekusi Topup
                 </button>
               </div>
               <div className="lg:col-span-2">
@@ -348,7 +363,7 @@ export default function TradingPage() {
             {/* Manual Order Form + Quick Buy */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="bg-card border border-border rounded-3xl p-6 lg:col-span-1">
-                <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><span>🛒</span> Place Order (Buy)</h3>
+                <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><PlusIcon className="w-4 h-4 text-profit" /> Place Order (Buy)</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] text-secondary block mb-1 font-bold uppercase">Ticker Saham</label>
@@ -374,8 +389,8 @@ export default function TradingPage() {
                       <input type="number" value={buySl} onChange={(e) => setBuySl(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-accent" />
                     </div>
                   </div>
-                  <button onClick={() => handleBuy(buyTicker, buyLot, buyPrice, buySignalId, buyTp, buySl)} className="w-full py-3 mt-2 bg-profit hover:bg-emerald-400 text-text font-bold rounded-xl transition text-sm shadow-lg shadow-emerald-500/20">
-                    🛒 Kirim Order Buy
+                  <button onClick={() => handleBuy(buyTicker, buyLot, buyPrice, buySignalId, buyTp, buySl)} className="w-full py-3 mt-2 bg-profit hover:bg-emerald-400 text-text font-bold rounded-xl transition text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+                    <PlusIcon className="w-4 h-4" /> Kirim Order Buy
                   </button>
                 </div>
               </div>
@@ -383,9 +398,9 @@ export default function TradingPage() {
               {/* Quick Buy from Top Picks */}
               <div className="lg:col-span-2 space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-text flex items-center gap-2"><span>🎯</span> Quick Buy dari Top Picks</h3>
-                  <button onClick={handleAutoInvestAll} className="px-3.5 py-1.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent font-bold rounded-xl text-xs transition">
-                    ⚡ Invest Semua (15% each)
+                  <h3 className="text-lg font-bold text-text flex items-center gap-2"><TargetIcon className="w-4 h-4 text-accent" /> Quick Buy dari Top Picks</h3>
+                  <button onClick={handleAutoInvestAll} className="px-3.5 py-1.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent font-bold rounded-xl text-xs transition flex items-center gap-1.5">
+                    <DoubleArrowUpIcon className="w-3.5 h-3.5 text-accent" /> Invest Semua (15% each)
                   </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[360px] overflow-y-auto pr-1">
@@ -422,7 +437,7 @@ export default function TradingPage() {
 
             {/* Pending Orders */}
             <div>
-              <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><span>⏳</span> Pending Orders</h3>
+              <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2"><ClockIcon className="w-4 h-4 text-accent" /> Pending Orders</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {pendingOrders.map((pos: any) => {
                   const diffVal = Math.abs(pos.current_price - pos.buy_price);

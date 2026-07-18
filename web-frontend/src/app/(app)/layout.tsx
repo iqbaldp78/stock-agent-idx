@@ -6,7 +6,11 @@ import { useApp } from '../context/AppContext';
 import {
   HomeIcon,
   TargetIcon,
-  BarChartIcon,
+  LightningBoltIcon,
+  PieChartIcon,
+  ClockIcon,
+  RocketIcon,
+  CardStackIcon,
   GearIcon,
   ExitIcon,
   CrossCircledIcon,
@@ -19,11 +23,11 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { href: "/", label: "Home Dashboard", icon: HomeIcon, id: "dashboard" },
   { href: "/top-picks", label: "AI Top Picks", icon: TargetIcon, id: "top-picks" },
-  { href: "/trading", label: "Trading Engine", icon: BarChartIcon, id: "trading" },
-  { href: "/bandarmologi", label: "Bandarmologi", icon: BarChartIcon, id: "bandarmologi" },
-  { href: "/ihsg", label: "IHSG Predictor", icon: BarChartIcon, id: "ihsg" },
-  { href: "/history", label: "AI Performance", icon: BarChartIcon, id: "history" },
-  { href: "/portfolio", label: "Portfolio Management", icon: BarChartIcon, id: "portfolio" },
+  { href: "/trading", label: "Trading Engine", icon: LightningBoltIcon, id: "trading" },
+  { href: "/bandarmologi", label: "Bandarmologi", icon: PieChartIcon, id: "bandarmologi" },
+  { href: "/ihsg", label: "IHSG Predictor", icon: ClockIcon, id: "ihsg" },
+  { href: "/performance", label: "AI Performance", icon: RocketIcon, id: "history" },
+  { href: "/portfolio", label: "Portfolio Management", icon: CardStackIcon, id: "portfolio" },
   { href: "/settings", label: "Preferences", icon: GearIcon, id: "settings" },
 ];
 
@@ -93,22 +97,23 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
                 </Link>
               );
             })}
-            <a href="https://admin.hamboo.me" target="_blank" className="flex items-center gap-4 px-4 py-3 text-secondary hover:text-text hover:bg-white/5 rounded-xl transition font-medium">
-              <GearIcon className="w-5 h-5" /> Admin Panel
-            </a>
           </nav>
 
-          <div className="mt-auto pt-6 border-t border-border">
-            <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 mb-4">
-              <p className="text-xs text-accent font-bold mb-1">PRO ACCOUNT AKTIF</p>
-              <p className="text-[10px] text-secondary">Akses sinyal unlimited dan AI reasoning detail menyala.</p>
+                    <div className="mt-auto pt-6 border-t border-border">
+            <div className="bg-background border border-border rounded-xl p-1 mb-4 flex text-xs font-medium">
+              <button
+                className={`flex-1 py-2 rounded-lg transition ${isPro ? 'text-secondary hover:text-text' : 'bg-accent text-text shadow-md'}`}
+                onClick={() => setIsPro(false)}
+              >Free</button>
+              <button
+                className={`flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1 ${isPro ? 'bg-accent text-text shadow-md' : 'text-secondary hover:text-text'}`}
+                onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")}
+              >
+                Pro <span className="text-[10px] bg-white/20 px-1 rounded-md">✨</span>
+              </button>
             </div>
             <button
-              onClick={() => {
-                localStorage.removeItem("token");
-                localStorage.removeItem("tier");
-                window.location.href = "/login";
-              }}
+              onClick={logout}
               className="flex items-center gap-4 px-4 py-3 text-loss hover:text-red-300 hover:bg-loss/10 rounded-xl transition font-medium w-full"
             >
               <ExitIcon className="w-5 h-5" /> Sign Out
@@ -117,23 +122,24 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
         </div>
       </aside>
 
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            {/* Navbar */}
+      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="mr-2 p-2 rounded-lg text-secondary hover:text-text hover:bg-white/10 transition">
+            <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 rounded-lg text-secondary hover:text-text hover:bg-white/10 transition">
               <HamburgerMenuIcon className="w-6 h-6" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shadow-lg shadow-accent/20 text-text font-bold text-sm">
+            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shadow-lg shadow-accent/20 text-text font-bold text-sm hidden sm:flex">
               H
             </div>
-            <h1 className="font-bold text-xl tracking-wide">
+            <h1 className="font-bold text-lg md:text-xl tracking-wide">
               Hamboo<span className="text-accent">.ai</span>
             </h1>
           </div>
 
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <div className="bg-background p-1 rounded-full border border-border flex text-xs">
+          <div className="flex items-center gap-3 text-sm font-medium">
+            {/* Desktop Only Actions */}
+            <div className="hidden md:flex bg-background p-1 rounded-full border border-border items-center shrink-0 text-xs">
               <button
                 className={`px-4 py-1.5 rounded-full transition ${isPro ? 'text-secondary hover:text-text' : 'bg-accent text-text shadow-lg shadow-indigo-500/20'}`}
                 onClick={() => setIsPro(false)}
@@ -145,28 +151,29 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
                 Pro <span className="text-[10px] bg-white/20 px-1.5 rounded-md">✨</span>
               </button>
               
-              {/* Logout Button */}
               {currentUser && (
-                <div className="flex items-center gap-2 mr-2">
-                  <span className="text-secondary text-sm hidden sm:inline-block">Hi, <strong className="text-text">{currentUser}</strong></span>
+                <div className="flex items-center gap-2 mx-2 pl-2 border-l border-border">
+                  <span className="text-secondary text-sm">Hi, <strong className="text-text">{currentUser}</strong></span>
                 </div>
               )}
               <button
                 onClick={logout}
-                className="px-3 py-1.5 rounded-full bg-loss/10 border border-loss/20 text-loss hover:bg-loss/20 transition flex items-center gap-1 font-semibold text-sm"
+                className="px-3 py-1.5 rounded-full bg-loss/10 border border-loss/20 text-loss hover:bg-loss/20 transition flex items-center gap-1 font-semibold text-sm ml-1"
               >
                 Logout
               </button>
             </div>
-            <span className="px-3 py-1 rounded-full bg-white/5 border border-border text-profit font-mono">
-              Cash: Rp {(wallet.cash || 0).toLocaleString('id-ID')}
+
+            {/* Always Visible: Cash */}
+            <span className="px-3 py-1.5 rounded-full bg-white/5 border border-border text-profit font-mono text-xs sm:text-sm shrink-0">
+              <span className="hidden sm:inline">Cash: </span>Rp {(wallet.cash || 0).toLocaleString('id-ID')}
             </span>
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-10 relative z-10">
+      <main className="max-w-5xl mx-auto px-4 md:px-6 py-10 space-y-10 relative z-10">
         {children}
       </main>
 

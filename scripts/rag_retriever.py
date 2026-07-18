@@ -8,7 +8,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-DB_URI = "postgresql://vectoruser:vectorpassword@vector_postgres:5432/vectoragent"
+DB_URI = os.getenv("VECTOR_DB_URI", "postgresql://vectoruser:vectorpassword@vector_postgres:5432/vectoragent")
 ROUTER_EMBED_URL = "https://router.hamboo.me/v1/embeddings"
 EMBED_MODEL = "gemini/gemini-embedding-2-preview"
 

@@ -5,6 +5,7 @@ import { useApp } from '../../context/AppContext';
 
 const formatEntry = (stock: any) => {
   if (!stock) return "-";
+  if (stock.entry_low === null || stock.entry_low === undefined) return "🔒 Upgrade Pro";
   if (stock.entry_low && stock.entry_high) return `${stock.entry_low.toLocaleString('id-ID')} - ${stock.entry_high.toLocaleString('id-ID')}`;
   if (stock.entry_low) return `${stock.entry_low.toLocaleString('id-ID')}`;
   if (stock.entry_high) return `${stock.entry_high.toLocaleString('id-ID')}`;
@@ -12,10 +13,15 @@ const formatEntry = (stock: any) => {
 };
 const formatTP = (stock: any) => {
   if (!stock) return "-";
+  if (stock.target_1 === null || stock.target_1 === undefined) return "🔒 Upgrade Pro";
   const tps = [stock.target_1, stock.target_2, stock.target_3].filter(tp => tp !== null && tp !== undefined);
   return tps.length > 0 ? tps.map(tp => `${tp.toLocaleString('id-ID')}`).join(" / ") : "-";
 };
-const formatSL = (stock: any) => (!stock || !stock.stop_loss) ? "-" : `${stock.stop_loss.toLocaleString('id-ID')}`;
+const formatSL = (stock: any) => {
+  if (!stock) return "-";
+  if (stock.stop_loss === null || stock.stop_loss === undefined) return "🔒 Upgrade Pro";
+  return `${stock.stop_loss.toLocaleString('id-ID')}`;
+};
 const formatLot = (lots: number) => { if (!lots) return "0"; if (lots >= 1000) return `${(lots / 1000).toFixed(1)}K`; return lots.toLocaleString('id-ID'); };
 const formatValue = (val: number) => { if (!val) return "0"; if (val >= 1e9) return `${(val / 1e9).toFixed(2)}B`; if (val >= 1e6) return `${(val / 1e6).toFixed(2)}M`; return val.toLocaleString('id-ID'); };
 const formatPercentage = (pct: number) => { if (pct === undefined || pct === null) return "0.00%"; return `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`; };
@@ -76,6 +82,10 @@ export default function TopPicksPage() {
               <div className="bg-white/5 rounded-xl p-4 border border-border flex items-center justify-center">
                 <button
                   onClick={() => {
+                    if (selectedStock.target_1 === null || selectedStock.target_1 === undefined) {
+                      showToast("Fitur simulasi transaksi dari sinyal membutuhkan Pro Tier", "error");
+                      return;
+                    }
                     sessionStorage.setItem('tradingPrefill', JSON.stringify({
                       ticker: selectedStock.ticker,
                       price: selectedStock.current_price || selectedStock.entry_price || 1000,
@@ -94,7 +104,7 @@ export default function TopPicksPage() {
             </div>
 
             {/* Entry, TP, SL targets */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
               <div className="bg-white/5 rounded-xl p-4 border border-border flex flex-col justify-center">
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">Entry Range</p>
                 <p className="text-base font-bold text-text font-mono">{formatEntry(selectedStock)}</p>
@@ -369,7 +379,7 @@ export default function TopPicksPage() {
                   <p className="text-xl font-bold text-text">Moderate</p>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                 <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Entry Range</p><p className="text-sm font-bold text-text font-mono">{formatEntry(picks[0])}</p></div>
                 <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Take Profit</p><p className="text-sm font-bold text-profit font-mono">{formatTP(picks[0])}</p></div>
                 <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Stop Loss</p><p className="text-sm font-bold text-loss font-mono">{formatSL(picks[0])}</p></div>
@@ -384,9 +394,9 @@ export default function TopPicksPage() {
           </div>
 
           {/* Grid remaining picks */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative">
             {picks.slice(1).map((pick, i) => (
-              <div key={i} className={`bg-card backdrop-blur-md border border-border rounded-3xl p-6 flex flex-col hover:bg-white/5 transition duration-300 ${!isPro ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
+              <div key={i} className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 flex flex-col hover:bg-white/5 transition duration-300">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h4 className="text-2xl font-black text-text mb-1 hover:text-accent cursor-pointer transition-colors" onClick={() => setSelectedStock(pick)}>{pick.ticker}</h4>
@@ -397,7 +407,7 @@ export default function TopPicksPage() {
                     <div className="text-[10px] text-secondary font-bold mt-1 uppercase tracking-wider">Current Price</div>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">Entry</p><p className="text-[11px] font-bold text-text font-mono truncate">{formatEntry(pick)}</p></div>
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">TP</p><p className="text-[11px] font-bold text-profit font-mono truncate">{formatTP(pick)}</p></div>
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">SL</p><p className="text-[11px] font-bold text-loss font-mono truncate">{formatSL(pick)}</p></div>
@@ -410,18 +420,6 @@ export default function TopPicksPage() {
                 </div>
               </div>
             ))}
-            {!isPro && picks.length > 1 && (
-              <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] rounded-3xl flex flex-col justify-center items-center text-center p-8 z-20 border border-border">
-                <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-accent/20">
-                  <span className="text-3xl">🔒</span>
-                </div>
-                <h4 className="text-2xl font-bold text-text mb-3">Pro Tier Required</h4>
-                <p className="text-secondary mb-8 max-w-sm">Upgrade ke akun Pro untuk membuka seluruh sinyal trading harian, deteksi algoritma bandarmologi, dan prediksi harga AI lanjutan.</p>
-                <button onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")} className="px-8 py-4 rounded-xl font-bold text-text bg-accent shadow-lg shadow-accent/25 hover:scale-105 transition transform">
-                  Upgrade ke Pro ✨
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
