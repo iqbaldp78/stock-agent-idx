@@ -51,7 +51,7 @@ def get_chat_model(
         api_key=NINEROUTER_API_KEY or "9router",
         temperature=temperature,
         max_tokens=max_tokens,
-        timeout=120,
+        timeout=300,
         model_kwargs=kwargs,
     )
 

@@ -27,16 +27,20 @@ def analyze_portfolio(
     """
 
     # Build context
+    logger.info(f"[Portfolio AI] Processing holdings: {holdings}")
     context = _build_portfolio_context(holdings, active_strategies, top_picks, monthly_budget, transactions)
-
+    
+    # Retrieve RAG news context for holdings tickers
+    news_context = _get_rag_news_context(holdings)
+    
     # System prompt
-    system_prompt = """You are an experienced Portfolio Manager for Indonesian stock market (IDX/LQ45) specializing in long-term investing with DCA (Dollar Cost Averaging) strategy.
+    system_prompt = """Anda adalah Manajer Portofolio berpengalaman untuk pasar saham Indonesia (IDX/LQ45) yang berspesialisasi dalam investasi jangka panjang dengan strategi DCA (Dollar Cost Averaging).
 
-Your task is to analyze the portfolio and provide actionable recommendations in JSON format.
+Tugas Anda adalah menganalisis portofolio dan memberikan rekomendasi yang dapat ditindaklanjuti dalam format JSON.
 
-Output JSON schema:
+Skema JSON Output:
 {
-    "summary": "Executive summary in 2-3 sentences",
+    "summary": "Ringkasan eksekutif dalam 2-3 kalimat dalam Bahasa Indonesia",
     "rebalancing": {
         "needed": true/false,
         "overweight": ["TICKER1", "TICKER2"],
@@ -50,57 +54,64 @@ Output JSON schema:
             "rank": 1,
             "ticker": "TICKER",
             "allocation": 800000,
+            "target_price": 4000,
+            "target_lots": 20,
             "timing_status": "IDEAL/ACCEPTABLE/CAUTION",
             "conviction": "HIGH/MEDIUM/LOW",
-            "reasoning": "Why this ticker is priority..."
+            "reasoning": "Mengapa ticker ini menjadi prioritas..."
         }
     ],
     "risk_analysis": {
         "sector_concentration": {"banking": 40, "mining": 30, "consumer": 20, "other": 10},
         "risk_level": "LOW/MEDIUM/HIGH",
         "diversification_score": 7.5,
-        "recommendations": ["Add consumer sector exposure", "Reduce banking concentration"]
+        "recommendations": ["Tambah eksposur sektor konsumsi", "Kurangi konsentrasi perbankan"]
     },
     "performance_attribution": {
         "best_performer": {"ticker": "TICKER", "return_pct": 15.2, "reason": "..."},
         "worst_performer": {"ticker": "TICKER", "return_pct": -3.5, "reason": "..."},
-        "signal_quality": "X/Y signals were profitable"
+        "signal_quality": "X/Y sinyal menguntungkan"
     }
 }
 
-Important:
-- Be specific with numbers (allocation amounts, prices, percentages)
-- Focus on actionable insights
-- Consider timing (true cost bandar) when ranking DCA priority
-- Allocate monthly budget across top 3 priorities only
-- Risk level based on sector concentration + P&L volatility
-- Diversification score 1-10 (higher = better)
+Penting:
+- Gunakan Bahasa Indonesia untuk semua output teks.
+- Spesifik dengan angka (jumlah alokasi, harga, persentase).
+- Fokus pada wawasan yang dapat ditindaklanjuti.
+- Pertimbangkan waktu (true cost bandar) saat memberi peringkat prioritas DCA.
+- Alokasikan anggaran bulanan hanya untuk 3 prioritas teratas.
+- Tingkat risiko berdasarkan konsentrasi sektor + volatilitas P&L.
+- Skor diversifikasi 1-10 (lebih tinggi = lebih baik).
+- Untuk DCA Priority, sertakan "target_price" (harga ideal pembelian) dan "target_lots" (jumlah lot berdasarkan alokasi dan target_price; 1 lot = 100 lembar).
 """
 
-    user_prompt = f"""CURRENT PORTFOLIO:
+    user_prompt = f"""PORTFOLIO SAAT INI:
 {context['portfolio_summary']}
 
-HOLDINGS DETAIL:
+DETAIL HOLDINGS:
 {context['holdings_detail']}
 
-ACTIVE DCA STRATEGIES:
+STRATEGI DCA AKTIF:
 {context['dca_strategies']}
 
-LATEST TOP PICKS (Investment Opportunities):
+TOP PICKS TERBARU (Peluang Investasi):
 {context['top_picks_detail']}
 
-MONTHLY DCA BUDGET: Rp {monthly_budget:,.0f}
+ANGGARAN DCA BULANAN: Rp {monthly_budget:,.0f}
 
-HISTORICAL PERFORMANCE:
+KINERJA HISTORIS:
 {context['performance_summary']}
 
-Please provide comprehensive portfolio analysis covering:
-1. Rebalancing: Is portfolio balanced? Which holdings overweight/underweight? Recommend actions.
-2. DCA Priority: From TOP PICKS + current holdings, rank top 3 tickers to buy this month. Allocate the monthly budget. Consider timing, conviction, and balance.
-3. Risk Analysis: Sector concentration, diversification score, risk level, recommendations.
-4. Performance Attribution: Best/worst performers, signal quality, lessons learned.
+BERITA & SENTIMEN TERKINI (dari RAG/Vector Database):
+{news_context}
 
-Output strictly in JSON format matching the schema provided.
+Berikan analisis portofolio komprehensif yang mencakup:
+1. Rebalancing: Apakah portofolio seimbang? Holding mana yang kelebihan/kekurangan bobot? Rekomendasikan tindakan.
+2. Prioritas DCA: Dari TOP PICKS + holding saat ini, beri peringkat 3 ticker teratas untuk dibeli bulan ini. Alokasikan anggaran bulanan. Pertimbangkan waktu, keyakinan, dan keseimbangan. ANDA WAJIB MENGISI field "target_price" dan "target_lots" untuk SETIAP ticker prioritas. Pertimbangkan juga berita/sentimen terkini dari RAG di atas.
+3. Analisis Risiko: Konsentrasi sektor, skor diversifikasi, tingkat risiko, rekomendasi.
+4. Atribusi Kinerja: Peraih untung/rugi terbaik, kualitas sinyal, pelajaran yang dipetik.
+
+Output harus berupa JSON ketat sesuai skema yang disediakan.
 """
 
     try:
@@ -118,12 +129,75 @@ Output strictly in JSON format matching the schema provided.
             return _error_response("LLM returned no valid JSON response")
 
         result["generated_at"] = datetime.now().isoformat()
+        
+        # Post-process dca_priority to guarantee target_price and target_lots
+        try:
+            price_map = {}
+            for h in holdings:
+                if h.get("ticker"):
+                    p = h.get("current_price")
+                    if not p or p <= 0:
+                        p = h.get("avg_cost", 0)
+                    price_map[h["ticker"]] = p
+            for tp in top_picks:
+                if tp.get("ticker"):
+                    p = tp.get("current_price")
+                    if not p or p <= 0:
+                        p = tp.get("target_price", 0)
+                    price_map[tp["ticker"]] = p
+            
+            dca = result.get("dca_priority")
+            if dca and isinstance(dca, list):
+                for item in dca:
+                    ticker = item.get("ticker")
+                    alloc = item.get("allocation", 0)
+                    if ticker and alloc > 0 and ticker in price_map:
+                        price = price_map[ticker]
+                        if price and price > 0:
+                            item["target_price"] = price
+                            item["target_lots"] = int(alloc // (price * 100))
+        except Exception as e:
+            logger.error(f"[Portfolio AI] Post-process error: {e}")
+
         logger.info(f"[Portfolio AI] Analysis completed: {result.get('summary', '')[:100]}")
         return result
 
     except Exception as e:
         logger.error(f"[Portfolio AI] Error: {e}")
         return _error_response(str(e))
+
+
+def _get_rag_news_context(holdings: list[dict]) -> str:
+    """Retrieve recent news from RAG (pgvector) for each ticker in holdings."""
+    try:
+        from scripts.rag_retriever import search_by_ticker, format_for_prompt
+        
+        tickers = [h.get("ticker") for h in holdings if h.get("ticker")]
+        if not tickers:
+            return "Tidak ada berita terkini yang tersedia."
+        
+        all_news = []
+        for ticker in tickers:
+            try:
+                news = search_by_ticker(ticker, limit=3)
+                if news:
+                    all_news.append(f"--- {ticker} ---")
+                    all_news.append(format_for_prompt(news))
+            except Exception as e:
+                logger.warning(f"[Portfolio AI] RAG search failed for {ticker}: {e}")
+                continue
+        
+        if not all_news:
+            return "Tidak ada berita terkini yang tersedia untuk ticker di portofolio."
+        
+        logger.info(f"[Portfolio AI] RAG retrieved news for {len(tickers)} tickers")
+        return "\n".join(all_news)
+    except ImportError:
+        logger.warning("[Portfolio AI] RAG retriever not available")
+        return "RAG retriever tidak tersedia."
+    except Exception as e:
+        logger.error(f"[Portfolio AI] RAG retrieval error: {e}")
+        return "Gagal mengambil berita dari RAG."
 
 
 def _build_portfolio_context(
@@ -153,17 +227,19 @@ Unrealized P&L: Rp {total_pnl:+,.0f} ({total_pnl_pct:+.2f}%)
         ticker = h['ticker']
         lots = h.get('total_lots', 0)
         avg = h.get('avg_cost', 0)
-        curr = h.get('current_price')
+        curr = h.get('current_price') or 0
         pnl_pct = h.get('unrealized_pnl_pct')
         invested = h.get('total_invested', 0)
         weight = (invested / total_invested * 100) if total_invested > 0 else 0
+        current_value = lots * curr
 
-        line = f"- {ticker}: {lots} lot @ Rp {avg:,.0f}"
+        # Pastikan data tersedia dengan memberikan nilai default jika kosong
+        line = f"- {ticker}: {lots} lot, Nilai: Rp {current_value:,.0f} (Avg: Rp {avg:,.0f})"
         if curr:
-            line += f" → Current: Rp {curr:,.0f}"
+            line += f" | Harga Terkini: Rp {curr:,.0f}"
         if pnl_pct is not None:
             line += f" | P&L: {pnl_pct:+.2f}%"
-        line += f" | Weight: {weight:.1f}%"
+        line += f" | Bobot: {weight:.1f}%"
         holdings_lines.append(line)
 
     holdings_detail = "\n".join(holdings_lines) if holdings_lines else "No holdings yet."

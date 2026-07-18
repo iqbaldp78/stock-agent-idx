@@ -197,16 +197,16 @@ def get_quick_ai_entry(ticker: str) -> Optional[dict]:
 # Get / List Strategies
 # ============================================================
 
-def get_active_strategies() -> list[dict]:
+def get_active_strategies(user_id: Optional[int] = None) -> list[dict]:
     """Ambil semua DCA strategies yang masih ACTIVE."""
     db: Session = SessionLocal()
     try:
-        strategies = (
-            db.query(DcaStrategy)
-            .filter(DcaStrategy.status == "ACTIVE")
-            .order_by(DcaStrategy.created_at.desc())
-            .all()
-        )
+        q = db.query(DcaStrategy).filter(DcaStrategy.status == "ACTIVE")
+        if user_id is not None:
+            from db.models import PortfolioHolding
+            q = q.join(PortfolioHolding, DcaStrategy.holding_id == PortfolioHolding.id).filter(PortfolioHolding.user_id == user_id)
+        
+        strategies = q.order_by(DcaStrategy.created_at.desc()).all()
         return [_strategy_to_dict(s) for s in strategies]
     finally:
         db.close()

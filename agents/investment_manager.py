@@ -432,7 +432,7 @@ def _build_pick_rule_based(
     
     fair_value = fund.get("fair_value", {})
 
-    def _broker_true_cost_rows(window: dict, limit: int = 5) -> list[dict]:
+    def _broker_true_cost_rows(window: dict, limit: int = 10) -> list[dict]:
         rows = []
         for b in (window.get("top_accumulators") or [])[:limit]:
             avg_price = b.get("avg_price") or 0
@@ -451,7 +451,7 @@ def _build_pick_rule_based(
             })
         return rows
 
-    def _broker_dist_rows(window: dict, limit: int = 5) -> list[dict]:
+    def _broker_dist_rows(window: dict, limit: int = 10) -> list[dict]:
         rows = []
         for b in (window.get("top_distributors") or [])[:limit]:
             avg_price = b.get("avg_price") or 0

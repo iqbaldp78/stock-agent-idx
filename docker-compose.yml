@@ -87,6 +87,8 @@ services:
     restart: always
     ports:
       - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file: .env
     environment:
       - DB_HOST=stock_postgres
@@ -103,6 +105,8 @@ services:
     build:
       context: ./web-frontend
       dockerfile: Dockerfile
+      args:
+        - BACKEND_URL=http://web_api:8000
     container_name: web_user_frontend
     restart: always
     ports:

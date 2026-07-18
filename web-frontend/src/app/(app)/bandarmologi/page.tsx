@@ -38,7 +38,23 @@ export default function BandarmologiPage() {
     try {
       const res = await fetch(`/api/bandarmologi/${ticker}`);
       const data = await res.json();
-      if (data && !data.error) setBandarmologiData(data);
+      if (data && !data.error) {
+        // Map agent response to frontend structure
+        const mapped = {
+          ...data,
+          summary: {
+            current_price: data.price_analysis?.current_price,
+            signal: data.signal,
+          },
+          accumulators_7d: data.window_7d?.top_accumulators || [],
+          accumulators_1m: data.window_1m?.top_accumulators || [],
+          distributors_7d: data.window_7d?.top_distributors || [],
+          distributors_1m: data.window_1m?.top_distributors || [],
+          window_7d_summary: data.window_7d || {},
+          window_1m_summary: data.window_1m || {},
+        };
+        setBandarmologiData(mapped);
+      }
     } catch (err) {
       console.error("Error loading bandarmologi data:", err);
     } finally {

@@ -637,6 +637,19 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
             "type": entry.get("type"),
         }
 
+    # === MUTUAL EXCLUSIVITY: Broker hanya bisa accumulator ATAU distributor, tidak keduanya ===
+    # Jika broker ada di kedua list, tentukan based on mana yang lebih signifikan (value lebih besar)
+    overlapping_brokers = set(broker_totals.keys()) & set(distribution_totals.keys())
+    for broker_code in overlapping_brokers:
+        buy_val = broker_totals[broker_code]["total_buy_value"]
+        sell_val = distribution_totals[broker_code]["total_sell_value"]
+
+        # Remove dari yang lebih kecil valuenya
+        if buy_val >= sell_val:
+            del distribution_totals[broker_code]
+        else:
+            del broker_totals[broker_code]
+
     sorted_brokers = sorted(
         broker_totals.items(),
         key=lambda x: x[1]["total_buy_value"],
@@ -664,8 +677,8 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
         "ticker": ticker,
         "window_days": days,
         "period": f"{date_from} s/d {date_to}",
-        "top_accumulators": sorted_brokers[:5],
-        "top_distributors": sorted_distributors[:5],
+        "top_accumulators": sorted_brokers[:10],
+        "top_distributors": sorted_distributors[:10],
         "distribution_top3_value": top3_sell_total,
         "bandar_detector": bandar_detector,
         "daily_summary": {},  # Not available in NET aggregate mode

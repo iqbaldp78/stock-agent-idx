@@ -253,14 +253,14 @@ def analyze(ticker: str) -> dict:
 
     # === Format top accumulators ===
     top_7d = [_format_broker_detail(code, data, BROKER_WATCH_SHORT, current_price)
-              for code, data in w7["top_accumulators"][:5]]
+              for code, data in w7["top_accumulators"][:10]]
     top_30d = [_format_broker_detail(code, data, BROKER_WATCH_LONG, current_price)
-               for code, data in w30["top_accumulators"][:5]]
+               for code, data in w30["top_accumulators"][:10]]
 
     top_dist_7d = [_format_distribution_detail(code, data, BROKER_WATCH_SHORT)
-                   for code, data in w7.get("top_distributors", [])[:5]]
+                   for code, data in w7.get("top_distributors", [])[:10]]
     top_dist_30d = [_format_distribution_detail(code, data, BROKER_WATCH_LONG)
-                    for code, data in w30.get("top_distributors", [])[:5]]
+                    for code, data in w30.get("top_distributors", [])[:10]]
 
     # === Entry Analysis ===
     bandar_avg_7d = w7["top_accumulators"][0][1]["avg_price"] if w7["top_accumulators"] else 0

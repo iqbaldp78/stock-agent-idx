@@ -44,7 +44,7 @@ def analyze_and_embed(content: str):
         "messages": [
             {
                 "role": "system",
-                "content": "You are a financial news analyst. Extract a brief summary, sentiment (Bullish/Bearish/Neutral), impact_scope (Macro/Micro), and a list of related stock tickers from the text. Respond ONLY with a JSON object containing keys: 'summary', 'sentiment', 'impact_scope', 'tickers'."
+                "content": "You are a financial news analyst. Extract a brief summary, sentiment (Bullish/Bearish/Neutral), impact_scope (Macro/Micro), and a list of related stock tickers from the text. IMPORTANT: Be proactive. If a report shows earnings growth, beat-expectations, or positive expansion, tag as 'Bullish'. If it shows declining profits, lawsuits, or negative outlook, tag as 'Bearish'. Only tag 'Neutral' for strictly non-financial or purely factual, non-indicative events. Respond ONLY with a JSON object containing keys: 'summary', 'sentiment', 'impact_scope', 'tickers'."
             },
             {
                 "role": "user",

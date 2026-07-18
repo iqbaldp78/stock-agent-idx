@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '../context/AppContext';
@@ -31,6 +31,13 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const { wallet, toasts, dismissToast, isPro, setIsPro, logout, currentUser } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token && pathname !== "/login") {
+      window.location.replace("/login");
+    }
+  }, [pathname]);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";

@@ -237,51 +237,64 @@ def update_current_prices(holdings: list[dict]) -> list[dict]:
     except ImportError:
         get_stock_info = None
 
+    import concurrent.futures
+
+    def _fetch_price_for_holding(h: dict) -> dict:
+        ticker = h["ticker"].strip() # Bersihkan whitespace!
+        current_price = 0.0
+        try:
+            # 1. Coba fetch dari Stockbit
+            current_price = get_current_price_stockbit(ticker)
+            
+            # 2. Fallback fetch dari Yahoo Finance (jika gagal/0/None)
+            if (not current_price or current_price <= 0) and get_stock_info:
+                try:
+                    info = get_stock_info(ticker)
+                    current_price = info.get("current_price") or 0
+                except Exception as yf_err:
+                    logger.warning(f"[Portfolio] yfinance fallback failed for {ticker}: {yf_err}")
+
+            if not current_price or current_price <= 0:
+                current_price = float(h["avg_cost"]) # Fallback to avg_cost
+        except Exception as e:
+            logger.error(f"[Portfolio] Error update price for {ticker}: {e}")
+            current_price = float(h["avg_cost"])
+
+        h["current_price"] = current_price
+        
+        # Hitung P&L
+        total_shares = int(h["total_shares"])
+        avg_cost = float(h["avg_cost"])
+        
+        market_value = current_price * total_shares
+        total_cost = avg_cost * total_shares
+        
+        unrealized_pnl = market_value - total_cost
+        unrealized_pnl_pct = (unrealized_pnl / total_cost * 100) if total_cost > 0 else 0.0
+        
+        h["market_value"] = market_value
+        h["total_cost"] = total_cost
+        h["unrealized_pnl"] = unrealized_pnl
+        h["unrealized_pnl_pct"] = unrealized_pnl_pct
+        return h
+
     try:
-        for h in holdings:
-            ticker = h["ticker"].strip() # Bersihkan whitespace!
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            updated = list(executor.map(_fetch_price_for_holding, holdings))
+        
+        db: Session = SessionLocal()
+        for h in updated:
             try:
-                # 1. Coba fetch dari Stockbit
-                current_price = get_current_price_stockbit(ticker)
-                
-                # 2. Fallback fetch dari Yahoo Finance (jika gagal/0/None)
-                if (not current_price or current_price <= 0) and get_stock_info:
-                    try:
-                        info = get_stock_info(ticker)
-                        current_price = info.get("current_price") or 0
-                    except Exception as yf_err:
-                        logger.warning(f"[Portfolio] yfinance fallback failed for {ticker}: {yf_err}")
-
-                if not current_price or current_price <= 0:
-                    updated.append(h)
-                    continue
-
-                total_shares = int(h["total_shares"])
-                avg_cost = float(h["avg_cost"])
-                total_invested = avg_cost * total_shares
-                current_value = current_price * total_shares
-                unrealized_pnl = current_value - total_invested
-                unrealized_pnl_pct = (unrealized_pnl / total_invested * 100) if total_invested > 0 else 0
-
                 # Update DB
-                holding_obj = db.query(PortfolioHolding).filter_by(ticker=ticker).first()
+                holding_obj = db.query(PortfolioHolding).filter_by(ticker=h["ticker"]).first()
                 if holding_obj:
-                    holding_obj.current_price = current_price
-                    holding_obj.current_value = current_value
-                    holding_obj.unrealized_pnl = unrealized_pnl
-                    holding_obj.unrealized_pnl_pct = round(unrealized_pnl_pct, 2)
+                    holding_obj.current_price = h["current_price"]
+                    holding_obj.current_value = h["market_value"]
+                    holding_obj.unrealized_pnl = h["unrealized_pnl"]
+                    holding_obj.unrealized_pnl_pct = round(h["unrealized_pnl_pct"], 2)
                     holding_obj.updated_at = datetime.now()
-
-                h = dict(h)
-                h["current_price"] = current_price
-                h["current_value"] = current_value
-                h["unrealized_pnl"] = unrealized_pnl
-                h["unrealized_pnl_pct"] = round(unrealized_pnl_pct, 2)
-
             except Exception as e:
-                logger.warning(f"[Portfolio] price update error for {ticker}: {e}")
-
-            updated.append(h)
+                logger.warning(f"[Portfolio] price update error for {h['ticker']}: {e}")
 
         db.commit()
     except Exception as e:
@@ -495,11 +508,15 @@ def get_transactions(
     txn_type: Optional[str] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    user_id: Optional[int] = None,
 ) -> list[dict]:
     """Ambil history transaksi dengan filter opsional."""
     db: Session = SessionLocal()
     try:
         q = db.query(DcaTransaction)
+        if user_id is not None:
+            from db.models import PortfolioHolding
+            q = q.join(PortfolioHolding, DcaTransaction.holding_id == PortfolioHolding.id).filter(PortfolioHolding.user_id == user_id)
         if ticker:
             q = q.filter(DcaTransaction.ticker == ticker.upper())
         if txn_type:

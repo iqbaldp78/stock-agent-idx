@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import authenticatedFetch from '@/lib/apiClient';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Toast { id: number; message: string; type: 'success' | 'error' | 'info'; }
@@ -86,7 +87,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const loadData = useCallback(async () => {
     const token = localStorage.getItem("token");
 
-    fetch('/api/signals/top-picks')
+    authenticatedFetch('/api/signals/top-picks')
       .then(res => res.json())
       .then(data => {
         if (data.data) {
@@ -97,7 +98,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
       .catch(err => console.error("Error loading picks:", err));
 
-    fetch('/api/dashboard/stats')
+    authenticatedFetch('/api/dashboard/stats')
       .then(res => res.json())
       .then(data => {
         setStats(data);
@@ -108,9 +109,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       });
 
-    fetch('/api/portfolio/paper', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    authenticatedFetch('/api/portfolio/paper')
       .then(res => res.json())
       .then(data => {
         if (data.wallet) setWallet(data.wallet);
@@ -118,7 +117,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
       .catch(err => console.error("Error loading portfolio:", err));
 
-    fetch('/api/performance/history')
+    authenticatedFetch('/api/performance/history')
       .then(res => res.json())
       .then(data => {
         if (data.history) setHistoryData(data.history);

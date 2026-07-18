@@ -109,9 +109,9 @@ export default function PortfolioPage() {
     e.preventDefault();
     if (!newHoldingTicker.trim()) { showToast("Ticker tidak boleh kosong", 'error'); return; }
     const token = localStorage.getItem("token");
-    const res = await fetch("/api/portfolio/holdings", {
+    const res = await fetch("/api/portfolio/holdings/add", {
       method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ticker: newHoldingTicker.toUpperCase(), lots: newHoldingLots, avg_cost: newHoldingAvg, notes: newHoldingNotes })
+      body: JSON.stringify({ ticker: newHoldingTicker.toUpperCase(), lot: newHoldingLots, avg_cost: newHoldingAvg, notes: newHoldingNotes })
     });
     const data = await res.json();
     if (res.ok) { showToast(data.message || "Holding berhasil ditambahkan"); fetchPortfolioData(); setNewHoldingTicker(""); setNewHoldingLots(10); setNewHoldingAvg(1000); setNewHoldingNotes(""); }
@@ -124,7 +124,7 @@ export default function PortfolioPage() {
     const token = localStorage.getItem("token");
     const res = await fetch("/api/portfolio/transactions", {
       method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ticker: recordTxnTicker, transaction_type: recordTxnType, lots: recordTxnLots, price: recordTxnPrice, notes: recordTxnNotes })
+      body: JSON.stringify({ ticker: recordTxnTicker, transaction_type: recordTxnType, lot: recordTxnLots, price: recordTxnPrice, notes: recordTxnNotes })
     });
     const data = await res.json();
     if (res.ok) { showToast(data.message || "Transaksi berhasil dicatat"); fetchPortfolioData(); fetchTransactions(); setRecordTxnNotes(""); }
@@ -580,7 +580,7 @@ export default function PortfolioPage() {
           {!aiAnalysisLoading && aiAnalysisResult && (
             <div className="space-y-6 animate-fade-in">
               {aiAnalysisResult.generated_at && <p className="text-xs text-secondary font-mono">Generated: {aiAnalysisResult.generated_at.substring(0, 19).replace("T", " ")} WIB</p>}
-              {aiAnalysisResult.summary && <div className="bg-accent/10 border border-[#7C3AED]/20 p-5 rounded-2xl text-accent text-sm leading-relaxed"><span className="font-bold text-text block mb-1">📋 AI Summary:</span>{aiAnalysisResult.summary}</div>}
+              {aiAnalysisResult.summary && <div className="bg-gray-800/60 border border-gray-600/30 p-5 rounded-2xl text-gray-300 text-sm leading-relaxed"><span className="font-bold text-text block mb-1">📋 AI Summary:</span>{aiAnalysisResult.summary}</div>}
               
               <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
                 <h4 className="text-base font-bold text-text">⚖️ Rebalancing Recommendations</h4>
@@ -598,21 +598,36 @@ export default function PortfolioPage() {
               <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
                 <h4 className="text-base font-bold text-text">💰 DCA Priority This Month (Budget: Rp {aiMonthlyBudget.toLocaleString("id-ID")})</h4>
                 <div className="space-y-3">
-                  {aiAnalysisResult.dca_priority?.map((p: any, idx: number) => (
-                    <div key={idx} className="bg-background border border-border p-4 rounded-xl flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-black text-accent font-mono">#{p.rank}</span>
-                        <div>
-                          <h5 className="font-bold text-text">{p.ticker}</h5>
-                          <p className="text-[10px] text-secondary">Timing: <span className="text-secondary font-mono font-bold">{p.timing_status}</span> | Conviction: <span className="text-secondary font-mono font-bold">{p.conviction}</span></p>
+                  {aiAnalysisResult.dca_priority?.map((p: any, idx: number) => {
+                    const amount = p.allocation || p.suggested_amount;
+                    const reason = p.reasoning || p.reason;
+                    return (
+                      <div key={idx} className="bg-background border border-border p-4 rounded-xl flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-black text-emerald-400 font-mono">#{p.rank}</span>
+                          <div>
+                            <h5 className="font-bold text-text">{p.ticker}</h5>
+                            <p className="text-xs text-gray-400">
+                              Timing: <span className="text-yellow-400 font-mono font-bold">{p.timing_status}</span> | 
+                              Conviction: <span className="text-yellow-400 font-mono font-bold">{p.conviction}</span>
+                            </p>
+                            {(p.target_lots || p.target_price) && (
+                              <p className="text-xs text-emerald-400 mt-1 font-mono font-bold">
+                                Target Beli: {p.target_lots ? `${p.target_lots} Lot` : ''} 
+                                {p.target_price ? ` @ Rp ${p.target_price.toLocaleString("id-ID")}` : ''}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right md:max-w-[45%]">
+                          <p className="font-mono font-bold text-text">
+                            Rp {amount?.toLocaleString("id-ID") || 0}
+                          </p>
+                          <p className="text-[11px] text-gray-400 italic mt-1 leading-tight">{reason}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-mono font-bold text-text">Rp {p.suggested_amount?.toLocaleString("id-ID")}</p>
-                        <p className="text-[10px] text-secondary italic">{p.reason}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {!aiAnalysisResult.dca_priority?.length && <p className="text-secondary text-sm">Tidak ada prioritas DCA yang disarankan.</p>}
                 </div>
               </div>

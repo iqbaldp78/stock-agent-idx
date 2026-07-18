@@ -472,288 +472,35 @@ def get_top_picks():
 
 @app.get("/api/bandarmologi/{ticker}")
 def get_bandarmologi_details(ticker: str):
+    """
+    Bandarmologi endpoint — return hasil agent analyze langsung (seperti Streamlit).
+    Lebih sederhana, langsung menggunakan Stockbit real-time API.
+    """
     ticker = ticker.upper()
     try:
         with engine.connect() as conn:
-            # 1. Get all available tickers to allow switching
+            # Get all available tickers for switching
             tickers_res = conn.execute(text("SELECT DISTINCT ticker FROM broker_accumulation ORDER BY ticker")).fetchall()
             all_tickers = [t[0] for t in tickers_res]
-            
-            # 2. Get latest price & signal info
-            signal_query = text("""
-                SELECT (price_prediction->'current_price')::numeric as current_price, 
-                       weight_mode, 
-                       broker_utama, 
-                       signal, 
-                       entry_low, 
-                       entry_high, 
-                       stop_loss, 
-                       target_1,
-                       bandar_avg_1m
-                FROM signals 
-                WHERE ticker = :ticker 
-                ORDER BY run_date DESC 
-                LIMIT 1
-            """)
-            sig_r = conn.execute(signal_query, {"ticker": ticker}).fetchone()
-            
-            summary = {}
-            if sig_r:
-                summary = {
-                    "current_price": float(sig_r[0]) if sig_r[0] else None,
-                    "weight_mode": sig_r[1],
-                    "broker_utama": fix_broker_utama(sig_r[2]),
-                    "signal": sig_r[3],
-                    "entry_low": float(sig_r[4]) if sig_r[4] else None,
-                    "entry_high": float(sig_r[5]) if sig_r[5] else None,
-                    "stop_loss": float(sig_r[6]) if sig_r[6] else None,
-                    "target_1": float(sig_r[7]) if sig_r[7] else None,
-                    "bandar_avg_1m": float(sig_r[8]) if sig_r[8] else None,
-                }
-            else:
-                # Fallback if no signal exists
-                summary = {
-                    "current_price": None,
-                    "weight_mode": "default",
-                    "broker_utama": "",
-                    "signal": "HOLD",
-                    "entry_low": None,
-                    "entry_high": None,
-                    "stop_loss": None,
-                    "target_1": None,
-                    "bandar_avg_1m": None,
-                }
 
-            # Selalu ambil harga terakhir dari sumber live agar summary tidak
-            # bergantung pada snapshot lama di tabel signals.
-            try:
-                from data.fetcher_stockbit import get_current_price_stockbit
+        # Call agent untuk ambil data fresh dari Stockbit
+        try:
+            from agents.bandarmologi import analyze as bandarm_analyze
+            bandarm_res = bandarm_analyze(ticker)
+        except Exception as e:
+            import traceback
+            print(f"Error calling bandarm_analyze in API: {e}")
+            print(traceback.format_exc())
+            raise HTTPException(status_code=500, detail=f"Error analyzing {ticker}: {str(e)}")
 
-                live_price = get_current_price_stockbit(ticker)
-                if live_price and live_price > 0:
-                    summary["current_price"] = float(live_price)
-            except Exception as e:
-                print(f"Error fetching live current price for {ticker}: {e}")
-
-            # 3. Query Top Accumulators (7D)
-            acc_7d_query = text("""
-                SELECT broker_code, broker_name, total_buy_lot, total_buy_value, avg_price_7d, active_days
-                FROM v_broker_avg_7d
-                WHERE ticker = :ticker
-                LIMIT 10
-            """)
-            acc_7d_res = conn.execute(acc_7d_query, {"ticker": ticker}).fetchall()
-            accumulators_7d = []
-            curr_price = summary.get("current_price")
-            for r in acc_7d_res:
-                avg_price = float(r[4]) if r[4] else 0.0
-                active_days = int(r[5]) if r[5] else 0
-                
-                consistency = active_days / 7.0
-                if consistency >= 0.8:
-                    status = "⚡ KONSISTEN — PANTAU KETAT"
-                elif consistency >= 0.6:
-                    status = "📈 AKTIF AKUMULASI"
-                elif consistency >= 0.4:
-                    status = "📊 AKUMULASI RINGAN"
-                else:
-                    status = "⚠️ TIDAK KONSISTEN"
-                
-                distance_pct = None
-                if curr_price and avg_price:
-                    distance_pct = round(((curr_price - avg_price) / avg_price) * 100, 2)
-
-                accumulators_7d.append({
-                    "broker": r[0],
-                    "broker_name": resolve_broker_name(r[0], r[1]),
-                    "total_buy_lot": int(r[2]) if r[2] else 0,
-                    "total_buy_value": int(r[3]) if r[3] else 0,
-                    "avg_price": avg_price,
-                    "active_days": f"{active_days}/7 hari",
-                    "distance_pct": distance_pct,
-                    "status": status
-                })
-
-            # 4. Query Top Accumulators (1M)
-            acc_1m_query = text("""
-                SELECT broker_code, broker_name, total_buy_lot, total_buy_value, avg_price_1m, active_days
-                FROM v_broker_avg_1m
-                WHERE ticker = :ticker
-                LIMIT 10
-            """)
-            acc_1m_res = conn.execute(acc_1m_query, {"ticker": ticker}).fetchall()
-            accumulators_1m = []
-            for r in acc_1m_res:
-                avg_price = float(r[4]) if r[4] else 0.0
-                active_days = int(r[5]) if r[5] else 0
-                
-                consistency = active_days / 30.0
-                if consistency >= 0.8:
-                    status = "⚡ KONSISTEN — PANTAU KETAT"
-                elif consistency >= 0.6:
-                    status = "📈 AKTIF AKUMULASI"
-                elif consistency >= 0.4:
-                    status = "📊 AKUMULASI RINGAN"
-                else:
-                    status = "⚠️ TIDAK KONSISTEN"
-                
-                distance_pct = None
-                if curr_price and avg_price:
-                    distance_pct = round(((curr_price - avg_price) / avg_price) * 100, 2)
-
-                accumulators_1m.append({
-                    "broker": r[0],
-                    "broker_name": resolve_broker_name(r[0], r[1]),
-                    "total_buy_lot": int(r[2]) if r[2] else 0,
-                    "total_buy_value": int(r[3]) if r[3] else 0,
-                    "avg_price": avg_price,
-                    "active_days": f"{active_days}/30 hari",
-                    "distance_pct": distance_pct,
-                    "status": status
-                })
-
-            # 5. Query Top Distributors (7D) directly from broker_accumulation
-            distributors_7d = []
-            dist_7d_query = text("""
-                SELECT 
-                    broker_code, 
-                    broker_name,
-                    SUM(ABS(sell_lot)) AS total_sell_lot,
-                    SUM(ABS(sell_value)) AS total_sell_value,
-                    ROUND(SUM(ABS(sell_value))::numeric / NULLIF(SUM(ABS(sell_lot)), 0) / 100, 2) AS avg_sell_7d,
-                    COUNT(DISTINCT trade_date) AS active_days
-                FROM broker_accumulation
-                WHERE ticker = :ticker
-                  AND trade_date >= CURRENT_DATE - INTERVAL '10 days'
-                  AND sell_lot < 0
-                GROUP BY broker_code, broker_name
-                ORDER BY total_sell_value DESC
-                LIMIT 10
-            """)
-            dist_7d_res = conn.execute(dist_7d_query, {"ticker": ticker}).fetchall()
-            for r in dist_7d_res:
-                avg_price = float(r[4]) if r[4] else 0.0
-                active_days = int(r[5]) if r[5] else 0
-                
-                consistency = active_days / 7.0
-                if consistency >= 0.8:
-                    status = "⚠️ DISTRIBUSI KONSISTEN"
-                elif consistency >= 0.6:
-                    status = "⚠️ DISTRIBUSI AKTIF"
-                elif consistency >= 0.4:
-                    status = "⚠️ DISTRIBUSI RINGAN"
-                else:
-                    status = "ℹ️ DISTRIBUSI SESUAI" if active_days > 0 else "ℹ️ DISTRIBUSI TIDAK KONSISTEN"
-                
-                distance_pct = None
-                if curr_price and avg_price:
-                    distance_pct = round(((curr_price - avg_price) / avg_price) * 100, 2)
-
-                distributors_7d.append({
-                    "broker": r[0],
-                    "broker_name": resolve_broker_name(r[0], r[1]),
-                    "total_sell_lot": int(r[2]) if r[2] else 0,
-                    "total_sell_value": int(r[3]) if r[3] else 0,
-                    "avg_price": avg_price,
-                    "active_days": f"{active_days}/7 hari",
-                    "distance_pct": distance_pct,
-                    "status": status
-                })
-
-            # 6. Query Top Distributors (1M) directly from broker_accumulation
-            distributors_1m = []
-            dist_1m_query = text("""
-                SELECT 
-                    broker_code, 
-                    broker_name,
-                    SUM(ABS(sell_lot)) AS total_sell_lot,
-                    SUM(ABS(sell_value)) AS total_sell_value,
-                    ROUND(SUM(ABS(sell_value))::numeric / NULLIF(SUM(ABS(sell_lot)), 0) / 100, 2) AS avg_sell_1m,
-                    COUNT(DISTINCT trade_date) AS active_days
-                FROM broker_accumulation
-                WHERE ticker = :ticker
-                  AND trade_date >= CURRENT_DATE - INTERVAL '30 days'
-                  AND sell_lot < 0
-                GROUP BY broker_code, broker_name
-                ORDER BY total_sell_value DESC
-                LIMIT 10
-            """)
-            dist_1m_res = conn.execute(dist_1m_query, {"ticker": ticker}).fetchall()
-            for r in dist_1m_res:
-                avg_price = float(r[4]) if r[4] else 0.0
-                active_days = int(r[5]) if r[5] else 0
-                
-                consistency = active_days / 30.0
-                if consistency >= 0.8:
-                    status = "⚠️ DISTRIBUSI KONSISTEN"
-                elif consistency >= 0.6:
-                    status = "⚠️ DISTRIBUSI AKTIF"
-                elif consistency >= 0.4:
-                    status = "⚠️ DISTRIBUSI RINGAN"
-                else:
-                    status = "ℹ️ DISTRIBUSI SESUAI" if active_days > 0 else "ℹ️ DISTRIBUSI TIDAK KONSISTEN"
-                
-                distance_pct = None
-                if curr_price and avg_price:
-                    distance_pct = round(((curr_price - avg_price) / avg_price) * 100, 2)
-
-                distributors_1m.append({
-                    "broker": r[0],
-                    "broker_name": resolve_broker_name(r[0], r[1]),
-                    "total_sell_lot": int(r[2]) if r[2] else 0,
-                    "total_sell_value": int(r[3]) if r[3] else 0,
-                    "avg_price": avg_price,
-                    "active_days": f"{active_days}/30 hari",
-                    "distance_pct": distance_pct,
-                    "status": status
-                })
-
-            # Calculate dynamic bandarmologi summaries using the core agent analyze logic
-            try:
-                from agents.bandarmologi import analyze as bandarm_analyze
-                bandarm_res = bandarm_analyze(ticker)
-            except Exception as e:
-                import traceback
-                print(f"Error calling bandarm_analyze in API: {e}")
-                print(traceback.format_exc())
-                bandarm_res = {}
-
-            w7_summary = bandarm_res.get("window_7d", {}) if bandarm_res else {}
-            w1m_summary = bandarm_res.get("window_1m", {}) if bandarm_res else {}
-            live_current_price = (bandarm_res.get("price_analysis", {}) or {}).get("current_price") if bandarm_res else None
-            if live_current_price and live_current_price > 0:
-                summary["current_price"] = float(live_current_price)
-
-            return {
-                "ticker": ticker,
-                "all_tickers": all_tickers,
-                "summary": summary,
-                "accumulators_7d": accumulators_7d,
-                "accumulators_1m": accumulators_1m,
-                "distributors_7d": distributors_7d,
-                "distributors_1m": distributors_1m,
-                "window_7d_summary": {
-                    "period": w7_summary.get("period", ""),
-                    "bandar_signal": w7_summary.get("bandar_signal", ""),
-                    "assessment": w7_summary.get("assessment", ""),
-                    "net_lot": w7_summary.get("net_lot", 0),
-                    "net_value": w7_summary.get("net_value", 0),
-                    "total_buyer": w7_summary.get("total_buyer", 0),
-                    "total_seller": w7_summary.get("total_seller", 0),
-                },
-                "window_1m_summary": {
-                    "period": w1m_summary.get("period", ""),
-                    "bandar_signal": w1m_summary.get("bandar_signal", ""),
-                    "assessment": w1m_summary.get("assessment", ""),
-                    "net_lot": w1m_summary.get("net_lot", 0),
-                    "net_value": w1m_summary.get("net_value", 0),
-                    "total_buyer": w1m_summary.get("total_buyer", 0),
-                    "total_seller": w1m_summary.get("total_seller", 0),
-                },
-                "score": bandarm_res.get("score", 0.0) if bandarm_res else 0.0,
-                "price_analysis": bandarm_res.get("price_analysis", {}) if bandarm_res else {},
-                "confidence": bandarm_res.get("confidence", "N/A") if bandarm_res else "N/A"
-            }
+        # Return hasil agent langsung
+        return {
+            "ticker": ticker,
+            "all_tickers": all_tickers,
+            **bandarm_res  # Spread semua field dari agent result
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         import traceback
         print(f"Error Bandarmologi: {e}")
@@ -1283,6 +1030,125 @@ def portfolio_transactions(ticker: str = None, txn_type: str = None, current_use
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- Compatibility Routing Layer for Frontend Mismatches ---
+from typing import Optional
+
+class CreateDcaUnifiedRequest(BaseModel):
+    signal_id: Optional[int] = None
+    ticker: Optional[str] = None
+    entry_low: Optional[float] = None
+    entry_high: Optional[float] = None
+    max_entry: Optional[float] = None
+    total_budget: float
+    dca_count: int
+
+class DcaPreviewRequest(BaseModel):
+    signal_id: Optional[int] = None
+    ticker: Optional[str] = None
+    entry_low: Optional[float] = None
+    entry_high: Optional[float] = None
+    max_entry: Optional[float] = None
+    total_budget: float
+    dca_count: int
+
+class TickerRequest(BaseModel):
+    ticker: str
+
+@app.get("/api/portfolio/dca")
+def portfolio_dca_alias():
+    return portfolio_dca_strategies()
+
+@app.post("/api/portfolio/reset")
+def portfolio_reset_alias(current_user: dict = Depends(get_current_user)):
+    return portfolio_holdings_reset(current_user)
+
+@app.post("/api/portfolio/holdings")
+def portfolio_holdings_post_alias(req: AddHoldingRequest, current_user: dict = Depends(get_current_user)):
+    return portfolio_holdings_add(req, current_user)
+
+@app.post("/api/portfolio/transactions")
+def portfolio_transactions_post_alias(req: RecordTransactionRequest, current_user: dict = Depends(get_current_user)):
+    return portfolio_holdings_record_buy_sell(req, current_user)
+
+@app.post("/api/portfolio/dca/{strategy_id}/deactivate")
+def portfolio_dca_deactivate_path_alias(strategy_id: int):
+    try:
+        from portfolio.dca_strategy import deactivate_strategy
+        success = deactivate_strategy(strategy_id)
+        return {"success": success, "message": "DCA strategy dinonaktifkan"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/portfolio/dca/preview")
+def portfolio_dca_preview(req: DcaPreviewRequest):
+    try:
+        from portfolio.manager import calculate_dca_levels
+        el, eh, me = req.entry_low, req.entry_high, req.max_entry
+        if req.signal_id:
+            with engine.connect() as conn:
+                signal = conn.execute(text("SELECT entry_low, entry_high, max_entry FROM signals WHERE id = :id"), {"id": req.signal_id}).fetchone()
+                if not signal:
+                    raise HTTPException(status_code=404, detail="Signal not found")
+                el = float(signal[0] or 0)
+                eh = float(signal[1] or 0)
+                me = float(signal[2] or 0)
+                if not eh:
+                    eh = (el + me) / 2
+        result = calculate_dca_levels(
+            entry_low=el,
+            entry_high=eh,
+            max_entry=me,
+            total_budget=req.total_budget,
+            dca_count=req.dca_count
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/portfolio/dca")
+def portfolio_dca_create_unified(req: CreateDcaUnifiedRequest, current_user: dict = Depends(get_current_user)):
+    if req.signal_id is not None:
+        from portfolio.dca_strategy import create_dca_from_signal
+        try:
+            result = create_dca_from_signal(req.signal_id, req.total_budget, req.dca_count)
+            return {"success": True, "strategy": result}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        from portfolio.dca_strategy import create_dca_manual
+        try:
+            result = create_dca_manual(
+                ticker=req.ticker,
+                total_budget=req.total_budget,
+                entry_low=req.entry_low,
+                entry_high=req.entry_high,
+                max_entry=req.max_entry,
+                dca_count=req.dca_count
+            )
+            return {"success": True, "strategy": result}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/portfolio/dca/ai-recommend")
+def portfolio_dca_ai_recommend_post(req: TickerRequest):
+    try:
+        from portfolio.dca_strategy import get_quick_ai_entry
+        rec = get_quick_ai_entry(req.ticker)
+        if rec is None:
+            raise HTTPException(status_code=404, detail="AI Entry recommendation not found")
+        return rec
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/portfolio/dca/timing")
+def portfolio_dca_timing_post(req: TickerRequest):
+    try:
+        from portfolio.dca_strategy import recommend_dca_timing
+        timing = recommend_dca_timing(req.ticker)
+        return timing
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/portfolio/ai-analysis")
 def portfolio_ai_analysis(req: AiAnalysisRequest, current_user: dict = Depends(get_current_user)):
     try:
@@ -1295,11 +1161,11 @@ def portfolio_ai_analysis(req: AiAnalysisRequest, current_user: dict = Depends(g
         h_list = get_all_holdings(user_id)
         if h_list:
             h_list = update_current_prices(h_list)
-        strats = get_active_strategies()
+        strats = get_active_strategies(user_id=user_id)
         
         # start_date for last 30 days
         start_date = (datetime.now() - timedelta(days=30)).date()
-        txns = get_transactions(start_date=start_date)
+        txns = get_transactions(start_date=start_date, user_id=user_id)
 
         top_picks = []  # as in Streamlit code, empty list or can load from signal query
 
