@@ -16,7 +16,8 @@ import {
   CrossCircledIcon,
   CheckCircledIcon,
   InfoCircledIcon,
-  HamburgerMenuIcon
+  HamburgerMenuIcon,
+  IdCardIcon
 } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/ihsg", label: "IHSG Predictor", icon: ClockIcon, id: "ihsg" },
   { href: "/performance", label: "AI Performance", icon: RocketIcon, id: "history" },
   { href: "/portfolio", label: "Portfolio Management", icon: CardStackIcon, id: "portfolio" },
+  { href: "/billing", label: "Billing & Upgrade", icon: IdCardIcon, id: "billing" },
   { href: "/settings", label: "Preferences", icon: GearIcon, id: "settings" },
 ];
 

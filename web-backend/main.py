@@ -320,18 +320,18 @@ def get_stats():
             elif outlook == "STRONG SELL" or outlook == "SELL":
                 outlook = "Bearish"
 
-            # Calculate win rate from performance table
+            # Calculate win rate from performance table using actual result statuses
             perf_query = text("""
                 SELECT 
-                    SUM(CASE WHEN result = 'PROFIT' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0) as win_rate,
-                    SUM(CASE WHEN result = 'PROFIT' THEN return_pct ELSE 0 END) / NULLIF(ABS(SUM(CASE WHEN result = 'LOSS' THEN return_pct ELSE 0 END)), 0) as profit_factor
+                    SUM(CASE WHEN result IN ('PROFIT', 'HIT_TP1', 'HIT_TP2', 'HIT_TP3', 'HIT_TARGET_1', 'HIT_TARGET_2') THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0) as win_rate,
+                    SUM(CASE WHEN result IN ('PROFIT', 'HIT_TP1', 'HIT_TP2', 'HIT_TP3', 'HIT_TARGET_1', 'HIT_TARGET_2') THEN return_pct ELSE 0 END) / NULLIF(ABS(SUM(CASE WHEN result IN ('LOSS', 'HIT_SL') THEN return_pct ELSE 0 END)), 0) as profit_factor
                 FROM performance 
-                WHERE result IN ('PROFIT', 'LOSS')
+                WHERE result IN ('PROFIT', 'LOSS', 'HIT_TP1', 'HIT_TP2', 'HIT_TP3', 'HIT_TARGET_1', 'HIT_TARGET_2', 'HIT_SL')
             """)
             perf_result = conn.execute(perf_query).fetchone()
             
-            win_rate = round(float(perf_result[0]), 1) if perf_result and perf_result[0] else 64.5
-            profit_factor = round(float(perf_result[1]), 2) if perf_result and perf_result[1] else 1.85
+            win_rate = round(float(perf_result[0]), 1) if perf_result and perf_result[0] is not None else 64.5
+            profit_factor = round(float(perf_result[1]), 2) if perf_result and perf_result[1] is not None else 1.85
             
             return {
                 "market_outlook": outlook,
@@ -1385,9 +1385,40 @@ def get_me(token: str = ""):
         if not token:
             raise HTTPException(status_code=401)
         payload = jwt.decode(token, "hamboo_super_secret_key_for_testing", algorithms=["HS256"])
-        return payload
-    except:
+        user_id = payload.get("user_id")
+        with engine.connect() as conn:
+            user = conn.execute(text("SELECT id, username, tier FROM users WHERE id = :uid"), {"uid": user_id}).fetchone()
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            return {
+                "user_id": user[0],
+                "username": user[1],
+                "tier": user[2]
+            }
+    except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+@app.post("/api/user/upgrade")
+def upgrade_user(current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
+    try:
+        with engine.connect() as conn:
+            with conn.begin():
+                conn.execute(text("UPDATE users SET tier = 'pro' WHERE id = :uid"), {"uid": user_id})
+            return {"success": True, "message": "Successfully upgraded to Pro tier!", "tier": "pro"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/user/downgrade")
+def downgrade_user(current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
+    try:
+        with engine.connect() as conn:
+            with conn.begin():
+                conn.execute(text("UPDATE users SET tier = 'free' WHERE id = :uid"), {"uid": user_id})
+            return {"success": True, "message": "Successfully downgraded to Free tier.", "tier": "free"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 

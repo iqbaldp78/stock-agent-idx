@@ -83,7 +83,7 @@ const CustomEquityChart = ({ points }: { points: any[] }) => {
 };
 
 export default function TradingPage() {
-  const { picks, showToast } = useApp();
+  const { picks, showToast, isPro } = useApp();
   const [tradingData, setTradingData] = useState<any>(null);
   const [equityData, setEquityData] = useState<any>(null);
   const [tradingLoading, setTradingLoading] = useState(false);
@@ -406,8 +406,15 @@ export default function TradingPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[360px] overflow-y-auto pr-1">
                   {picks.slice(0, 4).map((pick: any) => {
                     const defaultPrice = pick.entry_high || pick.entry_low || pick.current_price || 1000;
+                    const isLocked = !isPro && (pick.rank === 1 || pick.rank === 2);
                     return (
-                      <div key={pick.ticker} className="bg-card border border-border rounded-2xl p-4 hover:bg-white/[0.05] transition duration-300 flex flex-col justify-between gap-3">
+                      <div key={pick.ticker} className={`bg-card border border-border rounded-2xl p-4 transition duration-300 flex flex-col justify-between gap-3 relative overflow-hidden ${isLocked ? 'opacity-85' : 'hover:bg-white/[0.05]'}`}>
+                        {isLocked && (
+                          <div className="absolute inset-0 bg-black/75 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-3 text-center">
+                            <span className="text-xl mb-1">🔒 Upgrade Pro</span>
+                            <p className="text-[10px] text-accent font-bold">Rank #{pick.rank} Locked</p>
+                          </div>
+                        )}
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-extrabold text-text">{pick.ticker}</h4>
@@ -422,8 +429,9 @@ export default function TradingPage() {
                           <button
                             onClick={() => { setBuyTicker(pick.ticker); setBuyPrice(defaultPrice); setBuyTp(pick.target_1 || 0); setBuySl(pick.stop_loss || 0); setBuySignalId(pick.id || null); }}
                             className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-text rounded-lg text-xs font-bold transition border border-border"
+                            disabled={isLocked}
                           >Prefill Form</button>
-                          <button onClick={() => handleAutoInvestSingle(pick.id, defaultPrice)} className="flex-1 py-1.5 bg-indigo-600 hover:bg-accent text-text rounded-lg text-xs font-bold transition">
+                          <button onClick={() => handleAutoInvestSingle(pick.id, defaultPrice)} className="flex-1 py-1.5 bg-indigo-600 hover:bg-accent text-text rounded-lg text-xs font-bold transition" disabled={isLocked}>
                             ⚡ Auto 20%
                           </button>
                         </div>
