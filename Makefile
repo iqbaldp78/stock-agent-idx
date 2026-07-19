@@ -307,6 +307,19 @@ train-ml-multiday-ticker: ## Train ML Multi-Day model for one ticker (usage: mak
 		exit 1; \
 	fi
 	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER)
+
+.PHONY: validate-ml-multiday
+validate-ml-multiday: ## Validate ML Multi-Day model accuracy for all universe tickers
+	docker compose exec app python scripts/train_multiday_model.py --all --validate-only
+
+.PHONY: validate-ml-multiday-ticker
+validate-ml-multiday-ticker: ## Validate ML Multi-Day model accuracy for one ticker (usage: make validate-ml-multiday-ticker TICKER=BBCA)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make validate-ml-multiday-ticker TICKER=BBCA"; \
+		exit 1; \
+	fi
+	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER) --validate-only
+
 .PHONY: validate-ml-ticker
 validate-ml-ticker: ## [DEPRECATED] Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
 	@if [ -z "$(TICKER)" ]; then \

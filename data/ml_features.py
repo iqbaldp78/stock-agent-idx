@@ -88,7 +88,6 @@ FEATURE_COLUMNS = [
     # Foreign flow features
     "foreign_flow_zscore",
     # Brainstorm features
-    "fundamental_score",
     "news_score",
     "commodity_score",
     "bandar_accum_ratio",
@@ -154,7 +153,6 @@ ML_TRAIN_FEATURES = [
     # Foreign flow features
     "foreign_flow_zscore",
     # Brainstorm features
-    "fundamental_score",
     "news_score",
     "commodity_score",
     "bandar_accum_ratio",

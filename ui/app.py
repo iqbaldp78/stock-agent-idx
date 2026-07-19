@@ -198,7 +198,7 @@ st.sidebar.divider()
 
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"]
+    ["📈 Top Picks", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "🤖 ML Validation", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"]
 )
 
 st.sidebar.divider()
@@ -2635,6 +2635,109 @@ elif page == "📈 IHSG Predictor":
     else:
         st.info("Belum ada IHSG prediction. Jalankan analysis terlebih dahulu.")
 
+
+# === PAGE: ML Validation ===
+
+elif page == "🤖 ML Validation":
+    st.title("🤖 ML Validation (Multi-Day)")
+    st.caption("Menampilkan hasil akurasi model LightGBM dari `scripts/train_multiday_model.py`")
+
+    import os
+    import json
+    import pandas as pd
+
+    meta_path = "models/checkpoints/lgbm_multiday_meta.json"
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, 'r') as f:
+                meta = json.load(f)
+            
+            st.success(f"✅ Data model berhasil di-*load* (Trained at: {meta.get('run_date', 'Unknown')})")
+            
+            config = meta.get("config", {})
+            rows = meta.get("rows", {})
+            macro_avg = meta.get("holdout_metrics_macro_avg", {})
+            tickers_data = meta.get("tickers", [])
+            
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Tickers Trained", rows.get("tickers_trained", 0))
+            col2.metric("Total Training Rows", f"{rows.get('final_train_rows', 0):,}")
+            col3.metric("Test Data Rows", f"{rows.get('holdout_test_rows', 0):,}")
+            
+            st.write("---")
+            st.subheader("📋 Detail Per Ticker")
+            
+            if tickers_data:
+                # Siapkan data untuk tabel per ticker
+                table_data = []
+                for t in tickers_data:
+                    ticker = t.get("ticker", "UNKNOWN")
+                    metrics = t.get("metrics", {})
+                    
+                    row_data = {
+                        "Ticker": ticker,
+                        "Tested Rows": t.get("test_rows", 0)
+                    }
+                    
+                    for h in ["1d", "3d", "5d", "7d"]:
+                        if h in metrics:
+                            row_data[f"T_{h.upper()} Acc"] = f"{metrics[h].get('accuracy', 0)}%"
+                            row_data[f"T_{h.upper()} Buy Prec"] = f"{metrics[h].get('buy_precision', 0)}%"
+                            row_data[f"T_{h.upper()} Buy Rec"] = f"{metrics[h].get('buy_recall', 0)}%"
+                        else:
+                            row_data[f"T_{h.upper()} Acc"] = "-"
+                            row_data[f"T_{h.upper()} Buy Prec"] = "-"
+                            row_data[f"T_{h.upper()} Buy Rec"] = "-"
+                            
+                    table_data.append(row_data)
+                
+                df_tickers = pd.DataFrame(table_data)
+                st.dataframe(df_tickers, use_container_width=True)
+                
+            else:
+                st.warning("Data per ticker tidak ditemukan di metadata.")
+                
+            st.subheader("📊 Macro Average Accuracy (Across All Tickers)")
+            
+            if macro_avg:
+                horizons = list(macro_avg.keys())
+                
+                # Buat DataFrame untuk tabel
+                df_metrics = []
+                for h in horizons:
+                    m = macro_avg[h]
+                    df_metrics.append({
+                        "Horizon": h.upper(),
+                        "Accuracy (%)": m.get("accuracy", 0),
+                        "Buy Precision (%)": m.get("buy_precision", 0),
+                        "Buy Recall (%)": m.get("buy_recall", 0),
+                        "Holdout Rows": m.get("test_rows", 0)
+                    })
+                
+                df_metrics_pd = pd.DataFrame(df_metrics)
+                
+                # Tampilkan metrik utama sebagai columns
+                st.write("---")
+                h_cols = st.columns(len(horizons))
+                for idx, h in enumerate(horizons):
+                    with h_cols[idx]:
+                        m = macro_avg[h]
+                        st.metric(label=f"Horizon {h.upper()} Accuracy", value=f"{m.get('accuracy', 0)}%")
+                        st.metric(label=f"Horizon {h.upper()} Buy Precision", value=f"{m.get('buy_precision', 0)}%")
+                        
+                st.write("---")
+                st.write("**Detail Metrik per Horizon Timeframe:**")
+                st.dataframe(df_metrics_pd, use_container_width=True)
+                
+                st.info("💡 **Penjelasan Singkat:**\n- **Accuracy**: Seberapa sering model menebak benar arah harga secara keseluruhan.\n- **Buy Precision**: Tingkat 'Keberanian' yang terbukti menguntungkan. Jika 40%, berarti dari 10 kali AI menyuruh BUY, 4 kali tepat sasaran (Profit).")
+                
+            else:
+                st.warning("Belum ada data evaluasi holdout di metadata saat ini.")
+                
+        except Exception as e:
+            st.error(f"Gagal membaca file JSON meta model: {str(e)}")
+    else:
+        st.warning("⚠️ File hasil training multiday (`models/checkpoints/lgbm_multiday_meta.json`) tidak ditemukan. Silakan jalankan `python scripts/train_multiday_model.py --all`.")
 
 # === PAGE: Backtest ===
 

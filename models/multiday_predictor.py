@@ -9,6 +9,7 @@ import numpy as np
 import logging
 import joblib
 import os
+from sklearn.model_selection import TimeSeriesSplit
 from data.ml_features import ML_TRAIN_FEATURES
 
 logger = logging.getLogger(__name__)
@@ -84,29 +85,48 @@ class MultiDayPredictor:
 
             dtrain = lgb.Dataset(X_tr, label=y_tr, weight=weights)
             
-            valid_sets = [dtrain]
-            callbacks = []
-
-            if X_val_aligned is not None and Y_targets_val is not None and col_name in Y_targets_val.columns:
-                y_val = Y_targets_val[col_name]
-                val_valid_idx = ~y_val.isna()
-                if val_valid_idx.any():
-                    X_v = X_val_aligned[val_valid_idx].copy()
-                    y_v = y_val[val_valid_idx].astype(float)
-                    dval = lgb.Dataset(X_v, label=y_v, reference=dtrain)
-                    valid_sets.append(dval)
-                    callbacks.append(lgb.early_stopping(stopping_rounds=20, verbose=False))
+            # Use Time-Series Cross Validation (k-fold split) to find the optimal boosting rounds
+            best_rounds = []
+            n_splits = 3 if len(X_tr) < 100 else 5
             
-            logger.debug(f"Training {self.ticker} horizon: {h} on {len(X_tr)} samples")
+            if len(X_tr) >= 30:
+                tscv = TimeSeriesSplit(n_splits=n_splits)
+                for train_idx, val_idx in tscv.split(X_tr):
+                    X_fold_train, X_fold_val = X_tr.iloc[train_idx], X_tr.iloc[val_idx]
+                    y_fold_train, y_fold_val = y_tr.iloc[train_idx], y_tr.iloc[val_idx]
+                    w_fold_train = weights[train_idx]
+                    
+                    dfold_train = lgb.Dataset(X_fold_train, label=y_fold_train, weight=w_fold_train)
+                    dfold_val = lgb.Dataset(X_fold_val, label=y_fold_val, reference=dfold_train)
+                    
+                    fold_callbacks = [
+                        lgb.early_stopping(stopping_rounds=15, verbose=False),
+                        lgb.log_evaluation(period=0)
+                    ]
+                    
+                    fold_model = lgb.train(
+                        params,
+                        dfold_train,
+                        num_boost_round=200,
+                        valid_sets=[dfold_val],
+                        callbacks=fold_callbacks
+                    )
+                    best_rounds.append(fold_model.best_iteration)
             
-            # Using lgb.train directly instead of scikit-learn API for native early stopping and callbacks
-            callbacks.append(lgb.log_evaluation(period=0)) # suppress output
+            if best_rounds:
+                opt_rounds = int(np.mean(best_rounds))
+                # Ensure a sensible range of boosting rounds
+                opt_rounds = max(10, min(opt_rounds, 200))
+            else:
+                opt_rounds = 50  # Fallback default
+                
+            logger.debug(f"Training final {self.ticker} model for horizon: {h} with {opt_rounds} rounds (determined by {n_splits}-fold TimeSeriesSplit)")
+            
             self.models[h] = lgb.train(
                 params, 
                 dtrain, 
-                num_boost_round=300,
-                valid_sets=valid_sets,
-                callbacks=callbacks
+                num_boost_round=opt_rounds,
+                callbacks=[lgb.log_evaluation(period=0)]
             )
 
             # Save model

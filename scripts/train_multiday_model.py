@@ -84,7 +84,7 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
         }
     return results
 
-def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, final_dir):
+def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, final_dir, validate_only=False):
     from data.ml_features import prepare_training_data
     from models.multiday_predictor import MultiDayPredictor
     
@@ -109,9 +109,10 @@ def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, f
     holdout_predictor.train_incremental(X_train, Y_train, X_val=X_test, Y_targets_val=Y_test)
     holdout_metrics = evaluate_multiday_model(holdout_predictor, X_test, Y_test)
 
-    # Train Final
-    final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
-    final_predictor.train_incremental(X, Y, X_val=X_test, Y_targets_val=Y_test)
+    if not validate_only:
+        # Train Final
+        final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
+        final_predictor.train_incremental(X, Y, X_val=X_test, Y_targets_val=Y_test)
     
     summary = {
         "ticker": ticker,
@@ -133,6 +134,7 @@ def main():
     parser.add_argument("--test-size", type=float, default=0.2, help="Holdout ratio per ticker (default: 0.2)")
     parser.add_argument("--checkpoints-dir", default="models/checkpoints", help="Output model directory")
     parser.add_argument("--metadata-output", default="models/checkpoints/lgbm_multiday_meta.json", help="Output metadata JSON")
+    parser.add_argument("--validate-only", action="store_true", help="Only validate accuracy on holdout, do not save production models")
     args = parser.parse_args()
 
     tickers = get_universe_tickers() if args.all else [t.upper() for t in args.tickers]
@@ -151,7 +153,7 @@ def main():
             continue
             
         summary, err = train_and_evaluate_ticker(
-            ticker, ohlcv, args.min_rows, args.test_size, holdout_dir, args.checkpoints_dir
+            ticker, ohlcv, args.min_rows, args.test_size, holdout_dir, args.checkpoints_dir, validate_only=args.validate_only
         )
         
         if err:
@@ -201,17 +203,30 @@ def main():
         "errors": errors,
     }
 
-    os.makedirs(os.path.dirname(args.metadata_output), exist_ok=True)
-    with open(args.metadata_output, "w") as f:
+    metadata_path = args.metadata_output
+    if args.validate_only:
+        metadata_path = args.metadata_output.replace("lgbm_multiday_meta.json", "lgbm_multiday_val_meta.json")
+
+    os.makedirs(os.path.dirname(metadata_path), exist_ok=True)
+    with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2, ensure_ascii=False)
 
     print("\n" + "=" * 72)
-    print("  ML MULTI-DAY PER-TICKER TRAINING SUMMARY")
+    if args.validate_only:
+        print("  ML MULTI-DAY VALIDATION SUMMARY")
+    else:
+        print("  ML MULTI-DAY PER-TICKER TRAINING SUMMARY")
     print("=" * 72)
-    print(f"Tickers trained : {len(summaries)} / {len(tickers)}")
-    print(f"Final rows      : {total_final_rows}")
-    print(f"Models saved to : {args.checkpoints_dir} (lgbm_<ticker>_<horizon>.pkl)")
-    print(f"Metadata        : {args.metadata_output}")
+    if args.validate_only:
+        print(f"Tickers validated: {len(summaries)} / {len(tickers)}")
+    else:
+        print(f"Tickers trained  : {len(summaries)} / {len(tickers)}")
+    print(f"Final rows       : {total_final_rows}")
+    if args.validate_only:
+        print("Models saved to  : (Validation mode - no production models saved)")
+    else:
+        print(f"Models saved to  : {args.checkpoints_dir} (lgbm_<ticker>_<horizon>.pkl)")
+    print(f"Metadata         : {metadata_path}")
     print("-" * 72)
     print("MACRO AVERAGE ACCURACY (Across all tickers):")
     for h, metrics in global_metrics.items():
