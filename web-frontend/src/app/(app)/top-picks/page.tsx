@@ -58,7 +58,7 @@ export default function TopPicksPage() {
               </div>
               <div className="text-right">
                 <div className="text-4xl font-bold text-text font-mono">{selectedStock.current_price || selectedStock.entry_price}</div>
-                <p className="text-[10px] text-secondary font-bold mt-1 uppercase tracking-wider">Entry Price</p>
+                <p className="text-[10px] text-secondary font-bold mt-1 uppercase tracking-wider">Current Price</p>
               </div>
             </div>
 
@@ -363,7 +363,7 @@ export default function TopPicksPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-text font-mono">{picks[0].current_price || picks[0].entry_price}</div>
-                  <p className="text-secondary text-xs mt-1 uppercase font-bold tracking-widest">Entry Price</p>
+                  <p className="text-secondary text-xs mt-1 uppercase font-bold tracking-widest">Current Price</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -408,7 +408,7 @@ export default function TopPicksPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
-                  <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">Entry</p><p className="text-[11px] font-bold text-text font-mono truncate">{formatEntry(pick)}</p></div>
+                  <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">Range</p><p className="text-[11px] font-bold text-text font-mono truncate">{formatEntry(pick)}</p></div>
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">TP</p><p className="text-[11px] font-bold text-profit font-mono truncate">{formatTP(pick)}</p></div>
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">SL</p><p className="text-[11px] font-bold text-loss font-mono truncate">{formatSL(pick)}</p></div>
                 </div>
