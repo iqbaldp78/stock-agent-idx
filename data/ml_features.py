@@ -87,6 +87,12 @@ FEATURE_COLUMNS = [
     "stock_vs_ihsg_1d",
     # Foreign flow features
     "foreign_flow_zscore",
+    # Brainstorm features
+    "fundamental_score",
+    "news_score",
+    "commodity_score",
+    "bandar_accum_ratio",
+    "ihsg_trend_3d",
 ]
 
 # Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
@@ -147,6 +153,12 @@ ML_TRAIN_FEATURES = [
     "stock_vs_ihsg_1d",
     # Foreign flow features
     "foreign_flow_zscore",
+    # Brainstorm features
+    "fundamental_score",
+    "news_score",
+    "commodity_score",
+    "bandar_accum_ratio",
+    "ihsg_trend_3d",
 ]
 
 # ─── IHSG History Cache ──────────────────────────────────────────────────────
@@ -803,11 +815,11 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
 
-    # Targets: Continuous returns (regression target)
-    df['target_1d'] = df['Close'].shift(-1) / df['Close'] - 1
-    df['target_3d'] = df['Close'].shift(-3) / df['Close'] - 1
-    df['target_5d'] = df['Close'].shift(-5) / df['Close'] - 1
-    df['target_7d'] = df['Close'].shift(-7) / df['Close'] - 1
+    # Targets: Continuous returns (regression target) - NO WAIT, changing to binary targets (1 for BUY, 0 for AVOID)
+    df['target_1d'] = (df['Close'].shift(-1) > df['Close'] * 1.002).astype(int)
+    df['target_3d'] = (df['Close'].shift(-3) > df['Close'] * 1.01).astype(int)
+    df['target_5d'] = (df['Close'].shift(-5) > df['Close'] * 1.015).astype(int)
+    df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.02).astype(int)
 
     # Simple Technical Features for History
     df['ret_1d'] = df['Close'].pct_change()
@@ -1092,6 +1104,21 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df["bandarm_score"] = df.get("bandarm_score", pd.Series(5.0, index=df.index)).fillna(5.0)
     df["technical_score"] = df.get("technical_score", pd.Series(5.0, index=df.index)).fillna(5.0)
     df["macro_score"] = df.get("macro_score", pd.Series(5.0, index=df.index)).fillna(5.0)
+    
+    # NEW PARAMETERS FOR BRAINSTORM
+    df["fundamental_score"] = df.get("fundamental_score", pd.Series(5.0, index=df.index)).fillna(5.0)
+    df["news_score"] = df.get("news_score", pd.Series(5.0, index=df.index)).fillna(5.0)
+    df["commodity_score"] = df.get("commodity_score", pd.Series(5.0, index=df.index)).fillna(5.0)
+    
+    # BANDARMOLOGI NEW RATIO (0 or 1.0)
+    # If 1-month foreign net buy is positive AND price is not >5% from 1-month true cost
+    cond_bandar = (df.get("foreign_net_1m", pd.Series(0.0, index=df.index)).fillna(0.0) > 0) & \
+                  (df.get("dist_avg_1m", pd.Series(0.0, index=df.index)).fillna(0.0) < 5.0)
+    df["bandar_accum_ratio"] = cond_bandar.astype(float)
+    
+    # IHSG TREND
+    df["ihsg_trend_3d"] = df.get("ihsg_ret_3d", pd.Series(0.0, index=df.index)).fillna(0.0)
+
     df["dist_avg_7d"] = df.get("dist_avg_7d", pd.Series(0.0, index=df.index)).fillna(0.0)
     df["dist_avg_1m"] = df.get("dist_avg_1m", pd.Series(0.0, index=df.index)).fillna(0.0)
     df["foreign_net_7d"] = df.get("foreign_net_7d", pd.Series(0.0, index=df.index)).fillna(0.0)

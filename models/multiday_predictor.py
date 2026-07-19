@@ -73,11 +73,12 @@ class MultiDayPredictor:
                 'verbosity': -1,
                 'boosting_type': 'gbdt',
                 'learning_rate': 0.05,
-                'num_leaves': 31,
-                'min_child_samples': 20,
+                'num_leaves': 15,
+                'min_child_samples': 10,
                 'bagging_fraction': 0.8,
                 'feature_fraction': 0.8,
                 'bagging_freq': 1,
+                'is_unbalance': True,
                 'seed': 42
             }
 

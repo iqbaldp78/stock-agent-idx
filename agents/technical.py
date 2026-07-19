@@ -563,6 +563,12 @@ def analyze(ticker: str) -> dict:
                 stop_loss = round(float(support_strong) * 0.98, 0)
             else:
                 stop_loss = round(entry_low * 0.98, 0)
+                
+            # Cap stop loss to max 7% distance for BUY signals
+            min_acceptable_sl = round(entry_low * 0.93, 0)
+            if stop_loss < min_acceptable_sl:
+                stop_loss = min_acceptable_sl
+                
             risk = entry_low - stop_loss
             reward = target - entry_high
             if risk > 0 and reward / risk < min_rr:

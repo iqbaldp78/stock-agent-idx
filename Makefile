@@ -278,19 +278,22 @@ backtest-ticker: ## Run historical backtest for one ticker (usage: make backtest
 	docker compose exec app python scripts/backtest_signals.py --tickers $(TICKER) --period $(PERIOD)
 
 .PHONY: validate-ml
-validate-ml: ## Validate ML Day-1 accuracy for all universe tickers
+validate-ml: ## [DEPRECATED] Validate ML Day-1 accuracy for all universe tickers
+	@echo "⚠️ WARNING: validate-ml is deprecated."
 	docker compose exec app python scripts/validate_ml_accuracy.py --all
 
 .PHONY: train-ml
-train-ml: ## Train ML Day-1 model for all universe tickers
+train-ml: ## [DEPRECATED] Train ML Day-1 model (Use train-ml-multiday instead)
+	@echo "⚠️ WARNING: train-ml is deprecated. Please use 'make train-ml-multiday' instead."
 	docker compose exec app python scripts/train_day1_model.py --all
 
 .PHONY: train-ml-ticker
-train-ml-ticker: ## Train ML Day-1 model for one ticker (usage: make train-ml-ticker TICKER=BBCA)
+train-ml-ticker: ## [DEPRECATED] Train ML Day-1 model for one ticker (Use train-ml-multiday-ticker instead)
 	@if [ -z "$(TICKER)" ]; then \
 		echo "Error: TICKER is required. Usage: make train-ml-ticker TICKER=BBCA"; \
 		exit 1; \
 	fi
+	@echo "⚠️ WARNING: train-ml-ticker is deprecated. Please use 'make train-ml-multiday-ticker TICKER=$(TICKER)' instead."
 	docker compose exec app python scripts/train_day1_model.py --tickers $(TICKER)
 
 .PHONY: train-ml-multiday
@@ -305,11 +308,12 @@ train-ml-multiday-ticker: ## Train ML Multi-Day model for one ticker (usage: mak
 	fi
 	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER)
 .PHONY: validate-ml-ticker
-validate-ml-ticker: ## Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
+validate-ml-ticker: ## [DEPRECATED] Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
 	@if [ -z "$(TICKER)" ]; then \
 		echo "Error: TICKER is required. Usage: make validate-ml-ticker TICKER=BBCA"; \
 		exit 1; \
 	fi
+	@echo "⚠️ WARNING: validate-ml-ticker is deprecated."
 	docker compose exec app python scripts/validate_ml_accuracy.py --ticker $(TICKER)
 
 # ============================================================

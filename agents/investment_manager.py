@@ -603,8 +603,14 @@ def _calc_risk_reward(current, target, stop_loss, decision_label: str | None = N
         return "N/A"
     try:
         label = str(decision_label or "").upper()
+        
+        # Cap stop loss at a maximum of 7% below current/entry price to prevent absurd risk ratios in calculations
+        max_acceptable_sl = current * 0.93
+        if label != "SELL" and stop_loss < max_acceptable_sl:
+            stop_loss = max_acceptable_sl
 
-        # Direction-aware R/R: BUY-family uses long math, AVOID uses short math.
+        if label == "SELL":
+            risk = stop_loss - current
         if label in ("STRONG BUY", "BUY", "SPEC BUY"):
             risk = current - stop_loss
             reward = target - current

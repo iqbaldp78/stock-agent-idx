@@ -2416,15 +2416,16 @@ elif page == "📊 Performance":
             st.info("Belum ada data performance untuk menghitung agent accuracy.")
 
     with ml_tab:
-        st.caption("Status training dan validasi model ML Swing (5-Day).")
+        st.warning("⚠️ **Model ML Swing (Day-1) ini telah DEPRECATED.** Disarankan untuk menggunakan model Multi-Day (T+1 s/d T+7).")
+        st.caption("Status training dan validasi model ML Swing (Day-1 - Deprecated).")
 
         model_path = "models/checkpoints/lgbm_day1.pkl"
         meta_path = "models/checkpoints/lgbm_day1_meta.json"
         if os.path.exists(model_path):
-            st.success(f"Model aktif ditemukan: `{model_path}`")
+            st.info(f"Model Day-1 ditemukan: `{model_path}`")
         else:
-            st.warning("Model aktif belum ditemukan. Workflow akan memakai rule-based fallback.")
-            st.code("make train-ml", language="bash")
+            st.warning("Model Day-1 tidak aktif.")
+            st.code("make train-ml-multiday", language="bash")
 
         if os.path.exists(meta_path):
             try:
@@ -2454,7 +2455,7 @@ elif page == "📊 Performance":
             except Exception as e:
                 st.error(f"Gagal membaca metadata training: {e}")
         else:
-            st.info("Belum ada metadata training. Jalankan `make train-ml`.")
+            st.info("Belum ada metadata training untuk model Day-1.")
 
         st.divider()
         st.caption("Menampilkan hasil dari `scripts/validate_ml_accuracy.py` jika file `validate_ml_result.json` tersedia.")
@@ -3742,19 +3743,15 @@ elif page == "⚙️ Settings":
     st.subheader("🤖 Machine Learning")
     ml_col1, ml_col2 = st.columns(2)
     with ml_col1:
-        if st.button("🚀 Train ML Day-1 (--all)", use_container_width=True, help="Setara dengan 'make train-ml'"):
+        if st.button("🚀 Train ML Multi-Day (--all)", use_container_width=True, help="Setara dengan 'make train-ml-multiday'"):
             import sys
             import subprocess
             import os
-            subprocess.Popen([sys.executable, "scripts/train_day1_model.py", "--all"], preexec_fn=os.setsid)
-            st.success("Proses Train ML (Day-1) telah dijalankan di background!")
+            subprocess.Popen([sys.executable, "scripts/train_multiday_model.py", "--all"], preexec_fn=os.setsid)
+            st.success("Proses Train ML Multi-Day telah dijalankan di background!")
     with ml_col2:
-        if st.button("✅ Validate ML Accuracy (--all)", use_container_width=True, help="Setara dengan 'make validate-ml'"):
-            import sys
-            import subprocess
-            import os
-            subprocess.Popen([sys.executable, "scripts/validate_ml_accuracy.py", "--all"], preexec_fn=os.setsid)
-            st.success("Proses Validate ML telah dijalankan di background!")
+        if st.button("⚠️ Validate ML Accuracy [DEPRECATED]", use_container_width=True, help="Validasi model Day-1 yang telah deprecated"):
+            st.warning("Perhatian: Fitur validasi akurasi ini untuk model Day-1 yang sudah deprecated.")
 
     st.divider()
 
