@@ -81,8 +81,9 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
             entry_zone = pick.get("entry_zone", "")
             entry_low = None
             entry_high = None
-            if "–" in str(entry_zone):
-                parts = str(entry_zone).split("–")
+            separator = "–" if "–" in str(entry_zone) else "-"
+            if separator in str(entry_zone):
+                parts = str(entry_zone).split(separator)
                 try:
                     entry_low = _parse_number(parts[0])
                     entry_high = _parse_number(parts[1])

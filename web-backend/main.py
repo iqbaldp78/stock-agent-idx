@@ -463,6 +463,7 @@ def get_top_picks(current_user: dict = Depends(get_current_user)):
                     "stop_loss": float(r[18]) if r[18] is not None else None,
                     "weight_mode": r[19],
                     "broker_utama": fix_broker_utama(r[20]),
+                    "broker_to_watch": [fix_broker_utama(b.strip()) for b in r[20].split(", ") if b.strip()] if r[20] else [],
                     "rank": int(r[22]) if r[22] is not None else None
                 })
             

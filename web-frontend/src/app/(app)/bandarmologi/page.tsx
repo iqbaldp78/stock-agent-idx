@@ -7,9 +7,9 @@ const formatValue = (val: number) => { if (!val) return "0"; if (val >= 1e9) ret
 
 const getBrokerColorClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
-  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG"];
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
   
   if (foreign.includes(code)) return "text-red-400 font-extrabold";
   if (retail.includes(code)) return "text-green-400 font-extrabold";
@@ -19,9 +19,9 @@ const getBrokerColorClass = (brokerCode: string) => {
 
 const getBrokerTitle = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
-  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG"];
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
   
   if (foreign.includes(code)) return "Broker Asing (Foreign)";
   if (retail.includes(code)) return "Broker Ritel (Retail)";

@@ -2,10 +2,50 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
+import { 
+  RocketIcon, 
+  ArrowDownIcon, 
+  UpdateIcon, 
+  TargetIcon,
+  EyeOpenIcon
+} from '@radix-ui/react-icons';
+
+const extractEntryFromReasoning = (stock: any) => {
+  if (!stock || !stock.reasoning) return null;
+  const reason = stock.reasoning.toLowerCase();
+  
+  // Mencari pola angka harga e.g. "1.335", "1.340" yang diawali dengan kata-kata support/pullback/MA/entry/Fibonacci
+  const match = reason.match(/(?:pullback ke|support|entry ideal|area|ma\d+ di|fibonacci)\s+(\d{1,3}(?:\.\d{3})+)(?:\s*(?:atau|hingga|sampai|-)\s+(\d{1,3}(?:\.\d{3})+))?/);
+  
+  if (match) {
+    const val1 = parseInt(match[1].replace(/\./g, ''));
+    const val2 = match[2] ? parseInt(match[2].replace(/\./g, '')) : null;
+    
+    if (val1 > 100) { // filter out small numbers
+      if (val2 && val2 > 100) {
+        const low = Math.min(val1, val2);
+        const high = Math.max(val1, val2);
+        return { low, high };
+      }
+      // Jika hanya ada 1 angka, kita jadikan range kecil +/- 1% dari target harga pullback
+      const low = Math.round(val1 * 0.99);
+      const high = Math.round(val1 * 1.01);
+      return { low, high };
+    }
+  }
+  return null;
+};
 
 const formatEntry = (stock: any) => {
   if (!stock) return "-";
   if (stock.entry_low === null || stock.entry_low === undefined) return "🔒 Upgrade Pro";
+  
+  // Gunakan ekstraksi dari reasoning jika ada kecocokan
+  const extracted = extractEntryFromReasoning(stock);
+  if (extracted) {
+    return `${extracted.low.toLocaleString('id-ID')} - ${extracted.high.toLocaleString('id-ID')}`;
+  }
+  
   if (stock.entry_low && stock.entry_high) return `${stock.entry_low.toLocaleString('id-ID')} - ${stock.entry_high.toLocaleString('id-ID')}`;
   if (stock.entry_low) return `${stock.entry_low.toLocaleString('id-ID')}`;
   if (stock.entry_high) return `${stock.entry_high.toLocaleString('id-ID')}`;
@@ -25,6 +65,67 @@ const formatSL = (stock: any) => {
 const formatLot = (lots: number) => { if (!lots) return "0"; if (lots >= 1000) return `${(lots / 1000).toFixed(1)}K`; return lots.toLocaleString('id-ID'); };
 const formatValue = (val: number) => { if (!val) return "0"; if (val >= 1e9) return `${(val / 1e9).toFixed(2)}B`; if (val >= 1e6) return `${(val / 1e6).toFixed(2)}M`; return val.toLocaleString('id-ID'); };
 const formatPercentage = (pct: number) => { if (pct === undefined || pct === null) return "0.00%"; return `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`; };
+
+const getBrokerColorClass = (brokerCode: string) => {
+  const code = brokerCode.toUpperCase().trim();
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+
+  if (foreign.includes(code)) return "text-red-400 font-extrabold";
+  if (retail.includes(code)) return "text-green-400 font-extrabold";
+  if (institusi.includes(code)) return "text-purple-400 font-extrabold";
+  return "text-secondary font-bold";
+};
+
+const getBrokerBgClass = (brokerCode: string) => {
+  const code = brokerCode.toUpperCase().trim();
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+
+  if (foreign.includes(code)) return "bg-red-500/10 text-red-400 border-red-500/25";
+  if (retail.includes(code)) return "bg-green-500/10 text-green-400 border-green-500/25";
+  if (institusi.includes(code)) return "bg-purple-500/10 text-purple-400 border-purple-500/25";
+  return "bg-white/5 text-accent border-white/5";
+};
+
+const getBrokerTitle = (brokerCode: string) => {
+  const code = brokerCode.toUpperCase().trim();
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+
+  if (foreign.includes(code)) return "Broker Asing (Foreign)";
+  if (retail.includes(code)) return "Broker Ritel (Retail)";
+  if (institusi.includes(code)) return "Broker Institusi (Institution)";
+  return "Broker Tidak Terklasifikasi";
+};
+
+const getEntryType = (stock: any) => {
+  if (!stock) return null;
+  // Sinyal SELL tidak perlu tipe entry pembelian
+  if (stock.action === 'SELL') return null;
+  
+  const current = stock.current_price || stock.entry_price || 0;
+  
+  // Ambil low/high dari hasil ekstraksi reasoning terlebih dahulu, jika gagal fallback ke database
+  const extracted = extractEntryFromReasoning(stock);
+  const low = extracted ? extracted.low : (stock.entry_low || 0);
+  const high = extracted ? extracted.high : (stock.entry_high || 0);
+
+  if (current > 0 && low > 0 && high > 0) {
+    if (current < low * 0.995) {
+      return { label: "Buy on Breakout", color: "bg-blue-500/10 text-blue-300 border-blue-500/20", icon: <RocketIcon className="w-3.5 h-3.5" /> };
+    } else if (current > high * 1.005) {
+      return { label: "Buy on Weakness", color: "bg-amber-500/10 text-amber-300 border-amber-500/20", icon: <ArrowDownIcon className="w-3.5 h-3.5" /> };
+    } else {
+      return { label: "Market Buy", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20", icon: <TargetIcon className="w-3.5 h-3.5" /> };
+    }
+  }
+  
+  return { label: "Buy on Accumulation", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20", icon: <TargetIcon className="w-3.5 h-3.5" /> };
+};
 
 export default function TopPicksPage() {
   const { picks, runDate, isPro, setIsPro, showToast } = useApp();
@@ -52,9 +153,21 @@ export default function TopPicksPage() {
               <div>
                 <h2 className="text-4xl font-black text-text mb-1">{selectedStock.ticker}</h2>
                 <p className="text-secondary font-medium text-sm mb-3">Saham Tbk.</p>
-                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${selectedStock.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : selectedStock.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
-                  {selectedStock.action}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${selectedStock.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : selectedStock.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
+                    {selectedStock.action}
+                  </span>
+                  {(() => {
+                    const eType = getEntryType(selectedStock);
+                    if (!eType) return null;
+                    return (
+                      <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1.5 ${eType.color}`}>
+                        <span>{eType.icon}</span>
+                        <span>{eType.label}</span>
+                      </span>
+                    );
+                  })()}
+                </div>
               </div>
               <div className="text-right">
                 <div className="text-4xl font-bold text-text font-mono">{selectedStock.current_price || selectedStock.entry_price}</div>
@@ -233,14 +346,142 @@ export default function TopPicksPage() {
               </div>
             </div>
 
+            {/* Broker to Watch */}
+            {selectedStock.broker_to_watch && selectedStock.broker_to_watch.length > 0 && (
+              <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8 mt-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                <div className="flex items-center justify-between mb-6 pb-3 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-accent/15 border border-accent/20 flex items-center justify-center text-accent">
+                      🕵️‍♂️
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-text uppercase tracking-widest">Broker to Watch</h4>
+                      <p className="text-[10px] text-secondary">Aktivitas broker dominan & anomali transaksi</p>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border ${selectedStock.bandarm_signal === 'STRONG_ACCUMULATION' || selectedStock.bandarm_signal === 'ACCUMULATION'
+                    ? 'bg-profit/10 border-profit/20 text-profit'
+                    : selectedStock.bandarm_signal === 'DISTRIBUTION' || selectedStock.bandarm_signal === 'STRONG_DISTRIBUTION'
+                      ? 'bg-loss/10 border-loss/20 text-loss'
+                      : 'bg-white/5 border-border text-secondary'
+                    }`}>
+                    {selectedStock.bandarm_signal || 'NEUTRAL'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {selectedStock.broker_to_watch.map((broker: string, idx: number) => {
+                    const isAnomalyDist = broker.includes('[ANOMALI DISTRIBUSI]');
+                    const isAnomalyAcc = broker.includes('[ANOMALI AKUMULASI]');
+
+                    // Format broker string e.g. "DX (BNI Sekuritas)"
+                    const fullText = broker
+                      .replace('[ANOMALI DISTRIBUSI]', '')
+                      .replace('[ANOMALI AKUMULASI]', '')
+                      .trim();
+
+                    // Pisahkan kode broker dan nama (contoh: "DX (BNI Sekuritas)" -> code: "DX", name: "BNI Sekuritas")
+                    const match = fullText.match(/^([A-Z]{2})\s*\((.*)\)$/);
+                    const code = match ? match[1] : fullText;
+                    const name = match ? match[2] : '';
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 ${isAnomalyDist
+                          ? 'bg-loss/5 hover:bg-loss/10 border-loss/20 hover:border-loss/30 text-red-200 shadow-sm shadow-loss/5'
+                          : isAnomalyAcc
+                            ? 'bg-profit/5 hover:bg-profit/10 border-profit/20 hover:border-profit/30 text-emerald-200 shadow-sm shadow-profit/5'
+                            : 'bg-white/[0.02] hover:bg-white/[0.04] border-border hover:border-accent/30 text-text'
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-mono font-black text-base tracking-wider border ${getBrokerBgClass(code)}`}>
+                            {code}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-xs text-text truncate max-w-[130px]" title={name || code}>
+                              {name || 'Unknown Broker'}
+                            </span>
+                            <span className="text-[10px] text-secondary font-medium">
+                              {isAnomalyDist ? 'Anomali Jual' : isAnomalyAcc ? 'Anomali Beli' : 'Top Buyer'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status Tag */}
+                        <div>
+                          {isAnomalyDist ? (
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-loss/15 text-loss border border-loss/20">
+                              Distribusi 🔴
+                            </span>
+                          ) : isAnomalyAcc ? (
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-profit/15 text-profit border border-profit/20">
+                              Akumulasi 🟢
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/15">
+                              Aktif 🔵
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-5 p-3 rounded-xl bg-background/50 border border-border/60 flex flex-wrap gap-x-6 gap-y-2 items-center text-[10px] text-secondary">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                    <span className="text-red-400">Foreign</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                    <span className="text-green-400">Retail</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                    <span className="text-purple-400">Institusi</span>
+                  </div>
+                  <span className="text-border">|</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-loss/20 border border-loss/40 flex items-center justify-center"><span className="w-1 h-1 rounded-full bg-loss"></span></span>
+                    <span>Anomali Jual ≥3× rata-rata.</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-profit/20 border border-profit/40 flex items-center justify-center"><span className="w-1 h-1 rounded-full bg-profit"></span></span>
+                    <span>Anomali Beli ≥3× rata-rata.</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Broker Legend */}
+            <div className="flex flex-wrap items-center gap-4 text-xs bg-white/5 px-4 py-2.5 rounded-2xl border border-border w-fit mb-4">
+              <span className="text-secondary font-bold">Kategori Broker:</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                <span className="text-red-400 font-bold">Foreign (Asing)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                <span className="text-green-400 font-bold">Retail (Ritel)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                <span className="text-purple-400 font-bold">Institusi</span>
+              </div>
+            </div>
+
             {/* Broker True Cost */}
-            {selectedStock.broker_true_cost?.w1m && (
-              <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8 mt-8">
+            {selectedStock.broker_true_cost?.w7 && (
+              <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8">
                 <button
                   onClick={() => setShowTrueCostDetails(!showTrueCostDetails)}
                   className="w-full flex items-center justify-between py-2 text-text hover:text-text transition font-bold text-base"
                 >
-                  <span className="flex items-center gap-2"><span className="text-accent">🏛️</span> True Cost Broker Akumulasi</span>
+                  <span className="flex items-center gap-2"><span className="text-accent">🏛️</span> True Cost Broker Akumulasi (7D)</span>
                   <span>{showTrueCostDetails ? '▲' : '▼'}</span>
                 </button>
                 {showTrueCostDetails && (
@@ -257,9 +498,9 @@ export default function TopPicksPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5 text-sm font-mono text-secondary">
-                        {selectedStock.broker_true_cost.w1m.map((row: any, idx: number) => (
+                        {selectedStock.broker_true_cost.w7.map((row: any, idx: number) => (
                           <tr key={idx} className="hover:bg-white/5 transition">
-                            <td className="py-3 px-4 font-bold text-text">{row.broker}</td>
+                            <td className={`py-3 px-4 whitespace-nowrap ${getBrokerColorClass(row.broker)}`} title={getBrokerTitle(row.broker)}>{row.broker}</td>
                             <td className="py-3 px-4 text-text">Rp {(row.true_cost || 0).toLocaleString('id-ID')}</td>
                             <td className="py-3 px-4">{formatLot(row.total_buy_lot)}</td>
                             <td className="py-3 px-4">{formatValue(row.total_buy_value)}</td>
@@ -273,15 +514,15 @@ export default function TopPicksPage() {
                 )}
               </div>
             )}
-            
+
             {/* Broker Distribusi */}
-            {selectedStock.broker_distribution?.w1m && (
-              <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8 mt-8">
+            {selectedStock.broker_distributors?.w7 && (
+              <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8">
                 <button
                   onClick={() => setShowDistDetails(!showDistDetails)}
                   className="w-full flex items-center justify-between py-2 text-text hover:text-text transition font-bold text-base"
                 >
-                  <span className="flex items-center gap-2"><span className="text-loss">🏛️</span> Avg Sell Broker Distribusi</span>
+                  <span className="flex items-center gap-2"><span className="text-loss">🏛️</span> Avg Sell Broker Distribusi (7D)</span>
                   <span>{showDistDetails ? '▲' : '▼'}</span>
                 </button>
                 {showDistDetails && (
@@ -293,15 +534,15 @@ export default function TopPicksPage() {
                           <th className="py-3 px-4">Avg Sell</th>
                           <th className="py-3 px-4">Total Sell Lot</th>
                           <th className="py-3 px-4">Total Sell Value</th>
-                          <th className="py-3 px-4">Harga vs Cost</th>
+                          <th className="py-3 px-4">Harga vs Avg</th>
                           <th className="py-3 px-4 text-right">Active</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5 text-sm font-mono text-secondary">
-                        {selectedStock.broker_distribution.w1m.map((row: any, idx: number) => (
+                        {selectedStock.broker_distributors.w7.map((row: any, idx: number) => (
                           <tr key={idx} className="hover:bg-white/5 transition">
-                            <td className="py-3 px-4 font-bold text-text">{row.broker}</td>
-                            <td className="py-3 px-4 text-text">Rp {(row.avg_sell || 0).toLocaleString('id-ID')}</td>
+                            <td className={`py-3 px-4 whitespace-nowrap ${getBrokerColorClass(row.broker)}`} title={getBrokerTitle(row.broker)}>{row.broker}</td>
+                            <td className="py-3 px-4 text-text">Rp {(row.avg_sell || row.avg_price || 0).toLocaleString('id-ID')}</td>
                             <td className="py-3 px-4">{formatLot(row.total_sell_lot)}</td>
                             <td className="py-3 px-4">{formatValue(row.total_sell_value)}</td>
                             <td className={`py-3 px-4 font-bold ${row.distance_pct >= 0 ? 'text-profit' : 'text-loss'}`}>{formatPercentage(row.distance_pct)}</td>
@@ -357,9 +598,21 @@ export default function TopPicksPage() {
                     {picks[0].ticker}
                   </h4>
                   <p className="text-secondary font-medium text-sm mb-3">Saham Tbk.</p>
-                  <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${picks[0].action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : picks[0].action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
-                    {picks[0].action}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${picks[0].action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : picks[0].action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
+                      {picks[0].action}
+                    </span>
+                    {(() => {
+                      const eType = getEntryType(picks[0]);
+                      if (!eType) return null;
+                      return (
+                        <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1.5 ${eType.color}`}>
+                          <span>{eType.icon}</span>
+                          <span>{eType.label}</span>
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-text font-mono">{picks[0].current_price || picks[0].entry_price}</div>
@@ -400,7 +653,19 @@ export default function TopPicksPage() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h4 className="text-2xl font-black text-text mb-1 hover:text-accent cursor-pointer transition-colors" onClick={() => setSelectedStock(pick)}>{pick.ticker}</h4>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${pick.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : pick.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>{pick.action}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${pick.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : pick.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>{pick.action}</span>
+                      {(() => {
+                        const eType = getEntryType(pick);
+                        if (!eType) return null;
+                        return (
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1 ${eType.color}`}>
+                            <span>{eType.icon}</span>
+                            <span>{eType.label}</span>
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-xl font-bold text-text font-mono">{pick.current_price || pick.entry_price}</div>

@@ -346,6 +346,47 @@ print-debate-prompts: ## Print debate prompts for debugging
 	docker compose exec app python scripts/print_debate_prompts.py
 
 # ============================================================
+# BANDARMOLOGI BACKFILL
+# ============================================================
+
+MAX_DAYS ?= 1825
+
+.PHONY: backfill-bandarm
+backfill-bandarm: ## Backfill semua data broker_daily untuk SEMUA ticker universe (usage: make backfill-bandarm)
+	@echo "Starting bandarmologi backfill untuk semua ticker universe..."
+	@echo "Pastikan container sudah running: make up"
+	docker compose exec app python scripts/backfill_bandarmology.py
+
+.PHONY: backfill-bandarm-ticker
+backfill-bandarm-ticker: ## Init backfill untuk 1 ticker (usage: make backfill-bandarm-ticker TICKER=BBCA MAX_DAYS=365)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make backfill-bandarm-ticker TICKER=BBCA"; \
+		exit 1; \
+	fi
+	@echo "Backfill bandarmologi: $(TICKER) (max $(MAX_DAYS) hari ke belakang)"
+	docker compose exec app python scripts/backfill_bandarmology.py --tickers $(TICKER) --max-days $(MAX_DAYS)
+
+.PHONY: backfill-bandarm-dry
+backfill-bandarm-dry: ## Dry-run preview backfill untuk 1 ticker tanpa simpan ke DB (usage: make backfill-bandarm-dry TICKER=BBCA)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make backfill-bandarm-dry TICKER=BBCA"; \
+		exit 1; \
+	fi
+	@echo "[DRY-RUN] Preview backfill untuk $(TICKER)..."
+	docker compose exec app python scripts/backfill_bandarmology.py --tickers $(TICKER) --max-days 10 --dry-run
+
+.PHONY: backfill-bandarm-check
+backfill-bandarm-check: ## Cek jumlah data broker_accumulation yang sudah ada (usage: make backfill-bandarm-check TICKER=BBCA)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Usage: make backfill-bandarm-check TICKER=BBCA"; \
+		docker compose exec postgres psql -U stockuser -d stockagent -c \
+			"SELECT ticker, MIN(trade_date) as oldest, MAX(trade_date) as newest, COUNT(DISTINCT trade_date) as days FROM broker_accumulation GROUP BY ticker ORDER BY ticker;"; \
+	else \
+		docker compose exec postgres psql -U stockuser -d stockagent -c \
+			"SELECT ticker, trade_date, COUNT(*) as brokers FROM broker_accumulation WHERE ticker='$(TICKER)' GROUP BY ticker, trade_date ORDER BY trade_date DESC LIMIT 30;"; \
+	fi
+
+# ============================================================
 # DATA & DATABASE
 # ============================================================
 
