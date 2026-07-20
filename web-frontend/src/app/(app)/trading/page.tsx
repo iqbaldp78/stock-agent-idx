@@ -97,6 +97,7 @@ export default function TradingPage() {
   const [buyTp, setBuyTp] = useState(0);
   const [buySl, setBuySl] = useState(0);
   const [buySignalId, setBuySignalId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchTradingData = async () => {
     setTradingLoading(true);
@@ -308,6 +309,10 @@ export default function TradingPage() {
         const activePositions = positions.filter((p: any) => p.status === 'OPEN') || [];
         const pendingOrders = positions.filter((p: any) => p.status?.startsWith('PENDING')) || [];
         const closedTrades = history.filter((t: any) => t.status !== 'OPEN' && !t.status?.startsWith('PENDING')) || [];
+        const itemsPerPage = 10;
+        const totalPages = Math.ceil(closedTrades.length / itemsPerPage) || 1;
+        const activePage = currentPage > totalPages ? 1 : currentPage;
+        const paginatedClosedTrades = closedTrades.slice((activePage - 1) * itemsPerPage, activePage * itemsPerPage);
 
         return (
           <>
@@ -533,7 +538,7 @@ export default function TradingPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-secondary font-mono">
-                    {closedTrades.map((row: any, idx: number) => {
+                    {paginatedClosedTrades.map((row: any, idx: number) => {
                       const isProfit = row.realized_pnl >= 0;
                       return (
                         <tr key={idx} className="hover:bg-white/5 transition">
@@ -552,10 +557,52 @@ export default function TradingPage() {
                         </tr>
                       );
                     })}
-                    {closedTrades.length === 0 && <tr><td colSpan={8} className="py-10 text-center text-secondary font-sans">Belum ada riwayat transaksi ditutup.</td></tr>}
+                    {paginatedClosedTrades.length === 0 && <tr><td colSpan={8} className="py-10 text-center text-secondary font-sans">Belum ada riwayat transaksi ditutup.</td></tr>}
                   </tbody>
                 </table>
               </div>
+              {totalPages > 1 && (
+                <div className="flex flex-wrap items-center justify-between mt-4 gap-3 px-2">
+                  <span className="text-xs text-secondary font-medium">
+                    Menampilkan <span className="text-text font-bold">{((activePage - 1) * itemsPerPage) + 1}</span> - <span className="text-text font-bold">{Math.min(activePage * itemsPerPage, closedTrades.length)}</span> dari <span className="text-text font-bold">{closedTrades.length}</span> transaksi
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={activePage === 1}
+                      className="px-3.5 py-1.5 bg-white/5 border border-border hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 text-text rounded-xl text-xs font-bold transition duration-200"
+                    >
+                      Sebelumnya
+                    </button>
+                    {totalPages <= 6 ? (
+                      Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setCurrentPage(p)}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition duration-200 ${
+                            activePage === p
+                              ? 'bg-accent/20 border-accent text-accent'
+                              : 'bg-white/5 border-border text-secondary hover:text-text'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))
+                    ) : (
+                      <span className="px-3 py-1.5 text-xs text-secondary font-mono">
+                        Halaman {activePage} dari {totalPages}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={activePage === totalPages}
+                      className="px-3.5 py-1.5 bg-white/5 border border-border hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 text-text rounded-xl text-xs font-bold transition duration-200"
+                    >
+                      Berikutnya
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         );

@@ -99,7 +99,8 @@ def get_cached_ohlcv(ticker: str, start_date: str, end_date: str) -> pd.DataFram
     try:
         rows = db.execute(
             text("""
-                SELECT trade_date, open, high, low, close, volume
+                SELECT trade_date, open, high, low, close, volume,
+                       frequency, net_foreign, average_price, change_percentage
                 FROM ohlcv_prices
                 WHERE ticker = :ticker
                   AND trade_date BETWEEN :start AND :end
@@ -116,10 +117,10 @@ def get_cached_ohlcv(ticker: str, start_date: str, end_date: str) -> pd.DataFram
     if not rows:
         return pd.DataFrame()
 
-    df = pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"])
+    df = pd.DataFrame(rows, columns=["Date", "Open", "High", "Low", "Close", "Volume", "Frequency", "NetForeign", "AveragePrice", "ChangePercentage"])
     df["Date"] = pd.to_datetime(df["Date"])
     df.set_index("Date", inplace=True)
-    for col in ["Open", "High", "Low", "Close", "Volume"]:
+    for col in ["Open", "High", "Low", "Close", "Volume", "Frequency", "NetForeign", "AveragePrice", "ChangePercentage"]:
         df[col] = df[col].astype(float)
     return df
 
@@ -148,25 +149,34 @@ def save_ohlcv(
                 "low": float(row.get("Low", 0) or 0),
                 "close": float(row.get("Close", 0) or 0),
                 "volume": int(row.get("Volume", 0) or 0),
+                "frequency": int(row.get("Frequency", 0) or 0),
+                "net_foreign": int(row.get("NetForeign", 0) or 0),
+                "average_price": float(row.get("AveragePrice", 0) or 0),
+                "change_percentage": float(row.get("ChangePercentage", 0) or 0),
                 "source": source,
             }
             if trade_date == today_date:
                 db.execute(text("""
                     INSERT INTO ohlcv_prices
-                        (ticker, trade_date, open, high, low, close, volume, source)
+                        (ticker, trade_date, open, high, low, close, volume, source, frequency, net_foreign, average_price, change_percentage)
                     VALUES
-                        (:ticker, :trade_date, :open, :high, :low, :close, :volume, :source)
+                        (:ticker, :trade_date, :open, :high, :low, :close, :volume, :source, :frequency, :net_foreign, :average_price, :change_percentage)
                     ON CONFLICT (ticker, trade_date) DO UPDATE SET
                         open = EXCLUDED.open, high = EXCLUDED.high,
                         low  = EXCLUDED.low,  close = EXCLUDED.close,
-                        volume = EXCLUDED.volume, created_at = NOW()
+                        volume = EXCLUDED.volume,
+                        frequency = EXCLUDED.frequency,
+                        net_foreign = EXCLUDED.net_foreign,
+                        average_price = EXCLUDED.average_price,
+                        change_percentage = EXCLUDED.change_percentage,
+                        created_at = NOW()
                 """), params)
             else:
                 db.execute(text("""
                     INSERT INTO ohlcv_prices
-                        (ticker, trade_date, open, high, low, close, volume, source)
+                        (ticker, trade_date, open, high, low, close, volume, source, frequency, net_foreign, average_price, change_percentage)
                     VALUES
-                        (:ticker, :trade_date, :open, :high, :low, :close, :volume, :source)
+                        (:ticker, :trade_date, :open, :high, :low, :close, :volume, :source, :frequency, :net_foreign, :average_price, :change_percentage)
                     ON CONFLICT (ticker, trade_date) DO NOTHING
                 """), params)
         db.commit()

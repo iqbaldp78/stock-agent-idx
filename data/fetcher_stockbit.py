@@ -43,6 +43,14 @@ date_module_today = _date.today
 logger = logging.getLogger(__name__)
 
 
+def _get_api_key() -> str:
+    """Membaca STOCKBIT_API_KEY secara dinamis dari file .env tanpa restart."""
+    env_file = dotenv.find_dotenv()
+    if env_file:
+        dotenv.load_dotenv(env_file, override=True)
+    return os.getenv("STOCKBIT_API_KEY")
+
+
 def login_stockbit_with_password() -> str:
     """
     Melakukan login otomatis menggunakan STOCKBIT_USERNAME dan STOCKBIT_PASSWORD 
@@ -385,7 +393,7 @@ def get_marketdetector_broker_summary(
     investor_type: str = "INVESTOR_TYPE_ALL",
     limit: int = 10,
 ) -> dict:
-    api_key = os.getenv("STOCKBIT_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
 
@@ -436,7 +444,7 @@ def get_marketdetector_broker_summary(
 
 @_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
 def get_current_price_stockbit(ticker: str) -> float:
-    api_key = os.getenv("STOCKBIT_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
 
@@ -477,7 +485,7 @@ def get_ihsg_realtime_price_stockbit() -> dict:
         "currency": str
     }
     """
-    api_key = os.getenv("STOCKBIT_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         logger.warning("[IHSG Realtime] STOCKBIT_API_KEY not set, using fallback")
         return _ihsg_realtime_fallback()
@@ -496,9 +504,9 @@ def get_ihsg_realtime_price_stockbit() -> dict:
 
         data = payload.get("data", {})
         price = _parse_number(data.get("price", 0))
-        prev_close = _parse_number(data.get("prev_close", 0))
-        change = price - prev_close if prev_close > 0 else 0
-        change_pct = (change / prev_close * 100) if prev_close > 0 else 0
+        prev_close = _parse_number(data.get("prev_close", data.get("previous", 0)))
+        change = _parse_number(data.get("change", 0)) if "change" in data else (price - prev_close if prev_close > 0 else 0)
+        change_pct = _parse_number(data.get("percentage", 0)) if "percentage" in data else ((change / prev_close * 100) if prev_close > 0 else 0)
 
         # Format timestamp ke WIB (UTC+7)
         from datetime import datetime, timezone, timedelta
@@ -791,7 +799,7 @@ def _fetch_ohlcv_range_api(ticker: str, start_date: str, end_date: str, limit: i
     """
     Ambil data OHLCV langsung dari Stockbit API (no cache).
     """
-    api_key = os.getenv("STOCKBIT_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
     url = f"https://exodus.stockbit.com/company-price-feed/historical/summary/{ticker.upper()}"
@@ -832,7 +840,7 @@ def _fetch_ohlcv_range_api(ticker: str, start_date: str, end_date: str, limit: i
 
     # Hari libur bursa / data tidak tersedia: kembalikan DataFrame kosong tanpa warning keras.
     if not all_data:
-        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume", "Frequency", "NetForeign", "AveragePrice", "ChangePercentage"])
 
     df = pd.DataFrame([
         {
@@ -842,11 +850,15 @@ def _fetch_ohlcv_range_api(ticker: str, start_date: str, end_date: str, limit: i
             "Low": float(item["low"]),
             "Close": float(item["close"]),
             "Volume": float(item["volume"]),
+            "Frequency": int(item.get("frequency", 0)),
+            "NetForeign": int(item.get("net_foreign", 0)),
+            "AveragePrice": float(item.get("average", 0.0)),
+            "ChangePercentage": float(item.get("change_percentage", 0.0)),
         }
         for item in all_data if all(k in item for k in required_keys)
     ])
     if df.empty or "Date" not in df.columns:
-        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+        return pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume", "Frequency", "NetForeign", "AveragePrice", "ChangePercentage"])
     df.set_index("Date", inplace=True)
     df = df.sort_index()
     return df
@@ -959,7 +971,7 @@ def get_ohlcv(ticker: str, period: str = "3mo") -> pd.DataFrame:
 @_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
 def _fetch_stock_info_api(ticker: str) -> dict:
     """Ambil fundamental langsung dari Stockbit API (no cache)."""
-    api_key = os.getenv("STOCKBIT_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
     url = f"https://exodus.stockbit.com/keystats/ratio/v1/{ticker.upper()}?year_limit=10"
@@ -1048,7 +1060,7 @@ def _fetch_stock_info_api(ticker: str) -> dict:
                         return None
         return None
 
-    api_key = os.getenv("STOCKBIT_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         raise ValueError("STOCKBIT_API_KEY is not set")
     url = f"https://exodus.stockbit.com/keystats/ratio/v1/{ticker.upper()}?year_limit=10"

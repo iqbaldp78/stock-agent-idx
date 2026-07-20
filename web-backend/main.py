@@ -1171,8 +1171,8 @@ class TickerRequest(BaseModel):
     ticker: str
 
 @app.get("/api/portfolio/dca")
-def portfolio_dca_alias():
-    return portfolio_dca_strategies()
+def portfolio_dca_alias(current_user: dict = Depends(get_current_user)):
+    return portfolio_dca_strategies(current_user)
 
 @app.post("/api/portfolio/reset")
 def portfolio_reset_alias(current_user: dict = Depends(get_current_user)):

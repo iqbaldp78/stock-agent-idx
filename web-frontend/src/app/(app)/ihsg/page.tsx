@@ -82,7 +82,7 @@ export default function IhsgPage() {
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-secondary/60 mt-3">Updated: {new Date(realtime.timestamp).toLocaleString('id-ID')}</p>
+                  <p className="text-xs text-secondary/60 mt-3">Updated: {realtime.timestamp}</p>
                 </div>
               </div>
             )}

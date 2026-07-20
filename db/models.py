@@ -146,6 +146,10 @@ class OhlcvPrice(Base):
     low = Column(Numeric(12, 2))
     close = Column(Numeric(12, 2))
     volume = Column(BigInteger)
+    frequency = Column(Integer, default=0, server_default="0")
+    net_foreign = Column(BigInteger, default=0, server_default="0")
+    average_price = Column(Numeric(12, 2), default=0, server_default="0")
+    change_percentage = Column(Numeric(12, 2), default=0, server_default="0")
     source = Column(String(20), default="stockbit")
     created_at = Column(Date, server_default=func.now())
 
@@ -160,6 +164,10 @@ class IhsgOhlcv(Base):
     low = Column(Numeric(12, 2))
     close = Column(Numeric(12, 2))
     volume = Column(BigInteger)
+    frequency = Column(Integer, default=0, server_default="0")
+    net_foreign = Column(BigInteger, default=0, server_default="0")
+    average_price = Column(Numeric(12, 2), default=0, server_default="0")
+    change_percentage = Column(Numeric(12, 2), default=0, server_default="0")
     created_at = Column(Date, server_default=func.now())
 
 

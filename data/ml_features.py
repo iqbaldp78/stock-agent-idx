@@ -15,6 +15,9 @@ FEATURE_COLUMNS = [
     "dist_avg_1m",
     "foreign_net_7d",
     "foreign_net_1m",
+    "day_foreign_net",
+    "frequency_1d",
+    "close_vs_avg",
     "top3_buy_ratio_7d",
     "top3_sell_ratio_7d",
     "retail_buy_ratio_7d",
@@ -99,6 +102,10 @@ ML_TRAIN_FEATURES = [
     # ── Proven useful (importance > 0) ──────────────────────────────────
     "dist_avg_7d",
     "foreign_net_7d",
+    "foreign_net_1m",
+    "day_foreign_net",
+    "frequency_1d",
+    "close_vs_avg",
     "rsi",
     "is_bullish_trend",
     "vol_ratio",
@@ -854,6 +861,24 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df['range_pct'] = (df['High'] - df['Low']) / df['Close']
     df['gap_open'] = df['Open'] / df['Close'].shift(1) - 1
 
+    # New Stockbit Metadata Features
+    if 'NetForeign' in df.columns:
+        df['day_foreign_net'] = df['NetForeign'] / 1e9
+    else:
+        df['day_foreign_net'] = 0.0
+    df['foreign_net_7d'] = df['day_foreign_net'].rolling(7).sum().fillna(0.0)
+    df['foreign_net_1m'] = df['day_foreign_net'].rolling(30).sum().fillna(0.0)
+    
+    if 'Frequency' in df.columns:
+        df['frequency_1d'] = df['Frequency']
+    else:
+        df['frequency_1d'] = 0.0
+        
+    if 'AveragePrice' in df.columns:
+        df['close_vs_avg'] = (df['Close'] / df['AveragePrice'].replace(0, np.nan) - 1).fillna(0.0)
+    else:
+        df['close_vs_avg'] = 0.0
+
     # Advanced Indicators
     macd, macd_hist = _compute_macd(df['Close'])
     bb_upper, bb_lower = _compute_bb(df['Close'])
@@ -994,14 +1019,12 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
                     df_accum = pd.DataFrame([{
                         "date": pd.to_datetime(r.trade_date),
                         "buy_lot": float(r.buy_lot or 0),
-                        "buy_value": float(r.buy_value or 0),
-                        "day_foreign_net": float(r.day_foreign_net or 0)
+                        "buy_value": float(r.buy_value or 0)
                     } for r in accum_rows])
                     
                     df_daily = df_accum.groupby("date").agg({
                         "buy_lot": "sum",
-                        "buy_value": "sum",
-                        "day_foreign_net": "first"
+                        "buy_value": "sum"
                     }).sort_index()
                     
                     # Compute rolling sums on the daily grouped accumulation
@@ -1013,10 +1036,7 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
                     roll30_lot = df_daily["buy_lot"].rolling(30).sum()
                     df_daily["avg_1m"] = roll30_val / (roll30_lot * 100)
                     
-                    df_daily["foreign_net_7d"] = df_daily["day_foreign_net"].rolling(7).sum() / 1e9
-                    df_daily["foreign_net_1m"] = df_daily["day_foreign_net"].rolling(30).sum() / 1e9
-                    
-                    db_accum = df_daily[["avg_7d", "avg_1m", "foreign_net_7d", "foreign_net_1m"]]
+                    db_accum = df_daily[["avg_7d", "avg_1m"]]
             finally:
                 db.close()
         except Exception as e:
