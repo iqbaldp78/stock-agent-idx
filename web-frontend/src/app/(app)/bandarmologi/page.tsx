@@ -17,6 +17,18 @@ const getBrokerColorClass = (brokerCode: string) => {
   return "text-secondary font-bold"; // Fallback/default style for unclassified brokers
 };
 
+const getBrokerBgClass = (brokerCode: string) => {
+  const code = brokerCode.toUpperCase().trim();
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+
+  if (foreign.includes(code)) return "bg-red-500/10 text-red-400 border-red-500/25";
+  if (retail.includes(code)) return "bg-green-500/10 text-green-400 border-green-500/25";
+  if (institusi.includes(code)) return "bg-purple-500/10 text-purple-400 border-purple-500/25";
+  return "bg-white/5 text-accent border-white/5";
+};
+
 const getBrokerTitle = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
   const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
@@ -27,6 +39,21 @@ const getBrokerTitle = (brokerCode: string) => {
   if (retail.includes(code)) return "Broker Ritel (Retail)";
   if (institusi.includes(code)) return "Broker Institusi (Institution)";
   return "Broker Tidak Terklasifikasi";
+};
+
+const brokerNames: Record<string, string> = {
+  YP: "Mirae Asset", PD: "Indo Premier", CC: "Mandiri Sekuritas", NI: "BNI Sekuritas", 
+  CP: "Valbury", KK: "Phillip Sekuritas", OD: "BRI Danareksa", DX: "Bahana Sekuritas", 
+  AK: "UBS Sekuritas", BK: "J.P. Morgan", KZ: "CLSA Sekuritas", RX: "Macquarie", 
+  ZP: "Maybank", YU: "CGS-CIMB", BB: "Verdhana Sekuritas", DP: "DBS Vickers", 
+  TP: "OCBC Sekuritas", AI: "UOB Kay Hian", XA: "NH Korindo", AG: "Kiwoom Sekuritas", 
+  DR: "RHB Sekuritas", FS: "Reliance", HD: "KGI Sekuritas", XL: "Ajaib Sekuritas", 
+  XC: "Stockbit", AZ: "Sucor Sekuritas", AT: "Phintraco", SQ: "BCA Sekuritas", 
+  LG: "Trimegah", DH: "Sinarmas", MG: "Semesta Indovest", YJ: "Lotus Andalan", 
+  HP: "Henan Putihrai", CD: "Mega Capital", KI: "Ciptadana", RF: "Buana Capital", 
+  SS: "Supra Broker", EP: "MNC Sekuritas", BS: "Victoria Sekuritas", OK: "Net Sekuritas", 
+  EL: "Evergreen", GR: "Panin Sekuritas", IF: "Samuel Sekuritas", YB: "Jasa Utama", 
+  PO: "Pilarmas Investindo"
 };
 
 export default function BandarmologiPage() {
@@ -144,12 +171,12 @@ export default function BandarmologiPage() {
       {/* Top Metrics Cards */}
       {bandarmologiData && bandarmologiData.summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-2">Signal</p>
-            <p className={`text-2xl md:text-3xl font-black uppercase tracking-tight ${
+            <p className={`text-lg xl:text-2xl font-black uppercase tracking-tight truncate ${
               bandarmologiData.summary.signal === 'BUY' || bandarmologiData.summary.signal?.includes('ACCUMULATION') ? 'text-profit' :
               bandarmologiData.summary.signal === 'SELL' || bandarmologiData.summary.signal?.includes('DISTRIBUTION') ? 'text-loss' : 'text-accent'
-            }`}>
+            }`} title={bandarmologiData.summary.signal?.replace('_', ' ') || 'HOLD'}>
               {bandarmologiData.summary.signal?.replace('_', ' ') || 'HOLD'}
             </p>
           </div>
@@ -176,6 +203,73 @@ export default function BandarmologiPage() {
                 {bandarmologiData.price_analysis?.entry_status?.replace(/[^a-zA-Z]/g, '').trim() || 'N/A'}
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Broker to Watch */}
+      {bandarmologiData && bandarmologiData.broker_to_watch && bandarmologiData.broker_to_watch.length > 0 && (
+        <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+          <div className="flex items-center justify-between mb-6 pb-3 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-accent/15 border border-accent/20 flex items-center justify-center text-accent">
+                🕵️‍♂️
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-text uppercase tracking-widest">Broker to Watch</h4>
+                <p className="text-[10px] text-secondary">Aktivitas broker dominan & anomali transaksi</p>
+              </div>
+            </div>
+            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border ${bandarmologiData.signal === 'STRONG_ACCUMULATION' || bandarmologiData.signal === 'ACCUMULATION'
+              ? 'bg-profit/10 border-profit/20 text-profit'
+              : bandarmologiData.signal === 'DISTRIBUTION' || bandarmologiData.signal === 'STRONG_DISTRIBUTION'
+                ? 'bg-loss/10 border-loss/20 text-loss'
+                : 'bg-white/5 border-border text-secondary'
+              }`}>
+              {bandarmologiData.signal || 'NEUTRAL'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {bandarmologiData.broker_to_watch.map((broker: string, idx: number) => {
+              const isAnomalyDist = broker.includes('[ANOMALI DISTRIBUSI]');
+              const isAnomalyAcc = broker.includes('[ANOMALI AKUMULASI]');
+              const fullText = broker.replace('[ANOMALI DISTRIBUSI]', '').replace('[ANOMALI AKUMULASI]', '').trim();
+              const match = fullText.match(/^([A-Z]{2})\s*\((.*)\)$/);
+              const code = match ? match[1] : fullText;
+              const name = match ? match[2] : '';
+
+              return (
+                <div key={idx} className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 ${isAnomalyDist ? 'bg-loss/5 hover:bg-loss/10 border-loss/20 hover:border-loss/30 text-red-200 shadow-sm shadow-loss/5' : isAnomalyAcc ? 'bg-profit/5 hover:bg-profit/10 border-profit/20 hover:border-profit/30 text-emerald-200 shadow-sm shadow-profit/5' : 'bg-white/[0.02] hover:bg-white/[0.04] border-border hover:border-accent/30 text-text'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-mono font-black text-base tracking-wider border ${getBrokerBgClass(code)}`}>{code}</div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-semibold text-xs text-text truncate max-w-[130px]" title={name || brokerNames[code] || code}>{name || brokerNames[code] || 'Unknown Broker'}</span>
+                      <span className="text-[10px] text-secondary font-medium">{isAnomalyDist ? 'Anomali Jual' : isAnomalyAcc ? 'Anomali Beli' : 'Top Buyer'}</span>
+                    </div>
+                  </div>
+                  <div>
+                    {isAnomalyDist ? (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-loss/15 text-loss border border-loss/20">Distribusi 🔴</span>
+                    ) : isAnomalyAcc ? (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-profit/15 text-profit border border-profit/20">Akumulasi 🟢</span>
+                    ) : (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/15">Aktif 🔵</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="mt-5 p-3 rounded-xl bg-background/50 border border-border/60 flex flex-wrap gap-x-6 gap-y-2 items-center text-[10px] text-secondary">
+            <div className="flex items-center gap-1.5 font-bold"><span className="w-2.5 h-2.5 rounded-full bg-red-400"></span><span className="text-red-400">Foreign</span></div>
+            <div className="flex items-center gap-1.5 font-bold"><span className="w-2.5 h-2.5 rounded-full bg-green-400"></span><span className="text-green-400">Retail</span></div>
+            <div className="flex items-center gap-1.5 font-bold"><span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span><span className="text-purple-400">Institusi</span></div>
+            <span className="text-border">|</span>
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-loss/20 border border-loss/40 flex items-center justify-center"><span className="w-1 h-1 rounded-full bg-loss"></span></span><span>Anomali Jual ≥3× rata-rata.</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-profit/20 border border-profit/40 flex items-center justify-center"><span className="w-1 h-1 rounded-full bg-profit"></span></span><span>Anomali Beli ≥3× rata-rata.</span></div>
           </div>
         </div>
       )}

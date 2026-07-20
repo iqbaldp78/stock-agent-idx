@@ -20,6 +20,7 @@ import {
   IdCardIcon
 } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const navItems = [
   { href: "/", label: "Home Dashboard", icon: HomeIcon, id: "dashboard" },
@@ -30,7 +31,6 @@ const navItems = [
   { href: "/performance", label: "AI Performance", icon: RocketIcon, id: "history" },
   { href: "/portfolio", label: "Portfolio Management", icon: CardStackIcon, id: "portfolio" },
   { href: "/billing", label: "Billing & Upgrade", icon: IdCardIcon, id: "billing" },
-  { href: "/settings", label: "Preferences", icon: GearIcon, id: "settings" },
 ];
 
 export default function AppShellLayout({ children }: { children: React.ReactNode }) {
@@ -102,17 +102,16 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
           </nav>
 
                     <div className="mt-auto pt-6 border-t border-border">
-            <div className="bg-background border border-border rounded-xl p-1 mb-4 flex text-xs font-medium">
-              <button
-                className={`flex-1 py-2 rounded-lg transition ${isPro ? 'text-secondary hover:text-text' : 'bg-accent text-text shadow-md'}`}
-                onClick={() => setIsPro(false)}
-              >Free</button>
-              <button
-                className={`flex-1 py-2 rounded-lg transition flex items-center justify-center gap-1 ${isPro ? 'bg-accent text-text shadow-md' : 'text-secondary hover:text-text'}`}
-                onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")}
-              >
-                Pro <span className="text-[10px] bg-white/20 px-1 rounded-md">✨</span>
-              </button>
+            <div className="mb-4 flex">
+              {isPro ? (
+                <Badge variant="pro" className="w-full justify-center py-2 text-sm font-bold flex items-center gap-1 rounded-xl">
+                  Pro Tier <span className="text-[10px] bg-white/20 px-1.5 rounded-md">✨</span>
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="w-full justify-center py-2 text-sm font-bold bg-background border border-border rounded-xl">
+                  Free Tier
+                </Badge>
+              )}
             </div>
             <button
               onClick={logout}
@@ -141,17 +140,16 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
 
           <div className="flex items-center gap-3 text-sm font-medium">
             {/* Desktop Only Actions */}
-            <div className="hidden md:flex bg-background p-1 rounded-full border border-border items-center shrink-0 text-xs">
-              <button
-                className={`px-4 py-1.5 rounded-full transition ${isPro ? 'text-secondary hover:text-text' : 'bg-accent text-text shadow-lg shadow-indigo-500/20'}`}
-                onClick={() => setIsPro(false)}
-              >Free</button>
-              <button
-                className={`px-4 py-1.5 rounded-full transition flex items-center gap-1 ${isPro ? 'bg-accent text-text shadow-lg shadow-accent/20' : 'text-secondary hover:text-text'}`}
-                onClick={() => setIsPro(localStorage?.getItem("tier") === "pro")}
-              >
-                Pro <span className="text-[10px] bg-white/20 px-1.5 rounded-md">✨</span>
-              </button>
+            <div className="hidden md:flex items-center shrink-0 text-xs">
+              {isPro ? (
+                <Badge variant="pro" className="px-4 py-1.5 text-sm font-bold flex items-center gap-1 rounded-full">
+                  Pro <span className="text-[10px] bg-white/20 px-1.5 rounded-md">✨</span>
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="px-4 py-1.5 text-sm font-bold rounded-full bg-background border border-border">
+                  Free
+                </Badge>
+              )}
               
               {currentUser && (
                 <div className="flex items-center gap-2 mx-2 pl-2 border-l border-border">

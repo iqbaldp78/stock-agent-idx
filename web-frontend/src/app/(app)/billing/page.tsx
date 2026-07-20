@@ -157,7 +157,7 @@ export default function BillingUpgradePage() {
             <h3 className="text-xl font-extrabold text-text flex items-center gap-2">Pro Tier <StarIcon className="text-amber-400 fill-amber-400 w-4 h-4" /></h3>
             <p className="text-xs text-secondary mt-1">Solusi komprehensif untuk pengujian intensif</p>
             <div className="my-6">
-              <span className="text-3xl font-black text-text">Rp 149.000</span>
+              <span className="text-3xl font-black text-text">Rp 39.000</span>
               <span className="text-xs text-secondary">/ bulan</span>
             </div>
             <ul className="space-y-3 text-xs text-text border-t border-border pt-6">
@@ -225,7 +225,7 @@ export default function BillingUpgradePage() {
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-bold text-text">Scan kode QR di atas</p>
-                  <p className="text-xs text-secondary mt-1">Gunakan aplikasi e-wallet Anda untuk memindai pembayaran simulasi Rp 149.000.</p>
+                  <p className="text-xs text-secondary mt-1">Gunakan aplikasi e-wallet Anda untuk memindai pembayaran simulasi Rp 39.000.</p>
                 </div>
               </>
             ) : (
@@ -244,7 +244,7 @@ export default function BillingUpgradePage() {
                 </div>
                 <div className="flex justify-between text-xs text-secondary">
                   <span>NOMINAL TRANSFER:</span>
-                  <span className="text-accent font-bold">Rp 149.000</span>
+                  <span className="text-accent font-bold">Rp 39.000</span>
                 </div>
               </div>
             )}

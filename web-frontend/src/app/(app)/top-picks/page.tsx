@@ -102,6 +102,21 @@ const getBrokerTitle = (brokerCode: string) => {
   return "Broker Tidak Terklasifikasi";
 };
 
+const brokerNames: Record<string, string> = {
+  YP: "Mirae Asset", PD: "Indo Premier", CC: "Mandiri Sekuritas", NI: "BNI Sekuritas", 
+  CP: "Valbury", KK: "Phillip Sekuritas", OD: "BRI Danareksa", DX: "Bahana Sekuritas", 
+  AK: "UBS Sekuritas", BK: "J.P. Morgan", KZ: "CLSA Sekuritas", RX: "Macquarie", 
+  ZP: "Maybank", YU: "CGS-CIMB", BB: "Verdhana Sekuritas", DP: "DBS Vickers", 
+  TP: "OCBC Sekuritas", AI: "UOB Kay Hian", XA: "NH Korindo", AG: "Kiwoom Sekuritas", 
+  DR: "RHB Sekuritas", FS: "Reliance", HD: "KGI Sekuritas", XL: "Ajaib Sekuritas", 
+  XC: "Stockbit", AZ: "Sucor Sekuritas", AT: "Phintraco", SQ: "BCA Sekuritas", 
+  LG: "Trimegah", DH: "Sinarmas", MG: "Semesta Indovest", YJ: "Lotus Andalan", 
+  HP: "Henan Putihrai", CD: "Mega Capital", KI: "Ciptadana", RF: "Buana Capital", 
+  SS: "Supra Broker", EP: "MNC Sekuritas", BS: "Victoria Sekuritas", OK: "Net Sekuritas", 
+  EL: "Evergreen", GR: "Panin Sekuritas", IF: "Samuel Sekuritas", YB: "Jasa Utama", 
+  PO: "Pilarmas Investindo"
+};
+
 const getEntryType = (stock: any) => {
   if (!stock) return null;
   // Sinyal SELL tidak perlu tipe entry pembelian
@@ -401,8 +416,8 @@ export default function TopPicksPage() {
                             {code}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-semibold text-xs text-text truncate max-w-[130px]" title={name || code}>
-                              {name || 'Unknown Broker'}
+                            <span className="font-semibold text-xs text-text truncate max-w-[130px]" title={name || brokerNames[code] || code}>
+                              {name || brokerNames[code] || 'Unknown Broker'}
                             </span>
                             <span className="text-[10px] text-secondary font-medium">
                               {isAnomalyDist ? 'Anomali Jual' : isAnomalyAcc ? 'Anomali Beli' : 'Top Buyer'}
