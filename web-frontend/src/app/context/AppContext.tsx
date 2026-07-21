@@ -20,6 +20,7 @@ interface AppContextValue {
   holdings: any[];
   historyData: any[];
   loading: boolean;
+  debateCandidates: any[];
 
   // Toasts
   toasts: Toast[];
@@ -46,6 +47,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [holdings, setHoldings] = useState<any[]>([]);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [debateCandidates, setDebateCandidates] = useState<any[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
@@ -94,6 +96,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setPicks(data.data);
           setBatchId(data.batch_id);
           setRunDate(data.run_date || "");
+          setDebateCandidates(data.debate_candidates || []);
         }
       })
       .catch(err => console.error("Error loading picks:", err));
@@ -160,7 +163,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <AppContext.Provider value={{
       tokenStr, isPro, setIsPro,
-      picks, batchId, runDate, stats, wallet, holdings, historyData, loading,
+      picks, batchId, runDate, stats, wallet, holdings, historyData, loading, debateCandidates,
       toasts, showToast, dismissToast,
       loadData, handleTrade, logout, currentUser
     }}>

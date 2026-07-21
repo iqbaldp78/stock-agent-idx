@@ -95,6 +95,10 @@ FEATURE_COLUMNS = [
     "commodity_score",
     "bandar_accum_ratio",
     "ihsg_trend_3d",
+    # Candlestick pattern features
+    "candlestick_winrate",
+    "is_bullish_pattern",
+    "is_bearish_pattern",
 ]
 
 # Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
@@ -163,6 +167,10 @@ ML_TRAIN_FEATURES = [
     "news_score",
     "commodity_score",
     "bandar_accum_ratio",
+    # Candlestick pattern features
+    "candlestick_winrate",
+    "is_bullish_pattern",
+    "is_bearish_pattern",
     "ihsg_trend_3d",
 ]
 
@@ -781,6 +789,20 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "stoch_d": float(stoch_d.iloc[-1]) if len(stoch_d.dropna()) > 0 else 0.0,
             "atr": float(atr.iloc[-1] / current_price) if len(atr.dropna()) > 0 and current_price > 0 else 0.0,
         }
+
+        # Candlestick Pattern Features for Live ML Inference
+        candlestick_patterns = tech.get("candlestick_patterns", [])
+        if candlestick_patterns:
+            max_wr = max([p.get("win_rate_bei", 0.5) for p in candlestick_patterns], default=0.5)
+            has_bull = any(p.get("signal") in ["BULLISH", "STRONG BULLISH"] for p in candlestick_patterns)
+            has_bear = any(p.get("signal") == "BEARISH" for p in candlestick_patterns)
+            price_features["candlestick_winrate"] = float(max_wr)
+            price_features["is_bullish_pattern"] = 1.0 if has_bull else 0.0
+            price_features["is_bearish_pattern"] = 1.0 if has_bear else 0.0
+        else:
+            price_features["candlestick_winrate"] = 0.50
+            price_features["is_bullish_pattern"] = 0.0
+            price_features["is_bearish_pattern"] = 0.0
     else:
         price_features = {f"ret_{i}d": 0.0 for i in [1, 3, 5]}
         price_features.update({
@@ -892,6 +914,18 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df['stoch_k'] = stoch_k
     df['stoch_d'] = stoch_d
     df['atr'] = atr / df['Close']
+
+    # Candlestick Pattern Features historically for ML Training
+    body_size_h = (df['Close'] - df['Open']).abs()
+    lower_wick_h = df[['Open', 'Close']].min(axis=1) - df['Low']
+    upper_wick_h = df['High'] - df[['Open', 'Close']].max(axis=1)
+    is_hammer_h = (lower_wick_h > 2 * body_size_h) & (upper_wick_h < 0.3 * body_size_h) & (df['Volume'] > vol_ma20)
+    is_bull_eng_h = (df['Close'] > df['Open']) & (df['Close'].shift(1) < df['Open'].shift(1)) & (df['Close'] >= df['Open'].shift(1)) & (df['Open'] <= df['Close'].shift(1))
+    is_bear_eng_h = (df['Close'] < df['Open']) & (df['Close'].shift(1) > df['Open'].shift(1)) & (df['Open'] >= df['Close'].shift(1)) & (df['Close'] <= df['Open'].shift(1))
+
+    df['is_bullish_pattern'] = (is_hammer_h | is_bull_eng_h).astype(float)
+    df['is_bearish_pattern'] = (is_bear_eng_h).astype(float)
+    df['candlestick_winrate'] = np.where(is_bull_eng_h, 0.68, np.where(is_hammer_h, 0.64, np.where(is_bear_eng_h, 0.34, 0.50)))
 
     # ── Volume profile / orderbook-proxy from OHLCV ─────────────────────
     roll20 = df.rolling(20, min_periods=10)

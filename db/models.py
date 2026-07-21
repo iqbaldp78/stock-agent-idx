@@ -25,6 +25,7 @@ class Universe(Base):
     ticker = Column(String(10), nullable=False, unique=True)
     is_lq45 = Column(Boolean, default=True)
     is_custom = Column(Boolean, default=False)
+    is_konglo = Column(Boolean, default=False)
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
 

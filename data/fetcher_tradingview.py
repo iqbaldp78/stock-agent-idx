@@ -1,9 +1,16 @@
 from tradingview_ta import TA_Handler, Interval, Exchange
 import logging
+import time
+import threading
 
 logger = logging.getLogger(__name__)
 
-def get_technical_analysis(symbol: str, interval: str = "1d", screener: str = "indonesia", exchange: str = "IDX") -> dict:
+# Global state for rate limiting
+_tv_lock = threading.Lock()
+_last_tv_call = 0.0
+TV_RATE_LIMIT_DELAY = 1.0  # 1 detik jeda minimum antar request ke TradingView
+
+def get_technical_analysis(symbol: str, interval: str = "1d", screener: str = "indonesia", exchange: str = "IDX", max_retries: int = 3) -> dict:
     """
     Mengambil data full Technical Analysis dari TradingView yang mencakup RSI, MACD, Bollinger Bands,
     dan 20+ indikator lainnya beserta status BUY/SELL/HOLD.
@@ -34,30 +41,45 @@ def get_technical_analysis(symbol: str, interval: str = "1d", screener: str = "i
     
     tv_interval = interval_map.get(interval, Interval.INTERVAL_1_DAY)
     
-    try:
-        handler = TA_Handler(
-            symbol=symbol,
-            screener=screener,
-            exchange=exchange,
-            interval=tv_interval
-        )
-        
-        analysis = handler.get_analysis()
-        
-        return {
-            "status": "success",
-            "symbol": symbol,
-            "interval": interval,
-            "summary": analysis.summary,
-            "indicators": analysis.indicators
-        }
-    except Exception as e:
-        logger.error(f"Error fetching technical analysis for {symbol} from TradingView: {e}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "symbol": symbol
-        }
+    global _last_tv_call
+    
+    for attempt in range(max_retries):
+        try:
+            with _tv_lock:
+                now = time.time()
+                time_since_last = now - _last_tv_call
+                if time_since_last < TV_RATE_LIMIT_DELAY:
+                    time.sleep(TV_RATE_LIMIT_DELAY - time_since_last)
+                
+                _last_tv_call = time.time()
+                
+            handler = TA_Handler(
+                symbol=symbol,
+                screener=screener,
+                exchange=exchange,
+                interval=tv_interval
+            )
+            
+            analysis = handler.get_analysis()
+            
+            return {
+                "status": "success",
+                "symbol": symbol,
+                "interval": interval,
+                "summary": analysis.summary,
+                "indicators": analysis.indicators
+            }
+        except Exception as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"Rate limited or error fetching {symbol} from TradingView, retrying in 2s... (Attempt {attempt+1}/{max_retries}): {e}")
+                time.sleep(2)
+            else:
+                logger.error(f"Error fetching technical analysis for {symbol} from TradingView after {max_retries} attempts: {e}")
+                return {
+                    "status": "error",
+                    "message": str(e),
+                    "symbol": symbol
+                }
 
 if __name__ == "__main__":
     import json

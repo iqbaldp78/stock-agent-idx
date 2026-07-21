@@ -9,7 +9,7 @@ import json
 import logging
 from datetime import datetime
 
-from agents.debate.personas import IM_SYSTEM_PROMPT
+from agents.debate.personas import IM_SYSTEM_PROMPT, KONGLO_IM_SYSTEM_PROMPT
 from agents.llm_client import health_check, invoke_json_im
 from agents.price_predictor import predict_movement
 from config import (
@@ -98,6 +98,83 @@ def _synthesize_llm(state: dict, global_news: str = "") -> dict:
     return _merge_llm_decision(state, raw)
 
 
+def synthesize_konglo(state: dict) -> dict:
+    """
+    Investment Manager for Konglo Picks: Pilih TOP 3 dari finalists.
+    Tries LLM synthesis first, falls back to rule-based.
+    """
+    finalists = state.get("finalists", [])
+    if not finalists:
+        return {"top_picks": [], "final_report": _empty_report()}
+        
+    # Gather news context for finalists
+    try:
+        from scripts.rag_retriever import search_by_ticker, format_for_prompt
+        news_contexts = []
+        for f in finalists:
+            ticker = f.get("ticker")
+            if ticker:
+                news = search_by_ticker(ticker, limit=1)
+                if news:
+                    news_contexts.append(f"BERITA {ticker}: {format_for_prompt(news)}")
+        global_news = "\n".join(news_contexts)
+    except Exception as e:
+        logger.warning(f"Failed to fetch RAG news for IM: {e}")
+        global_news = ""
+
+    if LLM_ENABLED and health_check():
+        try:
+            return _synthesize_llm_konglo(state, global_news)
+        except Exception as e:
+            logger.error("LLM IM synthesis failed, falling back to rule-based: %s", e)
+            
+    return synthesize_rule_based(state)
+
+def _synthesize_llm_konglo(state: dict, global_news: str = "") -> dict:
+    """Single LLM call for TOP 3 narrative using Konglo IM persona."""
+    finalists = state.get("finalists", [])
+    scores = state.get("scores", {})
+    composites = state.get("composites", {})
+    macro_data = state.get("macro_data", {})
+    debate_log = state.get("debate_log", [])
+    ml_predictions = state.get("ml_predictions", {})
+
+    finalist_tickers = [f["ticker"] for f in finalists[:7]]
+    debate_summary = [
+        e for e in debate_log
+        if e.get("ticker") in finalist_tickers or e.get("ticker") == "MARKET"
+    ][-80:]
+
+    context = {
+        "finalists": finalists[:7],
+        "scores": {t: scores.get(t) for t in finalist_tickers if t in scores},
+        "composites": {t: composites.get(t) for t in finalist_tickers if t in composites},
+        "macro_data": macro_data,
+        "debate_log": debate_summary,
+        "ml_predictions": {t: ml_predictions.get(t) for t in finalist_tickers if t in ml_predictions},
+    }
+    news_text = ""
+    if global_news:
+        news_text = f"\n[RAG NEWS CONTEXT]\nBerikut adalah berita terbaru dari Stockbit untuk dipertimbangkan sebagai Hak Veto atau Katalis Tambahan:\n{global_news}\nSilahkan gunakan konteks berita ini untuk mengeliminasi saham yang rawan, atau mem-boost saham yang punya katalis bagus.\n\n"
+
+    user = (
+        "Pilih TOP 3 dari finalis Konglo Play berikut. Rank 1 = conviction tertinggi.\n\n"
+        f"{news_text}"
+        f"{json.dumps(context, ensure_ascii=False, default=str)}"
+    )
+
+    raw = invoke_json_im(
+        LLM_MODEL_INVESTMENT_MANAGER,
+        KONGLO_IM_SYSTEM_PROMPT,
+        user,
+        fallback_model=LLM_MODEL_IM_FALLBACK,
+    )
+    if not raw:
+        return None
+
+    return _merge_llm_decision(state, raw)
+
+
 def _merge_llm_decision(state: dict, llm_raw: dict) -> dict:
     """Merge LLM narratives with rule-based numeric fields."""
     finalists = state.get("finalists", [])
@@ -152,6 +229,53 @@ def _merge_llm_decision(state: dict, llm_raw: dict) -> dict:
             pick["position_size"] = _position_size(meta["conviction"])
         if meta.get("time_horizon"):
             pick["time_horizon"] = str(meta["time_horizon"])
+
+        # Override with LLM-decided entry, TP, and SL if provided
+        if meta.get("entry_low") is not None:
+            try:
+                el = float(meta["entry_low"])
+                eh = float(meta.get("entry_high") or el)
+                pick["entry_zone"] = f"{el:.0f}–{eh:.0f}"
+                pick["max_entry"] = f"{eh:.0f}"
+            except (ValueError, TypeError):
+                pass
+        if meta.get("tp1") is not None:
+            try:
+                pick["tp1"] = float(meta["tp1"])
+                pick["target_1"] = float(meta["tp1"])
+            except (ValueError, TypeError):
+                pass
+        if meta.get("tp2") is not None:
+            try:
+                pick["tp2"] = float(meta["tp2"])
+                pick["target_2"] = float(meta["tp2"])
+            except (ValueError, TypeError):
+                pass
+        if meta.get("tp3") is not None:
+            try:
+                pick["tp3"] = float(meta["tp3"])
+                pick["target_3"] = float(meta["tp3"])
+            except (ValueError, TypeError):
+                pass
+        if meta.get("stop_loss") is not None:
+            try:
+                pick["stop_loss"] = float(meta["stop_loss"])
+            except (ValueError, TypeError):
+                pass
+
+        # Recalculate risk reward based on overridden values
+        if meta.get("tp1") is not None or meta.get("stop_loss") is not None:
+            ticker_scores = scores.get(ticker, {})
+            bandarm = ticker_scores.get("bandarm", {})
+            price_analysis = bandarm.get("price_analysis", {})
+            current_price = price_analysis.get("current_price")
+            pick["risk_reward"] = _calc_risk_reward(current_price, pick.get("target_1"), pick.get("stop_loss"), pick.get("decision_label"))
+
+        if meta.get("entry_style"):
+            if not isinstance(pick.get("price_prediction"), dict):
+                pick["price_prediction"] = {}
+            pick["price_prediction"]["entry_style"] = str(meta["entry_style"])
+
         top_picks.append(pick)
 
     watchlist = llm_raw.get("watchlist")
@@ -263,8 +387,14 @@ def _build_pick_rule_based(
     avg_cost_7d = price_analysis.get("bandar_avg_7d")
     avg_cost_1m = price_analysis.get("bandar_avg_1m")
     current_price = price_analysis.get("current_price")
-    entry_low = price_analysis.get("ideal_entry_zone", "N/A")
-    max_entry = price_analysis.get("max_entry", "N/A")
+    entry_low_tech = tech.get("entry_low")
+    entry_high_tech = tech.get("entry_high")
+    if entry_low_tech is not None and entry_high_tech is not None:
+        entry_low = f"{entry_low_tech:.0f}–{entry_high_tech:.0f}"
+        max_entry = f"{entry_high_tech:.0f}"
+    else:
+        entry_low = price_analysis.get("ideal_entry_zone", "N/A")
+        max_entry = price_analysis.get("max_entry", "N/A")
 
     # Extract TP1, TP2, TP3 with R/R metrics
     tp1 = tech.get("tp1")
@@ -306,10 +436,14 @@ def _build_pick_rule_based(
     entry_reasoning = _build_entry_reasoning(
         ticker, avg_cost_7d, avg_cost_1m, current_price, stop_loss
     )
+    # Determine Conviction considering score and Candlestick Pattern Win Rate
+    candlestick_patterns = tech.get("candlestick_patterns", [])
+    max_pattern_winrate = max([p.get("win_rate_bei", 0) for p in candlestick_patterns], default=0)
+
     final_score = finalist.get("final_score", 0)
-    if final_score >= 8.0:
+    if final_score >= 7.8 or max_pattern_winrate >= 0.68:
         conviction = "HIGH"
-    elif final_score >= 6.5:
+    elif final_score >= 6.0 or max_pattern_winrate >= 0.60:
         conviction = "MEDIUM"
     else:
         conviction = "LOW"
@@ -579,6 +713,11 @@ def _build_thesis(ticker: str, bandarm: dict, tech: dict, fund: dict,
     setup = tech.get("setup", "")
     if setup:
         parts.append(setup)
+
+    patterns = tech.get("candlestick_patterns", [])
+    if patterns:
+        pat_strs = [f"{p['name']} ({int(p.get('win_rate_bei', 0.6)*100)}% Win-Rate BEI)" for p in patterns]
+        parts.append(f"Konfirmasi Pola Candlestick: {', '.join(pat_strs)}")
 
     key_pts = fund.get("key_points", [])
     if key_pts:

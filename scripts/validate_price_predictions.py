@@ -18,19 +18,30 @@ from sqlalchemy import text
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
-def fetch_predictions_and_actuals():
+def fetch_predictions_and_actuals(batch_id=None):
     db = SessionLocal()
     try:
         # Get all signals that have price_predictions
-        query = text("""
-            SELECT 
-                s.id, s.run_date, s.ticker,
-                s.price_prediction
-            FROM signals s
-            WHERE s.price_prediction IS NOT NULL
-            ORDER BY s.run_date DESC
-        """)
-        signals = db.execute(query).fetchall()
+        if batch_id:
+            query = text("""
+                SELECT 
+                    s.id, s.run_date, s.ticker,
+                    s.price_prediction
+                FROM signals s
+                WHERE s.price_prediction IS NOT NULL AND s.batch_id = :batch_id
+                ORDER BY s.run_date DESC
+            """)
+            signals = db.execute(query, {"batch_id": batch_id}).fetchall()
+        else:
+            query = text("""
+                SELECT 
+                    s.id, s.run_date, s.ticker,
+                    s.price_prediction
+                FROM signals s
+                WHERE s.price_prediction IS NOT NULL
+                ORDER BY s.run_date DESC
+            """)
+            signals = db.execute(query).fetchall()
         
         if not signals:
             logger.warning("Tidak ada prediksi yang tersimpan di database.")
@@ -137,5 +148,9 @@ def print_summary(df):
 
 if __name__ == "__main__":
     logger.info("Mengambil dan menghitung akurasi prediksi historis...")
-    df = fetch_predictions_and_actuals()
-    print_summary(df)
+    batch_id = None
+    if len(sys.argv) > 1 and sys.argv[1].startswith("--batch-id="):
+        batch_id = sys.argv[1].split("=")[1]
+    df = fetch_predictions_and_actuals(batch_id=batch_id)
+    if df is not None and not df.empty:
+        print_summary(df)

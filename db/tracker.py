@@ -132,10 +132,10 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
         db.close()
 
 
-def save_full_result(result: dict) -> None:
+def save_full_result(result: dict, batch_id: str | None = None) -> None:
     """Simpan semua hasil analisis sekaligus."""
     today = datetime.now()
-    batch_id = str(uuid.uuid4())
+    batch_id = batch_id or str(uuid.uuid4())
 
     if result.get("composites"):
         save_scores(today, result["scores"], result["composites"], result["macro_data"])

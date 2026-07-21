@@ -29,19 +29,31 @@ def detect_mode(ticker: str, market_cap: float, is_volatile: bool) -> str:
 
 def calculate_composite(scores: dict, ticker: str,
                          market_cap: float, is_volatile: bool,
-                         macro_data: dict = None) -> dict:
+                         macro_data: dict = None,
+                         exclude_fundamental: bool = False) -> dict:
     """
     Hitung composite score dari 5 agent (bandarm, technical, fundamental, macro, news).
     scores = {"bandarm": 8.5, "technical": 7.0, "fundamental": 8.0, "macro": 7.0, "news": 6.5}
     """
     w = get_weights(ticker, market_cap, is_volatile)
-    composite = (
-        scores["bandarm"] * w["bandarm"] +
-        scores["technical"] * w["technical"] +
-        scores["fundamental"] * w["fundamental"] +
-        scores["macro"] * w["macro"] +
-        scores.get("news", 5) * w.get("news", 0.12)
-    )
+    
+    total_w = w["bandarm"] + w["technical"] + w["macro"] + w.get("news", 0.12)
+    
+    if exclude_fundamental:
+        composite = (
+            scores["bandarm"] * (w["bandarm"] / total_w) +
+            scores["technical"] * (w["technical"] / total_w) +
+            scores["macro"] * (w["macro"] / total_w) +
+            scores.get("news", 5) * (w.get("news", 0.12) / total_w)
+        )
+    else:
+        composite = (
+            scores["bandarm"] * w["bandarm"] +
+            scores["technical"] * w["technical"] +
+            scores.get("fundamental", 5.0) * w["fundamental"] +
+            scores["macro"] * w["macro"] +
+            scores.get("news", 5) * w.get("news", 0.12)
+        )
     
     # USD/IDR Sector Adjustment
     sector = "Unknown"
@@ -106,16 +118,16 @@ def calculate_composite(scores: dict, ticker: str,
         "usdidr_adj": usdidr_adj,
         "usdidr_narrative": usdidr_narrative,
         "breakdown": {
-            "bandarm": {"score": scores["bandarm"], "weight": w["bandarm"],
-                        "contribution": round(scores["bandarm"] * w["bandarm"], 2)},
-            "technical": {"score": scores["technical"], "weight": w["technical"],
-                          "contribution": round(scores["technical"] * w["technical"], 2)},
-            "fundamental": {"score": scores["fundamental"], "weight": w["fundamental"],
-                            "contribution": round(scores["fundamental"] * w["fundamental"], 2)},
-            "macro": {"score": scores["macro"], "weight": w["macro"],
-                      "contribution": round(scores["macro"] * w["macro"], 2)},
-            "news": {"score": scores.get("news", 5), "weight": w.get("news", 0.12),
-                     "contribution": round(scores.get("news", 5) * w.get("news", 0.12), 2)}
+            "bandarm": {"score": scores["bandarm"], "weight": w["bandarm"] if not exclude_fundamental else w["bandarm"] / total_w,
+                        "contribution": round(scores["bandarm"] * (w["bandarm"] if not exclude_fundamental else w["bandarm"] / total_w), 2)},
+            "technical": {"score": scores["technical"], "weight": w["technical"] if not exclude_fundamental else w["technical"] / total_w,
+                          "contribution": round(scores["technical"] * (w["technical"] if not exclude_fundamental else w["technical"] / total_w), 2)},
+            "fundamental": {"score": scores.get("fundamental", 5.0), "weight": w["fundamental"] if not exclude_fundamental else 0.0,
+                            "contribution": round(scores.get("fundamental", 5.0) * (w["fundamental"] if not exclude_fundamental else 0.0), 2)},
+            "macro": {"score": scores["macro"], "weight": w["macro"] if not exclude_fundamental else w["macro"] / total_w,
+                      "contribution": round(scores["macro"] * (w["macro"] if not exclude_fundamental else w["macro"] / total_w), 2)},
+            "news": {"score": scores.get("news", 5), "weight": w.get("news", 0.12) if not exclude_fundamental else w.get("news", 0.12) / total_w,
+                     "contribution": round(scores.get("news", 5) * (w.get("news", 0.12) if not exclude_fundamental else w.get("news", 0.12) / total_w), 2)}
         }
     }
 
@@ -154,4 +166,48 @@ def assess_entry_vs_bandar(current_price: float,
         "distance_1m_pct": round(dist_1m, 2),
         "ideal_entry_zone": f"{round(avg_1m * 0.995, 0):.0f}–{ideal_entry:.0f}",
         "max_entry": f"{max_entry:.0f}",
+    }
+
+def calculate_konglo_composite(scores: dict, ticker: str,
+                               market_cap: float, is_volatile: bool,
+                               macro_data: dict = None) -> dict:
+    """
+    Hitung composite score khusus Konglo Play:
+    Technical 45%, Bandarmologi 45%, News 5%, Fundamental 5%.
+    """
+    w = {
+        "technical": 0.45,
+        "bandarm": 0.45,
+        "fundamental": 0.05,
+        "news": 0.05,
+        "macro": 0.0
+    }
+    
+    composite = (
+        scores["bandarm"] * w["bandarm"] +
+        scores["technical"] * w["technical"] +
+        scores.get("fundamental", 5.0) * w["fundamental"] +
+        scores.get("news", 5.0) * w["news"]
+    )
+    
+    sector = "Unknown"
+    
+    return {
+        "ticker": ticker,
+        "composite_score": round(composite, 2),
+        "weights_used": w,
+        "weight_mode": "konglo",
+        "sector": sector,
+        "usdidr_adj": 0.0,
+        "usdidr_narrative": "",
+        "breakdown": {
+            "bandarm": {"score": scores["bandarm"], "weight": w["bandarm"],
+                        "contribution": round(scores["bandarm"] * w["bandarm"], 2)},
+            "technical": {"score": scores["technical"], "weight": w["technical"],
+                          "contribution": round(scores["technical"] * w["technical"], 2)},
+            "fundamental": {"score": scores.get("fundamental", 5.0), "weight": w["fundamental"],
+                            "contribution": round(scores.get("fundamental", 5.0) * w["fundamental"], 2)},
+            "news": {"score": scores.get("news", 5.0), "weight": w["news"],
+                     "contribution": round(scores.get("news", 5.0) * w["news"], 2)}
+        }
     }

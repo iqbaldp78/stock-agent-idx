@@ -69,10 +69,10 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     return out.dropna()
 
 
-def generate_signal(row: pd.Series, broker_records: list = None) -> str:
+def generate_signal(row: pd.Series, broker_records: list = None, candle_window: pd.DataFrame = None) -> str:
     """
     Rule-based BUY signal.
-    Conservative supaya backtest tidak overtrade.
+    Conservative + Candlestick pattern & Bandarmologi confirmation.
     """
     close = row["Close"]
     bullish_trend = close > row["ma20"] > row["ma50"]
@@ -81,22 +81,29 @@ def generate_signal(row: pd.Series, broker_records: list = None) -> str:
     volume_ok = 0.7 <= row.get("volume_ratio", 1.0) <= 3.0
     technical_ok = bullish_trend and healthy_rsi and momentum_ok and volume_ok
 
-    if not technical_ok:
+    candlestick_ok = False
+    if candle_window is not None and len(candle_window) >= 5:
+        try:
+            from agents.candlestick_patterns import detect_candlestick_patterns
+            patterns = detect_candlestick_patterns(candle_window)
+            if patterns:
+                candlestick_ok = any(p.get("signal") in ["BULLISH", "STRONG BULLISH"] for p in patterns)
+        except Exception:
+            pass
+
+    if not (technical_ok or candlestick_ok):
         return "HOLD"
 
     # Hybrid Bandarmologi Confirmation
     if broker_records:
         foreign_net = getattr(broker_records[0], "day_foreign_net", 0) or 0
-        
         buyers = [r for r in broker_records if (r.buy_lot or 0) > 0]
         sellers = [r for r in broker_records if (r.sell_lot or 0) != 0]
-        
         top3_buy = sum(r.buy_lot for r in sorted(buyers, key=lambda x: x.buy_lot, reverse=True)[:3])
         top3_sell = sum(abs(r.sell_lot) for r in sorted(sellers, key=lambda x: abs(x.sell_lot), reverse=True)[:3])
-        
         top_3_accumulation_ok = top3_buy > top3_sell
         
-        if foreign_net > 0 or top_3_accumulation_ok:
+        if foreign_net > 0 or top_3_accumulation_ok or candlestick_ok:
             return "BUY"
         else:
             return "HOLD"
@@ -270,9 +277,10 @@ def backtest_ticker(
     # Leave room for holding_days at the end.
     for i in range(0, len(df) - holding_days - 1):
         row = df.iloc[i]
+        candle_window = df.iloc[max(0, i - 5) : i + 1]
         date_str = str(df.index[i].date() if hasattr(df.index[i], "date") else df.index[i])
         broker_records = broker_cache.get(date_str)
-        signal = generate_signal(row, broker_records)
+        signal = generate_signal(row, broker_records, candle_window=candle_window)
         if signal != "BUY":
             continue
 

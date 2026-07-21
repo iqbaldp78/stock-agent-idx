@@ -14,7 +14,8 @@ from agents.technical import analyze as tech_analyze
 from agents.bandarmologi import analyze as bandarm_analyze
 from agents.macro import analyze as macro_analyze
 from agents.news import analyze as news_analyze
-from agents.investment_manager import synthesize as im_synthesize
+from agents.investment_manager import synthesize_konglo as im_synthesize
+
 from agents.ihsg_predictor import predict_ihsg
 from models.multiday_predictor import MultiDayPredictor
 from data.ml_features import extract_features
@@ -22,7 +23,8 @@ from data.fetcher_stockbit import get_ohlcv
 from agents.debate import run_llm_debate
 from agents.debate.logging_utils import log_debate_turn, log_debate_section, log_finalists
 from agents.llm_client import health_check
-from graph.scoring import calculate_composite
+from graph.scoring import calculate_konglo_composite
+
 from config import LLM_ENABLED, get_universe
 from agents.commodity_integration import (
     add_commodity_context_to_macro,
@@ -63,26 +65,18 @@ class AgentState(TypedDict):
 # === Node Functions ===
 
 def run_filter(state: AgentState) -> dict:
-    """Phase 1: Rule-based filter ~55 → ~30 saham."""
-    universe = state.get("universe") or get_universe()
+    """Phase 1: Filter khusus Konglo Play."""
+    from db import SessionLocal
+    from db.models import Universe
     
-    # Exclude Konglo Play stocks
-    try:
-        from db import SessionLocal
-        from db.models import Universe
-        db = SessionLocal()
-        konglo_tickers = [t[0] for t in db.query(Universe.ticker).filter_by(is_konglo=True).all()]
-        db.close()
-        universe = [t for t in universe if t not in konglo_tickers]
-    except Exception as e:
-        logger.warning(f"[FILTER] Failed to fetch Konglo tickers for exclusion: {e}")
-        
-    logger.info(f"[FILTER] Input (excluding Konglo): {len(universe)} tickers")
+    db = SessionLocal()
+    tickers = db.query(Universe.ticker).filter_by(is_konglo=True, active=True).all()
+    db.close()
+    
+    universe = [t[0] for t in tickers]
+    logger.info(f"[FILTER] Input Konglo: {len(universe)} tickers")
 
-    candidates = apply_filter(universe)
-    logger.info(f"[FILTER] Output: {len(candidates)} candidates")
-
-    return {"candidates": candidates, "universe": universe}
+    return {"candidates": universe, "universe": universe}
 
 
 def run_parallel_scoring(state: AgentState) -> dict:
@@ -115,10 +109,12 @@ def run_parallel_scoring(state: AgentState) -> dict:
 
     for ticker in candidates:
         try:
+            # Konglo Play: Skip fundamental analysis
+            fund = {"score": 5.0, "status": "skipped", "analysis": "Fundamental diabaikan untuk Konglo Play."}
+            
             # Run all agents
             bandarm = bandarm_analyze(ticker)
             tech = tech_analyze(ticker, use_tradingview=False)
-            fund = {"score": 5.0, "signal": "HOLD", "status": "skipped_initial"}
             news = news_analyze(ticker)
 
             # Get market cap for weight selection
@@ -140,13 +136,17 @@ def run_parallel_scoring(state: AgentState) -> dict:
 
             # Calculate composite
             agent_scores = {
-                "bandarm": bandarm["score"],
-                "technical": tech["score"],
-                "fundamental": fund["score"],
+                "bandarm": bandarm.get("score", 5.0),
+                "technical": tech.get("score", 5.0),
+                "fundamental": fund.get("score", 5.0),
                 "macro": macro_data.get("score", 5.0),
                 "news": news.get("score", 5.0),
             }
-            composite = calculate_composite(agent_scores, ticker, market_cap, is_volatile, macro_data, exclude_fundamental=True)
+            comp = calculate_konglo_composite(
+                agent_scores, ticker, market_cap, is_volatile, macro_data
+            )
+            composites[ticker] = comp
+            logger.info(f"[SCORING] {ticker}: Composite={comp['composite_score']}")
 
             # === COMMODITY ANALYSIS (FROM CACHE - NO API CALL) ===
             try:
@@ -159,12 +159,12 @@ def run_parallel_scoring(state: AgentState) -> dict:
 
                     # Apply bonus to composite score
                     if commodity_bonus != 0:
-                        old_composite = composite["composite_score"]
+                        old_composite = composites[ticker]["composite_score"]
                         new_composite = max(1.0, min(10.0, old_composite + commodity_bonus))
-                        composite["composite_score"] = new_composite
-                        composite["commodity_bonus"] = commodity_bonus
-                        composite["commodity_narrative"] = commodity_narrative
-                        composite["composite_before_commodity"] = old_composite
+                        composites[ticker]["composite_score"] = new_composite
+                        composites[ticker]["commodity_bonus"] = commodity_bonus
+                        composites[ticker]["commodity_narrative"] = commodity_narrative
+                        composites[ticker]["composite_before_commodity"] = old_composite
 
                         logger.info(
                             f"  [{ticker}] Commodity adjustment: {old_composite} → {new_composite} "
@@ -172,13 +172,9 @@ def run_parallel_scoring(state: AgentState) -> dict:
                         )
 
                     # Store commodity analysis for debate phase
-                    composite["commodity_analysis"] = commodity_analysis
+                    composites[ticker]["commodity_analysis"] = commodity_analysis
             except Exception as e:
                 logger.warning(f"  [{ticker}] Commodity analysis failed: {e}")
-
-            composites[ticker] = composite
-
-            logger.info(f"  [{ticker}] composite={composite['composite_score']} mode={composite['weight_mode']}")
 
         except Exception as e:
             logger.warning(f"  [{ticker}] ERROR: {e}")
@@ -295,7 +291,7 @@ def run_debate_rule_based(state: AgentState) -> dict:
             }
             info = get_stock_info(ticker)
             market_cap = info.get("market_cap") or 0
-            composites[ticker] = calculate_composite(agent_scores, ticker, market_cap, is_volatile, macro_data, exclude_fundamental=False)
+            composites[ticker] = calculate_konglo_composite(agent_scores, ticker, market_cap, is_volatile, macro_data)
         except Exception as e:
             logger.warning(f"Failed to enrich {ticker} with TradingView/Fundamental data: {e}")
 
@@ -506,7 +502,7 @@ def run_debate(state: AgentState) -> dict:
     """
     if LLM_ENABLED and health_check():
         try:
-            return run_llm_debate(state)
+            return run_llm_debate(state, mode="KONGLO")
         except Exception as e:
             logger.warning("LLM debate failed, fallback rule-based: %s", e)
     elif LLM_ENABLED:
@@ -523,8 +519,8 @@ def run_investment_manager(state: AgentState) -> dict:
 
 # === Build Workflow ===
 
-def build_workflow() -> StateGraph:
-    """Build the LangGraph workflow."""
+def build_konglo_workflow() -> StateGraph:
+    """Bangun graph workflow LangGraph khusus Konglo."""
     workflow = StateGraph(AgentState)
 
     workflow.add_node("filter", run_filter)
@@ -616,8 +612,8 @@ def maybe_train_ml_before_analysis(universe: list[str] | None = None) -> None:
         logger.warning("[ML TRAIN] Auto training failed: %s", e)
 
 
-def run_full_analysis(universe: list[str] | None = None, auto_train_ml: bool = True) -> dict:
-    """Run the complete analysis pipeline."""
+def run_konglo_analysis(universe: list[str] | None = None, auto_train_ml: bool = True) -> dict:
+    """Run the complete Konglo analysis pipeline."""
     if auto_train_ml:
         maybe_train_ml_before_analysis(universe=universe)
 
@@ -629,12 +625,12 @@ def run_full_analysis(universe: list[str] | None = None, auto_train_ml: bool = T
         logger.warning(f"Failed to fetch portfolio holdings: {e}")
         portfolio_tickers = []
 
-    final_universe = universe or get_universe()
-    final_universe = list(set(final_universe + portfolio_tickers))
+    final_universe = universe or [] # if not provided, filter node will fetch konglo tickers
+    final_universe = list(set(final_universe + portfolio_tickers)) if final_universe else None
 
-    app = build_workflow()
+    app = build_konglo_workflow()
     initial_state = {
-        "universe": final_universe,
+        "universe": final_universe or [],
         "candidates": [],
         "macro_data": {},
         "scores": {},

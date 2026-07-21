@@ -209,7 +209,7 @@ def _calculate_tp_levels(
     }
 
 
-def analyze(ticker: str) -> dict:
+def analyze(ticker: str, use_tradingview: bool = True) -> dict:
     try:
         # Inisialisasi semua variabel output utama dengan default
         score = 5.0
@@ -227,9 +227,12 @@ def analyze(ticker: str) -> dict:
         data_used = []
         confidence = "LOW"
 
-        # Fetch full TA from TradingView at the beginning
-        tv_ta = get_technical_analysis(ticker)
-        tv_indicators = tv_ta.get("indicators", {}) if tv_ta.get("status") == "success" else {}
+        # Fetch full TA from TradingView at the beginning (conditional)
+        tv_ta = {}
+        tv_indicators = {}
+        if use_tradingview:
+            tv_ta = get_technical_analysis(ticker)
+            tv_indicators = tv_ta.get("indicators", {}) if tv_ta.get("status") == "success" else {}
 
         # Ambil data OHLCV 1 tahun penuh agar cukup untuk MA200
         ohlcv = get_ohlcv(ticker, period="1y")
@@ -518,6 +521,28 @@ def analyze(ticker: str) -> dict:
                 score -= 0.5
                 setup_notes.append("Dekat 52W high — waspada koreksi")
 
+        # === Candlestick Pattern Detection & Scoring ===
+        candlestick_patterns = []
+        pattern_conviction = 0.0
+        try:
+            from agents.candlestick_patterns import detect_candlestick_patterns
+            candlestick_patterns = detect_candlestick_patterns(ohlcv)
+            if candlestick_patterns:
+                pattern_names = [f"{p['name']} (WinRate: {int(p.get('win_rate_bei', 0.5)*100)}%)" for p in candlestick_patterns]
+                setup_notes.append(f"Pola Candlestick: {', '.join(pattern_names)}")
+                for pat in candlestick_patterns:
+                    win_rate = pat.get("win_rate_bei", 0.60)
+                    pattern_conviction = max(pattern_conviction, win_rate)
+                    delta = round(win_rate * 1.5, 2)
+                    if pat.get("signal") in ["BULLISH", "STRONG BULLISH"]:
+                        score += delta
+                        data_used.append(f"Candlestick {pat['name']}: Bullish (+{delta})")
+                    elif pat.get("signal") == "BEARISH":
+                        score -= delta
+                        data_used.append(f"Candlestick {pat['name']}: Bearish (-{delta})")
+        except Exception as p_err:
+            print(f"[TECHNICAL AGENT] Candlestick pattern detection warning: {p_err}")
+
         # Clamp score 1-10
         score = max(1.0, min(10.0, score))
 
@@ -597,9 +622,10 @@ def analyze(ticker: str) -> dict:
             target = round(current_price * 1.10, 0)
             stop_loss = round(current_price * 0.95, 0)
 
-        if len(data_used) >= 5:
+        # Confidence calculation
+        if len(data_used) >= 5 or pattern_conviction >= 0.68:
             confidence = "HIGH"
-        elif len(data_used) >= 3:
+        elif len(data_used) >= 3 or pattern_conviction >= 0.60:
             confidence = "MEDIUM"
         else:
             confidence = "LOW"
@@ -627,15 +653,15 @@ def analyze(ticker: str) -> dict:
             data_used.append("Trend: sideways (0)")
         trend = trend if 'trend' in locals() else "unknown"
 
+        # Final score clamp 1-10
+        score = max(1.0, min(10.0, score))
+
         # === Calculate TP1/TP2/TP3 with R/R optimization ===
         tp_data = {}
-        # Use target as fallback for resistance_strong when not available
-        # (target already calculated above based on signal type: BUY, SELL, or HOLD)
         effective_resistance_strong = resistance_strong
         if not effective_resistance_strong and target is not None:
             try:
                 target_float = float(target) if isinstance(target, str) else target
-                # Only use target as resistance if it's above entry (long direction)
                 if entry_low and target_float > float(entry_low):
                     effective_resistance_strong = target_float
             except (TypeError, ValueError):
@@ -669,6 +695,8 @@ def analyze(ticker: str) -> dict:
             "trend": trend,
             "setup": "; ".join(setup_notes) if setup_notes else "Tidak ada sinyal kuat",
             "entry_zone": f"{entry_low:.0f}-{entry_high:.0f}" if entry_low is not None and entry_high is not None else None,
+            "entry_low": entry_low,
+            "entry_high": entry_high,
             "target": f"{target:.0f}" if target is not None else None,
             "stop_loss": f"{stop_loss:.0f}" if stop_loss is not None else None,
             "support_near": f"{support_near:.0f}" if support_near is not None else None,
@@ -676,6 +704,7 @@ def analyze(ticker: str) -> dict:
             "support_strong": f"{support_strong:.0f}" if support_strong is not None else None,
             "resistance_strong": f"{resistance_strong:.0f}" if resistance_strong is not None else None,
             "divergence": divergence,
+            "candlestick_patterns": candlestick_patterns,
             "data_used": data_used,
             "confidence": confidence,
         }

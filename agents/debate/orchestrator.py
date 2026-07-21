@@ -12,12 +12,16 @@ from agents.debate.logging_utils import (
 from agents.debate.round1 import present_all, present_macro_global
 from agents.debate.round2 import cross_examine
 from agents.debate.synthesis import compute_round1_votes, select_finalists
+from agents.technical import analyze as tech_analyze
+from agents.fundamental import analyze as fund_analyze
+from graph.scoring import calculate_composite, calculate_konglo_composite
+from data.fetcher_stockbit import get_stock_info
 from config import LLM_DEBATE_MAX_TICKERS
 
 logger = logging.getLogger(__name__)
 
 
-def run_llm_debate(state: dict) -> dict:
+def run_llm_debate(state: dict, mode: str = "REGULAR") -> dict:
     """
     Multi-agent LLM debate: Round 1 parallel → Round 2 cross-exam → synthesis.
     Prioritizes STRONG BUY stocks from ML predictions + top composite scores.
@@ -62,6 +66,36 @@ def run_llm_debate(state: dict) -> dict:
             break
 
     debate_log: list[dict] = []
+
+    # Enrich candidates with TradingView TA and Fundamental Data for LLM debate
+    logger.info("[DEBATE LLM] Fetching TradingView TA and Fundamental Data for final candidates...")
+    is_volatile = macro_data.get("ihsg_condition") == "BEARISH_VOLATILE"
+    for ticker, _ in debate_candidates:
+        try:
+            # 1. Fetch TradingView TA
+            scores[ticker]["technical"] = tech_analyze(ticker, use_tradingview=True)
+            # 2. Fetch Fundamental Data
+            if mode != "KONGLO":
+                scores[ticker]["fundamental"] = fund_analyze(ticker)
+            else:
+                scores[ticker]["fundamental"] = {"score": 5.0, "status": "skipped", "analysis": "Fundamental diabaikan untuk Konglo Play."}
+            
+            # 3. Recalculate composite score (with fundamental included)
+            agent_scores = {
+                "bandarm": scores[ticker]["bandarm"]["score"],
+                "technical": scores[ticker]["technical"]["score"],
+                "fundamental": scores[ticker]["fundamental"]["score"],
+                "macro": macro_data.get("score", 5.0),
+                "news": scores[ticker]["news"].get("score", 5.0) if scores[ticker].get("news") else 5.0,
+            }
+            info = get_stock_info(ticker)
+            market_cap = info.get("market_cap") or 0
+            if mode == "KONGLO":
+                composites[ticker] = calculate_konglo_composite(agent_scores, ticker, market_cap, is_volatile, macro_data)
+            else:
+                composites[ticker] = calculate_composite(agent_scores, ticker, market_cap, is_volatile, macro_data, exclude_fundamental=False)
+        except Exception as e:
+            logger.warning(f"Failed to enrich {ticker} with TradingView/Fundamental data: {e}")
 
     log_debate_section(
         f"DEBAT MULTI-AGENT (LLM) — {len(debate_candidates)} ticker"

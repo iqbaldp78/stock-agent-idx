@@ -18,6 +18,7 @@ import signal
 import os
 import uuid
 from ui.login import render_login_page, init_cookie_manager
+from ui.konglo_play import render_konglo_play_page
 import extra_streamlit_components as stx
 
 logging.basicConfig(level=logging.INFO)
@@ -198,7 +199,7 @@ st.sidebar.divider()
 
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "🤖 ML Validation", "📊 Performance", "💼 Portfolio", "🌍 Universe", "⚙️ Settings"]
+    ["📈 Top Picks", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "🤖 ML Validation", "📊 Performance", "💼 Portfolio", "🌍 Universe", "🐋 Konglo Play", "⚙️ Settings"]
 )
 
 st.sidebar.divider()
@@ -286,7 +287,7 @@ if page == "📈 Top Picks":
     latest_meta = query_db("""
         SELECT MAX(run_date) AS max_run_date
         FROM signals
-        WHERE batch_id IS NOT NULL
+        WHERE batch_id IS NOT NULL AND batch_id != 'KONGLO_PICKS'
     """)
     latest_run_date = latest_meta[0]["max_run_date"] if latest_meta else None
 
@@ -296,7 +297,7 @@ if page == "📈 Top Picks":
             SELECT batch_id
             FROM signals
             WHERE run_date = %s
-            AND batch_id IS NOT NULL
+            AND batch_id IS NOT NULL AND batch_id != 'KONGLO_PICKS'
             LIMIT 1
         """, (latest_run_date,))
         latest_batch = (latest_batch[0]["batch_id"] if latest_batch else None)
@@ -1161,7 +1162,8 @@ elif page == "💹 Trading Engine":
     try:
         signals = query_db("""
             SELECT * FROM signals
-            WHERE run_date = (SELECT MAX(run_date) FROM signals)
+            WHERE run_date = (SELECT MAX(run_date) FROM signals WHERE batch_id IS NULL OR batch_id != 'KONGLO_PICKS')
+            AND (batch_id IS NULL OR batch_id != 'KONGLO_PICKS')
             AND rank IS NOT NULL
             ORDER BY rank
             LIMIT 5
@@ -3172,7 +3174,8 @@ elif page == "💼 Portfolio":
             signals = query_db("""
                 SELECT id, ticker, entry_low, entry_high, max_entry, conviction, thesis
                 FROM signals
-                WHERE run_date = (SELECT MAX(run_date) FROM signals)
+                WHERE run_date = (SELECT MAX(run_date) FROM signals WHERE batch_id IS NULL OR batch_id != 'KONGLO_PICKS')
+                AND (batch_id IS NULL OR batch_id != 'KONGLO_PICKS')
                 ORDER BY rank
                 LIMIT 10
             """)
@@ -3801,8 +3804,11 @@ elif page == "🌍 Universe":
     else:
         st.info("Belum ada data universe.")
 
-# === PAGE: Settings ===
+# === PAGE: Konglo Play ===
+elif page == "🐋 Konglo Play":
+    render_konglo_play_page()
 
+# === PAGE: Settings ===
 elif page == "⚙️ Settings":
     st.title("⚙️ Settings")
 

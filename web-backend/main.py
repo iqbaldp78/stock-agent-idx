@@ -435,6 +435,23 @@ def get_top_picks(current_user: dict = Depends(get_current_user)):
                 
                 run_date_val = format_to_wib(r[12])
                 
+                # Determine entry_style (either from LLM override in price_prediction, or fallback formula)
+                current_price_val = float(r[4]) if r[4] and not isinstance(r[4], (dict, list)) else 0.0
+                entry_low_val = float(r[13]) if r[13] is not None else 0.0
+                entry_high_val = float(r[14]) if r[14] is not None else 0.0
+                
+                entry_style = pred_json.get("entry_style")
+                if not entry_style:
+                    if current_price_val > 0 and entry_low_val > 0 and entry_high_val > 0:
+                        if current_price_val < entry_low_val * 0.995:
+                            entry_style = "Buy on Breakout"
+                        elif current_price_val > entry_high_val * 1.005:
+                            entry_style = "Buy on Weakness"
+                        else:
+                            entry_style = "Market Buy"
+                    else:
+                        entry_style = "Buy on Accumulation"
+                
                 data.append({
                     "id": int(r[0]),
                     "ticker": r[1],
@@ -464,7 +481,8 @@ def get_top_picks(current_user: dict = Depends(get_current_user)):
                     "weight_mode": r[19],
                     "broker_utama": fix_broker_utama(r[20]),
                     "broker_to_watch": [fix_broker_utama(b.strip()) for b in r[20].split(", ") if b.strip()] if r[20] else [],
-                    "rank": int(r[22]) if r[22] is not None else None
+                    "rank": int(r[22]) if r[22] is not None else None,
+                    "entry_style": entry_style
                 })
             
             if tier == "free":
@@ -477,7 +495,46 @@ def get_top_picks(current_user: dict = Depends(get_current_user)):
                     item["target_3"] = None
                     item["stop_loss"] = None
             
-            return {"batch_id": latest_batch, "run_date": latest_run_date, "data": data}
+            # Fetch debate candidates with their detailed scores
+            debate_candidates_info = []
+            try:
+                latest_debate_date_res = conn.execute(text("SELECT MAX(run_date) FROM debate_logs")).fetchone()
+                latest_debate_date = latest_debate_date_res[0] if latest_debate_date_res else None
+                
+                if latest_debate_date:
+                    debate_tickers_res = conn.execute(text("""
+                        SELECT DISTINCT ticker FROM debate_logs
+                        WHERE run_date = :latest_date
+                    """), {"latest_date": latest_debate_date}).fetchall()
+                    debate_tickers = [row[0] for row in debate_tickers_res]
+                    
+                    if debate_tickers:
+                        candidates_scores_res = conn.execute(text("""
+                            SELECT ticker, composite_score, bandarm_score, technical_score, fundamental_score, weight_mode
+                            FROM agent_scores
+                            WHERE run_date = (SELECT MAX(run_date) FROM agent_scores)
+                              AND ticker IN :tickers
+                            ORDER BY composite_score DESC
+                        """), {"tickers": tuple(debate_tickers)}).fetchall()
+                        
+                        for cs in candidates_scores_res:
+                            debate_candidates_info.append({
+                                "ticker": cs[0],
+                                "composite_score": float(cs[1]) if cs[1] is not None else 0.0,
+                                "bandarm_score": float(cs[2]) if cs[2] is not None else 0.0,
+                                "technical_score": float(cs[3]) if cs[3] is not None else 0.0,
+                                "fundamental_score": float(cs[4]) if cs[4] is not None else 0.0,
+                                "weight_mode": cs[5] or "default"
+                            })
+            except Exception as db_err:
+                print(f"Error fetching debate candidates: {db_err}")
+
+            return {
+                "batch_id": latest_batch,
+                "run_date": latest_run_date,
+                "data": data,
+                "debate_candidates": debate_candidates_info
+            }
     except Exception as e:
         import traceback
         print(f"Error DB: {e}")

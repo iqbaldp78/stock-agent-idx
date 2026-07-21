@@ -15,7 +15,7 @@ const extractEntryFromReasoning = (stock: any) => {
   const reason = stock.reasoning.toLowerCase();
   
   // Mencari pola angka harga e.g. "1.335", "1.340" yang diawali dengan kata-kata support/pullback/MA/entry/Fibonacci
-  const match = reason.match(/(?:pullback ke|support|entry ideal|area|ma\d+ di|fibonacci)\s+(\d{1,3}(?:\.\d{3})+)(?:\s*(?:atau|hingga|sampai|-)\s+(\d{1,3}(?:\.\d{3})+))?/);
+  const match = reason.match(/(?:pullback ke|support|entry ideal|ideal entry|area|ma\d+ di|fibonacci)(?:\s+(?:di|ke|zona|area|range|level))*\s+(\d{1,3}(?:\.\d{3})+)(?:\s*(?:atau|hingga|sampai|-)\s+(\d{1,3}(?:\.\d{3})+))?/);
   
   if (match) {
     const val1 = parseInt(match[1].replace(/\./g, ''));
@@ -121,6 +121,18 @@ const getEntryType = (stock: any) => {
   if (!stock) return null;
   // Sinyal SELL tidak perlu tipe entry pembelian
   if (stock.action === 'SELL') return null;
+
+  // Prioritas utama: gunakan entry_style dari JSON response backend
+  if (stock.entry_style) {
+    const style = stock.entry_style.toLowerCase();
+    if (style.includes('breakout') || style.includes('bob')) {
+      return { label: stock.entry_style, color: "bg-blue-500/10 text-blue-300 border-blue-500/20", icon: <RocketIcon className="w-3.5 h-3.5" /> };
+    } else if (style.includes('weakness') || style.includes('bow')) {
+      return { label: stock.entry_style, color: "bg-amber-500/10 text-amber-300 border-amber-500/20", icon: <ArrowDownIcon className="w-3.5 h-3.5" /> };
+    } else {
+      return { label: stock.entry_style, color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20", icon: <TargetIcon className="w-3.5 h-3.5" /> };
+    }
+  }
   
   const current = stock.current_price || stock.entry_price || 0;
   
@@ -143,7 +155,7 @@ const getEntryType = (stock: any) => {
 };
 
 export default function TopPicksPage() {
-  const { picks, runDate, isPro, setIsPro, showToast } = useApp();
+  const { picks, runDate, isPro, setIsPro, showToast, debateCandidates } = useApp();
   const router = useRouter();
   const [selectedStock, setSelectedStock] = useState<any | null>(null);
   const [showFairValueDetails, setShowFairValueDetails] = useState(false);
@@ -701,6 +713,65 @@ export default function TopPicksPage() {
               </div>
             ))}
           </div>
+
+          {/* Section: Debate Candidates */}
+          {debateCandidates && debateCandidates.length > 0 && (
+            <div className="mt-12 bg-card border border-border rounded-3xl p-6 md:p-8 relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-border/50 pb-4">
+                <div>
+                  <h3 className="text-xl md:text-2xl font-bold text-text flex items-center gap-2">
+                    <span>💬</span>
+                    <span>Kandidat Debat Multi-Agent (10 Besar)</span>
+                  </h3>
+                  <p className="text-secondary text-sm mt-1">
+                    Daftar emiten dengan peringkat skor komposit tertinggi yang lolos ke tahap debat multi-agent harian.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/50 text-[10px] uppercase tracking-wider text-secondary font-bold">
+                      <th className="pb-3 pr-4">Saham</th>
+                      <th className="pb-3 px-4 text-center">Score Komposit</th>
+                      <th className="pb-3 px-4 text-center">Bandarmologi</th>
+                      <th className="pb-3 px-4 text-center">Technical</th>
+                      <th className="pb-3 px-4 text-center">Fundamental</th>
+                      <th className="pb-3 px-4 text-center">Weight Mode</th>
+                      <th className="pb-3 pl-4 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {debateCandidates.map((cand: any, idx: number) => {
+                      const isPicked = picks.some((p: any) => p.ticker === cand.ticker);
+                      return (
+                        <tr key={idx} className="border-b border-border/30 last:border-0 hover:bg-white/[0.02] transition duration-200">
+                          <td className="py-4 pr-4 font-black text-text text-lg">{cand.ticker}</td>
+                          <td className="py-4 px-4 text-center font-mono font-bold text-accent text-base">{cand.composite_score.toFixed(2)}</td>
+                          <td className="py-4 px-4 text-center font-mono text-text/80">{cand.bandarm_score.toFixed(1)}</td>
+                          <td className="py-4 px-4 text-center font-mono text-text/80">{cand.technical_score.toFixed(1)}</td>
+                          <td className="py-4 px-4 text-center font-mono text-text/80">{cand.fundamental_score.toFixed(1)}</td>
+                          <td className="py-4 px-4 text-center text-secondary text-xs capitalize">{cand.weight_mode.replace('_', ' ')}</td>
+                          <td className="py-4 pl-4 text-right">
+                            {isPicked ? (
+                              <span className="px-2.5 py-1 bg-profit/10 text-profit border border-profit/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                Top Picked
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 bg-white/5 text-secondary border border-border rounded-full text-[10px] font-semibold">
+                                Eliminated
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
