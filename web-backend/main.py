@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Depends, Depends, Body
+from fastapi import FastAPI, Depends, HTTPException, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
@@ -107,12 +107,15 @@ app.add_middleware(
 )
 
 # Connect to the existing postgres container
-DB_HOST = os.getenv("DB_HOST", "stock_postgres")
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASS = os.getenv("DB_PASS", "postgres")
-DB_NAME = os.getenv("DB_NAME", "stock_db")
+DB_HOST = os.getenv("DB_HOST") or os.getenv("POSTGRES_HOST") or "stock_postgres"
+DB_USER = os.getenv("DB_USER") or os.getenv("POSTGRES_USER") or "stockuser"
+DB_PASS = os.getenv("DB_PASS") or os.getenv("POSTGRES_PASSWORD") or "stockpassword"
+DB_NAME = os.getenv("DB_NAME") or os.getenv("POSTGRES_DB") or "stockagent"
+DB_PORT = os.getenv("DB_PORT") or os.getenv("POSTGRES_PORT") or "5432"
+if not str(DB_PORT).isdigit():
+    DB_PORT = "5432"
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}"
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 engine = create_engine(DATABASE_URL)
 
 @app.get("/")
@@ -348,12 +351,16 @@ def get_stats():
         }
 
 @app.get("/api/signals/top-picks")
-def get_top_picks(current_user: dict = Depends(get_current_user)):
+def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get_current_user)):
     try:
         tier = current_user.get("tier", "free")
+        is_konglo_target = (type.lower() == "konglo")
         with engine.connect() as conn:
-            # Mengambil batch_id terbaru yang tidak NULL
-            batch_query = text("SELECT batch_id, run_date FROM signals WHERE batch_id IS NOT NULL ORDER BY run_date DESC LIMIT 1")
+            if is_konglo_target:
+                batch_query = text("SELECT batch_id, run_date FROM signals WHERE batch_id IS NOT NULL AND is_konglo = TRUE ORDER BY run_date DESC LIMIT 1")
+            else:
+                batch_query = text("SELECT batch_id, run_date FROM signals WHERE batch_id IS NOT NULL AND (is_konglo IS FALSE OR is_konglo IS NULL) ORDER BY run_date DESC LIMIT 1")
+            
             latest_batch_result = conn.execute(batch_query).fetchone()
             
             if not latest_batch_result:
@@ -362,34 +369,64 @@ def get_top_picks(current_user: dict = Depends(get_current_user)):
             latest_batch = latest_batch_result[0]
             latest_run_date = format_to_wib(latest_batch_result[1])
             
-            # Mengambil sinyal pada batch terbaru yang datanya komplit (semua saham, bukan cuma limit 5)
-            query = text("""
-                SELECT id, ticker, signal, composite_score, 
-                       (price_prediction->'current_price')::numeric as current_price,
-                       entry_reasoning,
-                       price_prediction,
-                       thesis,
-                       fair_value,
-                       bandar_avg_1m,
-                       broker_true_costs,
-                       broker_distributors,
-                       run_date,
-                       entry_low,
-                       entry_high,
-                       target_1,
-                       target_2,
-                       target_3,
-                       stop_loss,
-                       weight_mode,
-                       broker_utama,
-                       max_entry,
-                       rank
-                FROM signals 
-                WHERE batch_id = :batch_id
-                  AND price_prediction IS NOT NULL 
-                  AND (price_prediction->>'current_price') IS NOT NULL
-                ORDER BY rank ASC
-            """)
+            if is_konglo_target:
+                query = text("""
+                    SELECT id, ticker, signal, composite_score, 
+                           (price_prediction->'current_price')::numeric as current_price,
+                           entry_reasoning,
+                           price_prediction,
+                           thesis,
+                           fair_value,
+                           bandar_avg_1m,
+                           broker_true_costs,
+                           broker_distributors,
+                           run_date,
+                           entry_low,
+                           entry_high,
+                           target_1,
+                           target_2,
+                           target_3,
+                           stop_loss,
+                           weight_mode,
+                           broker_utama,
+                           max_entry,
+                           rank
+                    FROM signals 
+                    WHERE batch_id = :batch_id
+                      AND is_konglo = TRUE
+                      AND price_prediction IS NOT NULL 
+                      AND (price_prediction->>'current_price') IS NOT NULL
+                    ORDER BY rank ASC
+                """)
+            else:
+                query = text("""
+                    SELECT id, ticker, signal, composite_score, 
+                           (price_prediction->'current_price')::numeric as current_price,
+                           entry_reasoning,
+                           price_prediction,
+                           thesis,
+                           fair_value,
+                           bandar_avg_1m,
+                           broker_true_costs,
+                           broker_distributors,
+                           run_date,
+                           entry_low,
+                           entry_high,
+                           target_1,
+                           target_2,
+                           target_3,
+                           stop_loss,
+                           weight_mode,
+                           broker_utama,
+                           max_entry,
+                           rank
+                    FROM signals 
+                    WHERE batch_id = :batch_id
+                      AND (is_konglo IS FALSE OR is_konglo IS NULL)
+                      AND price_prediction IS NOT NULL 
+                      AND (price_prediction->>'current_price') IS NOT NULL
+                    ORDER BY rank ASC
+                """)
             res = conn.execute(query, {"batch_id": latest_batch}).fetchall()
             
             data = []
@@ -498,34 +535,34 @@ def get_top_picks(current_user: dict = Depends(get_current_user)):
             # Fetch debate candidates with their detailed scores
             debate_candidates_info = []
             try:
-                latest_debate_date_res = conn.execute(text("SELECT MAX(run_date) FROM debate_logs")).fetchone()
-                latest_debate_date = latest_debate_date_res[0] if latest_debate_date_res else None
+                if is_konglo_target:
+                    candidates_scores_res = conn.execute(text("""
+                        SELECT ticker, composite_score, bandarm_score, technical_score, fundamental_score, weight_mode
+                        FROM agent_scores
+                        WHERE run_date = (SELECT MAX(run_date) FROM agent_scores WHERE LOWER(weight_mode) = 'konglo')
+                          AND LOWER(weight_mode) = 'konglo'
+                        ORDER BY composite_score DESC
+                        LIMIT 10
+                    """)).fetchall()
+                else:
+                    candidates_scores_res = conn.execute(text("""
+                        SELECT ticker, composite_score, bandarm_score, technical_score, fundamental_score, weight_mode
+                        FROM agent_scores
+                        WHERE run_date = (SELECT MAX(run_date) FROM agent_scores WHERE LOWER(weight_mode) != 'konglo' OR weight_mode IS NULL)
+                          AND (LOWER(weight_mode) != 'konglo' OR weight_mode IS NULL)
+                        ORDER BY composite_score DESC
+                        LIMIT 10
+                    """)).fetchall()
                 
-                if latest_debate_date:
-                    debate_tickers_res = conn.execute(text("""
-                        SELECT DISTINCT ticker FROM debate_logs
-                        WHERE run_date = :latest_date
-                    """), {"latest_date": latest_debate_date}).fetchall()
-                    debate_tickers = [row[0] for row in debate_tickers_res]
-                    
-                    if debate_tickers:
-                        candidates_scores_res = conn.execute(text("""
-                            SELECT ticker, composite_score, bandarm_score, technical_score, fundamental_score, weight_mode
-                            FROM agent_scores
-                            WHERE run_date = (SELECT MAX(run_date) FROM agent_scores)
-                              AND ticker IN :tickers
-                            ORDER BY composite_score DESC
-                        """), {"tickers": tuple(debate_tickers)}).fetchall()
-                        
-                        for cs in candidates_scores_res:
-                            debate_candidates_info.append({
-                                "ticker": cs[0],
-                                "composite_score": float(cs[1]) if cs[1] is not None else 0.0,
-                                "bandarm_score": float(cs[2]) if cs[2] is not None else 0.0,
-                                "technical_score": float(cs[3]) if cs[3] is not None else 0.0,
-                                "fundamental_score": float(cs[4]) if cs[4] is not None else 0.0,
-                                "weight_mode": cs[5] or "default"
-                            })
+                for cs in candidates_scores_res:
+                    debate_candidates_info.append({
+                        "ticker": cs[0],
+                        "composite_score": float(cs[1]) if cs[1] is not None else 0.0,
+                        "bandarm_score": float(cs[2]) if cs[2] is not None else 0.0,
+                        "technical_score": float(cs[3]) if cs[3] is not None else 0.0,
+                        "fundamental_score": float(cs[4]) if cs[4] is not None else 0.0,
+                        "weight_mode": cs[5] or "default"
+                    })
             except Exception as db_err:
                 print(f"Error fetching debate candidates: {db_err}")
 

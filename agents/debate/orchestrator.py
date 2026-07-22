@@ -110,7 +110,7 @@ def run_llm_debate(state: dict, mode: str = "REGULAR") -> dict:
     round1_all: list[dict] = []
     for ticker, composite in debate_candidates:
         log_ticker_header(ticker, composite.get("composite_score"))
-        entries = present_all(ticker, scores, macro_data)
+        entries = present_all(ticker, scores, macro_data, mode=mode)
         round1_all.extend(entries)
         debate_log.extend(entries)
 
@@ -130,7 +130,7 @@ def run_llm_debate(state: dict, mode: str = "REGULAR") -> dict:
     for ticker, composite in debate_candidates:
         log_ticker_header(ticker)
         r1_for_ticker = [e for e in round1_all if e.get("ticker") == ticker]
-        r2_entries, delta = cross_examine(ticker, scores, r1_for_ticker)
+        r2_entries, delta = cross_examine(ticker, scores, r1_for_ticker, mode=mode)
         debate_log.extend(r2_entries)
         round2_deltas[ticker] = delta
         logger.info("[DEBATE R2 DELTA] %s | bonus=%+.2f", ticker, delta)

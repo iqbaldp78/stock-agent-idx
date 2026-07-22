@@ -33,6 +33,7 @@ def cross_examine(
     ticker: str,
     scores: dict,
     round1_entries: list[dict],
+    mode: str = "REGULAR",
 ) -> tuple[list[dict], float]:
     ticker_scores = scores.get(ticker, {})
     round1_for_ticker = [e for e in round1_entries if e.get("ticker") == ticker]
@@ -44,7 +45,9 @@ def cross_examine(
     bandarm_score = bandarm.get("score", 5)
     tech_score = tech.get("score", 5)
 
-    for agent in ROUND2_AGENTS:
+    round2_agents_list = ("bandarmologi", "technical") if mode == "KONGLO" else ROUND2_AGENTS
+
+    for agent in round2_agents_list:
         analysis = _analysis_for_agent(ticker_scores, agent)
         raw = invoke_json_for_agent(
             agent,

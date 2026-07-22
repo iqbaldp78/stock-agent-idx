@@ -116,6 +116,7 @@ class Signal(Base):
     risk_reward_tp2 = Column(String(20))
     risk_reward_tp3 = Column(String(20))
     batch_id = Column(String(36))
+    is_konglo = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())
 
 

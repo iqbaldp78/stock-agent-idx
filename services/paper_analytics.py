@@ -362,7 +362,7 @@ class PaperAnalytics:
             period_stats = attribution_results["by_holding_period"][holding_category]
             period_stats["total_trades"] += 1
             period_stats["total_pnl"] += float(trade.realized_pnl)
-            period_stats["avg_pnl_pct"] = (period_stats["total_pnl"] / trade.amount * 100) if trade.amount > 0 else 0
+            period_stats["avg_pnl_pct"] = (period_stats["total_pnl"] / float(trade.amount) * 100) if float(trade.amount) > 0 else 0
         
         # Calculate averages
         for ticker, stats in attribution_results["by_ticker"].items():
@@ -484,9 +484,9 @@ Generated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}
                 "large_profit": 0,   # > 10%
             },
             "holding_period_stats": {
-                "short_term": {"count": 0, "total_pnl": 0.0, "avg_pnl_pct": 0.0},
-                "medium_term": {"count": 0, "total_pnl": 0.0, "avg_pnl_pct": 0.0},
-                "long_term": {"count": 0, "total_pnl": 0.0, "avg_pnl_pct": 0.0},
+                "short_term": {"count": 0, "total_pnl": 0.0, "total_pnl_pct": 0.0, "avg_pnl_pct": 0.0},
+                "medium_term": {"count": 0, "total_pnl": 0.0, "total_pnl_pct": 0.0, "avg_pnl_pct": 0.0},
+                "long_term": {"count": 0, "total_pnl": 0.0, "total_pnl_pct": 0.0, "avg_pnl_pct": 0.0},
             },
             "best_trades": [],
             "worst_trades": [],
@@ -523,6 +523,7 @@ Generated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}
             stats = analysis["holding_period_stats"][category]
             stats["count"] += 1
             stats["total_pnl"] += float(trade.realized_pnl)
+            stats["total_pnl_pct"] += pnl_pct
             stats["avg_pnl_pct"] = stats["total_pnl_pct"] / stats["count"] if stats["count"] > 0 else 0
         
         # Find best/worst trades

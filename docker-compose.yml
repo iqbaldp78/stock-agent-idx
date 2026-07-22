@@ -20,9 +20,9 @@ services:
     container_name: stock_postgres
     restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-stockagent}
+      POSTGRES_USER: ${POSTGRES_USER:-stockuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stockpassword}
       TZ: Asia/Jakarta
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -32,7 +32,7 @@ services:
     networks:
       - stock_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stockuser} -d ${POSTGRES_DB:-stockagent}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,14 +94,17 @@ services:
     env_file: .env
     environment:
       - DB_HOST=stock_postgres
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASS=${POSTGRES_PASSWORD}
-      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER:-stockuser}
+      - DB_PASS=${POSTGRES_PASSWORD:-stockpassword}
+      - DB_NAME=${POSTGRES_DB:-stockagent}
       - TZ=Asia/Jakarta
     networks:
       - stock_net
     volumes:
       - ./.env:/app/.env
+      - ./web-backend/main.py:/app/main.py
+      - ./config.py:/app/config.py
+      - ./db:/app/db
     depends_on:
       postgres:
         condition: service_healthy

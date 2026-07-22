@@ -1,13 +1,16 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
+import authenticatedFetch from '@/lib/apiClient';
 import { 
   RocketIcon, 
   ArrowDownIcon, 
   UpdateIcon, 
   TargetIcon,
-  EyeOpenIcon
+  EyeOpenIcon,
+  BarChartIcon,
+  LightningBoltIcon
 } from '@radix-ui/react-icons';
 
 const extractEntryFromReasoning = (stock: any) => {
@@ -155,12 +158,47 @@ const getEntryType = (stock: any) => {
 };
 
 export default function TopPicksPage() {
-  const { picks, runDate, isPro, setIsPro, showToast, debateCandidates } = useApp();
+  const { isPro, setIsPro, showToast } = useApp();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'regular' | 'konglo'>('regular');
+  const [picks, setPicks] = useState<any[]>([]);
+  const [runDate, setRunDate] = useState<string>('');
+  const [debateCandidates, setDebateCandidates] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedStock, setSelectedStock] = useState<any | null>(null);
   const [showFairValueDetails, setShowFairValueDetails] = useState(false);
   const [showTrueCostDetails, setShowTrueCostDetails] = useState(true);
   const [showDistDetails, setShowDistDetails] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    authenticatedFetch(`/api/signals/top-picks?type=${activeTab}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!isMounted) return;
+        if (data.data && Array.isArray(data.data)) {
+          setPicks(data.data);
+          setRunDate(data.run_date || "");
+          setDebateCandidates(data.debate_candidates || []);
+        } else {
+          setPicks([]);
+          setRunDate("");
+          setDebateCandidates([]);
+        }
+      })
+      .catch(err => {
+        console.error("Error loading tab picks:", err);
+        if (isMounted) {
+          setPicks([]);
+          setDebateCandidates([]);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+    return () => { isMounted = false; };
+  }, [activeTab]);
 
   if (selectedStock) {
     return (
@@ -602,11 +640,63 @@ export default function TopPicksPage() {
         <p className="text-secondary max-w-2xl mx-auto text-lg">Pilihan saham eksklusif hasil perdebatan beberapa LLM independen dan analisis fundamental teknikal mendalam.</p>
       </div>
 
-      {picks.length === 0 ? (
-        <div className="text-center py-20 text-secondary">
-          <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4 text-2xl">🔍</div>
-          <h4 className="text-lg font-bold text-text mb-2">No Data Found</h4>
-          <p>Tidak ada sinyal rekomendasi saham yang aktif saat ini dari AI.</p>
+      {/* Tab Control Bar (Rata Kiri & Kanan / Full Width) */}
+      <div className="w-full pb-2 mb-6">
+        <div className="grid grid-cols-2 gap-3 w-full bg-white/5 p-1.5 rounded-2xl border border-white/10">
+          <button
+            onClick={() => { setActiveTab('regular'); setSelectedStock(null); }}
+            className={`flex items-center justify-center gap-2.5 py-3 px-6 rounded-xl font-bold text-sm transition-all duration-200 ${
+              activeTab === 'regular'
+                ? 'bg-accent/20 text-white border border-accent/40 shadow-sm'
+                : 'text-secondary hover:text-text hover:bg-white/5'
+            }`}
+          >
+            <BarChartIcon className="w-4 h-4 text-accent" />
+            <span>Regular Top Picks</span>
+            {activeTab === 'regular' && picks.length > 0 && (
+              <span className="bg-white/10 text-text text-xs px-2 font-mono">
+                {picks.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('konglo'); setSelectedStock(null); }}
+            className={`flex items-center justify-center gap-2.5 py-3 px-6 rounded-xl font-bold text-sm transition-all duration-200 ${
+              activeTab === 'konglo'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                : 'text-secondary hover:text-text hover:bg-white/5'
+            }`}
+          >
+            <LightningBoltIcon className="w-4 h-4 text-amber-400" />
+            <span>Konglo Play Picks</span>
+            {activeTab === 'konglo' && picks.length > 0 && (
+              <span className="bg-white/10 text-text text-xs px-2 font-mono">
+                {picks.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-20 space-y-4">
+          <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin mx-auto"></div>
+          <p className="text-secondary text-sm font-medium animate-pulse">Memuat sinyal {activeTab === 'konglo' ? 'Konglo Play' : 'Regular'}...</p>
+        </div>
+      ) : picks.length === 0 ? (
+        <div className="bg-card/40 backdrop-blur-md border border-white/10 rounded-3xl p-12 text-center max-w-xl mx-auto space-y-4 shadow-2xl">
+          <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+            {activeTab === 'konglo' ? <LightningBoltIcon className="w-8 h-8" /> : <BarChartIcon className="w-8 h-8" />}
+          </div>
+          <h4 className="text-xl font-bold text-text">
+            {activeTab === 'konglo' ? 'Belum Ada Data Konglo Picks' : 'No Data Found'}
+          </h4>
+          <p className="text-secondary text-sm leading-relaxed">
+            {activeTab === 'konglo'
+              ? "Belum ada sinyal Konglo Play yang aktif saat ini. Silakan jalankan 'Konglo Analysis' melalui dashboard Streamlit terlebih dahulu."
+              : "Tidak ada sinyal rekomendasi saham yang aktif saat ini dari AI."}
+          </p>
         </div>
       ) : (
         <div className="space-y-8">

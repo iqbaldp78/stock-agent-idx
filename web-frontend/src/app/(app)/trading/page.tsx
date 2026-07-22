@@ -5,6 +5,7 @@
 import dynamic from "next/dynamic";
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import authenticatedFetch from '@/lib/apiClient';
 import {
   DoubleArrowUpIcon,
   ReloadIcon,
@@ -15,7 +16,9 @@ import {
   PlusCircledIcon,
   PlusIcon,
   TargetIcon,
-  ClockIcon
+  ClockIcon,
+  BarChartIcon,
+  LightningBoltIcon
 } from '@radix-ui/react-icons';
 
 const CustomEquityChart = ({ points }: { points: any[] }) => {
@@ -90,6 +93,11 @@ export default function TradingPage() {
   const [tradingError, setTradingError] = useState("");
   const [topupAmount, setTopupAmount] = useState(100000000);
 
+  // Quick Buy tab & picks states
+  const [quickBuyTab, setQuickBuyTab] = useState<'regular' | 'konglo'>('regular');
+  const [regularPicks, setRegularPicks] = useState<any[]>([]);
+  const [kongloPicks, setKongloPicks] = useState<any[]>([]);
+
   // Buy form state — can be prefilled from Top Picks via sessionStorage
   const [buyTicker, setBuyTicker] = useState("MEDC");
   const [buyLot, setBuyLot] = useState(10);
@@ -128,6 +136,17 @@ export default function TradingPage() {
   useEffect(() => {
     fetchTradingData();
     fetchEquityData();
+
+    authenticatedFetch('/api/signals/top-picks?type=regular')
+      .then(r => r.json())
+      .then(d => { if (d.data && Array.isArray(d.data)) setRegularPicks(d.data); })
+      .catch(console.error);
+
+    authenticatedFetch('/api/signals/top-picks?type=konglo')
+      .then(r => r.json())
+      .then(d => { if (d.data && Array.isArray(d.data)) setKongloPicks(d.data); })
+      .catch(console.error);
+
     // Check if we have prefill data from Top Picks navigation
     const prefill = sessionStorage.getItem('tradingPrefill');
     if (prefill) {
@@ -142,6 +161,10 @@ export default function TradingPage() {
       } catch {}
     }
   }, []);
+
+  const activeQuickPicks = quickBuyTab === 'konglo'
+    ? kongloPicks
+    : (regularPicks.length > 0 ? regularPicks : picks);
 
   const handleTopup = async (amount: number) => {
     try {
@@ -216,6 +239,39 @@ export default function TradingPage() {
       showToast(data.message || "Auto-invest berhasil dijalankan", 'success');
       fetchTradingData(); fetchEquityData();
     } catch { showToast("Kesalahan jaringan saat auto-invest", 'error'); }
+  };
+
+  const handleAutoInvestSingleForm = (pick: any, currentPrice: number) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Extract actual equity robustly (handle if equityData is object or array)
+    let totalEquity = 0;
+    if (equityData) {
+      if (typeof equityData.equity === 'number') totalEquity = equityData.equity;
+      else if (equityData.data && typeof equityData.data.equity === 'number') totalEquity = equityData.data.equity;
+      else if (Array.isArray(equityData) && equityData.length > 0) totalEquity = equityData[0].equity || 0;
+    }
+    
+    // Fallback jika API belum loading: asumsikan default 28 juta
+    if (totalEquity <= 0) totalEquity = 28000000;
+    
+    // Hitung alokasi 20%
+    const targetAmount = totalEquity * 0.20;
+    
+    // Hitung Lot
+    const lotPrice = currentPrice * 100;
+    let targetLot = Math.floor(targetAmount / lotPrice);
+    if (targetLot < 1) targetLot = 1;
+    
+    // Set State
+    setBuyTicker(pick.ticker);
+    setBuyPrice(currentPrice);
+    setBuyLot(targetLot);
+    setBuyTp(pick.target_1 || 0);
+    setBuySl(pick.stop_loss || 0);
+    setBuySignalId(pick.id || null);
+    
+    showToast(`Pre-fill 20% (Rp ${(targetLot * lotPrice).toLocaleString('id-ID')}) dari balance (Rp ${totalEquity.toLocaleString('id-ID')})`, 'info');
   };
 
   const handleAutoInvestSingle = async (signalId: number, price: number) => {
@@ -308,7 +364,7 @@ export default function TradingPage() {
         const positions = summary?.positions || [];
         const activePositions = positions.filter((p: any) => p.status === 'OPEN') || [];
         const pendingOrders = positions.filter((p: any) => p.status?.startsWith('PENDING')) || [];
-        const closedTrades = history.filter((t: any) => t.status !== 'OPEN' && !t.status?.startsWith('PENDING')) || [];
+        const closedTrades = history.filter((t: any) => t.status !== 'OPEN' && !t.status?.startsWith('PENDING') && t.status !== 'CANCELLED') || [];
         const itemsPerPage = 10;
         const totalPages = Math.ceil(closedTrades.length / itemsPerPage) || 1;
         const activePage = currentPage > totalPages ? 1 : currentPage;
@@ -394,22 +450,64 @@ export default function TradingPage() {
                       <input type="number" value={buySl} onChange={(e) => setBuySl(Number(e.target.value))} min={0} placeholder="0" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm font-mono font-bold text-text focus:outline-none focus:border-accent" />
                     </div>
                   </div>
+                  
+                  {/* NEW FIELD: AMOUNT DISABLED */}
+                  <div>
+                    <label className="text-[10px] text-secondary block mb-1 font-bold uppercase flex justify-between">
+                      <span>Total Amount (Estimasi)</span>
+                      <span className="text-accent">Locked</span>
+                    </label>
+                    <div className="w-full bg-background/50 border border-border rounded-xl px-4 py-2 flex items-center gap-2">
+                      <span className="text-secondary text-sm font-bold">Rp</span>
+                      <input type="text" value={buyLot && buyPrice ? (buyLot * 100 * buyPrice).toLocaleString('id-ID') : "0"} disabled className="w-full bg-transparent text-sm font-mono font-bold text-secondary focus:outline-none cursor-not-allowed" />
+                    </div>
+                  </div>
+
                   <button onClick={() => handleBuy(buyTicker, buyLot, buyPrice, buySignalId, buyTp, buySl)} className="w-full py-3 mt-2 bg-profit hover:bg-emerald-400 text-text font-bold rounded-xl transition text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
                     <PlusIcon className="w-4 h-4" /> Kirim Order Buy
                   </button>
                 </div>
               </div>
 
-              {/* Quick Buy from Top Picks */}
+              {/* Quick Buy from Top Picks & Konglo Play */}
               <div className="lg:col-span-2 space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-text flex items-center gap-2"><TargetIcon className="w-4 h-4 text-accent" /> Quick Buy dari Top Picks</h3>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-bold text-text flex items-center gap-2">
+                      <TargetIcon className="w-4 h-4 text-accent" /> Quick Buy
+                    </h3>
+                    <div className="bg-white/5 p-1 rounded-xl border border-white/10 flex gap-1 shadow-sm">
+                      <button
+                        onClick={() => setQuickBuyTab('regular')}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold text-xs transition-all duration-200 ${
+                          quickBuyTab === 'regular'
+                            ? 'bg-accent/20 text-white border border-accent/40 shadow-sm'
+                            : 'text-secondary hover:text-text hover:bg-white/5'
+                        }`}
+                      >
+                        <BarChartIcon className="w-3.5 h-3.5 text-accent" />
+                        <span>Regular Top Picks</span>
+                      </button>
+                      <button
+                        onClick={() => setQuickBuyTab('konglo')}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold text-xs transition-all duration-200 ${
+                          quickBuyTab === 'konglo'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                            : 'text-secondary hover:text-text hover:bg-white/5'
+                        }`}
+                      >
+                        <LightningBoltIcon className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Konglo Play Picks</span>
+                      </button>
+                    </div>
+                  </div>
                   <button onClick={handleAutoInvestAll} className="px-3.5 py-1.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent font-bold rounded-xl text-xs transition flex items-center gap-1.5">
                     <DoubleArrowUpIcon className="w-3.5 h-3.5 text-accent" /> Invest Semua (15% each)
                   </button>
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[360px] overflow-y-auto pr-1">
-                  {picks.slice(0, 4).map((pick: any) => {
+                  {activeQuickPicks.slice(0, 4).map((pick: any) => {
                     const defaultPrice = pick.entry_high || pick.entry_low || pick.current_price || 1000;
                     const isLocked = !isPro && (pick.rank === 1 || pick.rank === 2);
                     return (
@@ -422,7 +520,14 @@ export default function TradingPage() {
                         )}
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-extrabold text-text">{pick.ticker}</h4>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-extrabold text-text">{pick.ticker}</h4>
+                              {quickBuyTab === 'konglo' && (
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-bold">
+                                  Konglo
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[10px] text-secondary">Rank #{pick.rank || '-'}</p>
                           </div>
                           <div className="text-right">
@@ -432,18 +537,22 @@ export default function TradingPage() {
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => { setBuyTicker(pick.ticker); setBuyPrice(defaultPrice); setBuyTp(pick.target_1 || 0); setBuySl(pick.stop_loss || 0); setBuySignalId(pick.id || null); }}
+                            onClick={() => { setBuyTicker(pick.ticker); setBuyPrice(defaultPrice); setBuyTp(pick.target_1 || 0); setBuySl(pick.stop_loss || 0); setBuySignalId(pick.id || null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                             className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-text rounded-lg text-xs font-bold transition border border-border"
                             disabled={isLocked}
                           >Prefill Form</button>
-                          <button onClick={() => handleAutoInvestSingle(pick.id, defaultPrice)} className="flex-1 py-1.5 bg-indigo-600 hover:bg-accent text-text rounded-lg text-xs font-bold transition" disabled={isLocked}>
+                          <button onClick={() => handleAutoInvestSingleForm(pick, defaultPrice)} className="flex-1 py-1.5 bg-indigo-600 hover:bg-accent text-text rounded-lg text-xs font-bold transition" disabled={isLocked}>
                             ⚡ Auto 20%
                           </button>
                         </div>
                       </div>
                     );
                   })}
-                  {picks.length === 0 && <div className="col-span-2 py-10 text-center text-secondary text-sm">Tidak ada rekomendasi Top Picks aktif.</div>}
+                  {activeQuickPicks.length === 0 && (
+                    <div className="col-span-2 py-10 text-center text-secondary text-sm">
+                      {quickBuyTab === 'konglo' ? 'Belum ada rekomendasi Konglo Play aktif.' : 'Tidak ada rekomendasi Top Picks aktif.'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

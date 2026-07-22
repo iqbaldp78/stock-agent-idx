@@ -64,6 +64,7 @@ def present_all(
     ticker: str,
     scores: dict[str, dict],
     macro_data: dict,
+    mode: str = "REGULAR",
 ) -> list[dict]:
     ticker_scores = scores.get(ticker, {})
     fund_score = ticker_scores.get("fundamental", {})
@@ -94,10 +95,12 @@ def present_all(
         return agent, entry
 
     entries: list[dict] = []
+    round1_agents = ("fundamental", "technical", "bandarmologi") if mode != "KONGLO" else ("technical", "bandarmologi")
+    
     with ThreadPoolExecutor(max_workers=3) as executor:
         futures = {
             executor.submit(run_agent, a): a
-            for a in ("fundamental", "technical", "bandarmologi")
+            for a in round1_agents
         }
         for future in as_completed(futures):
             agent, entry = future.result()

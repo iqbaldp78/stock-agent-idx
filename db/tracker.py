@@ -65,7 +65,7 @@ def save_debate_log(run_date: datetime, debate_log: list) -> None:
         db.close()
 
 
-def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: str | None = None) -> None:
+def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: str | None = None, is_konglo: bool = False) -> None:
     """Simpan final signals ke tabel signals."""
     db: Session = SessionLocal()
     try:
@@ -121,6 +121,7 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
                 broker_distributors=pick.get("broker_distributors"),
                 fair_value=pick.get("fair_value"),
                 batch_id=batch_id,
+                is_konglo=is_konglo,
             )
             db.add(record)
 
@@ -132,7 +133,7 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
         db.close()
 
 
-def save_full_result(result: dict, batch_id: str | None = None) -> None:
+def save_full_result(result: dict, batch_id: str | None = None, is_konglo: bool = False) -> None:
     """Simpan semua hasil analisis sekaligus."""
     today = datetime.now()
     batch_id = batch_id or str(uuid.uuid4())
@@ -161,7 +162,7 @@ def save_full_result(result: dict, batch_id: str | None = None) -> None:
                 })
 
     if all_signals:
-        save_signals(today, all_signals, result.get("scores", {}), batch_id=batch_id)
+        save_signals(today, all_signals, result.get("scores", {}), batch_id=batch_id, is_konglo=is_konglo)
 
     if result.get("ihsg_prediction"):
         save_ihsg_prediction(today, result["ihsg_prediction"], batch_id=batch_id)

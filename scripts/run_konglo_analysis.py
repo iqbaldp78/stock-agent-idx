@@ -27,7 +27,7 @@ def main():
     print("9Router:", status)
 
     result = run_konglo_analysis(universe=tickers)
-    save_full_result(result, batch_id="KONGLO_PICKS")
+    save_full_result(result, is_konglo=True)
 
     picks = result.get("top_picks", [])
     print(f"\n=== TOP {len(picks)} PICKS ===")

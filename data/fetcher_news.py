@@ -1,62 +1,47 @@
 """
-Data Fetcher — News
-Mengambil berita terkait ticker saham dari API berita eksternal.
-
-Fungsi yang disediakan:
-- fetch_news(ticker: str, limit: int = 10) -> list[dict]
+Data Fetcher — News (Local RAG Vector Database)
+Mengambil berita terkait ticker saham dari database RAG lokal (news_signals).
+Tidak melakukan HTTP request eksternal ke NewsAPI.
 """
+import logging
+from typing import List, Dict
+from scripts.rag_retriever import search_by_ticker
 
-import os
-import httpx
-from datetime import datetime
+logger = logging.getLogger(__name__)
 
-NEWS_API_URL = "https://newsapi.org/v2/everything"
-NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 
-def fetch_news(ticker: str, limit: int = 10) -> list[dict]:
+def fetch_news(ticker: str, limit: int = 10) -> List[Dict]:
     """
-    Mengambil berita terkait ticker saham dari API berita eksternal.
+    Mengambil berita terkait ticker saham dari RAG Vector Database lokal.
     
     Args:
         ticker (str): Ticker saham (contoh: "BBCA").
         limit (int): Jumlah maksimum berita yang diambil.
     
     Returns:
-        list[dict]: Daftar berita dengan informasi seperti judul, deskripsi, dan tanggal publikasi.
+        List[Dict]: Daftar berita dengan judul, deskripsi, dan tanggal publikasi.
     """
-    if not NEWS_API_KEY:
-        raise ValueError("NEWS_API_KEY tidak diset di environment variables.")
-    
-    params = {
-        "q": ticker,
-        "apiKey": NEWS_API_KEY,
-        "pageSize": limit,
-        "sortBy": "publishedAt",
-        "language": "id",
-    }
-    
     try:
-        response = httpx.get(NEWS_API_URL, params=params, timeout=10.0)
-        response.raise_for_status()
-        articles = response.json().get("articles", [])
-        return [
-            {
-                "title": article.get("title"),
-                "description": article.get("description"),
-                "published_at": article.get("publishedAt"),
-                "source": article.get("source", {}).get("name"),
-                "url": article.get("url"),
-            }
-            for article in articles
-        ]
-    except httpx.RequestError as e:
-        raise RuntimeError(f"Error saat mengambil berita: {e}")
-    except httpx.HTTPStatusError as e:
-        raise RuntimeError(f"HTTP error saat mengambil berita: {e.response.status_code}")
+        rag_results = search_by_ticker(ticker, limit=limit)
+        articles = []
+        for item in rag_results:
+            articles.append({
+                "title": item.get("summary") or item.get("content", "")[:100],
+                "description": item.get("content", ""),
+                "published_at": str(item.get("created_at", "")),
+                "source": "Stockbit RAG News",
+                "url": "",
+                "sentiment": item.get("sentiment", "NEUTRAL"),
+            })
+        return articles
+    except Exception as e:
+        logger.warning(f"Error fetching RAG news for {ticker}: {e}")
+        return []
+
 
 if __name__ == "__main__":
-    # Contoh penggunaan
     ticker = "BBCA"
     news = fetch_news(ticker, limit=5)
+    print(f"RAG News for {ticker}: {len(news)} items")
     for article in news:
         print(f"- {article['title']} ({article['published_at']})")

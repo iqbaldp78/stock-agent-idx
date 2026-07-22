@@ -36,6 +36,27 @@ def run_daily_analysis():
     logger.info("=== DAILY ANALYSIS END ===")
 
 
+def run_konglo_daily_analysis():
+    """Konglo Play analysis harian + save to DB."""
+    logger.info("=== KONGLO PLAY DAILY ANALYSIS START ===")
+    try:
+        from graph.konglo_workflow import run_konglo_analysis
+        from db.tracker import save_full_result
+
+        result = run_konglo_analysis()
+        save_full_result(result, is_konglo=True)
+
+        top_picks = result.get("top_picks", [])
+        logger.info(f"Konglo Analysis complete: {len(top_picks)} top picks")
+        for p in top_picks:
+            logger.info(f"  #{p.get('rank')} {p.get('ticker')} — {p.get('conviction', 'N/A')}")
+
+    except Exception as e:
+        logger.exception(f"Konglo daily analysis failed: {e}")
+
+    logger.info("=== KONGLO PLAY DAILY ANALYSIS END ===")
+
+
 def run_performance_check():
     """Check yesterday's signals: hit target or hit SL?"""
     logger.info("=== PERFORMANCE CHECK START ===")
@@ -333,6 +354,14 @@ def main():
         CronTrigger(day_of_week="mon-fri", hour=7, minute=0, timezone="Asia/Jakarta"),
         id="daily_analysis",
         name="Daily AI Portfolio Analysis",
+    )
+
+    # Konglo Play Daily Analysis: Every day at 07:30 AM WIB
+    scheduler.add_job(
+        run_konglo_daily_analysis,
+        CronTrigger(hour=7, minute=30, timezone="Asia/Jakarta"),
+        id="konglo_daily_analysis",
+        name="Daily Konglo Play AI Analysis",
     )
 
     # Performance Check (TP/SL validation): Every day at 17:00 WIB

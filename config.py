@@ -206,13 +206,15 @@ def get_configured_llm_models() -> dict[str, str]:
     return models
 
 # Database
-DATABASE_URL = (
-    f"postgresql://{os.getenv('POSTGRES_USER')}:"
-    f"{os.getenv('POSTGRES_PASSWORD')}@"
-    f"{os.getenv('POSTGRES_HOST')}:"
-    f"{os.getenv('POSTGRES_PORT')}/"
-    f"{os.getenv('POSTGRES_DB')}"
-)
+_db_user = os.getenv("POSTGRES_USER") or "stockuser"
+_db_pass = os.getenv("POSTGRES_PASSWORD") or "stockpassword"
+_db_host = os.getenv("POSTGRES_HOST") or os.getenv("DB_HOST") or "stock_postgres"
+_db_port = os.getenv("POSTGRES_PORT") or os.getenv("DB_PORT") or "5432"
+if not str(_db_port).isdigit():
+    _db_port = "5432"
+_db_name = os.getenv("POSTGRES_DB") or os.getenv("DB_NAME") or "stockagent"
+
+DATABASE_URL = f"postgresql://{_db_user}:{_db_pass}@{_db_host}:{_db_port}/{_db_name}"
 
 # Bandarmologi
 BROKER_WATCH_SHORT = 7   # hari → timing signal (sedang aktif akumulasi?)
