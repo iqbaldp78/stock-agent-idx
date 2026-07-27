@@ -45,13 +45,16 @@ def get_chat_model(
     kwargs: dict[str, Any] = {}
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
+    
+    # Force max_retries to 0 so LangChain doesn't block indefinitely on 9router stalls
     return ChatOpenAI(
         model=model,
         base_url=LLM_BASE_URL,
         api_key=NINEROUTER_API_KEY or "9router",
         temperature=temperature,
         max_tokens=max_tokens,
-        timeout=300,
+        timeout=180.0,
+        max_retries=0,
         model_kwargs=kwargs,
     )
 
@@ -92,8 +95,8 @@ def _invoke_once(
     temperature: float,
     max_tokens: int,
     json_mode: bool,
-) -> tuple[dict[str, Any] | None, str]:
-    """Single LLM call; returns (parsed_json, raw_content)."""
+) -> tuple[dict[str, Any] | None, str, Exception | None]:
+    """Single LLM call; returns (parsed_json, raw_content, exception)."""
     try:
         llm = get_chat_model(
             model, temperature=temperature, max_tokens=max_tokens, json_mode=json_mode
@@ -109,13 +112,13 @@ def _invoke_once(
             )
         raw = str(content)
         if _is_refusal(raw):
-            logger.warning("[LLM] persona refusal model=%s preview=%s", model, raw[:120])
-            return None, raw
+            logger.warning("[LLM] persona refusal model=%s base_url=%s preview=%s", model, LLM_BASE_URL, raw[:120])
+            return None, raw, None
         parsed = _extract_json(raw)
-        return parsed, raw
+        return parsed, raw, None
     except Exception as e:
-        logger.warning("[LLM] invoke failed model=%s: %s", model, e)
-        return None, ""
+        logger.error("[LLM ERROR] Call to LLM_BASE_URL (%s) failed for model=%s: %s", LLM_BASE_URL, model, e)
+        return None, "", e
 
 
 def invoke_json(
@@ -141,10 +144,11 @@ def invoke_json(
         models_to_try.append(fallback_model)
 
     ctx = f" agent={agent} ticker={ticker}" if agent else ""
+    last_err: Exception | None = None
 
     for attempt_model in models_to_try:
         for json_mode in (True, False):
-            parsed, raw = _invoke_once(
+            parsed, raw, err = _invoke_once(
                 attempt_model,
                 system,
                 user,
@@ -152,6 +156,8 @@ def invoke_json(
                 max_tokens=max_tokens,
                 json_mode=json_mode,
             )
+            if err:
+                last_err = err
             if parsed is not None:
                 logger.info("[LLM] OK model=%s%s json_mode=%s", attempt_model, ctx, json_mode)
                 return parsed
@@ -162,7 +168,7 @@ def invoke_json(
                     f"{schema_hint}\n"
                     f"No markdown. No explanation. Start with {{ and end with }}."
                 )
-                parsed2, _ = _invoke_once(
+                parsed2, _, err2 = _invoke_once(
                     attempt_model,
                     system,
                     repair_user,
@@ -170,6 +176,8 @@ def invoke_json(
                     max_tokens=max_tokens,
                     json_mode=json_mode,
                 )
+                if err2:
+                    last_err = err2
                 if parsed2 is not None:
                     logger.info("[LLM] OK after repair model=%s%s", attempt_model, ctx)
                     return parsed2
@@ -183,6 +191,8 @@ def invoke_json(
                     raw[:200],
                 )
 
+    if last_err:
+        logger.error("[LLM EXHAUSTED] All attempts to LLM_BASE_URL (%s) failed. Final error: %s", LLM_BASE_URL, last_err)
     return None
 
 

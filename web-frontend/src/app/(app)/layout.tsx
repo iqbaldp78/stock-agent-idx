@@ -17,20 +17,22 @@ import {
   CheckCircledIcon,
   InfoCircledIcon,
   HamburgerMenuIcon,
-  IdCardIcon
+  IdCardIcon,
+  MagicWandIcon
 } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 const navItems = [
-  { href: "/", label: "Home Dashboard", icon: HomeIcon, id: "dashboard" },
-  { href: "/top-picks", label: "AI Top Picks", icon: TargetIcon, id: "top-picks" },
-  { href: "/trading", label: "Trading Engine", icon: LightningBoltIcon, id: "trading" },
-  { href: "/bandarmologi", label: "Bandarmologi", icon: PieChartIcon, id: "bandarmologi" },
-  { href: "/ihsg", label: "IHSG Predictor", icon: ClockIcon, id: "ihsg" },
-  { href: "/performance", label: "AI Performance", icon: RocketIcon, id: "history" },
-  { href: "/portfolio", label: "Portfolio Management", icon: CardStackIcon, id: "portfolio" },
-  { href: "/billing", label: "Billing & Upgrade", icon: IdCardIcon, id: "billing" },
+{ href: "/", label: "Home Dashboard", icon: HomeIcon, id: "dashboard" },
+{ href: "/top-picks", label: "AI Top Picks", icon: TargetIcon, id: "top-picks" },
+{ href: "/trading", label: "Trading Engine", icon: LightningBoltIcon, id: "trading" },
+{ href: "/bandarmologi", label: "Bandarmologi", icon: PieChartIcon, id: "bandarmologi" },
+{ href: "/ihsg", label: "IHSG Predictor", icon: ClockIcon, id: "ihsg" },
+{ href: "/performance", label: "AI Performance", icon: RocketIcon, id: "history" },
+{ href: "/backtest-lab", label: "AI Backtest Lab", icon: MagicWandIcon, id: "backtest-lab" },
+{ href: "/portfolio", label: "Portfolio Management", icon: CardStackIcon, id: "portfolio" },
+{ href: "/billing", label: "Billing & Upgrade", icon: IdCardIcon, id: "billing" },
 ];
 
 export default function AppShellLayout({ children }: { children: React.ReactNode }) {

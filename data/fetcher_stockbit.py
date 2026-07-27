@@ -17,6 +17,7 @@ import random
 import time
 from datetime import date, datetime, timedelta
 from functools import wraps
+from typing import Optional
 
 import httpx
 import pandas as pd
@@ -245,6 +246,32 @@ BROKER_LIST = [
     ("GR", "Goldman Sachs"),
     ("CG", "CGS-CIMB"),
     ("LG", "Trimegah Sekuritas"),
+    ("BQ", "Ciptadana Sekuritas"),
+    ("KI", "Ciptadana Sekuritas"),
+    ("SS", "Shinhan Sekuritas"),
+    ("IF", "Samuel Sekuritas"),
+    ("BB", "Verdhana Sekuritas"),
+    ("DH", "Sinarmas Sekuritas"),
+    ("CD", "Mega Capital Sekuritas"),
+    ("XL", "Stockbit Sekuritas"),
+    ("AZ", "Sucor Sekuritas"),
+    ("AG", "Alindo Sekuritas"),
+    ("YJ", "Phillip Sekuritas"),
+    ("XC", "Ajaib Sekuritas"),
+    ("KK", "KGI Sekuritas"),
+    ("YP", "Mirae Asset Sekuritas"),
+    ("AI", "UOB Kay Hian Sekuritas"),
+    ("RF", "Lotus Andalan Sekuritas"),
+    ("OD", "BRI Danareksa Sekuritas"),
+    ("SQ", "BCA Sekuritas"),
+    ("HP", "Henan Putihrai Sekuritas"),
+    ("DP", "Dinar Sekuritas"),
+    ("TP", "OCBC Sekuritas"),
+    ("PD", "Indo Premier Sekuritas"),
+    ("NI", "BNI Sekuritas"),
+    ("CP", "Valbury Sekuritas"),
+    ("DR", "RHB Sekuritas"),
+    ("ZP", "Maybank Sekuritas"),
 ]
 
 _BROKER_NAME_MAP = {code: name for code, name in BROKER_LIST}
@@ -623,7 +650,12 @@ def get_broker_daily(ticker: str, date: str) -> dict:
     return day_data
 
 
-def get_broker_accumulation(ticker: str, days: int) -> dict:
+def get_broker_accumulation(
+    ticker: str,
+    days: int = 7,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+) -> dict:
     """
     Agregasi broker summary untuk N hari trading ke belakang menggunakan NET data.
     Hitung avg price tiap broker = true cost mereka.
@@ -634,9 +666,26 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
     NOTE: Menggunakan Market Detector API dengan TRANSACTION_TYPE_NET untuk full period,
     bukan agregasi harian GROSS.
     """
-    trading_days = _get_trading_days(days, include_today=True)
-    date_from = trading_days[-1]
-    date_to = trading_days[0]
+    if date_from and date_to:
+        try:
+            d_start = datetime.strptime(date_from, "%Y-%m-%d").date()
+            d_end = datetime.strptime(date_to, "%Y-%m-%d").date()
+            trading_days = []
+            cur = d_start
+            while cur <= d_end:
+                if cur.weekday() < 5:
+                    trading_days.append(cur.strftime("%Y-%m-%d"))
+                cur += timedelta(days=1)
+            if not trading_days:
+                trading_days = [date_from]
+            days = len(trading_days)
+        except Exception:
+            trading_days = [date_from]
+            days = 1
+    else:
+        trading_days = _get_trading_days(days, include_today=True)
+        date_from = trading_days[-1]
+        date_to = trading_days[0]
 
     # Hitung keaktifan per broker secara harian (menggunakan cache-first get_broker_daily)
     # Ini sangat cepat jika data historis sudah ada di DB cache.
@@ -775,13 +824,20 @@ def get_broker_accumulation(ticker: str, days: int) -> dict:
     }
 
 
-def get_full_bandarm_data(ticker: str) -> dict:
+def get_full_bandarm_data(
+    ticker: str,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+) -> dict:
     """Ambil kedua window sekaligus untuk 1 saham."""
-    return {
+    res = {
         "ticker": ticker,
         "w7": get_broker_accumulation(ticker, days=7),
         "w30": get_broker_accumulation(ticker, days=30),
     }
+    if date_from and date_to:
+        res["custom_window"] = get_broker_accumulation(ticker, date_from=date_from, date_to=date_to)
+    return res
 
 
 def _get_base_price(ticker: str) -> float:
@@ -871,11 +927,24 @@ def get_ohlcv_range(ticker: str, start_date: str, end_date: str, limit: int = 50
     - Today: selalu di-upsert dari API.
     """
     today = date.today()
-    cached = get_cached_ohlcv(ticker, start_date, end_date)
-    missing = find_missing_dates(cached, start_date, end_date)
+    try:
+        start_dt = date.fromisoformat(start_date)
+        end_dt = date.fromisoformat(end_date)
+    except (ValueError, TypeError):
+        start_dt = today
+        end_dt = today
+
+    fetch_end = min(end_dt, today)
+    if start_dt > fetch_end:
+        cached = get_cached_ohlcv(ticker, start_date, end_date)
+        return cached if cached is not None else pd.DataFrame()
+
+    fetch_end_str = fetch_end.isoformat()
+    cached = get_cached_ohlcv(ticker, start_date, fetch_end_str)
+    missing = find_missing_dates(cached, start_date, fetch_end_str)
 
     # Skip tanggal historis yang sudah pernah dipastikan tidak punya data.
-    no_data_dates = get_ohlcv_no_data_dates(ticker, start_date, end_date)
+    no_data_dates = get_ohlcv_no_data_dates(ticker, start_date, fetch_end_str)
     if no_data_dates:
         missing = [d for d in missing if d not in no_data_dates]
 

@@ -1,0 +1,11 @@
+1. Add new table `MlPredictionLog`:
+   - id (Integer, primary_key)
+   - trade_date (Date) - Tanggal prediksi (jam 6 pagi)
+   - ticker (String)
+   - horizon (String) - '1d', '3d', '5d', '7d'
+   - predicted_return_pct (Float) - Hasil prediksinya (misal 2.5)
+   - predicted_price (Float) - Harga yang diprediksi
+   - actual_close_price (Float, nullable) - Diisi saat endofdate jam 23:00
+   - actual_return_pct (Float, nullable) - Real return % di endofdate
+   - is_correct_direction (Boolean, nullable) - Validasi arah trend
+   - created_at (DateTime)

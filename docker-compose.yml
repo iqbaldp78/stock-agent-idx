@@ -105,6 +105,9 @@ services:
       - ./web-backend/main.py:/app/main.py
       - ./config.py:/app/config.py
       - ./db:/app/db
+      - ./agents:/app/agents
+      - ./data:/app/data
+      - ./graph:/app/graph
     depends_on:
       postgres:
         condition: service_healthy

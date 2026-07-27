@@ -3,6 +3,7 @@ Agent — Bandarmologi (Bobot 40%)
 Analisis akumulasi/distribusi bandar berdasarkan broker summary.
 Core agent — penentu utama scoring di IDX market.
 """
+from typing import Optional
 from data.fetcher_stockbit import get_current_price_stockbit
 from data.fetcher_stockbit import get_full_bandarm_data
 from data.fetcher_stockbit import get_stock_info
@@ -183,14 +184,18 @@ def _assess_confidence(
     return "LOW"
 
 
-def analyze(ticker: str) -> dict:
+def analyze(
+    ticker: str,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+) -> dict:
     """
     Analisis bandarmologi lengkap:
     - Window 7 hari (timing signal)
     - Window 30 hari (true cost bandar)
     - Entry assessment vs avg cost bandar
     """
-    bandarm_data = get_full_bandarm_data(ticker)
+    bandarm_data = get_full_bandarm_data(ticker, date_from=date_from, date_to=date_to)
     info = get_stock_info(ticker)
     try:
         current_price = get_current_price_stockbit(ticker) or 0
@@ -406,7 +411,7 @@ def analyze(ticker: str) -> dict:
     w30_total_buyer = len(w30.get("top_accumulators", []))
     w30_total_seller = len(w30.get("top_distributors", []))
 
-    return {
+    res = {
         "ticker": ticker,
         "score": round(score, 1),
         "signal": signal,
@@ -442,6 +447,24 @@ def analyze(ticker: str) -> dict:
         "data_used": data_used,
         "confidence": confidence,
     }
+
+    if "custom_window" in bandarm_data:
+        cw = bandarm_data["custom_window"]
+        cw_days = cw.get("window_days", 1)
+        top_accum_cw = [_format_broker_detail(code, data, cw_days, current_price)
+                        for code, data in cw.get("top_accumulators", [])[:10]]
+        top_dist_cw = [_format_distribution_detail(code, data, cw_days)
+                       for code, data in cw.get("top_distributors", [])[:10]]
+        res["custom_window"] = {
+            "period": cw.get("period", ""),
+            "window_days": cw_days,
+            "top_accumulators": top_accum_cw,
+            "top_distributors": top_dist_cw,
+            "distribution_top3_value": cw.get("distribution_top3_value", 0),
+            "foreign_net": cw.get("foreign_net", 0),
+        }
+
+    return res
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ const getBrokerColorClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
   const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
   
   if (foreign.includes(code)) return "text-red-400 font-extrabold";
   if (retail.includes(code)) return "text-green-400 font-extrabold";
@@ -21,7 +21,7 @@ const getBrokerBgClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
   const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
 
   if (foreign.includes(code)) return "bg-red-500/10 text-red-400 border-red-500/25";
   if (retail.includes(code)) return "bg-green-500/10 text-green-400 border-green-500/25";
@@ -33,7 +33,7 @@ const getBrokerTitle = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
   const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
   
   if (foreign.includes(code)) return "Broker Asing (Foreign)";
   if (retail.includes(code)) return "Broker Ritel (Retail)";
@@ -50,7 +50,7 @@ const brokerNames: Record<string, string> = {
   DR: "RHB Sekuritas", FS: "Reliance", HD: "KGI Sekuritas", XL: "Ajaib Sekuritas", 
   XC: "Stockbit", AZ: "Sucor Sekuritas", AT: "Phintraco", SQ: "BCA Sekuritas", 
   LG: "Trimegah", DH: "Sinarmas", MG: "Semesta Indovest", YJ: "Lotus Andalan", 
-  HP: "Henan Putihrai", CD: "Mega Capital", KI: "Ciptadana", RF: "Buana Capital", 
+  HP: "Henan Putihrai", CD: "Mega Capital", KI: "Ciptadana", BQ: "Ciptadana", RF: "Buana Capital", 
   SS: "Supra Broker", EP: "MNC Sekuritas", BS: "Victoria Sekuritas", OK: "Net Sekuritas", 
   EL: "Evergreen", GR: "Panin Sekuritas", IF: "Samuel Sekuritas", YB: "Jasa Utama", 
   PO: "Pilarmas Investindo"
@@ -61,8 +61,9 @@ export default function BandarmologiPage() {
   const [bandarmologiTicker, setBandarmologiTicker] = useState("MEDC");
   const [bandarmologiData, setBandarmologiData] = useState<any | null>(null);
   const [bandarLoading, setBandarLoading] = useState(false);
-  const [bandarTimeframe, setBandarTimeframe] = useState("1m");
-
+  const [bandarTimeframe, setBandarTimeframe] = useState("latest");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
   const getCurrentPrice = () => {
     const fromSummary = Number(bandarmologiData?.summary?.current_price);
     if (Number.isFinite(fromSummary) && fromSummary > 0) return fromSummary;
@@ -87,7 +88,9 @@ export default function BandarmologiPage() {
   const fetchBandarmologiData = async (ticker: string) => {
     setBandarLoading(true);
     try {
-      const res = await fetch(`/api/bandarmologi/${ticker}`);
+      // Create date format YYYY-MM-DD
+      const dateStr = new Date().toISOString().split('T')[0];
+      const res = await fetch(`/api/bandarmologi/${ticker}?date_from=${dateStr}&date_to=${dateStr}`);
       const data = await res.json();
       if (data && !data.error) {
         // Map agent response to frontend structure
@@ -101,6 +104,8 @@ export default function BandarmologiPage() {
           accumulators_1m: data.window_1m?.top_accumulators || [],
           distributors_7d: data.window_7d?.top_distributors || [],
           distributors_1m: data.window_1m?.top_distributors || [],
+          accumulators_custom: data.custom_window?.top_accumulators || [],
+          distributors_custom: data.custom_window?.top_distributors || [],
           window_7d_summary: data.window_7d || {},
           window_1m_summary: data.window_1m || {},
         };
@@ -139,19 +144,9 @@ export default function BandarmologiPage() {
           </select>
           {bandarLoading && <span className="text-xs text-accent animate-pulse font-bold">Memuat...</span>}
         </div>
-        <div className="flex bg-background p-1 rounded-xl border border-border">
-          <button
-            onClick={() => setBandarTimeframe("1m")}
-            className={`px-4 py-1.5 rounded-lg transition text-xs font-bold ${bandarTimeframe === '1m' ? 'bg-accent text-text shadow-lg' : 'text-secondary hover:text-text'}`}
-          >1 Bulan (30 Hari)</button>
-          <button
-            onClick={() => setBandarTimeframe("7d")}
-            className={`px-4 py-1.5 rounded-lg transition text-xs font-bold ${bandarTimeframe === '7d' ? 'bg-accent text-text shadow-lg' : 'text-secondary hover:text-text'}`}
-          >7 Hari</button>
-        </div>
       </div>
 
-      {/* Broker Legend */}
+      {/* Summary Score */}
       <div className="flex flex-wrap items-center gap-4 text-xs bg-white/5 px-4 py-2.5 rounded-2xl border border-border w-fit mb-6">
         <span className="text-secondary font-bold">Kategori Broker:</span>
         <div className="flex items-center gap-1.5">
@@ -276,18 +271,41 @@ export default function BandarmologiPage() {
 
       {/* Tables */}
       {bandarmologiData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Accumulators Table */}
-          <div className="bg-profit/[0.02] hover:bg-profit/[0.04] border border-profit/20 rounded-2xl p-6 transition duration-300">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2 bg-background p-1.5 rounded-xl border border-border w-full sm:w-fit">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setBandarTimeframe("latest")}
+                className={`px-3 py-1.5 rounded-lg transition text-xs font-bold ${bandarTimeframe === 'latest' ? 'bg-accent text-text shadow-lg' : 'text-secondary hover:text-text'}`}
+              >Latest</button>
+              <button
+                onClick={() => setBandarTimeframe("7d")}
+                className={`px-3 py-1.5 rounded-lg transition text-xs font-bold ${bandarTimeframe === '7d' ? 'bg-accent text-text shadow-lg' : 'text-secondary hover:text-text'}`}
+              >7 Hari</button>
+              <button
+                onClick={() => setBandarTimeframe("1m")}
+                className={`px-3 py-1.5 rounded-lg transition text-xs font-bold ${bandarTimeframe === '1m' ? 'bg-accent text-text shadow-lg' : 'text-secondary hover:text-text'}`}
+              >1 Bulan</button>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 border-t sm:border-t-0 sm:border-l border-border pt-1.5 sm:pt-0 sm:pl-2 sm:ml-1 w-full sm:w-auto">
+               <input type="date" value={customDateFrom} onChange={(e) => {setCustomDateFrom(e.target.value); setBandarTimeframe('custom');}} className="bg-background text-xs border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-accent text-text max-w-[130px] sm:max-w-none"/>
+               <span className="text-secondary text-xs">s/d</span>
+               <input type="date" value={customDateTo} onChange={(e) => {setCustomDateTo(e.target.value); setBandarTimeframe('custom');}} className="bg-background text-xs border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-accent text-text max-w-[130px] sm:max-w-none"/>
+            </div>
+          </div>
+        
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Accumulators Table */}
+            <div className="bg-profit/[0.02] hover:bg-profit/[0.04] border border-profit/20 rounded-2xl p-6 transition duration-300">
             <h3 className="text-lg font-bold text-profit mb-4 flex items-center gap-2">
-              <span>🏛️</span> Top {(bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d)?.length || 0} Broker Akumulasi ({bandarTimeframe.toUpperCase()})
+              <span>🏛️</span> Top Broker Akumulasi ({bandarTimeframe.toUpperCase()})
             </h3>
             <div className="overflow-x-auto rounded-xl border border-profit/10 bg-background/40">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-profit/10 text-[11px] font-bold uppercase tracking-wider text-emerald-300/70 bg-emerald-950/10">
                     <th className="py-3 px-4 whitespace-nowrap">Broker</th>
-                    <th className="py-3 px-4 whitespace-nowrap">Keaktifan</th>
+                    {bandarTimeframe !== 'latest' && <th className="py-3 px-4 whitespace-nowrap">Keaktifan</th>}
                     <th className="py-3 px-4 whitespace-nowrap">Avg Price</th>
                     <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
                     <th className="py-3 px-4 whitespace-nowrap">Value</th>
@@ -295,13 +313,13 @@ export default function BandarmologiPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-emerald-500/5 text-secondary font-mono">
-                  {(bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d)?.map((row: any, idx: number) => (
+                  {(bandarTimeframe === 'latest' || bandarTimeframe === 'custom' ? bandarmologiData.accumulators_custom : (bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d))?.map((row: any, idx: number) => (
                     (() => {
                       const distancePct = getDistancePct(row);
                       return (
                         <tr key={idx} className="hover:bg-profit/5 transition">
                           <td className={`py-3 px-4 whitespace-nowrap ${getBrokerColorClass(row.broker)}`} title={getBrokerTitle(row.broker)}>{row.broker}</td>
-                          <td className="py-3 px-4 whitespace-nowrap text-secondary font-medium">{row.active_days}</td>
+                          {bandarTimeframe !== 'latest' && <td className="py-3 px-4 whitespace-nowrap text-secondary font-medium">{row.active_days || '-'}</td>}
                           <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_buy_lot)}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_buy_value)}</td>
@@ -312,8 +330,8 @@ export default function BandarmologiPage() {
                       );
                     })()
                   ))}
-                  {!(bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d)?.length && (
-                    <tr><td colSpan={6} className="py-10 text-center text-secondary font-sans">Tidak ada data akumulasi terdeteksi.</td></tr>
+                  {!(bandarTimeframe === 'latest' || bandarTimeframe === 'custom' ? bandarmologiData.accumulators_custom : (bandarTimeframe === '1m' ? bandarmologiData.accumulators_1m : bandarmologiData.accumulators_7d))?.length && (
+                    <tr><td colSpan={bandarTimeframe === 'latest' ? 5 : 6} className="py-10 text-center text-secondary font-sans font-medium">Tidak ada data akumulasi terdeteksi.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -323,14 +341,14 @@ export default function BandarmologiPage() {
           {/* Distributors Table */}
           <div className="bg-loss/[0.02] hover:bg-loss/[0.04] border border-loss/20 rounded-2xl p-6 transition duration-300">
             <h3 className="text-lg font-bold text-loss mb-4 flex items-center gap-2">
-              <span>📉</span> Top {(bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d)?.length || 0} Broker Distribusi ({bandarTimeframe.toUpperCase()})
+              <span>📉</span> Top Broker Distribusi ({bandarTimeframe.toUpperCase()})
             </h3>
             <div className="overflow-x-auto rounded-xl border border-loss/10 bg-background/40">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-loss/10 text-[11px] font-bold uppercase tracking-wider text-red-300/70 bg-red-950/10">
                     <th className="py-3 px-4 whitespace-nowrap">Broker</th>
-                    <th className="py-3 px-4 whitespace-nowrap">Keaktifan</th>
+                    {bandarTimeframe !== 'latest' && <th className="py-3 px-4 whitespace-nowrap">Keaktifan</th>}
                     <th className="py-3 px-4 whitespace-nowrap">Avg Sell</th>
                     <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
                     <th className="py-3 px-4 whitespace-nowrap">Value</th>
@@ -338,13 +356,13 @@ export default function BandarmologiPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-red-500/5 text-secondary font-mono">
-                  {(bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d)?.map((row: any, idx: number) => (
+                  {(bandarTimeframe === 'latest' || bandarTimeframe === 'custom' ? bandarmologiData.distributors_custom : (bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d))?.map((row: any, idx: number) => (
                     (() => {
                       const distancePct = getDistancePct(row);
                       return (
                         <tr key={idx} className="hover:bg-loss/5 transition">
                           <td className={`py-3 px-4 whitespace-nowrap ${getBrokerColorClass(row.broker)}`} title={getBrokerTitle(row.broker)}>{row.broker}</td>
-                          <td className="py-3 px-4 whitespace-nowrap text-secondary font-medium">{row.active_days}</td>
+                          {bandarTimeframe !== 'latest' && <td className="py-3 px-4 whitespace-nowrap text-secondary font-medium">{row.active_days || '-'}</td>}
                           <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_sell_lot)}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_sell_value)}</td>
@@ -355,14 +373,15 @@ export default function BandarmologiPage() {
                       );
                     })()
                   ))}
-                  {!(bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d)?.length && (
-                    <tr><td colSpan={6} className="py-10 text-center text-secondary font-sans">Tidak ada data distribusi terdeteksi.</td></tr>
+                  {!(bandarTimeframe === 'latest' || bandarTimeframe === 'custom' ? bandarmologiData.distributors_custom : (bandarTimeframe === '1m' ? bandarmologiData.distributors_1m : bandarmologiData.distributors_7d))?.length && (
+                    <tr><td colSpan={bandarTimeframe === 'latest' ? 5 : 6} className="py-10 text-center text-secondary font-sans font-medium">Tidak ada data distribusi terdeteksi.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
+      </div>
       )}
     </div>
   );

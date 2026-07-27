@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, Integer, String, Boolean, Date, DateTime, Numeric,
+    Column, Integer, String, Boolean, Date, DateTime, Numeric, Float,
     Text, BigInteger, ForeignKey, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -16,6 +16,23 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
+
+
+class CandlestickSignal(Base):
+    __tablename__ = "candlestick_signals"
+
+    id = Column(Integer, primary_key=True)
+    scan_date = Column(Date, nullable=False)
+    ticker = Column(String(10), nullable=False)
+    pattern_name = Column(String(100), nullable=False)
+    signal_direction = Column(String(20), nullable=False)
+    win_rate = Column(Float, nullable=False)
+    context_note = Column(String(255), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint('scan_date', 'ticker', name='uq_candlestick_date_ticker'),
+    )
 
 
 class Universe(Base):
@@ -173,6 +190,51 @@ class IhsgOhlcv(Base):
     created_at = Column(Date, server_default=func.now())
 
 
+class IhsgPrediction(Base):
+    __tablename__ = "ihsg_predictions"
+
+    id = Column(Integer, primary_key=True)
+    run_date = Column(Date, nullable=False)
+    current_price = Column(Numeric(12, 2), nullable=False)
+    confidence = Column(String(10))
+    direction = Column(String(30))
+    volatility_level = Column(String(20))
+    day_1_price = Column(Numeric(12, 2))
+    day_1_pct = Column(Numeric(6, 2))
+    day_3_price = Column(Numeric(12, 2))
+    day_3_pct = Column(Numeric(6, 2))
+    day_5_price = Column(Numeric(12, 2))
+    day_5_pct = Column(Numeric(6, 2))
+    day_7_price = Column(Numeric(12, 2))
+    day_7_pct = Column(Numeric(6, 2))
+    reasoning = Column(Text)
+    key_drivers = Column(JSONB)
+    risks = Column(JSONB)
+    component_scores = Column(JSONB)
+    ihsg_trend = Column(String(30))
+    macro_signal = Column(String(30))
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class IhsgNoData(Base):
+    __tablename__ = "ihsg_no_data"
+
+    id = Column(Integer, primary_key=True)
+    trade_date = Column(Date, nullable=False, unique=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class OhlcvNoData(Base):
+    __tablename__ = "ohlcv_no_data"
+    __table_args__ = (UniqueConstraint("ticker", "trade_date", "source", name="uix_ohlcv_no_data"),)
+
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String(10), nullable=False)
+    trade_date = Column(Date, nullable=False)
+    source = Column(String(20), default="stockbit")
+    created_at = Column(DateTime, server_default=func.now())
+
+
 class StockInfoSnapshot(Base):
     __tablename__ = "stock_info_snapshot"
     __table_args__ = (UniqueConstraint("ticker", "snapshot_date"),)
@@ -322,3 +384,50 @@ class PaperTrade(Base):
     # Foreign key to wallet (optional, bisa dihitung aggregat)
     wallet_id = Column(Integer, ForeignKey("paper_wallet.id"), nullable=True)
     user_id = Column(Integer, nullable=True)
+
+class MlPredictionLog(Base):
+    __tablename__ = "ml_prediction_log"
+    __table_args__ = (
+        UniqueConstraint("trade_date", "ticker", "horizon", name="uix_ml_pred_date_ticker_hor"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    trade_date = Column(Date, nullable=False)
+    ticker = Column(String(10), nullable=False)
+    horizon = Column(String(5), nullable=False)  # e.g., '1d', '3d', '5d', '7d'
+    pred_return_pct = Column(Numeric(8, 4), nullable=False)
+    pred_price = Column(Float, nullable=True)
+    predicted_direction = Column(String(10), nullable=True)
+    actual_close_price = Column(Float, nullable=True)
+    actual_return_pct = Column(Numeric(8, 4), nullable=True)
+    is_correct = Column(Boolean, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    validated_at = Column(DateTime, nullable=True)
+from sqlalchemy import Column, Integer, String, Date, DateTime, Numeric, Float, JSON, ForeignKey, UniqueConstraint
+from sqlalchemy.sql import func
+from db import Base
+
+class BacktestSession(Base):
+    __tablename__ = "backtest_sessions"
+    id = Column(Integer, primary_key=True)
+    run_date = Column(DateTime, server_default=func.now())
+    horizon = Column(String(10), nullable=False)
+    threshold = Column(Float, nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    initial_capital = Column(Float, nullable=False)
+    final_capital = Column(Float, nullable=False)
+    total_pnl = Column(Float, nullable=False)
+    total_trades = Column(Integer, nullable=False)
+
+class BacktestResult(Base):
+    __tablename__ = "backtest_results"
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey("backtest_sessions.id"))
+    ticker = Column(String(10), nullable=False)
+    initial_capital = Column(Float, nullable=False)
+    final_capital = Column(Float, nullable=False)
+    total_pnl = Column(Float, nullable=False)
+    win_rate = Column(Float, nullable=False)
+    total_trades = Column(Integer, nullable=False)
+    trades_json = Column(JSON, nullable=True) # menyimpan list trades untuk detail

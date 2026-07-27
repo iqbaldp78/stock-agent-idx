@@ -221,6 +221,23 @@ def run_ml_prediction(state: AgentState) -> dict:
 
             # Use 1d prediction for the main signal/direction
             signal = predictor.get_signal(preds.get('1d', 0.5))
+            
+            # UPDATE COMPOSITE SCORE IF SIGNAL IS BUY
+            if signal in ["BUY", "STRONG BUY"]:
+                comp = composites.get(ticker)
+                if comp:
+                    bonus_score = 2.5 if signal == "STRONG BUY" else 2.0
+                    bonus_text = f"Bonus Sinyal ML Prediction {signal} (+{bonus_score})"
+                    
+                    if "Bonus Sinyal ML Prediction Buy" not in comp.get("usdidr_narrative", ""):
+                        if comp.get("usdidr_narrative"):
+                            comp["usdidr_narrative"] += f" | {bonus_text}"
+                        else:
+                            comp["usdidr_narrative"] = bonus_text
+                        
+                        old_score = comp["composite_score"]
+                        comp["composite_score"] = min(10.0, round(old_score + bonus_score, 2))
+                        logger.info(f"[ML BONUS] {ticker} diprediksi {signal}, composite score di-boost: {old_score} -> {comp['composite_score']}")
 
             ml_results[ticker] = {
                 "pred_prob": pred_pcts.get('1d', 50.0), # Main 1d probability

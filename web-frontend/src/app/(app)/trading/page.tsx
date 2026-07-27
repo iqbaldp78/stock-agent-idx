@@ -85,6 +85,7 @@ const CustomEquityChart = ({ points }: { points: any[] }) => {
   );
 };
 
+import { CalendarIcon } from '@radix-ui/react-icons';
 export default function TradingPage() {
   const { picks, showToast, isPro } = useApp();
   const [tradingData, setTradingData] = useState<any>(null);
@@ -92,6 +93,12 @@ export default function TradingPage() {
   const [tradingLoading, setTradingLoading] = useState(false);
   const [tradingError, setTradingError] = useState("");
   const [topupAmount, setTopupAmount] = useState(100000000);
+
+
+  // Tabs
+  const [activeTab, setActiveTab] = useState<'desk' | 'analytics'>('desk');
+  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
 
   // Quick Buy tab & picks states
   const [quickBuyTab, setQuickBuyTab] = useState<'regular' | 'konglo'>('regular');
@@ -124,6 +131,26 @@ export default function TradingPage() {
     }
   };
 
+
+  const fetchPerformanceData = async () => {
+    setPerformanceLoading(true);
+    try {
+      const res = await fetch("/api/trading/performance", {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem("token")}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === "success") {
+          setPerformanceData(json.data);
+        }
+      }
+    } catch (err) {
+      console.error("Gagal mengambil metrik performance:", err);
+    } finally {
+      setPerformanceLoading(false);
+    }
+  };
+
   const fetchEquityData = async () => {
     try {
       const res = await fetch("/api/trading/equity-history", {
@@ -136,6 +163,7 @@ export default function TradingPage() {
   useEffect(() => {
     fetchTradingData();
     fetchEquityData();
+    fetchPerformanceData();
 
     authenticatedFetch('/api/signals/top-picks?type=regular')
       .then(r => r.json())
@@ -174,7 +202,7 @@ export default function TradingPage() {
         body: JSON.stringify({ amount })
       });
       const data = await res.json();
-      if (data.status === "success") { showToast(data.message, 'success'); fetchTradingData(); fetchEquityData(); }
+      if (data.status === "success") { showToast(data.message, 'success'); fetchTradingData(); fetchEquityData(); fetchPerformanceData(); }
       else showToast(data.message || "Gagal melakukan topup", 'error');
     } catch { showToast("Kesalahan jaringan saat melakukan topup", 'error'); }
   };
@@ -198,7 +226,7 @@ export default function TradingPage() {
       });
       const data = await res.json();
       if (data.status === "error") showToast(data.message, 'error');
-      else { showToast(data.message || "Order berhasil ditempatkan", 'success'); fetchTradingData(); fetchEquityData(); }
+      else { showToast(data.message || "Order berhasil ditempatkan", 'success'); fetchTradingData(); fetchEquityData(); fetchPerformanceData(); }
     } catch { showToast("Kesalahan jaringan saat melakukan pembelian", 'error'); }
   };
 
@@ -210,7 +238,7 @@ export default function TradingPage() {
         body: JSON.stringify({ trade_id: tradeId, price, reason: "MANUAL" })
       });
       const data = await res.json();
-      if (data.status === "success") { showToast(`Berhasil menjual: ${data.message || ''}`, 'success'); fetchTradingData(); fetchEquityData(); }
+      if (data.status === "success") { showToast(`Berhasil menjual: ${data.message || ''}`, 'success'); fetchTradingData(); fetchEquityData(); fetchPerformanceData(); }
       else showToast(data.message || "Gagal melakukan penjualan", 'error');
     } catch { showToast("Kesalahan jaringan saat melakukan penjualan", 'error'); }
   };
@@ -223,7 +251,7 @@ export default function TradingPage() {
         body: JSON.stringify({ trade_id: tradeId })
       });
       const data = await res.json();
-      if (data.status === "success") { showToast(data.message || "Order berhasil dibatalkan", 'success'); fetchTradingData(); fetchEquityData(); }
+      if (data.status === "success") { showToast(data.message || "Order berhasil dibatalkan", 'success'); fetchTradingData(); fetchEquityData(); fetchPerformanceData(); }
       else showToast(data.message || "Gagal membatalkan order", 'error');
     } catch { showToast("Kesalahan jaringan saat membatalkan order", 'error'); }
   };
@@ -298,20 +326,50 @@ export default function TradingPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-text mb-2">Trading <span className="text-accent">Engine</span></h2>
-          <p className="text-secondary">Virtual Portfolio Validator — Uji strategi trading Anda dengan modal virtual secara real-time.</p>
+      
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-text mb-2">Trading <span className="text-accent">Engine</span></h2>
+            <p className="text-secondary">Virtual Portfolio Validator — Uji strategi trading Anda dengan modal virtual secara real-time.</p>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={handleCheckTpsl} className="px-4 py-2.5 bg-indigo-600 hover:bg-accent text-text font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+              <DoubleArrowUpIcon className="w-4 h-4" /> Cek TP/SL
+            </button>
+            <button onClick={handleResetPortfolio} className="px-4 py-2.5 bg-loss/10 hover:bg-loss/20 border border-loss/20 text-loss font-semibold rounded-xl text-sm transition flex items-center gap-2">
+              <ReloadIcon className="w-4 h-4" /> Reset
+            </button>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <button onClick={handleCheckTpsl} className="px-4 py-2.5 bg-indigo-600 hover:bg-accent text-text font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-            <DoubleArrowUpIcon className="w-4 h-4" /> Cek TP/SL Sekarang
-          </button>
-          <button onClick={handleResetPortfolio} className="px-4 py-2.5 bg-loss/10 hover:bg-loss/20 border border-loss/20 text-loss font-semibold rounded-xl text-sm transition flex items-center gap-2">
-            <ReloadIcon className="w-4 h-4" /> Reset Portfolio
-          </button>
-        </div>
+        
+        {/* Sub-Navigation Tabs */}
+        {!tradingLoading && tradingData && tradingData.status !== 'not_setup' && (
+          <div className="flex gap-2 p-1 bg-white/5 border border-border rounded-xl w-fit">
+            <button
+              onClick={() => setActiveTab('desk')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                activeTab === 'desk' 
+                  ? 'bg-accent text-text shadow-md' 
+                  : 'text-secondary hover:text-text hover:bg-white/10'
+              }`}
+            >
+              Trading Desk
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                activeTab === 'analytics' 
+                  ? 'bg-accent text-text shadow-md' 
+                  : 'text-secondary hover:text-text hover:bg-white/10'
+              }`}
+            >
+              Performance Analytics
+            </button>
+          </div>
+        )}
       </div>
+
 
       {tradingLoading && !tradingData && (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -392,7 +450,12 @@ export default function TradingPage() {
               ))}
             </div>
 
-            {/* Topup + Equity Chart */}
+            
+            {/* Conditional Rendering based on Tabs */}
+            {activeTab === 'desk' ? (
+              <>
+                {/* Topup + Equity Chart */}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="bg-card border border-border rounded-3xl p-6 flex flex-col justify-between">
                 <div>
@@ -628,6 +691,76 @@ export default function TradingPage() {
                 {activePositions.length === 0 && <div className="col-span-2 py-10 text-center bg-white/[0.01] border border-dashed border-border rounded-2xl text-secondary text-sm">Tidak ada posisi aktif yang terbuka.</div>}
               </div>
             </div>
+
+            
+              </>
+            ) : (
+              /* ANALYTICS TAB CONTENT */
+              <div className="space-y-6 animate-fade-in">
+                {/* Performance Metrics Cards */}
+                {performanceLoading ? (
+                  <div className="py-10 text-center text-secondary">Memuat metrik analitik...</div>
+                ) : performanceData ? (
+                  <>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-card border border-border rounded-2xl p-5">
+                        <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">Total Trades</p>
+                        <p className="text-2xl font-black font-mono text-text">{performanceData.total_trades}</p>
+                        <div className="flex gap-2 mt-2 text-xs font-mono">
+                          <span className="text-[#22C55E]">{performanceData.winning_trades} Win</span>
+                          <span className="text-secondary">/</span>
+                          <span className="text-loss">{performanceData.losing_trades} Loss</span>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-card border border-border rounded-2xl p-5">
+                        <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">Win Rate</p>
+                        <p className={`text-2xl font-black font-mono ${performanceData.win_rate_pct >= 50 ? 'text-[#22C55E]' : 'text-loss'}`}>
+                          {performanceData.win_rate_pct?.toFixed(1)}%
+                        </p>
+                      </div>
+
+                      <div className="bg-card border border-border rounded-2xl p-5">
+                        <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">Profit Factor</p>
+                        <p className={`text-2xl font-black font-mono ${performanceData.profit_factor >= 1 ? 'text-[#22C55E]' : 'text-loss'}`}>
+                          {performanceData.profit_factor?.toFixed(2)}
+                        </p>
+                        <p className="text-[10px] text-secondary mt-1">Gross Profit / Gross Loss</p>
+                      </div>
+
+                      <div className="bg-card border border-border rounded-2xl p-5">
+                        <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">Avg Return / Trade</p>
+                        <p className={`text-2xl font-black font-mono ${performanceData.avg_return_pct >= 0 ? 'text-[#22C55E]' : 'text-loss'}`}>
+                          {performanceData.avg_return_pct >= 0 ? '+' : ''}{performanceData.avg_return_pct?.toFixed(2)}%
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="bg-card border border-border rounded-2xl p-5 bg-gradient-to-br from-[#22C55E]/5 to-transparent border-[#22C55E]/20">
+                        <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">Gross Profit (Total Untung)</p>
+                        <p className="text-2xl font-black font-mono text-[#22C55E]">Rp {performanceData.total_profit?.toLocaleString('id-ID')}</p>
+                      </div>
+                      <div className="bg-card border border-border rounded-2xl p-5 bg-gradient-to-br from-loss/5 to-transparent border-loss/20">
+                        <p className="text-[11px] text-secondary font-bold uppercase tracking-wider mb-2">Gross Loss (Total Rugi)</p>
+                        <p className="text-2xl font-black font-mono text-loss">Rp {performanceData.total_loss?.toLocaleString('id-ID')}</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-10 text-center text-secondary">Gagal memuat analitik.</div>
+                )}
+
+                {/* Big Equity Curve inside Analytics */}
+                <div className="mt-8">
+                  <h3 className="text-lg font-bold text-text mb-4">Grafik Pertumbuhan Portfolio (Equity Curve)</h3>
+                  <div className="h-[280px]">
+                    <CustomEquityChart points={equityData?.points || []} />
+                  </div>
+                </div>
+
+                </div>
+            )}
 
             {/* Closed Trades */}
             <div>

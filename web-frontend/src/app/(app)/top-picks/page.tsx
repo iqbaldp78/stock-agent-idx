@@ -73,7 +73,7 @@ const getBrokerColorClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
   const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
 
   if (foreign.includes(code)) return "text-red-400 font-extrabold";
   if (retail.includes(code)) return "text-green-400 font-extrabold";
@@ -85,7 +85,7 @@ const getBrokerBgClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
   const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
 
   if (foreign.includes(code)) return "bg-red-500/10 text-red-400 border-red-500/25";
   if (retail.includes(code)) return "bg-green-500/10 text-green-400 border-green-500/25";
@@ -97,7 +97,7 @@ const getBrokerTitle = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
   const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
 
   if (foreign.includes(code)) return "Broker Asing (Foreign)";
   if (retail.includes(code)) return "Broker Ritel (Retail)";
@@ -114,7 +114,7 @@ const brokerNames: Record<string, string> = {
   DR: "RHB Sekuritas", FS: "Reliance", HD: "KGI Sekuritas", XL: "Ajaib Sekuritas", 
   XC: "Stockbit", AZ: "Sucor Sekuritas", AT: "Phintraco", SQ: "BCA Sekuritas", 
   LG: "Trimegah", DH: "Sinarmas", MG: "Semesta Indovest", YJ: "Lotus Andalan", 
-  HP: "Henan Putihrai", CD: "Mega Capital", KI: "Ciptadana", RF: "Buana Capital", 
+  HP: "Henan Putihrai", CD: "Mega Capital", KI: "Ciptadana", BQ: "Ciptadana", RF: "Buana Capital", 
   SS: "Supra Broker", EP: "MNC Sekuritas", BS: "Victoria Sekuritas", OK: "Net Sekuritas", 
   EL: "Evergreen", GR: "Panin Sekuritas", IF: "Samuel Sekuritas", YB: "Jasa Utama", 
   PO: "Pilarmas Investindo"
@@ -300,18 +300,24 @@ export default function TopPicksPage() {
             {/* Fair Value Details */}
             {selectedStock.fair_value_details && (
               <div className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 mb-8 hover:bg-white/5 transition duration-300">
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-border">
-                  <div className="flex items-center gap-2 text-base font-semibold text-text">
-                    <span>💰 Fair Value:</span>
-                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${selectedStock.fair_value_details.valuation_label?.includes('UNDERVALUED') ? 'bg-profit shadow-[0_0_10px_rgba(34,197,94,0.5)]' : selectedStock.fair_value_details.valuation_label?.includes('OVERVALUED') ? 'bg-loss shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-warning shadow-[0_0_10px_rgba(245,158,11,0.5)]'}`}></span>
-                    <span className="font-bold text-profit">Rp {(selectedStock.fair_value_details.fair_value_base || selectedStock.fair_value_details.fair_value || 0).toLocaleString('id-ID')}</span>
-                    <span className="text-secondary">|</span>
-                    <span className="text-secondary">Upside:</span>
-                    <span className={`font-mono font-bold ${selectedStock.fair_value_details.upside_pct >= 0 ? 'text-profit' : 'text-loss'}`}>
-                      {selectedStock.fair_value_details.upside_pct >= 0 ? '+' : ''}{selectedStock.fair_value_details.upside_pct?.toFixed(2)}%
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-border">
+                  <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base font-semibold text-text">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span>💰</span>
+                      <span className="text-secondary">Fair Value:</span>
+                      <span className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${selectedStock.fair_value_details.valuation_label?.includes('UNDERVALUED') ? 'bg-profit shadow-[0_0_10px_rgba(34,197,94,0.5)]' : selectedStock.fair_value_details.valuation_label?.includes('OVERVALUED') ? 'bg-loss shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-warning shadow-[0_0_10px_rgba(245,158,11,0.5)]'}`}></span>
+                      <span className="font-bold text-profit">Rp {(selectedStock.fair_value_details.fair_value_base || selectedStock.fair_value_details.fair_value || 0).toLocaleString('id-ID')}</span>
                     </span>
-                    <span className="text-secondary">|</span>
-                    <span className="text-secondary font-bold uppercase tracking-wider text-xs bg-white/5 px-2.5 py-1 rounded-md border border-border">
+                    <span className="text-secondary hidden sm:inline">|</span>
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <span className="text-secondary">Upside:</span>
+                      <span className={`font-mono font-bold ${selectedStock.fair_value_details.upside_pct >= 0 ? 'text-profit' : 'text-loss'}`}>
+                        {selectedStock.fair_value_details.upside_pct >= 0 ? '+' : ''}{selectedStock.fair_value_details.upside_pct?.toFixed(2)}%
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center shrink-0">
+                    <span className="text-secondary font-bold uppercase tracking-wider text-xs bg-white/5 px-2.5 py-1 rounded-md border border-border shrink-0">
                       {selectedStock.fair_value_details.valuation_label?.replace('_', ' ')} ({selectedStock.fair_value_details.confidence})
                     </span>
                   </div>
@@ -345,6 +351,41 @@ export default function TopPicksPage() {
                 )}
               </div>
             )}
+            
+            {/* ML Prediction Details */}
+            <div className="bg-card border border-border rounded-2xl p-6 mb-8">
+              <h4 className="text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2">
+                <span>🤖</span> ML Prediction
+              </h4>
+              <div className="flex items-center gap-4 flex-wrap">
+                {selectedStock.ml_prediction ? (
+                  <>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-secondary uppercase font-bold tracking-wider mb-1">Signal</span>
+                      <span className={`font-mono text-lg font-bold px-3 py-1 rounded-lg ${
+                        selectedStock.ml_prediction.signal === 'STRONG BUY' ? 'bg-profit/20 text-profit' : 
+                        selectedStock.ml_prediction.signal === 'BUY' ? 'bg-profit/10 text-profit' : 
+                        selectedStock.ml_prediction.signal === 'AVOID' ? 'bg-loss/10 text-loss' : 'bg-secondary/10 text-secondary'
+                      }`}>
+                        {selectedStock.ml_prediction.signal}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-secondary uppercase font-bold tracking-wider mb-1">Win Prob. (1D)</span>
+                      <span className="font-mono text-lg font-bold text-text">
+                        {selectedStock.ml_prediction.pred_prob ? `${selectedStock.ml_prediction.pred_prob}%` : '-'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-secondary uppercase font-bold tracking-wider mb-1">Confidence</span>
+                      <span className="font-mono text-lg font-bold text-text">{selectedStock.ml_prediction.confidence || '-'}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-secondary font-mono">-</div>
+                )}
+              </div>
+            </div>
 
             {/* Price Projections */}
             {selectedStock.predictions && Object.keys(selectedStock.predictions).length > 0 && (

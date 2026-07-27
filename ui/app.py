@@ -2331,12 +2331,245 @@ elif page == "📈 IHSG Predictor":
 # === PAGE: ML Validation ===
 
 elif page == "🤖 ML Validation":
-    st.title("🤖 ML Validation (Multi-Day)")
-    st.caption("Menampilkan hasil akurasi model LightGBM dari `scripts/train_multiday_model.py`")
+    st.title("🤖 ML Validation (Multi-Day & Live Predictions)")
+    
+    tab_live, tab_nextday, tab_backtest, tab_sim, tab_candle = st.tabs([
+        "🔴 Live Predictions", 
+        "🔮 Next-Day Predictions", 
+        "🧪 Backtest Metrics", 
+        "💸 Trading Simulator",
+        "🕯️ Candlestick Screener"
+    ])
+    
+    with tab_nextday:
+        st.header("🔮 Prediksi ML Hari Perdagangan Berikutnya (Next-Day)")
+        st.caption("Memprediksi pergerakan harga saham untuk hari bursa berikutnya berdasarkan penutupan bursa terakhir (EOD). Hasil otomatis tersimpan di Database.")
+        
+        from scripts.cron_ml_predict import get_next_trading_day, run_ml_prediction
+        from db import SessionLocal
+        from db.models import MlPredictionLog
+        import pandas as pd
+        
+        default_next_dt = get_next_trading_day()
+        
+        col_nd1, col_nd2, col_nd3 = st.columns([2, 2, 2])
+        with col_nd1:
+            sel_date = st.date_input("Target Trade Date", value=default_next_dt)
+        with col_nd2:
+            min_prob_filter = st.slider("Min. 1D Prob (%)", min_value=40.0, max_value=95.0, value=50.0, step=1.0)
+        with col_nd3:
+            signal_filter = st.selectbox("Filter Sinyal", ["Semua Sinyal", "Hanya BUY / STRONG BUY", "Hanya STRONG BUY"])
+            
+        col_btn_nd1, col_btn_nd2 = st.columns([2, 4])
+        with col_btn_nd1:
+            if st.button("🚀 Run & Save Next-Day Predictions", type="primary"):
+                with st.spinner(f"Menjalankan ML MultiDayPredictor untuk target {sel_date.strftime('%Y-%m-%d')}..."):
+                    count = run_ml_prediction(target_date=sel_date)
+                    st.success(f"✅ Prediksi berhasil dihitung & disimpan ke DB ({count} ticker untuk {sel_date})!")
+                    st.rerun()
+                    
+        st.divider()
+        
+        session = SessionLocal()
+        try:
+            next_logs = session.query(MlPredictionLog).filter(MlPredictionLog.trade_date == sel_date).order_by(MlPredictionLog.ticker).all()
+            if next_logs:
+                pivot_dict = {}
+                for l in next_logs:
+                    key = l.ticker
+                    if key not in pivot_dict:
+                        pivot_dict[key] = {
+                            "Ticker": l.ticker,
+                            "Trade Date": str(l.trade_date),
+                            "1D Prob (%)": "-",
+                            "3D Prob (%)": "-",
+                            "5D Prob (%)": "-",
+                            "7D Prob (%)": "-",
+                            "Sinyal 1D": "HOLD",
+                            "Target Price (1D)": "-"
+                        }
+                    
+                    raw_prob = float(l.pred_return_pct) if l.pred_return_pct is not None else 0.0
+                    prob_pct = raw_prob * 100.0 if raw_prob <= 1.0 else raw_prob
+                    prob_str = f"{prob_pct:.2f}%"
+                    
+                    if l.horizon == "1d":
+                        pivot_dict[key]["1D Prob (%)"] = prob_str
+                        if prob_pct >= 55.0:
+                            pivot_dict[key]["Sinyal 1D"] = "🔥 STRONG BUY"
+                        elif prob_pct >= 51.0:
+                            pivot_dict[key]["Sinyal 1D"] = "🟢 BUY"
+                        elif prob_pct <= 48.0:
+                            pivot_dict[key]["Sinyal 1D"] = "🔴 AVOID"
+                        else:
+                            pivot_dict[key]["Sinyal 1D"] = "🟡 HOLD"
+                            
+                        if l.pred_price:
+                            pivot_dict[key]["Target Price (1D)"] = f"Rp {float(l.pred_price):,.0f}"
+                            
+                    elif l.horizon == "3d":
+                        pivot_dict[key]["3D Prob (%)"] = prob_str
+                    elif l.horizon == "5d":
+                        pivot_dict[key]["5D Prob (%)"] = prob_str
+                    elif l.horizon == "7d":
+                        pivot_dict[key]["7D Prob (%)"] = prob_str
+                
+                df_next = pd.DataFrame(list(pivot_dict.values()))
+                
+                def get_prob_num(val):
+                    try:
+                        return float(str(val).replace("%", ""))
+                    except:
+                        return 0.0
+                        
+                df_next["prob_num"] = df_next["1D Prob (%)"].apply(get_prob_num)
+                df_next = df_next[df_next["prob_num"] >= min_prob_filter]
+                
+                if signal_filter == "Hanya BUY / STRONG BUY":
+                    df_next = df_next[df_next["Sinyal 1D"].isin(["🔥 STRONG BUY", "🟢 BUY"])]
+                elif signal_filter == "Hanya STRONG BUY":
+                    df_next = df_next[df_next["Sinyal 1D"] == "🔥 STRONG BUY"]
+                    
+                df_next = df_next.sort_values(by="prob_num", ascending=False).drop(columns=["prob_num"])
+                
+                if not df_next.empty:
+                    st.dataframe(df_next, use_container_width=True, hide_index=True)
+                    
+                    csv = df_next.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="📥 Download CSV Hasil Prediksi Next-Day",
+                        data=csv,
+                        file_name=f"ml_nextday_predictions_{sel_date}.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.warning("Tidak ada data prediksi yang memenuhi kriteria filter.")
+            else:
+                st.info(f"Belum ada data prediksi tersimpan di DB untuk tanggal target {sel_date}. Klik tombol **🚀 Run & Save Next-Day Predictions** di atas untuk membuat prediksi baru.")
+        except Exception as e:
+            st.error(f"Gagal membaca data dari DB: {e}")
+        finally:
+            session.close()
 
-    import os
-    import json
-    import pandas as pd
+    with tab_live:
+        st.header("🔮 Prediksi ML Hari Ini")
+        
+        # Tambahan Tombol Validasi Manual
+        col_btn1, col_btn2 = st.columns([1, 4])
+        with col_btn1:
+            if st.button("🔄 Validasi Manual EOD", type="primary"):
+                with st.spinner("Menjalankan skrip cron_ml_validate.py..."):
+                    import subprocess
+                    result = subprocess.run(
+                        ["python", "scripts/cron_ml_validate.py"],
+                        capture_output=True,
+                        text=True
+                    )
+                    if result.returncode == 0:
+                        st.success("✅ Validasi EOD selesai dijalankan!")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Error: {result.stderr}")
+                        
+        st.caption("Hasil prediksi Cron Job Pagi (06:00) yang belum atau sudah divalidasi Cron Sore (18:00)")
+        
+        st.info("**Cara Membaca Angka Probabilitas (Prob):**\n"
+                "- **1D Prob:** Peluang harga naik > 0.2% besok (Cocok untuk Day Trading / ODT)\n"
+                "- **3D Prob:** Peluang harga naik > 1.0% dlm 3 hari bursa (Cocok untuk Swing Pendek)\n"
+                "- **5D Prob:** Peluang harga naik > 1.5% dlm 5 hari bursa\n"
+                "- **7D Prob:** Peluang harga naik > 2.0% dlm 7 hari bursa\n"
+                "\n*Makin mendekati 100%, makin kuat keyakinan mesin ML bahwa saham ini akan hijau.*")
+        
+        from db import SessionLocal
+        from db.models import MlPredictionLog
+        import pandas as pd
+        
+        session = SessionLocal()
+        try:
+            logs = session.query(MlPredictionLog).order_by(MlPredictionLog.trade_date.desc(), MlPredictionLog.ticker).limit(2000).all()
+            if logs:
+                # Pivot data so that 1 ticker = 1 row per date
+                pivot_dict = {}
+                for l in logs:
+                    key = (l.trade_date, l.ticker)
+                    if key not in pivot_dict:
+                        pivot_dict[key] = {
+                            "Trade Date": l.trade_date,
+                            "Ticker": l.ticker,
+                            "Prediksi Mesin": "-",
+                            "1D Prob (%)": "-",
+                            "Val 1D": "⏳",
+                            "3D Prob (%)": "-",
+                            "Val 3D": "⏳",
+                            "5D Prob (%)": "-",
+                            "Val 5D": "⏳",
+                            "7D Prob (%)": "-",
+                            "Val 7D": "⏳"
+                        }
+                    
+                    prob_str = f"{l.pred_return_pct * 100:.2f}%"
+                    status_icon = "⏳"
+                    if l.is_correct is not None:
+                        status_icon = "✅" if l.is_correct else "❌"
+                    
+                    if l.horizon == "1d":
+                        pivot_dict[key]["1D Prob (%)"] = prob_str
+                        pivot_dict[key]["Val 1D"] = status_icon
+                        # 1D Prob dijadikan acuan arah utama
+                        if l.pred_return_pct >= 0.50:
+                            pivot_dict[key]["Prediksi Mesin"] = "📈 NAIK"
+                        else:
+                            pivot_dict[key]["Prediksi Mesin"] = "📉 TURUN"
+                            
+                    elif l.horizon == "3d":
+                        pivot_dict[key]["3D Prob (%)"] = prob_str
+                        pivot_dict[key]["Val 3D"] = status_icon
+                    elif l.horizon == "5d":
+                        pivot_dict[key]["5D Prob (%)"] = prob_str
+                        pivot_dict[key]["Val 5D"] = status_icon
+                    elif l.horizon == "7d":
+                        pivot_dict[key]["7D Prob (%)"] = prob_str
+                        pivot_dict[key]["Val 7D"] = status_icon
+
+                df_live = pd.DataFrame(list(pivot_dict.values()))
+                
+                # Urutkan berdasarkan 1D Prob tertinggi secara default
+                # Bersihkan '%' untuk sorting
+                def extract_prob(val):
+                    try:
+                        return float(val.replace("%", ""))
+                    except:
+                        return 0.0
+                        
+                df_live["sort_val"] = df_live["1D Prob (%)"].apply(extract_prob)
+                df_live = df_live.sort_values(by=["Trade Date", "sort_val"], ascending=[False, False]).drop(columns=["sort_val"])
+                    
+                st.dataframe(df_live, use_container_width=True, hide_index=True)
+                
+                # Hit Rate Stats
+                st.subheader("Statistik Hit Rate (Per Row Tervalidasi)")
+                # Hitung berdasarkan data asli untuk akurasi persis
+                val_logs = [l for l in logs if l.is_correct is not None]
+                if val_logs:
+                    benar = sum(1 for l in val_logs if l.is_correct)
+                    total = len(val_logs)
+                    st.metric("Akurasi Real-Time", f"{(benar/total)*100:.1f}%", f"{benar} benar dari {total} prediksi divalidasi")
+                else:
+                    st.info("Belum ada data yang divalidasi oleh Cron EOD 23:00.")
+            else:
+                st.warning("Belum ada log prediksi di database. Cron mungkin belum berjalan hari ini.")
+        except Exception as e:
+            st.error(f"Gagal mengambil data live: {e}")
+        finally:
+            session.close()
+
+    with tab_backtest:
+        st.header("🧪 Metrik Backtest Model")
+        st.caption("Menampilkan hasil akurasi model LightGBM dari `scripts/train_multiday_model.py`")
+
+        import os
+        import json
+        import pandas as pd
 
     meta_path = "models/checkpoints/lgbm_multiday_meta.json"
     if os.path.exists(meta_path):
@@ -2430,6 +2663,271 @@ elif page == "🤖 ML Validation":
             st.error(f"Gagal membaca file JSON meta model: {str(e)}")
     else:
         st.warning("⚠️ File hasil training multiday (`models/checkpoints/lgbm_multiday_meta.json`) tidak ditemukan. Silakan jalankan `python scripts/train_multiday_model.py --all`.")
+
+    with tab_sim:
+        st.header("💸 Trading Simulator (ML Driven)")
+        st.caption("Mengeksekusi backtest P&L dengan sinyal dari model AI yang sudah dilatih, hasil otomatis tersimpan di Database.")
+        
+        # Section History Sim
+        st.markdown("### 🗄️ Histori Simulasi (Tersimpan di Database)")
+        try:
+            from db import SessionLocal
+            from db.models import BacktestSession, BacktestResult # type: ignore
+            db = SessionLocal()
+            sessions = db.query(BacktestSession).order_by(BacktestSession.run_date.desc()).limit(5).all()
+            if not sessions:
+                st.info("Belum ada histori simulasi.")
+            else:
+                for s in sessions:
+                    res_count = db.query(BacktestResult).filter(BacktestResult.session_id == s.id).count()
+                    date_range = f" | Periode: {s.start_date} s/d {s.end_date}" if getattr(s, 'start_date', None) and getattr(s, 'end_date', None) else ""
+                    with st.expander(f"📁 ID {s.id} | {s.run_date.strftime('%d %b %Y %H:%M')} | Horizon: {s.horizon}{date_range} | Tickers: {res_count} | P&L: Rp {s.total_pnl:,.0f}", expanded=False):
+                        # get details
+                        results = db.query(BacktestResult).filter(BacktestResult.session_id == s.id).all()
+                        for r in results:
+                            st.markdown(f"**{r.ticker}** - P&L: Rp {r.total_pnl:,.0f} (Win: {r.win_rate}%) | Trades: {r.total_trades}")
+                            if r.trades_json:
+                                import pandas as pd
+                                df = pd.DataFrame(r.trades_json)
+                                if not df.empty:
+                                    st.dataframe(df[['buy_date', 'prob', 'buy_price', 'sell_date', 'sell_price', 'pnl_pct']], use_container_width=True)
+            db.close()
+        except Exception as e:
+            st.error(f"Gagal memuat histori DB: {e}")
+                
+        st.divider()
+        col_sim1, col_sim2, col_sim3 = st.columns([2, 1, 1])
+        with col_sim1:
+            sim_ticker = st.text_input("Ticker (Pisahkan koma, atau 'ALL' untuk semua universe)", value="AMMN, BRPT")
+        with col_sim2:
+            sim_horizon = st.selectbox("Horizon", ["1d", "3d", "5d", "7d"], index=0)
+        with col_sim3:
+            sim_threshold = st.number_input("Min. Prob (%)", min_value=40.0, max_value=99.0, value=51.0, step=1.0)
+            
+        col_sim4, col_sim5, col_sim6 = st.columns([2, 1, 1])
+        with col_sim4:
+            sim_capital = st.number_input("Initial Capital", value=100_000_000, step=1_000_000)
+        with col_sim5:
+            sim_start_date = st.date_input("Start Date", value=datetime(2026, 1, 1).date())
+        with col_sim6:
+            sim_end_date = st.date_input("End Date", value=datetime(2026, 7, 24).date())
+            
+        if not st.session_state.get("sim_running", False):
+            if st.button("🚀 Run Simulator", type="primary"):
+                import subprocess
+                st.session_state["sim_running"] = True
+                
+                # Setup output file for background job
+                import tempfile
+                out_fd, out_path = tempfile.mkstemp(suffix=".txt", prefix="sim_out_")
+                st.session_state["sim_out_path"] = out_path
+                os.close(out_fd)
+                
+                cmd = [
+                    sys.executable, "scripts/backtest_ml_trading.py",
+                    "--ticker", sim_ticker.upper(),
+                    "--horizon", sim_horizon,
+                    "--threshold", str(sim_threshold / 100.0),
+                    "--start", sim_start_date.strftime("%Y-%m-%d"),
+                    "--end", sim_end_date.strftime("%Y-%m-%d"),
+                    "--capital", str(sim_capital)
+                ]
+                with open(out_path, "w") as f:
+                    p = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
+                
+                st.session_state["sim_pid"] = p.pid
+                st.rerun()
+        else:
+            # Fragment to auto-refresh background status
+            @st.fragment(run_every="2s")
+            def render_sim_status():
+                pid = st.session_state.get("sim_pid")
+                is_alive = False
+                if pid:
+                    try:
+                        os.kill(pid, 0)
+                        is_alive = True
+                        try:
+                            with open(f"/proc/{pid}/stat", "r") as f:
+                                stat_line = f.read()
+                                if len(stat_line.split()) >= 3 and stat_line.split()[2] == 'Z':
+                                    is_alive = False
+                        except Exception:
+                            pass
+                    except OSError:
+                        pass
+                
+                if is_alive:
+                    st.info("⏳ Simulator sedang berjalan di background... (Auto-refresh tiap 2 detik)")
+                    if st.button("🛑 Batalkan Simulator"):
+                        try:
+                            import signal
+                            os.killpg(os.getpgid(pid), signal.SIGTERM)
+                        except Exception:
+                            pass
+                        st.session_state["sim_running"] = False
+                        st.rerun()
+                else:
+                    st.success("✅ Simulasi Selesai!")
+                    st.session_state["sim_running"] = False
+                    
+                    # Read output
+                    out_path = st.session_state.get("sim_out_path")
+                    if out_path and os.path.exists(out_path):
+                        with open(out_path, "r") as f:
+                            output = f.read()
+                        st.session_state["sim_last_output"] = output
+                        # st.rerun() dipanggil agar form state bisa keluar dari render_sim_status
+                        st.rerun()
+
+            render_sim_status()
+            
+        # Tampilkan hasil kalau sudah beres
+        output = st.session_state.get("sim_last_output")
+        if output and not st.session_state.get("sim_running", False):
+            if "BACKTEST RESULT" in output or "MULTI-TICKER SUMMARY" in output:
+                # Parsing the output to make it native Streamlit UI
+                lines = output.split('\n')
+                summary_lines = []
+                table_lines = []
+                multi_ticker_summary = []
+                is_table = False
+                is_multi = False
+                
+                for line in lines:
+                    if "MULTI-TICKER SUMMARY" in line:
+                        is_multi = True
+                        
+                    if is_multi:
+                        if "Total Tickers" in line or "Total Trades" in line or "Initial Port" in line or "Final Port" in line or "Net Port P&L" in line:
+                            multi_ticker_summary.append(line)
+                            
+                    if "buy_date" in line and "sell_date" in line:
+                        is_table = True
+                        table_lines.append("\n" + line) # Add spacing between tables
+                    elif is_table:
+                        if line.strip() and not line.startswith("---") and not line.startswith("===") and "Trades   :" not in line and "Net P&L  :" not in line:
+                            table_lines.append(line)
+                        elif line.startswith("---") and len(line.strip().split()) == 3: # "--- AMMN ---"
+                            table_lines.append(line)
+                            is_table = False
+                            
+                    if "BACKTEST RESULT" not in line and "===" not in line and not is_multi and not is_table:
+                        if line.strip() and "OHLCV" not in line and "Loaded IHSG" not in line and "Running ML" not in line and "cache hit" not in line and not line.startswith("---") and "Trades   :" not in line and "Net P&L  :" not in line:
+                            summary_lines.append(line)
+                            
+                if multi_ticker_summary:
+                    st.markdown("### 🏆 Total Portfolio (Gabungan)")
+                    for s_line in multi_ticker_summary:
+                        if ":" in s_line:
+                            k, v = s_line.split(":", 1)
+                            st.markdown(f"**{k.strip()}**: {v.strip()}")
+                            
+                    st.markdown("### 📊 Ringkasan per Ticker")
+                    for s_line in summary_lines:
+                        if "---" in s_line:
+                            st.markdown(f"**{s_line.strip()}**")
+                        else:
+                            st.text(s_line.strip())
+                else:
+                    st.markdown("### 📊 Ringkasan Hasil")
+                    for s_line in summary_lines:
+                        if ":" in s_line:
+                            k, v = s_line.split(":", 1)
+                            st.markdown(f"**{k.strip()}**: {v.strip()}")
+                
+                if table_lines and not multi_ticker_summary:
+                    st.markdown("### 📜 Histori Transaksi")
+                    st.code('\n'.join(table_lines), language="text")
+            else:
+                st.warning("Tidak ada hasil, pastikan ticker ada dan model terlatih.")
+                if output.strip():
+                    with st.expander("Show Logs"):
+                        st.text(output)
+
+    with tab_candle:
+        st.header("🕯️ Candlestick Pattern Screener")
+        st.caption("Memindai seluruh 64 saham Universe untuk menemukan pola price action yang terbentuk di penutupan hari ini, dan memfilter pola dengan probabilitas win-rate tertinggi berdasar historis BEI.")
+        
+        st.markdown("---")
+        
+        # Manual Screen Button
+        col_c1, col_c2 = st.columns([1, 4])
+        with col_c1:
+            if st.button("🔍 Jalankan Screener Sekarang", key="btn_run_screener", type="primary"):
+                with st.spinner("Memindai data Candlestick (±15 detik)..."):
+                    import subprocess
+                    import os
+                    script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "screener_candlestick.py")
+                    try:
+                        res = subprocess.run(["python", script_path, "--save-db"], capture_output=True, text=True, timeout=60)
+                        if res.returncode == 0:
+                            st.success("Screener selesai berjalan & data tersimpan ke database!")
+                        else:
+                            st.error(f"Terjadi error: {res.stderr}")
+                    except Exception as e:
+                        st.error(f"Error eksekusi script: {e}")
+        
+        with col_c2:
+            st.info("💡 Screener secara otomatis akan berjalan setiap hari bursa pada pukul **18:00 WIB** via background Cronjob.")
+            
+        st.markdown("### 🗄️ Database Sinyal Pola (Hari Ini)")
+        
+        # Ambil data hari ini dari database
+        try:
+            import pandas as pd
+            from datetime import date
+            today_str = date.today().strftime("%Y-%m-%d")
+            
+            query = f"""
+            SELECT ticker, pattern_name, signal_direction, win_rate, context_note 
+            FROM candlestick_signals 
+            WHERE scan_date = '{today_str}'
+            ORDER BY win_rate DESC
+            """
+            conn = get_db_conn()
+            df_signals = pd.read_sql(query, conn)
+            conn.close()
+            
+            if len(df_signals) > 0:
+                # Split into bullish & bearish
+                df_bull = df_signals[df_signals['signal_direction'].str.contains('BULL')].copy()
+                df_bear = df_signals[df_signals['signal_direction'].str.contains('BEAR')].copy()
+                
+                col_sum1, col_sum2, col_sum3 = st.columns(3)
+                col_sum1.metric("Total Pola Terdeteksi", f"{len(df_signals)} Sinyal")
+                col_sum2.metric("Bullish Reversal", f"{len(df_bull)} Sinyal")
+                col_sum3.metric("Bearish Reversal", f"{len(df_bear)} Sinyal")
+                
+                col_t1, col_t2 = st.columns(2)
+                
+                with col_t1:
+                    st.markdown("#### 🎯 Indikasi Bullish")
+                    if len(df_bull) > 0:
+                        st.dataframe(
+                            df_bull.style.map(lambda x: "color: #22c55e", subset=['signal_direction'])
+                                   .format({'win_rate': '{:.1f}%'}), 
+                            use_container_width=True, hide_index=True
+                        )
+                    else:
+                        st.warning("Tidak ada pola candlestick Bullish yang kuat hari ini.")
+                        
+                with col_t2:
+                    st.markdown("#### ⚠️ Indikasi Bearish")
+                    if len(df_bear) > 0:
+                        st.dataframe(
+                            df_bear.style.map(lambda x: "color: #ef4444", subset=['signal_direction'])
+                                   .format({'win_rate': '{:.1f}%'}), 
+                            use_container_width=True, hide_index=True
+                        )
+                    else:
+                        st.success("Tidak ada pola candlestick Bearish yang mengancam hari ini.")
+                        
+            else:
+                st.info(f"Belum ada data pola candlestick untuk tanggal **{today_str}**. Silakan klik tombol 'Jalankan Screener' di atas jika market sudah tutup.")
+                
+        except Exception as e:
+            st.error(f"Gagal mengambil data dari database: {str(e)}")
 
 # === PAGE: Backtest ===
 

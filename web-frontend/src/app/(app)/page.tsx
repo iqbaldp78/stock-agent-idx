@@ -267,7 +267,7 @@ export default function DashboardPage() {
             <h3 className={`text-3xl font-bold font-mono ${stats.market_outlook === 'Bullish' ? 'text-profit' : stats.market_outlook === 'Bearish' ? 'text-loss' : 'text-secondary'}`}>
               {stats.market_outlook}
             </h3>
-            <p className="text-sm text-secondary mt-1">Sinyal saham utama</p>
+            <p className="text-sm text-secondary mt-1">Sinyal makro ekonomi Indonesia</p>
           </CardContent>
         </Card>
 

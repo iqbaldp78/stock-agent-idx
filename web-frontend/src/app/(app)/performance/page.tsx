@@ -371,16 +371,16 @@ export default function AIPerformancePage() {
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 shadow-lg relative">
           <p className="text-sm text-secondary mb-1 flex items-center gap-1 group/tooltip relative">
-            Win Rate
+            AI Win Rate
             <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/10 text-[9px] cursor-help font-bold">?</span>
             <span className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-border bg-background p-3 text-xs text-secondary opacity-0 shadow-2xl transition-opacity group-hover/tooltip:opacity-100 z-50 leading-relaxed normal-case font-normal">
-              <strong className="text-text block mb-1">Win Rate</strong>
-              Persentase keberhasilan sinyal rekomendasi atau transaksi yang menghasilkan profit dibanding total keseluruhan sinyal/transaksi.
-              <span className="block mt-1.5 text-accent font-semibold">Sumber: Akumulasi seluruh riwayat transaksi virtual dan validasi rekomendasi AI.</span>
+              <strong className="text-text block mb-1">AI Win Rate</strong>
+              Persentase keberhasilan AI dalam menentukan rekomendasi yang ditutup dengan profit.
+              <span className="block mt-1.5 text-accent font-semibold">Sumber: Tabel Validasi (bukan paper trading).</span>
             </span>
           </p>
-          <h3 className="text-2xl font-bold text-text">{(metrics?.win_rate ?? summary.win_rate).toFixed(2)}%</h3>
-          <p className="mt-1 text-xs text-secondary">{metrics?.total_trades || summary.total_signals} trade / validasi</p>
+          <h3 className="text-2xl font-bold text-text">{summary.win_rate.toFixed(2)}%</h3>
+          <p className="mt-1 text-xs text-secondary">{summary.total_signals} validasi terselesaikan</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 shadow-lg relative">
           <p className="text-sm text-secondary mb-1 flex items-center gap-1 group/tooltip relative">

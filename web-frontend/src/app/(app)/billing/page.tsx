@@ -11,7 +11,7 @@ import {
 } from '@radix-ui/react-icons';
 
 export default function BillingUpgradePage() {
-  const { isPro, setIsPro, showToast } = useApp();
+  const { isPro, setIsPro, showToast, logout } = useApp();
   const [loading, setLoading] = useState(false);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'qris' | 'va'>('qris');
@@ -54,8 +54,11 @@ export default function BillingUpgradePage() {
         setIsPro(true);
         setCurrentTier('pro');
         localStorage.setItem('tier', 'pro');
-        showToast("Pembayaran berhasil diverifikasi! Tier Anda kini PRO ✨", "success");
+        showToast("Pembayaran berhasil diverifikasi! Mengalihkan ke halaman login...", "success");
         setShowPaymentDetails(false);
+        setTimeout(() => {
+          logout();
+        }, 1000);
       } else {
         showToast("Gagal memverifikasi pembayaran", "error");
       }

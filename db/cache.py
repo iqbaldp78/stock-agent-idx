@@ -38,6 +38,11 @@ def find_missing_dates(cached_df: pd.DataFrame, start_date: str, end_date: str) 
     """
     start = date.fromisoformat(start_date)
     end = date.fromisoformat(end_date)
+    today = date.today()
+    if end > today:
+        end = today
+    if start > end:
+        return []
     expected = set(_weekdays_between(start, end))
 
     if cached_df is None or cached_df.empty:

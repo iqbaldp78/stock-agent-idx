@@ -3,11 +3,15 @@ DB — Tracker
 Menyimpan hasil analisis ke PostgreSQL.
 """
 import json
+import logging
 from datetime import datetime
 import uuid
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from db import SessionLocal
 from db.models import AgentScore, DebateLog, Signal
+
+logger = logging.getLogger(__name__)
 
 
 def save_scores(run_date: datetime, scores: dict, composites: dict,
@@ -66,11 +70,26 @@ def save_debate_log(run_date: datetime, debate_log: list) -> None:
 
 
 def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: str | None = None, is_konglo: bool = False) -> None:
-    """Simpan final signals ke tabel signals."""
+    """Simpan final signals ke tabel signals. Jika data untuk (ticker, run_date, is_konglo) sudah ada, abaikan (jangan insert duplikat)."""
     db: Session = SessionLocal()
     try:
+        # Konversi run_date ke DATE supaya gampang dicek
+        run_date_only = run_date.date() if isinstance(run_date, datetime) else run_date
+        
         for pick in top_picks:
             ticker = pick["ticker"]
+            
+            # Cek apakah sudah ada record dengan ticker dan tanggal yang sama
+            existing_signal = db.query(Signal).filter(
+                Signal.ticker == ticker,
+                func.date(Signal.run_date) == run_date_only,
+                Signal.is_konglo == is_konglo
+            ).first()
+            
+            if existing_signal:
+                logger.info(f"Skipping insert for {ticker} on {run_date_only} (is_konglo={is_konglo}): already exists.")
+                continue
+                
             ticker_scores = scores.get(ticker, {})
             bandarm = ticker_scores.get("bandarm", {})
             price_analysis = bandarm.get("price_analysis", {})

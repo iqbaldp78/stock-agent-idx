@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Body, Query
+from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
@@ -36,6 +37,7 @@ def format_to_wib(dt):
 BROKER_NAMES = {
     "SS": "Shinhan Sekuritas",
     "KI": "Ciptadana Sekuritas",
+    "BQ": "Ciptadana Sekuritas",
     "IF": "Samuel Sekuritas",
     "BB": "Verdhana Sekuritas",
     "DH": "Sinarmas Sekuritas",
@@ -229,7 +231,6 @@ def get_performance_history():
                 SELECT p.check_date, s.ticker, s.signal, p.result, p.return_pct 
                 FROM performance p 
                 JOIN signals s ON p.signal_id = s.id 
-                WHERE p.result IN ('PROFIT', 'LOSS', 'HIT_TP1', 'HIT_TP2', 'HIT_TP3', 'HIT_TARGET_1', 'HIT_TARGET_2', 'HIT_SL')
                 ORDER BY p.check_date DESC LIMIT 100
             """)
             res = conn.execute(query).fetchall()
@@ -237,7 +238,7 @@ def get_performance_history():
                 "date": r[0].strftime("%Y-%m-%d") if r[0] else "",
                 "ticker": r[1],
                 "signal": r[2],
-                "result": "PROFIT" if r[3] in ('PROFIT', 'HIT_TP1', 'HIT_TP2', 'HIT_TP3', 'HIT_TARGET_1', 'HIT_TARGET_2') else "LOSS",
+                "result": "PROFIT" if r[3] in ('PROFIT', 'HIT_TP1', 'HIT_TP2', 'HIT_TP3', 'HIT_TARGET_1', 'HIT_TARGET_2') else ("LOSS" if r[3] in ('LOSS', 'HIT_SL') else r[3]),
                 "return_pct": float(r[4]) if r[4] else 0.0
             } for r in res]
             
@@ -251,16 +252,19 @@ def get_performance_history():
                     {"date": "2026-07-06", "ticker": "AMMN", "signal": "BUY", "result": "PROFIT", "return_pct": 8.7}
                 ]
 
-            total_signals = len(history)
-            winning_signals = sum(1 for row in history if row["result"] == "PROFIT")
-            losing_signals = sum(1 for row in history if row["result"] == "LOSS")
-            total_return_pct = sum(float(row.get("return_pct", 0) or 0) for row in history)
+            # Filter cuma yang udah jelas PROFIT atau LOSS untuk metrik statistik (yang OPEN jangan dihitung sebagai loss/win)
+            closed_history = [row for row in history if row["result"] in ("PROFIT", "LOSS")]
+            
+            total_signals = len(closed_history)
+            winning_signals = sum(1 for row in closed_history if row["result"] == "PROFIT")
+            losing_signals = sum(1 for row in closed_history if row["result"] == "LOSS")
+            total_return_pct = sum(float(row.get("return_pct", 0) or 0) for row in closed_history)
 
             best_pick = None
             worst_pick = None
-            if history:
-                best_row = max(history, key=lambda row: float(row.get("return_pct", 0) or 0))
-                worst_row = min(history, key=lambda row: float(row.get("return_pct", 0) or 0))
+            if closed_history:
+                best_row = max(closed_history, key=lambda row: float(row.get("return_pct", 0) or 0))
+                worst_row = min(closed_history, key=lambda row: float(row.get("return_pct", 0) or 0))
                 best_pick = {
                     "date": best_row["date"],
                     "ticker": best_row["ticker"],
@@ -277,14 +281,15 @@ def get_performance_history():
                 }
 
             current_streak = 0
-            for row in history:
+            for row in closed_history:
                 if row["result"] == "PROFIT":
                     current_streak += 1
                 else:
                     break
 
-            recent_window = history[:5]
+            recent_window = closed_history[:5]
             recent_win_count = sum(1 for row in recent_window if row["result"] == "PROFIT")
+            recent_win_rate = (recent_win_count / len(recent_window) * 100) if len(recent_window) > 0 else 0.0
             recent_total_return = sum(float(row.get("return_pct", 0) or 0) for row in recent_window)
 
             summary = {
@@ -309,20 +314,21 @@ def get_performance_history():
 def get_stats():
     try:
         with engine.connect() as conn:
-            # Get latest market outlook from ML prediction of the highest rank stock
+            # Get latest market outlook from ihsg_predictions table
             outlook_query = text("""
-                SELECT ml_prediction->>'signal' as outlook
-                FROM signals 
-                WHERE batch_id IS NOT NULL 
-                ORDER BY run_date DESC, rank ASC 
+                SELECT direction as outlook
+                FROM ihsg_predictions
+                ORDER BY run_date DESC, created_at DESC
                 LIMIT 1
             """)
             outlook_result = conn.execute(outlook_query).fetchone()
             outlook = outlook_result[0] if outlook_result and outlook_result[0] else "Neutral"
-            if outlook == "STRONG BUY" or outlook == "BUY":
+            if outlook.upper() == "BULLISH":
                 outlook = "Bullish"
-            elif outlook == "STRONG SELL" or outlook == "SELL":
+            elif outlook.upper() == "BEARISH":
                 outlook = "Bearish"
+            else:
+                outlook = outlook.capitalize()
 
             # Calculate win rate from performance table using actual result statuses
             perf_query = text("""
@@ -375,6 +381,7 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                            (price_prediction->'current_price')::numeric as current_price,
                            entry_reasoning,
                            price_prediction,
+
                            thesis,
                            fair_value,
                            bandar_avg_1m,
@@ -390,7 +397,8 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                            weight_mode,
                            broker_utama,
                            max_entry,
-                           rank
+                           rank,
+                           ml_prediction
                     FROM signals 
                     WHERE batch_id = :batch_id
                       AND is_konglo = TRUE
@@ -404,6 +412,7 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                            (price_prediction->'current_price')::numeric as current_price,
                            entry_reasoning,
                            price_prediction,
+
                            thesis,
                            fair_value,
                            bandar_avg_1m,
@@ -419,7 +428,8 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                            weight_mode,
                            broker_utama,
                            max_entry,
-                           rank
+                           rank,
+                           ml_prediction
                     FROM signals 
                     WHERE batch_id = :batch_id
                       AND (is_konglo IS FALSE OR is_konglo IS NULL)
@@ -504,6 +514,7 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                     "bandar_avg": float(bandar_avg_val) if bandar_avg_val else None,
                     "broker_true_cost": true_cost,
                     "broker_distributors": distributors,
+                    "ml_prediction": r[23] if isinstance(r[23], dict) else json.loads(r[23]) if r[23] and isinstance(r[23], str) else None,
                     "predictions": predictions,
                     "key_drivers": key_drivers,
                     "risks": risks,
@@ -580,33 +591,54 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
 
 
 @app.get("/api/bandarmologi/{ticker}")
-def get_bandarmologi_details(ticker: str):
+def get_bandarmologi_details(
+    ticker: str,
+    date_from: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
+    date_to: Optional[str] = Query(None, description="End date YYYY-MM-DD")
+):
     """
     Bandarmologi endpoint — return hasil agent analyze langsung (seperti Streamlit).
     Lebih sederhana, langsung menggunakan Stockbit real-time API.
     """
     ticker = ticker.upper()
     try:
+        from agents.bandarmologi import analyze
+        from datetime import datetime, timedelta
+        
+        # Fallback for 'latest' logic: if date_from and date_to are today, 
+        # and we don't get data, try yesterday. We do this by intercepting empty custom results.
+        # But even better: if date_from == date_to, we do it.
+        bandarm_res = analyze(ticker, date_from, date_to)
+        
+        # Fallback logic for latest/single-day queries
+        if date_from and date_from == date_to and bandarm_res.get("custom_window"):
+            cw = bandarm_res["custom_window"]
+            if not cw.get("top_accumulators") and not cw.get("top_distributors"):
+                # No data for today, let's try yesterday (only if it's today or a single day)
+                try:
+                    q_date = datetime.strptime(date_from, "%Y-%m-%d")
+                    # simple fallback: go back 1 day (up to 3 days to skip weekend if we want, but 1 day is start)
+                    # Let's loop up to 3 days back to find nearest trading day
+                    for i in range(1, 4):
+                        prev_date = (q_date - timedelta(days=i)).strftime("%Y-%m-%d")
+                        fallback_res = analyze(ticker, prev_date, prev_date)
+                        fw = fallback_res.get("custom_window")
+                        if fw and (fw.get("top_accumulators") or fw.get("top_distributors")):
+                            bandarm_res["custom_window"] = fw
+                            bandarm_res["custom_window"]["is_fallback"] = True
+                            bandarm_res["custom_window"]["fallback_date"] = prev_date
+                            break
+                except Exception as e:
+                    pass
+
         with engine.connect() as conn:
-            # Get all available tickers for switching
             tickers_res = conn.execute(text("SELECT DISTINCT ticker FROM broker_accumulation ORDER BY ticker")).fetchall()
             all_tickers = [t[0] for t in tickers_res]
 
-        # Call agent untuk ambil data fresh dari Stockbit
-        try:
-            from agents.bandarmologi import analyze as bandarm_analyze
-            bandarm_res = bandarm_analyze(ticker)
-        except Exception as e:
-            import traceback
-            print(f"Error calling bandarm_analyze in API: {e}")
-            print(traceback.format_exc())
-            raise HTTPException(status_code=500, detail=f"Error analyzing {ticker}: {str(e)}")
-
-        # Return hasil agent langsung
         return {
             "ticker": ticker,
             "all_tickers": all_tickers,
-            **bandarm_res  # Spread semua field dari agent result
+            **bandarm_res
         }
     except HTTPException:
         raise
@@ -803,6 +835,18 @@ def trading_reset(current_user: dict = Depends(get_current_user)):
     try:
         res = service.reset_wallet()
         return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        service.session.close()
+
+@app.get("/api/trading/performance")
+def get_trading_performance(current_user: dict = Depends(get_current_user)):
+    service = PaperTradingService()
+    service.user_id = current_user.get("user_id")
+    try:
+        res = service.get_performance_metrics()
+        return {"status": "success", "data": res}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -1575,6 +1619,71 @@ def get_ai_performance_metrics(current_user: dict = Depends(get_current_user)):
                 },
                 "ihsg_predictor": latest_ihsg
             }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/backtest/history")
+async def get_backtest_history(token_data: dict = Depends(get_current_user)):
+    try:
+        with engine.connect() as conn:
+            sessions_query = text('''
+                SELECT id, run_date, horizon, threshold, start_date, end_date, 
+                       initial_capital, final_capital, total_pnl, total_trades
+                FROM backtest_sessions
+                ORDER BY run_date DESC
+                LIMIT 10
+            ''')
+            sessions = conn.execute(sessions_query).fetchall()
+            
+            history = []
+            for s in sessions:
+                session_id = s[0]
+                
+                # Fetch per-ticker results for this session
+                results_query = text('''
+                    SELECT ticker, total_pnl, win_rate, total_trades, trades_json
+                    FROM backtest_results
+                    WHERE session_id = :session_id
+                    ORDER BY total_trades DESC, total_pnl DESC
+                ''')
+                results = conn.execute(results_query, {"session_id": session_id}).fetchall()
+                
+                tickers_data = []
+                total_wins = 0
+                total_trades = 0
+                for r in results:
+                    ticker_win_rate = float(r[2]) if r[2] is not None else 0.0
+                    ticker_trades = int(r[3]) if r[3] is not None else 0
+                    total_wins += (ticker_win_rate / 100.0) * ticker_trades
+                    total_trades += ticker_trades
+                    tickers_data.append({
+                        "ticker": r[0],
+                        "pnl": float(r[1]) if r[1] is not None else 0.0,
+                        "win_rate": ticker_win_rate,
+                        "trades_count": ticker_trades,
+                        "trades": r[4] if r[4] else []
+                    })
+                
+                session_win_rate = (total_wins / total_trades * 100) if total_trades > 0 else 0.0
+                
+                history.append({
+                    "id": session_id,
+                    "run_date": format_to_wib(s[1]),
+                    "horizon": s[2],
+                    "threshold": float(s[3]),
+                    "start_date": str(s[4]),
+                    "end_date": str(s[5]),
+                    "initial_capital": float(s[6]) / len(results) if len(results) > 0 else float(s[6]),
+                    "final_capital": float(s[7]),
+                    "total_pnl": float(s[8]),
+                    "total_trades": int(s[9]),
+                    "win_rate": session_win_rate,
+                    "tickers": tickers_data
+                })
+            
+            return {"status": "success", "data": history}
     except Exception as e:
         import traceback
         traceback.print_exc()

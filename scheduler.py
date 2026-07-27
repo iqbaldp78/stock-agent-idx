@@ -325,8 +325,22 @@ def run_ihsg_performance_check():
         logger.error(f"IHSG Performance Check error: {e}")
     logger.info("=== IHSG PERFORMANCE CHECK END ===")
 
+def run_migrations():
+    """Run database migrations on startup to ensure all tables exist."""
+    try:
+        import subprocess
+        logger.info("Running database migrations (alembic upgrade head)...")
+        res = subprocess.run(["alembic", "upgrade", "head"], capture_output=True, text=True)
+        if res.returncode == 0:
+            logger.info("Database migrations executed successfully.")
+        else:
+            logger.warning(f"Database migration output: {res.stderr or res.stdout}")
+    except Exception as e:
+        logger.warning(f"Failed to run database migrations automatically: {e}")
+
 def main():
     logger.info("Stock Agent IDX — Scheduler started")
+    run_migrations()
     logger.info("Jobs: news_ingester@every 30 mins")
 
     scheduler = BlockingScheduler(timezone="Asia/Jakarta")

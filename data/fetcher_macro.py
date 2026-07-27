@@ -17,14 +17,26 @@ from db.cache import (
 def _calculate_vs_ma(ticker_obj, period: int = 20) -> float | None:
     """Hitung posisi harga vs MA."""
     try:
-        hist = ticker_obj.history(period="3mo")
-        if hist.empty or len(hist) < period:
-            return None
-        ma = hist["Close"].rolling(period).mean().iloc[-1]
-        current = hist["Close"].iloc[-1]
-        return round((current - ma) / ma * 100, 2)
+        hist = ticker_obj.history(period="3mo") if ticker_obj else None
+        if hist is not None and not hist.empty and len(hist) >= period:
+            ma = hist["Close"].rolling(period).mean().iloc[-1]
+            current = hist["Close"].iloc[-1]
+            return round((current - ma) / ma * 100, 2)
     except Exception:
-        return None
+        pass
+
+    # Fallback to local DB/Stockbit IHSG OHLCV data
+    try:
+        from data.fetcher_ihsg import get_ihsg_ohlcv
+        df = get_ihsg_ohlcv("3m")
+        if df is not None and not df.empty and len(df) >= period:
+            ma = df["Close"].rolling(period).mean().iloc[-1]
+            current = df["Close"].iloc[-1]
+            return round((current - ma) / ma * 100, 2)
+    except Exception:
+        pass
+
+    return None
 
 def _get_usdidr_trend() -> dict:
     """Mengambil pergerakan day-by-day USD/IDR selama 1 bulan menggunakan endpoint non-yfinance."""
@@ -86,7 +98,16 @@ def get_macro_data() -> dict:
         except Exception:
             usdidr_price = None
 
-    ihsg_vs_ma20 = _calculate_vs_ma(ihsg, 20) if ihsg else None
+    if ihsg_price is None:
+        try:
+            from data.fetcher_stockbit import get_ihsg_realtime_price_stockbit
+            realtime = get_ihsg_realtime_price_stockbit()
+            if realtime and realtime.get("price"):
+                ihsg_price = realtime["price"]
+        except Exception:
+            pass
+
+    ihsg_vs_ma20 = _calculate_vs_ma(ihsg, 20)
     is_volatile = abs(ihsg_change_pct or 0) > 1.5
 
     usdidr_trend = _get_usdidr_trend()

@@ -15,6 +15,7 @@ COPY db/ ./db/
 COPY graph/ ./graph/
 COPY portfolio/ ./portfolio/
 COPY services/ ./services/
+COPY scripts/ ./scripts/
 
 # Copy web-backend source files
 COPY web-backend/main.py .

@@ -59,7 +59,10 @@ def calculate_composite(scores: dict, ticker: str,
     sector = "Unknown"
     usdidr_adj = 0.0
     usdidr_narrative = ""
-    
+        
+    ml_bonus_adj = 0.0
+    ml_bonus_narrative = ""
+        
     if macro_data:
         # Common idx sectors map
         COMMON_SECTORS = {
@@ -104,7 +107,12 @@ def calculate_composite(scores: dict, ticker: str,
                 usdidr_adj = 0.5
                 usdidr_narrative = f"Sinyal positif valas reda (Rupiah menguat {abs(usdidr_1d_change)}%)"
                 
-        composite += usdidr_adj
+        # Tambahan ML Prediction Buy
+        if macro_data.get("ml_signal") == "BUY":
+            ml_bonus_adj = 2.0
+            ml_bonus_narrative = "Bonus Sinyal ML Prediction Buy (+2.0)"
+            
+        composite += usdidr_adj + ml_bonus_adj
         composite = max(1.0, min(10.0, composite))
     
     mode = detect_mode(ticker, market_cap, is_volatile)
@@ -116,7 +124,7 @@ def calculate_composite(scores: dict, ticker: str,
         "weight_mode": mode,
         "sector": sector,
         "usdidr_adj": usdidr_adj,
-        "usdidr_narrative": usdidr_narrative,
+        "usdidr_narrative": usdidr_narrative + (" | " + ml_bonus_narrative if ml_bonus_narrative else ""),
         "breakdown": {
             "bandarm": {"score": scores["bandarm"], "weight": w["bandarm"] if not exclude_fundamental else w["bandarm"] / total_w,
                         "contribution": round(scores["bandarm"] * (w["bandarm"] if not exclude_fundamental else w["bandarm"] / total_w), 2)},
