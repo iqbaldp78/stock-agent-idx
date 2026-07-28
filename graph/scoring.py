@@ -150,19 +150,20 @@ def assess_entry_vs_bandar(current_price: float,
     dist_7d = (current_price - avg_7d) / avg_7d * 100
     dist_1m = (current_price - avg_1m) / avg_1m * 100
 
-    # Status berdasarkan jarak dari avg 1 bulan (true cost)
-    if dist_1m <= 0:
+    # Status difokuskan ke jarak dari avg 7 hari (jangka pendek) 
+    # bukan 1 bulan (true cost yang kejauhan) untuk menyesuaikan ritme trading
+    if dist_7d <= 0:
         status = "🟢 IDEAL"
-        label = f"Harga {abs(dist_1m):.1f}% DI BAWAH true cost bandar — entry sangat menarik"
-    elif dist_1m <= 2:
+        label = f"Harga {abs(dist_7d):.1f}% DI BAWAH avg cost bandar seminggu terakhir — ideal entry"
+    elif dist_7d <= 3:
         status = "🟡 ACCEPTABLE"
-        label = f"Harga {dist_1m:.1f}% di atas true cost bandar — layak entry"
-    elif dist_1m <= 5:
+        label = f"Harga {dist_7d:.1f}% di atas cost bandar mingguan — layak entry"
+    elif dist_7d <= 7:
         status = "🟠 CAUTION"
-        label = f"Harga {dist_1m:.1f}% di atas true cost bandar — tunggu pullback"
+        label = f"Harga {dist_7d:.1f}% di atas cost bandar mingguan — tunggu pullback"
     else:
         status = "🔴 AVOID"
-        label = f"Harga {dist_1m:.1f}% di atas true cost bandar — terlalu jauh"
+        label = f"Harga {dist_7d:.1f}% terlalu jauh dari cost bandar (rawan guyur profit taking)"
 
     ideal_entry = round(avg_1m * 1.005, 0)
     max_entry = round(avg_7d * 1.02, 0)
@@ -198,6 +199,16 @@ def calculate_konglo_composite(scores: dict, ticker: str,
         scores.get("news", 5.0) * w["news"]
     )
     
+    ml_bonus_adj = 0.0
+    ml_bonus_narrative = ""
+    if macro_data:
+        if macro_data.get("ml_signal") == "BUY":
+            ml_bonus_adj = 2.0
+            ml_bonus_narrative = "Bonus Sinyal ML Prediction Buy (+2.0)"
+            
+        composite += ml_bonus_adj
+        composite = max(1.0, min(10.0, composite))
+    
     sector = "Unknown"
     
     return {
@@ -207,7 +218,7 @@ def calculate_konglo_composite(scores: dict, ticker: str,
         "weight_mode": "konglo",
         "sector": sector,
         "usdidr_adj": 0.0,
-        "usdidr_narrative": "",
+        "usdidr_narrative": ml_bonus_narrative,
         "breakdown": {
             "bandarm": {"score": scores["bandarm"], "weight": w["bandarm"],
                         "contribution": round(scores["bandarm"] * w["bandarm"], 2)},

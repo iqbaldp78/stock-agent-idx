@@ -11,27 +11,83 @@ from graph.scoring import assess_entry_vs_bandar
 from config import BROKER_WATCH_SHORT, BROKER_WATCH_LONG
 
 
-def _assess_accumulation(top_accumulators: list, window_days: int) -> tuple[float, str]:
+def _assess_accumulation(top_accumulators: list, window_days: int) -> dict:
     """
     Evaluasi kekuatan akumulasi dari top broker.
-    Returns: (score_adjustment, signal)
+    Returns: dict with status and metrics
     """
     if not top_accumulators:
-        return 0.0, "NO_DATA"
+        return {"status": "NO_DATA", "consistency": 0.0, "top_broker": None}
 
     top_broker = top_accumulators[0][1]
     active_days = top_broker["active_days"]
     consistency = active_days / window_days
 
-    # Consistency scoring
+    # Raw status assignment
     if consistency >= 0.8:
-        return 2.0, "STRONG_ACCUMULATION"
+        status = "STRONG_ACCUMULATION"
     elif consistency >= 0.6:
-        return 1.0, "MODERATE_ACCUMULATION"
+        status = "MODERATE_ACCUMULATION"
     elif consistency >= 0.4:
-        return 0.0, "LIGHT_ACCUMULATION"
+        status = "LIGHT_ACCUMULATION"
     else:
-        return -1.0, "DISTRIBUTION"
+        status = "DISTRIBUTION"
+        
+    return {
+        "status": status,
+        "consistency": consistency,
+        "top_broker": top_accumulators[0][0],
+        "top_broker_data": top_broker
+    }
+
+def _evaluate_bandar_phase(w7_eval: dict, w30_eval: dict, dist_7d_status: str, dist_30d_status: str) -> tuple[float, str, str]:
+    """
+    Matriks Fase Bandar.
+    Returns: (base_score, phase_name, narrative)
+    """
+    w7_status = w7_eval["status"]
+    w30_status = w30_eval["status"]
+    
+    # 1. THE ACCUMULATION (Fase Akumulasi Masif)
+    if w30_status in ["STRONG_ACCUMULATION", "MODERATE_ACCUMULATION"] and w7_status in ["STRONG_ACCUMULATION", "MODERATE_ACCUMULATION"]:
+        if dist_7d_status == "DISTRIBUTION":
+            return 6.5, "ACCUMULATION_WITH_MINOR_DISTRIBUTION", "Akumulasi konsisten 1M tapi mulai ada distribusi kecil minggu ini"
+        return 8.5, "STRONG_ACCUMULATION", "Fase Akumulasi Masif: Bandar konsisten akumulasi dari 1 bulan lalu hingga minggu ini"
+        
+    # 2. THE BREAKOUT / ESTAFET (Fase Pergantian Bandar / Re-Akumulasi)
+    elif w30_status in ["DISTRIBUTION", "LIGHT_ACCUMULATION", "NO_DATA"] and w7_status in ["STRONG_ACCUMULATION", "MODERATE_ACCUMULATION"]:
+        return 7.5, "RE_ACCUMULATION", "Fase Re-Akumulasi (Estafet): Bandar lama mungkin taking profit, tapi ada bandar baru yang nampung agresif minggu ini"
+        
+    # 3. THE MARK-UP TRAP (Fase Distribusi Terselubung)
+    elif w30_status in ["STRONG_ACCUMULATION", "MODERATE_ACCUMULATION"] and w7_status in ["DISTRIBUTION", "LIGHT_ACCUMULATION", "NO_DATA"]:
+        return 4.5, "MARK_UP_TRAP", "Fase Mark-up Trap: Bandar punya banyak barang dari bulan lalu, tapi ekornya mulai buang barang (distribusi) minggu ini"
+        
+    # 4. THE MARK-DOWN (Fase Buang Barang)
+    else: # w30 dist/light, w7 dist/light
+        return 2.5, "DISTRIBUTION", "Fase Mark-Down: Murni distribusi dari bulan lalu hingga hari ini (Rawan guyur)"
+
+def _detect_broker_estafet(w30_distributors: list, w7_accumulators: list) -> tuple[float, str]:
+    """
+    Cek apakah barang dari Top Seller 1M ditampung oleh Top Buyer 7D.
+    """
+    if not w30_distributors or not w7_accumulators:
+        return 0.0, ""
+        
+    top_sellers = [code for code, data in w30_distributors[:3]]
+    top_buyers = [code for code, data in w7_accumulators[:3]]
+    
+    # Broker institusi kuat (Asing / Big Local)
+    STRONG_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU"}
+    RETAIL_BROKERS = {"YP", "XC", "XL", "NI"}
+    
+    # Estafet dari ritel ke asing/big broker
+    for seller in top_sellers:
+        if seller in RETAIL_BROKERS:
+            for buyer in top_buyers:
+                if buyer in STRONG_BROKERS:
+                    return 1.5, f"Estafet dari ritel ({seller}) ke institusi kuat ({buyer})"
+                    
+    return 0.0, ""
 
 
 def _format_broker_detail(broker_code: str, broker_data: dict,
@@ -205,39 +261,49 @@ def analyze(
     w7 = bandarm_data["w7"]
     w30 = bandarm_data["w30"]
 
-    score = 5.0
     data_used = ["Stockbit broker summary 7H & 1M"]
 
-    # === W7 Assessment ===
-    adj_7d, signal_7d = _assess_accumulation(w7["top_accumulators"], BROKER_WATCH_SHORT)
-    score += adj_7d
-
-    # === W30 Assessment ===
-    adj_30d, signal_30d = _assess_accumulation(w30["top_accumulators"], BROKER_WATCH_LONG)
-    score += adj_30d
-
-    # === Foreign Flow ===
-    foreign_7d = w7["foreign_net"]
-    foreign_30d = w30["foreign_net"]
-
-    if foreign_7d > 0 and foreign_30d > 0:
-        score += 1.0
-        data_used.append(f"Foreign net buy 7H & 1M")
-    elif foreign_7d > 0:
-        score += 0.5
-        data_used.append(f"Foreign net buy 7H")
-    elif foreign_7d < 0 and foreign_30d < 0:
-        score -= 1.0
-        data_used.append(f"Foreign net sell 7H & 1M")
+    # === Base Evaluations ===
+    eval_7d = _assess_accumulation(w7["top_accumulators"], BROKER_WATCH_SHORT)
+    eval_30d = _assess_accumulation(w30["top_accumulators"], BROKER_WATCH_LONG)
+    
+    signal_7d = eval_7d["status"]
+    signal_30d = eval_30d["status"]
 
     # === Distribution Signal ===
     dist_adj_7d, dist_signal_7d, dist_notes_7d = _assess_distribution(w7)
     dist_adj_30d, dist_signal_30d, dist_notes_30d = _assess_distribution(w30)
+    
+    # === PHASE MATRIX BASE SCORE ===
+    score, phase_signal, phase_narrative = _evaluate_bandar_phase(eval_7d, eval_30d, dist_signal_7d, dist_signal_30d)
+    data_used.append(phase_narrative)
+    
+    # Apply Distribution Penalties on top of base score
     score += dist_adj_7d + dist_adj_30d
     if dist_notes_7d:
         data_used.append("Distribution 7H: " + ", ".join(dist_notes_7d))
     if dist_notes_30d:
         data_used.append("Distribution 1M: " + ", ".join(dist_notes_30d))
+
+    # === Deteksi Estafet (Ritel -> Asing) ===
+    estafet_bonus, estafet_narrative = _detect_broker_estafet(w30.get("top_distributors", []), w7.get("top_accumulators", []))
+    if estafet_bonus > 0:
+        score += estafet_bonus
+        data_used.append(estafet_narrative)
+
+    # === Foreign Flow (Net Asing) ===
+    foreign_7d = w7["foreign_net"]
+    foreign_30d = w30["foreign_net"]
+
+    if foreign_7d > 0 and foreign_30d > 0:
+        score += 1.0
+        data_used.append(f"Foreign net buy akumulasi 7H & 1M")
+    elif foreign_7d > 0:
+        score += 0.5
+        data_used.append(f"Foreign net buy jangka pendek 7H")
+    elif foreign_7d < 0 and foreign_30d < 0:
+        score -= 1.0
+        data_used.append(f"Foreign buang barang (net sell) 7H & 1M")
 
     # === Consistency Bonus ===
     if signal_7d == "STRONG_ACCUMULATION" and signal_30d in ("STRONG_ACCUMULATION", "MODERATE_ACCUMULATION"):

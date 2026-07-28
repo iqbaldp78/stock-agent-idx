@@ -250,6 +250,13 @@ def save_ihsg_prediction(run_date: datetime, ihsg_pred: dict, batch_id: str | No
     from sqlalchemy import text
     db: Session = SessionLocal()
     try:
+        # Hapus data prediksi di hari yang sama agar tidak double
+        delete_sql = """
+            DELETE FROM ihsg_predictions 
+            WHERE DATE(run_date) = DATE(:run_date)
+        """
+        db.execute(text(delete_sql), {"run_date": run_date})
+        
         sql = """
             INSERT INTO ihsg_predictions
             (run_date, current_price, confidence, direction, volatility_level,

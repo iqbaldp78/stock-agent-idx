@@ -2,6 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
+
 # Install standard dependencies first
 COPY requirements.txt ./root_requirements.txt
 COPY web-backend/requirements.txt ./web_requirements.txt
@@ -16,6 +18,7 @@ COPY graph/ ./graph/
 COPY portfolio/ ./portfolio/
 COPY services/ ./services/
 COPY scripts/ ./scripts/
+COPY models/ ./models/
 
 # Copy web-backend source files
 COPY web-backend/main.py .

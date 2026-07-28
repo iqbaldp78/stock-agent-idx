@@ -206,7 +206,7 @@ def run_ml_prediction(state: AgentState) -> dict:
 
     # Sort by composite score to only run ML on top candidates (performance optimization)
     sorted_tickers = sorted(composites.keys(), key=lambda t: composites[t]["composite_score"], reverse=True)
-    top_candidates = sorted_tickers[:12] # Limit to top 12
+    top_candidates = sorted_tickers[:15] # Limit to top 15 candidates as requested by user
 
     for ticker in top_candidates:
         try:

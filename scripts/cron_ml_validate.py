@@ -58,8 +58,9 @@ def main():
                 # Logika horizon lain (3d, 5d, 7d) menyesuaikan index
                 elif log.horizon in ["3d", "5d", "7d"]:
                     days = int(log.horizon[0])
-                    # Menggunakan >= agar menghitung trade_date sebagai hari 1, jika definisi swing seperti itu.
-                    future_data = raw.loc[raw.index >= str(log.trade_date)]
+                    # Menggunakan > (strictly greater) agar hanya menghitung hari bursa (open market) SETELAH trade_date.
+                    # Jika data cron diambil pagi, trade_date sudah open market. Jadi hari ke-1 adalah hari bursa *besoknya*, dst.
+                    future_data = raw.loc[raw.index > str(log.trade_date)]
                     if len(future_data) >= days:
                         target_close = float(future_data['Close'].iloc[days-1])
                         base_close = float(raw.loc[raw.index <= str(log.trade_date)]['Close'].iloc[-1])
