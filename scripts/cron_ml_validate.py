@@ -49,7 +49,8 @@ def main():
                         # Karena output ML skrg biner probability (0 s/d 1), threshold adalah 0.5 (50%)
                         # Jika pred > 0.5 (Prediksi NAIK), maka harus actual_return > 0 (Beneran naik)
                         # Jika pred < 0.5 (Prediksi TURUN), maka harus actual_return <= 0 (Beneran turun/stagnan)
-                        if log.pred_return_pct >= 0.5:
+                        pred_val = float(log.pred_return_pct) if log.pred_return_pct is not None else 0.0
+                        if pred_val >= 0.5:
                             log.is_correct = bool(actual_return > 0)
                         else:
                             log.is_correct = bool(actual_return <= 0)
@@ -69,7 +70,8 @@ def main():
                         log.actual_close_price = target_close
                         log.actual_return_pct = actual_return
                         
-                        if log.pred_return_pct >= 0.5:
+                        pred_val = float(log.pred_return_pct) if log.pred_return_pct is not None else 0.0
+                        if pred_val >= 0.5:
                             log.is_correct = bool(actual_return > 0)
                         else:
                             log.is_correct = bool(actual_return <= 0)

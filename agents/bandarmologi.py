@@ -76,9 +76,10 @@ def _detect_broker_estafet(w30_distributors: list, w7_accumulators: list) -> tup
     top_sellers = [code for code, data in w30_distributors[:3]]
     top_buyers = [code for code, data in w7_accumulators[:3]]
     
-    # Broker institusi kuat (Asing / Big Local)
-    STRONG_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU"}
-    RETAIL_BROKERS = {"YP", "XC", "XL", "NI"}
+    # Broker institusi kuat (Asing + Institusi Lokal/Dana Pensiun/Big Player)
+    STRONG_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU", "CG", "DX", "BB", "IF", "OD", "TP"}
+    # Broker Ritel Murni (FOMO Army)
+    RETAIL_BROKERS = {"YP", "XC", "XL", "PD", "CC", "SQ"}
     
     # Estafet dari ritel ke asing/big broker
     for seller in top_sellers:
@@ -88,7 +89,133 @@ def _detect_broker_estafet(w30_distributors: list, w7_accumulators: list) -> tup
                     return 1.5, f"Estafet dari ritel ({seller}) ke institusi kuat ({buyer})"
                     
     return 0.0, ""
+    
+def _assess_concentration(w7_accumulators: list, w7_distributors: list, w7_data: dict) -> tuple[float, str, str, str]:
+    """
+    Hitung Rasio Konsentrasi Beli vs Jual (1 vs Many).
+    Returns: (score_adjustment, type (driver/risk/neutral), narrative, internal_log)
+    """
+    if not w7_accumulators or not w7_distributors:
+        return 0.0, "neutral", "", ""
+        
+    # Dapatkan total volume/value seluruh market dari w7_data
+    # Asumsi: total_buy_value_all == total_sell_value_all (match)
+    # Karena data yang kita punya adalah top broker, kita jumlahkan top 10 sebagai proksi,
+    # ATAU jika tersedia total real market, gunakan itu. 
+    # Di sini kita gunakan total dari semua broker di array accumulators & distributors
+    total_buy_val = sum(data["total_buy_value"] for code, data in w7_accumulators)
+    total_sell_val = sum(data["total_sell_value"] for code, data in w7_distributors)
+    
+    if total_buy_val == 0 or total_sell_val == 0:
+        return 0.0, "neutral", "", ""
+        
+    # Hitung konsentrasi Top 3
+    top3_buyers = w7_accumulators[:3]
+    top3_sellers = w7_distributors[:3]
+    
+    top3_buy_val = sum(data["total_buy_value"] for code, data in top3_buyers)
+    top3_sell_val = sum(data["total_sell_value"] for code, data in top3_sellers)
+    
+    buy_concentration = (top3_buy_val / total_buy_val) * 100
+    sell_concentration = (top3_sell_val / total_sell_val) * 100
+    
+    # Ambil nama kode broker
+    buyer_codes = ", ".join([code for code, data in top3_buyers])
+    seller_codes = ", ".join([code for code, data in top3_sellers])
+    
+    # Skenario 1: Akumulasi Terkonsentrasi (Piramida)
+    if buy_concentration > 50.0 and sell_concentration < 45.0:
+        nar = f"Akumulasi Terkonsentrasi: Top 3 broker ({buyer_codes}) menyapu {buy_concentration:.0f}% suplai pasar dari tangan ritel tersebar."
+        return 1.0, "driver", nar, f"Konsentrasi Beli ({buy_concentration:.0f}%) > Jual ({sell_concentration:.0f}%) -> Bonus +1.0"
+        
+    # Skenario 2: Distribusi Terkonsentrasi (Ritel Exit Liquidity)
+    elif sell_concentration > 50.0 and buy_concentration < 45.0:
+        nar = f"Distribusi Terkonsentrasi: {sell_concentration:.0f}% buangan bandar besar ({seller_codes}) sedang ditadah oleh broker eceran."
+        return -1.0, "risk", nar, f"Konsentrasi Jual ({sell_concentration:.0f}%) > Beli ({buy_concentration:.0f}%) -> Penalti -1.0"
+        
+    # Skenario 3: Big vs Big / Retail vs Retail
+    else:
+        return 0.0, "neutral", "", f"Konsentrasi Beli ({buy_concentration:.0f}%) vs Jual ({sell_concentration:.0f}%) -> Imbang (Netral)"
 
+def _assess_aggressiveness(w7_accumulators: list, current_price: float, is_accumulating: bool) -> tuple[float, str, str, str]:
+    """
+    Hitung Agresivitas Bandar (HAKA/HAKI) berdasarkan jarak Avg Cost Top 3 Buyer dengan Current Price.
+    Hanya dihitung jika saham sedang dalam fase akumulasi secara keseluruhan.
+    Returns: (score_adjustment, type (driver/risk/neutral), narrative, internal_log)
+    """
+    if not is_accumulating or not w7_accumulators or current_price <= 0:
+        return 0.0, "neutral", "", ""
+        
+    # Hitung volume-weighted average price (VWAP) khusus Top 3 Buyer
+    top3 = w7_accumulators[:3]
+    total_val = sum(data["total_buy_value"] for code, data in top3)
+    total_lot = sum(data["total_buy_lot"] for code, data in top3)
+    
+    if total_lot == 0:
+        return 0.0, "neutral", "", ""
+        
+    # Harga rata-rata per lembar saham = Total Value / (Total Lot * 100)
+    avg_cost_top3 = total_val / (total_lot * 100)
+    
+    # Hitung selisih: positif artinya Bandar nyangkut/beli di atas harga closing (HAKA kuat)
+    diff_pct = ((avg_cost_top3 - current_price) / current_price) * 100
+    
+    # Skenario 1: Hyper-Aggressive (Sangat HAKA)
+    if diff_pct > 3.0:
+        nar = f"Agresivitas Ekstrem (HAKA): Bandar rela akumulasi dengan rata-rata modal ({avg_cost_top3:.0f}) yang {diff_pct:.1f}% LEBIH TINGGI dari harga penutupan saat ini. Sinyal kuat antisipasi pergerakan naik."
+        return 1.0, "driver", nar, f"HAKA Ekstrem: Cost {avg_cost_top3:.0f} > Price {current_price} (+{diff_pct:.1f}%) -> Bonus +1.0"
+        
+    # Skenario 2: Aggressive (HAKA Wajar)
+    elif 0.0 <= diff_pct <= 3.0:
+        nar = f"Agresivitas Wajar: Bandar proaktif menyerap barang di harga pasar saat ini (Avg: {avg_cost_top3:.0f})."
+        return 0.5, "driver", nar, f"HAKA Wajar: Cost {avg_cost_top3:.0f} >= Price {current_price} (+{diff_pct:.1f}%) -> Bonus +0.5"
+        
+    # Skenario 3: False Accumulation / Harga Ketinggian
+    elif diff_pct < -7.0:
+        nar = f"Akumulasi Tertinggal: Harga pasar (+{-diff_pct:.1f}%) terlampau jauh meninggalkan modal bandar ({avg_cost_top3:.0f}). Rawan guyuran profit taking."
+        return -1.0, "risk", nar, f"Trap: Price {current_price} jauh di atas Cost {avg_cost_top3:.0f} ({diff_pct:.1f}%) -> Penalti -1.0"
+        
+    # Skenario 4: Passive Accumulation
+    else:
+        return 0.0, "neutral", "", f"Akumulasi Pasif: Cost {avg_cost_top3:.0f} di bawah Price {current_price} ({diff_pct:.1f}%) -> Imbang (Netral)"
+
+def _detect_fomo_trap(w7_accumulators: list, w7_distributors: list, current_price: float, bandar_avg_cost_7d: float) -> tuple[float, str, str, str]:
+    """
+    Mendeteksi jebakan pucuk (Exit Liquidity): 
+    Harga dipompa meroket, namun Institusi justru membuang barang ke Ritel (YP, XC, PD dkk).
+    Returns: (score_adjustment, type (driver/risk/neutral), narrative, internal_log)
+    """
+    if not w7_accumulators or not w7_distributors or current_price <= 0 or bandar_avg_cost_7d <= 0:
+        return 0.0, "neutral", "", ""
+        
+    # 1. Syarat Harga: Harga harus sedang "terbang" atau jauh di atas modal bandar (minimal > 4% dari modal bandar)
+    diff_price = ((current_price - bandar_avg_cost_7d) / bandar_avg_cost_7d) * 100
+    if diff_price < 4.0:
+        return 0.0, "neutral", "", "" # Bukan trap pucuk kalau harga lagi turun/sideways
+        
+    # Broker institusi kuat (Asing + Lokal)
+    INST_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU", "CG", "DX", "BB", "IF", "OD", "TP"}
+    # Broker Ritel Murni (FOMO Army)
+    RETAIL_BROKERS = {"YP", "XC", "XL", "PD", "CC", "SQ"}
+    
+    # 2. Cek apakah Ritel dominan di Top 3 Buyer
+    top_buyers_code = [code for code, data in w7_accumulators[:3]]
+    retail_buyers = [b for b in top_buyers_code if b in RETAIL_BROKERS]
+    
+    # 3. Cek apakah Institusi dominan di Top 3 Seller
+    top_sellers_code = [code for code, data in w7_distributors[:3]]
+    inst_sellers = [s for s in top_sellers_code if s in INST_BROKERS]
+    
+    # 4. TRAP TERKONFIRMASI: Jika minimal 2 ritel ada di top buyer, DAN minimal 1-2 institusi di top seller membuang barang
+    if len(retail_buyers) >= 1 and len(inst_sellers) >= 1:
+        # Hitung dominasinya untuk narasi
+        ret_str = ", ".join(retail_buyers)
+        inst_str = ", ".join(inst_sellers)
+        nar = f"🚨 Retail FOMO Trap: Harga dipompa naik (+{diff_price:.1f}% dari modal bandar), namun Institusi ({inst_str}) membuang barang yang ditampung Ritel ({ret_str}). Sangat rawan jebol (Exit Liquidity)."
+        log = f"FOMO Trap Detected! Price +{diff_price:.1f}% -> Inst Seller ({inst_str}) vs Retail Buyer ({ret_str}) -> Penalti -1.5"
+        return -1.5, "risk", nar, log
+        
+    return 0.0, "neutral", "", ""
 
 def _format_broker_detail(broker_code: str, broker_data: dict,
                           window_days: int, current_price: float = 0) -> dict:
@@ -290,6 +417,27 @@ def analyze(
     if estafet_bonus > 0:
         score += estafet_bonus
         data_used.append(estafet_narrative)
+        
+    # === Rasio Konsentrasi (The Pyramid) ===
+    conc_score, conc_type, conc_narrative, conc_log = _assess_concentration(
+        w7.get("top_accumulators", []), 
+        w7.get("top_distributors", []), 
+        w7
+    )
+    score += conc_score
+    data_used.append(conc_log)
+
+    # === Agresivitas Bandar (HAKA Indicator) ===
+    # HAKA hanya dinilai jika fase 7 harinya beneran Akumulasi
+    is_accum = (signal_7d in ["STRONG_ACCUM", "MODERATE_ACCUM", "LIGHT_ACCUM"])
+    haka_score, haka_type, haka_narrative, haka_log = _assess_aggressiveness(
+        w7.get("top_accumulators", []), 
+        current_price,
+        is_accum
+    )
+    score += haka_score
+    if haka_log:
+        data_used.append(haka_log)
 
     # === Foreign Flow (Net Asing) ===
     foreign_7d = w7["foreign_net"]
@@ -439,9 +587,20 @@ def analyze(
         w30,
         price_analysis,
     )
+    
+    # === Deteksi FOMO Trap (Exit Liquidity) ===
+    fomo_score, fomo_type, fomo_narrative, fomo_log = _detect_fomo_trap(
+        w7.get("top_accumulators", []),
+        w7.get("top_distributors", []),
+        current_price,
+        price_analysis.get("bandar_avg_7d", 0)
+    )
+    score += fomo_score
+    if fomo_log:
+        data_used.append(fomo_log)
 
     # === Retail Broker Penalty (XL, XC, YP) ===
-    RETAIL_BROKERS = {"XL", "XC", "YP"}
+    RETAIL_BROKERS_PENALTY = {"YP", "XC", "XL", "PD", "CC"}
     retail_penalty = 0.0
     # Cek top 3 broker akumulasi 7 hari
     if w7["top_accumulators"]:
@@ -451,7 +610,7 @@ def analyze(
         avg_value = sum(values) / len(values) if values else 0
         avg_lot = sum(lots) / len(lots) if lots else 0
         for rank, (code, data) in enumerate(top_brokers[:3], 1):
-            if code in RETAIL_BROKERS:
+            if code in RETAIL_BROKERS_PENALTY:
                 # Anomali jika value/lot 2x lebih besar dari rata2 top 5
                 if (data["total_buy_value"] >= 2 * avg_value or data["total_buy_lot"] >= 2 * avg_lot):
                     data_used.append(f"Anomali: Broker retail {code} akumulasi besar di rank {rank} (anomali, no penalty)")
@@ -512,6 +671,18 @@ def analyze(
         "broker_to_watch": broker_to_watch,
         "data_used": data_used,
         "confidence": confidence,
+        "insight_concentration": {
+            "type": conc_type,
+            "narrative": conc_narrative
+        },
+        "insight_aggressiveness": {
+            "type": haka_type,
+            "narrative": haka_narrative
+        },
+        "insight_fomo_trap": {
+            "type": fomo_type,
+            "narrative": fomo_narrative
+        }
     }
 
     if "custom_window" in bandarm_data:

@@ -418,7 +418,54 @@ def predict_movement(
             result["risks"] = llm_enhanced["risks"]
         if llm_enhanced.get("confidence") in ("HIGH", "MEDIUM", "LOW"):
             result["confidence"] = llm_enhanced["confidence"]
-    
+            
+    # === INJEKSI PAKSA NARASI BANDARMOLOGI KONSENTRASI ===
+    if "bandarm" in scores and isinstance(scores["bandarm"], dict):
+        insight_conc = scores["bandarm"].get("insight_concentration")
+        if insight_conc and insight_conc.get("narrative"):
+            conc_type = insight_conc.get("type")
+            conc_narrative = insight_conc.get("narrative")
+            
+            # Masukkan ke key_drivers jika driver
+            if conc_type == "driver":
+                if conc_narrative not in result["key_drivers"]:
+                    # Taruh di posisi pertama biar mencolok
+                    result["key_drivers"].insert(0, conc_narrative)
+                    
+            # Masukkan ke risks jika risk
+            elif conc_type == "risk":
+                if conc_narrative not in result["risks"]:
+                    result["risks"].insert(0, conc_narrative)
+                    
+    # === INJEKSI PAKSA NARASI BANDARMOLOGI AGRESIVITAS (HAKA) ===
+    if "bandarm" in scores and isinstance(scores["bandarm"], dict):
+        insight_haka = scores["bandarm"].get("insight_aggressiveness")
+        if insight_haka and insight_haka.get("narrative"):
+            haka_type = insight_haka.get("type")
+            haka_narrative = insight_haka.get("narrative")
+            
+            # Masukkan ke key_drivers jika driver
+            if haka_type == "driver":
+                if haka_narrative not in result["key_drivers"]:
+                    # Taruh setelah narasi konsentrasi (posisi 1 atau 0)
+                    result["key_drivers"].insert(0, haka_narrative)
+                    
+            # Masukkan ke risks jika risk
+            elif haka_type == "risk":
+                if haka_narrative not in result["risks"]:
+                    result["risks"].insert(0, haka_narrative)
+                    
+    # === INJEKSI PAKSA NARASI FOMO TRAP (EXIT LIQUIDITY) ===
+    if "bandarm" in scores and isinstance(scores["bandarm"], dict):
+        insight_fomo = scores["bandarm"].get("insight_fomo_trap")
+        if insight_fomo and insight_fomo.get("narrative"):
+            fomo_type = insight_fomo.get("type")
+            fomo_narrative = insight_fomo.get("narrative")
+            
+            if fomo_type == "risk":
+                if fomo_narrative not in result["risks"]:
+                    result["risks"].insert(0, fomo_narrative)
+                    
     return result
 
 

@@ -2381,11 +2381,14 @@ elif page == "🤖 ML Validation":
                         pivot_dict[key] = {
                             "Ticker": l.ticker,
                             "Trade Date": str(l.trade_date),
+                            "Sinyal 1D": "-",
                             "1D Prob (%)": "-",
+                            "Sinyal 3D": "-",
                             "3D Prob (%)": "-",
+                            "Sinyal 5D": "-",
                             "5D Prob (%)": "-",
+                            "Sinyal 7D": "-",
                             "7D Prob (%)": "-",
-                            "Sinyal 1D": "HOLD",
                             "Target Price (1D)": "-"
                         }
                     
@@ -2393,45 +2396,50 @@ elif page == "🤖 ML Validation":
                     prob_pct = raw_prob * 100.0 if raw_prob <= 1.0 else raw_prob
                     prob_str = f"{prob_pct:.2f}%"
                     
-                    if l.horizon == "1d":
-                        pivot_dict[key]["1D Prob (%)"] = prob_str
+                    is_horizon_buy = (prob_pct >= min_prob_filter)
+                    
+                    if is_horizon_buy:
                         if prob_pct >= 55.0:
-                            pivot_dict[key]["Sinyal 1D"] = "🔥 STRONG BUY"
-                        elif prob_pct >= 51.0:
-                            pivot_dict[key]["Sinyal 1D"] = "🟢 BUY"
-                        elif prob_pct <= 48.0:
-                            pivot_dict[key]["Sinyal 1D"] = "🔴 AVOID"
+                            sig_label = "🔥 STRONG BUY"
                         else:
-                            pivot_dict[key]["Sinyal 1D"] = "🟡 HOLD"
-                            
-                        if l.pred_price:
+                            sig_label = "🟢 BUY"
+                    else:
+                        sig_label = "-"
+                    
+                    if l.horizon == "1d":
+                        pivot_dict[key]["Sinyal 1D"] = sig_label
+                        pivot_dict[key]["1D Prob (%)"] = prob_str if is_horizon_buy else "-"
+                        if l.pred_price and is_horizon_buy:
                             pivot_dict[key]["Target Price (1D)"] = f"Rp {float(l.pred_price):,.0f}"
-                            
                     elif l.horizon == "3d":
-                        pivot_dict[key]["3D Prob (%)"] = prob_str
+                        pivot_dict[key]["Sinyal 3D"] = sig_label
+                        pivot_dict[key]["3D Prob (%)"] = prob_str if is_horizon_buy else "-"
                     elif l.horizon == "5d":
-                        pivot_dict[key]["5D Prob (%)"] = prob_str
+                        pivot_dict[key]["Sinyal 5D"] = sig_label
+                        pivot_dict[key]["5D Prob (%)"] = prob_str if is_horizon_buy else "-"
                     elif l.horizon == "7d":
-                        pivot_dict[key]["7D Prob (%)"] = prob_str
+                        pivot_dict[key]["Sinyal 7D"] = sig_label
+                        pivot_dict[key]["7D Prob (%)"] = prob_str if is_horizon_buy else "-"
                 
                 df_next = pd.DataFrame(list(pivot_dict.values()))
                 
-                def get_prob_num(val):
-                    try:
-                        return float(str(val).replace("%", ""))
-                    except:
-                        return 0.0
-                        
-                df_next["prob_num"] = df_next["1D Prob (%)"].apply(get_prob_num)
-                df_next = df_next[df_next["prob_num"] >= min_prob_filter]
-                
-                if signal_filter == "Hanya BUY / STRONG BUY":
-                    df_next = df_next[df_next["Sinyal 1D"].isin(["🔥 STRONG BUY", "🟢 BUY"])]
-                elif signal_filter == "Hanya STRONG BUY":
-                    df_next = df_next[df_next["Sinyal 1D"] == "🔥 STRONG BUY"]
+                # Filter baris yang punya minimal 1 horizon BUY / STRONG BUY
+                def is_any_buy(row):
+                    for col in ["Sinyal 1D", "Sinyal 3D", "Sinyal 5D", "Sinyal 7D"]:
+                        if row.get(col, "-") in ["🔥 STRONG BUY", "🟢 BUY"]:
+                            return True
+                    return False
                     
-                df_next = df_next.sort_values(by="prob_num", ascending=False).drop(columns=["prob_num"])
+                df_next = df_next[df_next.apply(is_any_buy, axis=1)]
                 
+                if signal_filter == "Hanya STRONG BUY":
+                    df_next = df_next[
+                        (df_next["Sinyal 1D"] == "🔥 STRONG BUY") |
+                        (df_next["Sinyal 3D"] == "🔥 STRONG BUY") |
+                        (df_next["Sinyal 5D"] == "🔥 STRONG BUY") |
+                        (df_next["Sinyal 7D"] == "🔥 STRONG BUY")
+                    ]
+                    
                 if not df_next.empty:
                     st.dataframe(df_next, use_container_width=True, hide_index=True)
                     
@@ -2473,6 +2481,8 @@ elif page == "🤖 ML Validation":
                         
         st.caption("Hasil prediksi Cron Job Pagi (06:00) yang belum atau sudah divalidasi Cron Sore (18:00)")
         
+        show_only_buy = st.checkbox("🟢 Hanya tampilkan saham sinyal NAIK / BUY (Prob ≥ 50% pada 1D, 3D, 5D, atau 7D)", value=True)
+        
         st.info("**Cara Membaca Angka Probabilitas (Prob):**\n"
                 "- **1D Prob:** Peluang harga naik > 0.2% besok (Cocok untuk Day Trading / ODT)\n"
                 "- **3D Prob:** Peluang harga naik > 1.0% dlm 3 hari bursa (Cocok untuk Swing Pendek)\n"
@@ -2496,45 +2506,63 @@ elif page == "🤖 ML Validation":
                         pivot_dict[key] = {
                             "Trade Date": l.trade_date,
                             "Ticker": l.ticker,
-                            "Prediksi Mesin": "-",
+                            "Pred 1D": "-",
                             "1D Prob (%)": "-",
-                            "Val 1D": "⏳",
+                            "Val 1D": "-",
+                            "Pred 3D": "-",
                             "3D Prob (%)": "-",
-                            "Val 3D": "⏳",
+                            "Val 3D": "-",
+                            "Pred 5D": "-",
                             "5D Prob (%)": "-",
-                            "Val 5D": "⏳",
+                            "Val 5D": "-",
+                            "Pred 7D": "-",
                             "7D Prob (%)": "-",
-                            "Val 7D": "⏳"
+                            "Val 7D": "-"
                         }
                     
-                    prob_str = f"{l.pred_return_pct * 100:.2f}%"
+                    raw_pred = float(l.pred_return_pct) if l.pred_return_pct is not None else 0.0
+                    prob_pct = raw_pred * 100.0 if raw_pred <= 1.0 else raw_pred
+                    prob_str = f"{prob_pct:.2f}%"
                     status_icon = "⏳"
                     if l.is_correct is not None:
                         status_icon = "✅" if l.is_correct else "❌"
                     
+                    is_horizon_naik = (raw_pred >= 0.50 or prob_pct >= 50.0)
+                    
                     if l.horizon == "1d":
-                        pivot_dict[key]["1D Prob (%)"] = prob_str
-                        pivot_dict[key]["Val 1D"] = status_icon
-                        # 1D Prob dijadikan acuan arah utama
-                        if l.pred_return_pct >= 0.50:
-                            pivot_dict[key]["Prediksi Mesin"] = "📈 NAIK"
-                        else:
-                            pivot_dict[key]["Prediksi Mesin"] = "📉 TURUN"
-                            
+                        pivot_dict[key]["Pred 1D"] = "📈 NAIK" if is_horizon_naik else "-"
+                        pivot_dict[key]["1D Prob (%)"] = prob_str if is_horizon_naik else "-"
+                        pivot_dict[key]["Val 1D"] = status_icon if is_horizon_naik else "-"
                     elif l.horizon == "3d":
-                        pivot_dict[key]["3D Prob (%)"] = prob_str
-                        pivot_dict[key]["Val 3D"] = status_icon
+                        pivot_dict[key]["Pred 3D"] = "📈 NAIK" if is_horizon_naik else "-"
+                        pivot_dict[key]["3D Prob (%)"] = prob_str if is_horizon_naik else "-"
+                        pivot_dict[key]["Val 3D"] = status_icon if is_horizon_naik else "-"
                     elif l.horizon == "5d":
-                        pivot_dict[key]["5D Prob (%)"] = prob_str
-                        pivot_dict[key]["Val 5D"] = status_icon
+                        pivot_dict[key]["Pred 5D"] = "📈 NAIK" if is_horizon_naik else "-"
+                        pivot_dict[key]["5D Prob (%)"] = prob_str if is_horizon_naik else "-"
+                        pivot_dict[key]["Val 5D"] = status_icon if is_horizon_naik else "-"
                     elif l.horizon == "7d":
-                        pivot_dict[key]["7D Prob (%)"] = prob_str
-                        pivot_dict[key]["Val 7D"] = status_icon
+                        pivot_dict[key]["Pred 7D"] = "📈 NAIK" if is_horizon_naik else "-"
+                        pivot_dict[key]["7D Prob (%)"] = prob_str if is_horizon_naik else "-"
+                        pivot_dict[key]["Val 7D"] = status_icon if is_horizon_naik else "-"
 
                 df_live = pd.DataFrame(list(pivot_dict.values()))
                 
-                # Urutkan berdasarkan 1D Prob tertinggi secara default
-                # Bersihkan '%' untuk sorting
+                # Filter hanya ticker yang punya prob >= 50% di minimal salah satu horizon
+                def is_any_horizon_buy(row):
+                    for h_col in ["1D Prob (%)", "3D Prob (%)", "5D Prob (%)", "7D Prob (%)"]:
+                        val_str = str(row.get(h_col, "-"))
+                        try:
+                            val_num = float(val_str.replace("%", ""))
+                            if val_num >= 50.0:
+                                return True
+                        except ValueError:
+                            pass
+                    return False
+
+                if show_only_buy:
+                    df_live = df_live[df_live.apply(is_any_horizon_buy, axis=1)]
+
                 def extract_prob(val):
                     try:
                         return float(val.replace("%", ""))
@@ -2544,7 +2572,10 @@ elif page == "🤖 ML Validation":
                 df_live["sort_val"] = df_live["1D Prob (%)"].apply(extract_prob)
                 df_live = df_live.sort_values(by=["Trade Date", "sort_val"], ascending=[False, False]).drop(columns=["sort_val"])
                     
-                st.dataframe(df_live, use_container_width=True, hide_index=True)
+                if not df_live.empty:
+                    st.dataframe(df_live, use_container_width=True, hide_index=True)
+                else:
+                    st.warning("Tidak ada saham dengan sinyal NAIK / BUY (Prob ≥ 50%) pada tanggal ini.")
                 
                 # Hit Rate Stats
                 st.subheader("Statistik Hit Rate (Per Row Tervalidasi)")
