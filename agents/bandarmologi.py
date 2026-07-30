@@ -76,10 +76,10 @@ def _detect_broker_estafet(w30_distributors: list, w7_accumulators: list) -> tup
     top_sellers = [code for code, data in w30_distributors[:3]]
     top_buyers = [code for code, data in w7_accumulators[:3]]
     
-    # Broker institusi kuat (Asing + Institusi Lokal/Dana Pensiun/Big Player)
-    STRONG_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU", "CG", "DX", "BB", "IF", "OD", "TP"}
+    # Broker institusi & asing kuat (Asing + Institusi Lokal/Dana Pensiun/Big Player)
+    STRONG_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU", "CG", "DX", "BB", "IF", "OD", "TP", "NI", "CC", "GW", "AI", "AG", "DB", "DP", "LG", "LS", "HD", "MS", "GR", "ML", "UB"}
     # Broker Ritel Murni (FOMO Army)
-    RETAIL_BROKERS = {"YP", "XC", "XL", "PD", "CC", "SQ"}
+    RETAIL_BROKERS = {"YP", "XC", "XL", "PD", "SQ"}
     
     # Estafet dari ritel ke asing/big broker
     for seller in top_sellers:
@@ -193,18 +193,20 @@ def _detect_fomo_trap(w7_accumulators: list, w7_distributors: list, current_pric
     if diff_price < 4.0:
         return 0.0, "neutral", "", "" # Bukan trap pucuk kalau harga lagi turun/sideways
         
-    # Broker institusi kuat (Asing + Lokal)
-    INST_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU", "CG", "DX", "BB", "IF", "OD", "TP"}
+    # Broker institusi & asing kuat (Asing + Lokal)
+    INST_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU", "CG", "DX", "BB", "IF", "OD", "TP", "NI", "CC", "GW", "AI", "AG", "DB", "DP", "LG", "LS", "HD", "MS", "GR", "ML", "UB"}
     # Broker Ritel Murni (FOMO Army)
-    RETAIL_BROKERS = {"YP", "XC", "XL", "PD", "CC", "SQ"}
+    RETAIL_BROKERS = {"YP", "XC", "XL", "PD", "SQ"}
     
     # 2. Cek apakah Ritel dominan di Top 3 Buyer
     top_buyers_code = [code for code, data in w7_accumulators[:3]]
     retail_buyers = [b for b in top_buyers_code if b in RETAIL_BROKERS]
     
-    # 3. Cek apakah Institusi dominan di Top 3 Seller
-    top_sellers_code = [code for code, data in w7_distributors[:3]]
-    inst_sellers = [s for s in top_sellers_code if s in INST_BROKERS]
+    # 3. Cek apakah Institusi / Asing dominan di Top 3 Seller (Berdasarkan Kode ATAU Tipe Broker 'Asing')
+    inst_sellers = [
+        code for code, data in w7_distributors[:3] 
+        if code in INST_BROKERS or data.get("type") in ["Asing", "FOREIGN", "F", "Foreign"]
+    ]
     
     # 4. TRAP TERKONFIRMASI: Jika minimal 2 ritel ada di top buyer, DAN minimal 1-2 institusi di top seller membuang barang
     if len(retail_buyers) >= 1 and len(inst_sellers) >= 1:
@@ -599,8 +601,8 @@ def analyze(
     if fomo_log:
         data_used.append(fomo_log)
 
-    # === Retail Broker Penalty (XL, XC, YP) ===
-    RETAIL_BROKERS_PENALTY = {"YP", "XC", "XL", "PD", "CC"}
+    # === Retail Broker Penalty (XL, XC, YP, PD) ===
+    RETAIL_BROKERS_PENALTY = {"YP", "XC", "XL", "PD"}
     retail_penalty = 0.0
     # Cek top 3 broker akumulasi 7 hari
     if w7["top_accumulators"]:
