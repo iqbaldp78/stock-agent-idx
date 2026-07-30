@@ -10,7 +10,9 @@ from db import SessionLocal
 from db.models import MlPredictionLog
 from models.multiday_predictor import MultiDayPredictor
 from scripts.train_day1_model import get_universe_tickers, fetch_ohlcv
-from data.ml_features import prepare_training_data
+from data.ml_features import prepare_training_data, extract_features
+from agents import bandarmologi, technical, fundamental
+from data.fetcher_macro import get_macro_data
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -56,17 +58,37 @@ def run_ml_prediction(target_date: date = None, tickers: list = None) -> int:
     logging.info(f"Mulai Prediksi ML untuk {len(tickers)} saham pada target trade_date: {target_date}")
     count = 0
 
+    try:
+        macro_data = get_macro_data()
+    except Exception as e:
+        logging.warning(f"Gagal mengambil macro_data: {e}")
+        macro_data = {}
+
     for ticker in tickers:
         try:
             raw = fetch_ohlcv(ticker, "2y")
             if raw.empty or len(raw) < 50:
                 continue
 
-            X, _ = prepare_training_data(raw, ticker=ticker)
-            if X.empty:
+            # Ambil skor real-time dari agen agar fitur ML konsisten & lengkap
+            try:
+                b_res = bandarmologi.analyze(ticker)
+            except Exception:
+                b_res = {}
+            try:
+                t_res = technical.analyze(ticker)
+            except Exception:
+                t_res = {}
+            try:
+                f_res = fundamental.analyze(ticker)
+            except Exception:
+                f_res = {}
+
+            scores = {ticker: {"bandarm": b_res, "technical": t_res, "fundamental": f_res}}
+            latest_feature = extract_features(ticker, scores, macro_data, raw)
+            if latest_feature.empty:
                 continue
 
-            latest_feature = X.iloc[-1:]
             last_close = float(raw['Close'].iloc[-1])
             predictor = MultiDayPredictor(ticker=ticker)
             predictions = predictor.predict(latest_feature)

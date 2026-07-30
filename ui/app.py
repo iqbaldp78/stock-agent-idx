@@ -2527,7 +2527,8 @@ elif page == "🤖 ML Validation":
                     if l.is_correct is not None:
                         status_icon = "✅" if l.is_correct else "❌"
                     
-                    is_horizon_naik = (raw_pred >= 0.50 or prob_pct >= 50.0)
+                    # Threshold dinaikkan jadi 54.0% agar tidak banyak "False Positive" di masa sideways
+                    is_horizon_naik = (raw_pred >= 0.54 or prob_pct >= 54.0)
                     
                     if l.horizon == "1d":
                         pivot_dict[key]["Pred 1D"] = "📈 NAIK" if is_horizon_naik else "-"
@@ -2554,7 +2555,7 @@ elif page == "🤖 ML Validation":
                         val_str = str(row.get(h_col, "-"))
                         try:
                             val_num = float(val_str.replace("%", ""))
-                            if val_num >= 50.0:
+                            if val_num >= 54.0:
                                 return True
                         except ValueError:
                             pass

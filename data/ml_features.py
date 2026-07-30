@@ -25,6 +25,9 @@ FEATURE_COLUMNS = [
     "top3_buy_ratio_1m",
     "top3_sell_ratio_1m",
     "is_retail_accum",
+    "dominance_score",
+    "haka_score",
+    "is_fomo_trap",
     "technical_score",
     "rsi",
     "is_bullish_trend",
@@ -712,7 +715,10 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         "retail_sell_ratio_7d": bandar_ratios.get("retail_sell_ratio_7d", 0.0),
         "top3_buy_ratio_1m": bandar_ratios.get("top3_buy_ratio_1m", 0.0),
         "top3_sell_ratio_1m": bandar_ratios.get("top3_sell_ratio_1m", 0.0),
-        "is_retail_accum": 1.0 if "Penalty: Broker retail" in str(bandarm.get("data_used")) else 0.0,
+        "is_retail_accum": 1.0 if bandar_ratios.get("is_retail_accum", False) else 0.0,
+        "dominance_score": 1.0 if bandarm.get("insight_dominance", {}).get("type") == "driver" else (-1.0 if bandarm.get("insight_dominance", {}).get("type") == "risk" else 0.0),
+        "haka_score": 1.0 if bandarm.get("insight_aggressiveness", {}).get("type") == "driver" else (-1.0 if bandarm.get("insight_aggressiveness", {}).get("type") == "risk" else 0.0),
+        "is_fomo_trap": 1.0 if bandarm.get("insight_fomo_trap", {}).get("type") == "risk" else 0.0,
     }
 
     # 2. Technical Features

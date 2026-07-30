@@ -22,13 +22,17 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 
 def format_to_wib(dt):
     if not dt:
         return ""
     if isinstance(dt, datetime):
-        wib_dt = dt + timedelta(hours=7)
+        if dt.tzinfo is not None:
+            wib_tz = timezone(timedelta(hours=7))
+            wib_dt = dt.astimezone(wib_tz)
+        else:
+            wib_dt = dt
         return wib_dt.strftime("%Y-%m-%d %H:%M:%S WIB")
     elif isinstance(dt, date):
         return dt.strftime("%Y-%m-%d")

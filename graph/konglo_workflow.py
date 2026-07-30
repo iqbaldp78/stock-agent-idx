@@ -457,6 +457,15 @@ def run_debate_rule_based(state: AgentState) -> dict:
                 "argument": argument, "vote": "SELL",
             })
 
+        if bandarm.get("insight_fomo_trap", {}).get("type") == "risk":
+            fomo_nar = bandarm.get("insight_fomo_trap", {}).get("narrative", "")
+            argument = f"🚨 Exit Liquidity Warning: {fomo_nar}"
+            round1_votes[ticker]["net_vote"] -= 0.30
+            _log({
+                "round": 2, "ticker": ticker, "agent": "bandarmologi",
+                "argument": argument, "vote": "SELL",
+            })
+
         bd_7 = bandarm.get("window_7d", {}).get("net_value", 0)
         if isinstance(bd_7, (int, float)) and bd_7 > 0 and bandarm_score >= 6:
             argument = f"{ticker}: net value positif konfirmasi akumulasi bandar"

@@ -466,6 +466,20 @@ def predict_movement(
                 if fomo_narrative not in result["risks"]:
                     result["risks"].insert(0, fomo_narrative)
                     
+    # === INJEKSI PAKSA NARASI BANDAR DOMINANCE ===
+    if "bandarm" in scores and isinstance(scores["bandarm"], dict):
+        insight_dom = scores["bandarm"].get("insight_dominance")
+        if insight_dom and insight_dom.get("narrative"):
+            dom_type = insight_dom.get("type")
+            dom_narrative = insight_dom.get("narrative")
+            
+            if dom_type == "driver":
+                if dom_narrative not in result["key_drivers"]:
+                    result["key_drivers"].insert(0, dom_narrative)
+            elif dom_type == "risk":
+                if dom_narrative not in result["risks"]:
+                    result["risks"].insert(0, dom_narrative)
+                    
     return result
 
 

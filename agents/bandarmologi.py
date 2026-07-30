@@ -179,45 +179,104 @@ def _assess_aggressiveness(w7_accumulators: list, current_price: float, is_accum
     else:
         return 0.0, "neutral", "", f"Akumulasi Pasif: Cost {avg_cost_top3:.0f} di bawah Price {current_price} ({diff_pct:.1f}%) -> Imbang (Netral)"
 
-def _detect_fomo_trap(w7_accumulators: list, w7_distributors: list, current_price: float, bandar_avg_cost_7d: float) -> tuple[float, str, str, str]:
+def _detect_fomo_trap(w7_accumulators: list, w7_distributors: list, current_price: float, bandar_avg_cost_7d: float) -> tuple[float, str, str, str, bool]:
     """
-    Mendeteksi jebakan pucuk (Exit Liquidity): 
-    Harga dipompa meroket, namun Institusi justru membuang barang ke Ritel (YP, XC, PD dkk).
-    Returns: (score_adjustment, type (driver/risk/neutral), narrative, internal_log)
+    Mendeteksi jebakan pucuk (Exit Liquidity & FOMO Trap Matrix): 
+    Returns: (score_adjustment, type (driver/risk/neutral), narrative, internal_log, is_deadly_trap)
     """
     if not w7_accumulators or not w7_distributors or current_price <= 0 or bandar_avg_cost_7d <= 0:
-        return 0.0, "neutral", "", ""
+        return 0.0, "neutral", "", "", False
         
     # 1. Syarat Harga: Harga harus sedang "terbang" atau jauh di atas modal bandar (minimal > 4% dari modal bandar)
     diff_price = ((current_price - bandar_avg_cost_7d) / bandar_avg_cost_7d) * 100
     if diff_price < 4.0:
-        return 0.0, "neutral", "", "" # Bukan trap pucuk kalau harga lagi turun/sideways
+        return 0.0, "neutral", "", "", False # Bukan trap pucuk kalau harga lagi turun/sideways
         
     # Broker institusi & asing kuat (Asing + Lokal)
     INST_BROKERS = {"BK", "ZP", "AK", "CS", "RX", "KZ", "YU", "CG", "DX", "BB", "IF", "OD", "TP", "NI", "CC", "GW", "AI", "AG", "DB", "DP", "LG", "LS", "HD", "MS", "GR", "ML", "UB"}
     # Broker Ritel Murni (FOMO Army)
     RETAIL_BROKERS = {"YP", "XC", "XL", "PD", "SQ"}
     
-    # 2. Cek apakah Ritel dominan di Top 3 Buyer
+    # Buyer classification
     top_buyers_code = [code for code, data in w7_accumulators[:3]]
     retail_buyers = [b for b in top_buyers_code if b in RETAIL_BROKERS]
+    inst_buyers = [
+        code for code, data in w7_accumulators[:3] 
+        if code in INST_BROKERS or data.get("type") in ["Asing", "FOREIGN", "F", "Foreign"]
+    ]
     
-    # 3. Cek apakah Institusi / Asing dominan di Top 3 Seller (Berdasarkan Kode ATAU Tipe Broker 'Asing')
+    # Seller classification
+    top_sellers_code = [code for code, data in w7_distributors[:3]]
     inst_sellers = [
         code for code, data in w7_distributors[:3] 
         if code in INST_BROKERS or data.get("type") in ["Asing", "FOREIGN", "F", "Foreign"]
     ]
+    retail_sellers = [s for s in top_sellers_code if s in RETAIL_BROKERS]
     
-    # 4. TRAP TERKONFIRMASI: Jika minimal 2 ritel ada di top buyer, DAN minimal 1-2 institusi di top seller membuang barang
+    # 🔴 SKENARIO 1: TRAP TERKONFIRMASI (Deadly Trap)
     if len(retail_buyers) >= 1 and len(inst_sellers) >= 1:
-        # Hitung dominasinya untuk narasi
         ret_str = ", ".join(retail_buyers)
         inst_str = ", ".join(inst_sellers)
         nar = f"🚨 Retail FOMO Trap: Harga dipompa naik (+{diff_price:.1f}% dari modal bandar), namun Institusi ({inst_str}) membuang barang yang ditampung Ritel ({ret_str}). Sangat rawan jebol (Exit Liquidity)."
-        log = f"FOMO Trap Detected! Price +{diff_price:.1f}% -> Inst Seller ({inst_str}) vs Retail Buyer ({ret_str}) -> Penalti -1.5"
-        return -1.5, "risk", nar, log
+        log = f"FOMO Trap (Deadly Trap)! Price +{diff_price:.1f}% -> Inst Seller ({inst_str}) vs Retail Buyer ({ret_str}) -> Penalti -2.0 & Hard Cap 4.0"
+        return -2.0, "risk", nar, log, True
+
+    # 🟡 SKENARIO 2: RETAIL VS RETAIL (Noise Pucuk)
+    elif len(retail_buyers) >= 1 and len(retail_sellers) >= 1 and len(inst_sellers) == 0:
+        ret_b_str = ", ".join(retail_buyers)
+        ret_s_str = ", ".join(retail_sellers)
+        nar = f"ℹ️ Retail vs Retail: Harga dipompa naik (+{diff_price:.1f}%), namun transaksi didominasi oleh sesama ritel (Buyer: {ret_b_str}, Seller: {ret_s_str}). Tidak ada partisipasi bandar besar."
+        log = f"Retail vs Retail Noise! Price +{diff_price:.1f}% -> Netral (0.0)"
+        return 0.0, "neutral", nar, log, False
+
+    # 🟢 SKENARIO 3: INSTITUTIONAL BREAKOUT (Valid Breakout)
+    elif len(inst_buyers) >= 2:
+        inst_b_str = ", ".join(inst_buyers)
+        nar = f"🚀 Institutional Breakout: Kenaikan harga (+{diff_price:.1f}%) didorong akumulasi kuat institusi/asing ({inst_b_str}) yang menampung barang dari pasar."
+        log = f"Institutional Breakout! Price +{diff_price:.1f}% -> Inst Buyer ({inst_b_str})"
+        return -1.5, "risk", nar, log, True
         
-    return 0.0, "neutral", "", ""
+    return 0.0, "neutral", "", "", False
+
+def _assess_dominance(w7_top_brokers: list, total_market_value: float, is_accumulating: bool) -> tuple[float, str, str, str]:
+    """
+    Menghitung Bandar Dominance (Kekuatan Setir): Top 3 vs Total Transaksi Market Se-Indonesia.
+    Returns: (score_adjustment, type (driver/risk/neutral), narrative, internal_log)
+    """
+    if not w7_top_brokers or total_market_value <= 0:
+        return 0.0, "neutral", "", ""
+        
+    # 1. Hitung total transaksi Top 3
+    # Bisa untuk Top Buyer maupun Top Seller, kita ambil 'total_buy_value' 
+    # atau fall back ke 'total_sell_value' jika yang masuk adalah w7_distributors
+    top3 = w7_top_brokers[:3]
+    
+    top3_val = 0
+    for code, data in top3:
+        if "total_buy_value" in data:
+            top3_val += data["total_buy_value"]
+        elif "total_sell_value" in data:
+            top3_val += data["total_sell_value"]
+            
+    # 2. Hitung persentase dominasi
+    dominance_pct = (top3_val / total_market_value) * 100
+    
+    # 3. Matriks Skenario Dominasi
+    if dominance_pct > 40.0:
+        if is_accumulating:
+            nar = f"👑 Dominasi Mutlak: {dominance_pct:.1f}% transaksi pasar dikendalikan oleh 3 broker utama. Sinyal Akumulasi ber-validitas SANGAT TINGGI."
+            return 1.0, "driver", nar, f"Dominance {dominance_pct:.1f}% (>40) + Accum -> Bonus +1.0"
+        else:
+            nar = f"⚠️ Distribusi Masif: {dominance_pct:.1f}% transaksi pasar dikendalikan 3 broker yang membuang barang. Risiko SANGAT TINGGI."
+            return -1.0, "risk", nar, f"Dominance {dominance_pct:.1f}% (>40) + Dist -> Penalti -1.0"
+            
+    elif dominance_pct < 15.0:
+        nar = f"⚠️ Sinyal Lemah (Noise): Top 3 broker hanya menguasai {dominance_pct:.1f}% transaksi. Pergerakan saham murni acak/digerakkan ritel."
+        return -1.5, "risk", nar, f"Dominance {dominance_pct:.1f}% (<15) -> Sinyal Noise / Penalty -1.5"
+        
+    else:
+        # Dominasi Signifikan/Wajar (15% - 40%)
+        return 0.0, "neutral", "", f"Dominance {dominance_pct:.1f}% (Wajar) -> Netral"
 
 def _format_broker_detail(broker_code: str, broker_data: dict,
                           window_days: int, current_price: float = 0) -> dict:
@@ -591,7 +650,7 @@ def analyze(
     )
     
     # === Deteksi FOMO Trap (Exit Liquidity) ===
-    fomo_score, fomo_type, fomo_narrative, fomo_log = _detect_fomo_trap(
+    fomo_score, fomo_type, fomo_narrative, fomo_log, is_deadly_trap = _detect_fomo_trap(
         w7.get("top_accumulators", []),
         w7.get("top_distributors", []),
         current_price,
@@ -601,25 +660,63 @@ def analyze(
     if fomo_log:
         data_used.append(fomo_log)
 
-    # === Retail Broker Penalty (XL, XC, YP, PD) ===
-    RETAIL_BROKERS_PENALTY = {"YP", "XC", "XL", "PD"}
-    retail_penalty = 0.0
-    # Cek top 3 broker akumulasi 7 hari
-    if w7["top_accumulators"]:
-        top_brokers = w7["top_accumulators"][:5]
-        values = [data["total_buy_value"] for code, data in top_brokers]
-        lots = [data["total_buy_lot"] for code, data in top_brokers]
-        avg_value = sum(values) / len(values) if values else 0
-        avg_lot = sum(lots) / len(lots) if lots else 0
-        for rank, (code, data) in enumerate(top_brokers[:3], 1):
-            if code in RETAIL_BROKERS_PENALTY:
-                # Anomali jika value/lot 2x lebih besar dari rata2 top 5
-                if (data["total_buy_value"] >= 2 * avg_value or data["total_buy_lot"] >= 2 * avg_lot):
-                    data_used.append(f"Anomali: Broker retail {code} akumulasi besar di rank {rank} (anomali, no penalty)")
-                else:
-                    retail_penalty -= 1.0
-                    data_used.append(f"Penalty: Broker retail {code} akumulasi di rank {rank} (score -1.0)")
-    score += retail_penalty
+    # === Bandar Dominance (Kekuatan Setir) ===
+    # Kita hitung total traded value di market selama 7 hari
+    total_market_val_7d = w7.get("total_buy_value_all", 0)
+    # Default total market value estimation if API doesn't provide it directly
+    if total_market_val_7d == 0 and w7.get("top_accumulators"):
+        # Jika API tidak memberi grand total, kita tak bisa menebak akurat. 
+        # Tapi kita gunakan proxy: top 10 buyer + seller = total market proxy 
+        # Karena script data/fetcher membatasi limit=10, kita jumlahkan
+        val_b = sum(d["total_buy_value"] for c, d in w7.get("top_accumulators", []))
+        val_s = sum(d["total_sell_value"] for c, d in w7.get("top_distributors", []))
+        total_market_val_7d = max(val_b, val_s) # Proxy terendah
+
+    # Tentukan parameter yang dipakai (akumulasi atau distribusi) berdasar fase
+    w7_acc = w7.get("top_accumulators", [])
+    w7_dist = w7.get("top_distributors", [])
+    # Kita tentukan dari net lot/value mana yang lebih besar untuk status sederhana dominasi
+    w7_net_lot = sum(b[1]["total_buy_lot"] for b in w7_acc) - sum(d[1]["total_sell_lot"] for d in w7_dist)
+    is_accum_phase = w7_net_lot >= 0
+    
+    dominance_brokers = w7.get("top_accumulators", []) if is_accum_phase else w7.get("top_distributors", [])
+    
+    dom_score, dom_type, dom_narrative, dom_log = _assess_dominance(
+        dominance_brokers,
+        total_market_val_7d,
+        is_accum_phase
+    )
+    score += dom_score
+    if dom_log:
+        data_used.append(dom_log)
+
+    # === Retail Broker Penalty (XL, XC, YP) ===
+    RETAIL_BROKERS_PENALTY = {"YP", "XC", "XL", "PD", "CC"}
+    
+    # Hanya dihitung jika BUKAN Deadly Trap (bypassed jika trap pucuk terkonfirmasi agar tidak double penalty)
+    if not is_deadly_trap:
+        retail_penalty = 0.0
+        # Cek top 3 broker akumulasi 7 hari
+        if w7.get("top_accumulators"):
+            top_brokers = w7["top_accumulators"][:5]
+            values = [data.get("total_buy_value", 0) for code, data in top_brokers]
+            lots = [data.get("total_buy_lot", 0) for code, data in top_brokers]
+            avg_value = sum(values) / len(values) if values else 0
+            avg_lot = sum(lots) / len(lots) if lots else 0
+            for rank, (code, data) in enumerate(top_brokers[:3], 1):
+                if code in RETAIL_BROKERS_PENALTY:
+                    # Anomali jika value/lot 2x lebih besar dari rata2 top 5
+                    if (data.get("total_buy_value", 0) >= 2 * avg_value or data.get("total_buy_lot", 0) >= 2 * avg_lot):
+                        data_used.append(f"Anomali: Broker retail {code} akumulasi besar di rank {rank} (anomali, no penalty)")
+                    else:
+                        retail_penalty -= 1.0
+                        data_used.append(f"Penalty: Broker retail {code} akumulasi di rank {rank} (score -1.0)")
+        score += retail_penalty
+
+    # === Calculate aggregated metrics for UI ===
+    if is_deadly_trap:
+        score = min(score, 4.0)
+        data_used.append("🚨 HARD CAP: Skor Bandarmologi dikunci maksimal 4.0 (Distribution/Neutral) karena Deadly FOMO Trap Terkonfirmasi")
 
     # === Calculate aggregated metrics for UI ===
     # Window 7 days
@@ -684,6 +781,10 @@ def analyze(
         "insight_fomo_trap": {
             "type": fomo_type,
             "narrative": fomo_narrative
+        },
+        "insight_dominance": {
+            "type": dom_type,
+            "narrative": dom_narrative
         }
     }
 

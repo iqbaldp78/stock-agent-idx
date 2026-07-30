@@ -85,12 +85,18 @@ export default function BandarmologiPage() {
     return ((currentPrice - avgPrice) / avgPrice) * 100;
   };
 
-  const fetchBandarmologiData = async (ticker: string) => {
+  const fetchBandarmologiData = async (ticker: string, dateFrom?: string, dateTo?: string) => {
     setBandarLoading(true);
     try {
-      // Create date format YYYY-MM-DD
-      const dateStr = new Date().toISOString().split('T')[0];
-      const res = await fetch(`/api/bandarmologi/${ticker}?date_from=${dateStr}&date_to=${dateStr}`);
+      let queryParams = "";
+      if (dateFrom && dateTo) {
+        queryParams = `?date_from=${dateFrom}&date_to=${dateTo}`;
+      } else {
+        // Default to today
+        const dateStr = new Date().toISOString().split('T')[0];
+        queryParams = `?date_from=${dateStr}&date_to=${dateStr}`;
+      }
+      const res = await fetch(`/api/bandarmologi/${ticker}${queryParams}`);
       const data = await res.json();
       if (data && !data.error) {
         // Map agent response to frontend structure
@@ -118,7 +124,15 @@ export default function BandarmologiPage() {
     }
   };
 
-  useEffect(() => { fetchBandarmologiData(bandarmologiTicker); }, [bandarmologiTicker]);
+  useEffect(() => {
+    if (bandarTimeframe === 'custom') {
+      if (customDateFrom && customDateTo) {
+        fetchBandarmologiData(bandarmologiTicker, customDateFrom, customDateTo);
+      }
+    } else {
+      fetchBandarmologiData(bandarmologiTicker);
+    }
+  }, [bandarmologiTicker, bandarTimeframe, customDateFrom, customDateTo]);
 
   return (
     <div className="space-y-6 animate-fade-in">
