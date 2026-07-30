@@ -313,6 +313,112 @@ def get_performance_history():
     except Exception as e:
         return {"history": [], "summary": {"total_signals": 0, "winning_signals": 0, "losing_signals": 0, "win_rate": 0, "avg_return_pct": 0, "best_pick": None, "worst_pick": None, "current_streak": 0, "recent_win_rate": 0, "recent_avg_return_pct": 0}}
 
+
+@app.get("/api/performance/ml-predictions")
+def get_ml_predictions(
+    trade_date: Optional[str] = Query(None, description="Trade date in YYYY-MM-DD format"),
+    horizon: Optional[str] = Query("1D", description="Horizon: 1D, 3D, 5D, 7D"),
+    direction: Optional[str] = Query("NAIK", description="Direction filter: NAIK, TURUN, or ALL")
+):
+    try:
+        with engine.connect() as conn:
+            dates_query = text("""
+                SELECT DISTINCT trade_date 
+                FROM ml_prediction_log 
+                ORDER BY trade_date DESC
+            """)
+            dates_res = conn.execute(dates_query).fetchall()
+            available_dates = [r[0].strftime("%Y-%m-%d") for r in dates_res if r[0]]
+            
+            if not available_dates:
+                return {
+                    "available_dates": [],
+                    "trade_date": None,
+                    "horizon": horizon.upper() if horizon else "1D",
+                    "predictions": []
+                }
+            
+            today_str = date.today().isoformat()
+            if trade_date and trade_date in available_dates:
+                selected_date = trade_date
+            elif today_str in available_dates:
+                selected_date = today_str
+            else:
+                past_dates = [d for d in available_dates if d <= today_str]
+                selected_date = past_dates[0] if past_dates else available_dates[0]
+
+            norm_horizon = horizon.lower() if horizon else "1d"
+            
+            sql_where = "WHERE m.trade_date = :tdate AND LOWER(m.horizon) = :hz"
+            params = {"tdate": selected_date, "hz": norm_horizon}
+            
+            if direction and direction.upper() != "ALL":
+                sql_where += " AND UPPER(m.predicted_direction) = :dir"
+                params["dir"] = direction.upper()
+                
+            query = text(f"""
+                SELECT 
+                    m.ticker,
+                    m.predicted_direction,
+                    m.pred_return_pct,
+                    m.pred_price,
+                    m.actual_close_price,
+                    m.actual_return_pct,
+                    m.is_correct,
+                    m.trade_date,
+                    m.horizon
+                FROM ml_prediction_log m
+                {sql_where}
+                ORDER BY m.pred_return_pct DESC
+            """)
+            rows = conn.execute(query, params).fetchall()
+            
+            predictions = []
+            for r in rows:
+                ticker = r[0]
+                pred_dir = r[1] or "NAIK"
+                prob_pct = float(r[2]) * 100.0 if r[2] is not None and float(r[2]) <= 1.0 else float(r[2] or 0.0)
+                pred_price = float(r[3]) if r[3] is not None else None
+                actual_close = float(r[4]) if r[4] is not None else None
+                actual_return = float(r[5]) if r[5] is not None else None
+                is_correct = r[6]
+                
+                if is_correct is True or (actual_return is not None and actual_return > 0):
+                    status = "BENAR"
+                elif is_correct is False or (actual_return is not None and actual_return <= 0):
+                    status = "SALAH"
+                else:
+                    status = "PENDING"
+                    
+                predictions.append({
+                    "ticker": ticker,
+                    "direction": pred_dir,
+                    "probability_pct": round(prob_pct, 2),
+                    "pred_price": round(pred_price, 2) if pred_price else None,
+                    "actual_close": round(actual_close, 2) if actual_close else None,
+                    "actual_return_pct": round(float(actual_return), 2) if actual_return is not None else None,
+                    "status": status,
+                    "is_correct": is_correct
+                })
+                
+            return {
+                "available_dates": available_dates,
+                "trade_date": selected_date,
+                "today_date": today_str,
+                "horizon": norm_horizon.upper(),
+                "predictions": predictions
+            }
+    except Exception as e:
+        print(f"Error fetching ml_predictions: {e}")
+        return {
+            "error": str(e),
+            "available_dates": [],
+            "trade_date": trade_date,
+            "horizon": horizon,
+            "predictions": []
+        }
+
+
 @app.get("/api/stats")
 @app.get("/api/dashboard/stats")
 def get_stats():
