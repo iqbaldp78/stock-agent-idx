@@ -63,7 +63,7 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
         # preds is now probabilities
         preds = model.predict(X_valid[predictor.feature_cols].fillna(0.0))
         
-        binary_preds = (preds > 0.5).astype(int)
+        binary_preds = (preds >= 0.55).astype(int)
         y_true_int = y_true.astype(int)
         
         # Manual metrics

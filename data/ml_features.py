@@ -848,11 +848,12 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
 
-    # Targets: Continuous returns (regression target) - NO WAIT, changing to binary targets (1 for BUY, 0 for AVOID)
-    df['target_1d'] = (df['Close'].shift(-1) > df['Close'] * 1.002).astype(int)
-    df['target_3d'] = (df['Close'].shift(-3) > df['Close'] * 1.01).astype(int)
+    # Targets: Binary classification — 1 for significant price increase, 0 otherwise
+    # Thresholds tuned to filter noise: 1D=0.5%, 3D=1.5%, 5D=1.5%, 7D=2.5%
+    df['target_1d'] = (df['Close'].shift(-1) > df['Close'] * 1.005).astype(int)
+    df['target_3d'] = (df['Close'].shift(-3) > df['Close'] * 1.015).astype(int)
     df['target_5d'] = (df['Close'].shift(-5) > df['Close'] * 1.015).astype(int)
-    df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.02).astype(int)
+    df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.025).astype(int)
 
     # Simple Technical Features for History
     df['ret_1d'] = df['Close'].pct_change()

@@ -199,7 +199,7 @@ st.sidebar.divider()
 
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "🤖 ML Validation", "📊 Performance", "💼 Portfolio", "🌍 Universe", "🐋 Konglo Play", "⚙️ Settings"]
+    ["📈 Top Picks", "🔍 Screener", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "🤖 ML Validation", "📊 Performance", "💼 Portfolio", "🌍 Universe", "🐋 Konglo Play", "⚙️ Settings"]
 )
 
 st.sidebar.divider()
@@ -668,6 +668,84 @@ if page == "📈 Top Picks":
             render_signals_list(signals_konglo)
         else:
             st.info("👋 Belum ada data Konglo Picks. Silahkan jalankan 'Konglo Analysis' dari menu Konglo Play terlebih dahulu.")
+
+# === PAGE: Screener ===
+elif page == "🔍 Screener":
+    st.title("🔍 STOCK SCREENER BEI")
+    st.caption("Skrining saham IHSG berbasis Candlestick Pattern, HAKA Volume, Broker Accumulation, & Technical Breakout.")
+    
+    from services.screener_service import get_screener_data
+    import pandas as pd
+    
+    col_type, col_univ, col_action = st.columns([2.5, 1.5, 1])
+    
+    with col_type:
+        screener_type = st.selectbox(
+            "Pilih Tipe Screener",
+            [
+                "🕯️ Candlestick Patterns (BEI Win-Rate)",
+                "⚡ HAKA / Volume Spike",
+                "🏛️ Broker Dominance (Akumulasi)",
+                "📈 Technical Breakout (TradingView TA)",
+                "💎 Deep Undervalued Gem",
+                "🐋 Konglo Group Momentum",
+                "🎯 Oversold Bounce (RSI < 35)"
+            ]
+        )
+        
+    with col_univ:
+        universe_type = st.selectbox("Universe Saham", ["ALL", "LQ45", "KONGLO", "CUSTOM"])
+        
+    with col_action:
+        st.write("")
+        st.write("")
+        run_scan = st.button("▶️ Scan Now", type="primary", use_container_width=True)
+        
+    with st.spinner("Mengambil hasil screening saham..."):
+        data = get_screener_data(screener_type, universe_type, force_scan=run_scan)
+        
+    if not data:
+        st.warning("⚠️ Tidak ada emiten yang memenuhi kriteria screener pada universe/tipe ini. Silahkan klik '▶️ Scan Now' untuk memperbarui data.")
+    else:
+        # Summary metrics
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("📊 Total Sinyal", len(data))
+        
+        if "candlestick" in screener_type.lower():
+            bullish_count = len([x for x in data if "BULLISH" in str(x.get("signal", ""))])
+            avg_wr = sum([x.get("win_rate", 50) for x in data]) / len(data) if data else 0
+            m2.metric("🟢 Bullish Patterns", bullish_count)
+            m3.metric("🎯 Avg Win-Rate", f"{avg_wr:.1f}%")
+            m4.metric("🏆 Top Pick", data[0].get("ticker", "-") if data else "-")
+        elif "haka" in screener_type.lower():
+            super_haka = len([x for x in data if "SUPER" in str(x.get("status", ""))])
+            max_vol = max([x.get("volume_multiplier", 0) for x in data], default=0)
+            m2.metric("🚀 Super HAKA", super_haka)
+            m3.metric("📈 Max Vol Multiplier", f"{max_vol:.2f}x")
+            m4.metric("🏆 Highest Vol", data[0].get("ticker", "-") if data else "-")
+        elif "broker" in screener_type.lower() or "dominance" in screener_type.lower():
+            accum = len([x for x in data if x.get("accumulation_status") == "ACCUMULATION"])
+            m2.metric("🏛️ Akumulasi Net Buy", accum)
+            m3.metric("🌐 Foreign Net Buy", len([x for x in data if x.get("foreign_flow") == "NET BUY"]))
+            m4.metric("🏆 Top Accumulation", data[0].get("ticker", "-") if data else "-")
+        else:
+            m2.metric("🟢 High Conviction", len(data))
+            m3.metric("⚡ Status", "Active")
+            m4.metric("🏆 Top Ticker", data[0].get("ticker", "-") if data else "-")
+
+        st.divider()
+        
+        # Interactive DataFrame
+        df_display = pd.DataFrame(data)
+        st.dataframe(df_display, use_container_width=True, height=380)
+        
+        # Detail view per ticker
+        st.subheader("🔍 Detail & Quick Analysis")
+        selected_tick = st.selectbox("Pilih Saham untuk Detail Analyst View", [d.get("ticker") for d in data if isinstance(d, dict) and "ticker" in d])
+        if selected_tick:
+            item_detail = next((x for x in data if isinstance(x, dict) and x.get("ticker") == selected_tick), None)
+            if item_detail:
+                st.json(item_detail)
 
 elif page == "💹 Trading Engine":
     st.title("💹 TRADING ENGINE")

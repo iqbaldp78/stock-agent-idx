@@ -1,0 +1,92 @@
+[
+  {
+    "ticker": "ADRO",
+    "price": 2510,
+    "recommendation": "BUY",
+    "buy_signals": 16,
+    "sell_signals": 2,
+    "rsi_14": 57.75,
+    "macd_bullish": false,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "AKRA",
+    "price": 1455,
+    "recommendation": "BUY",
+    "buy_signals": 14,
+    "sell_signals": 2,
+    "rsi_14": 62.62,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "BBCA",
+    "price": 6450,
+    "recommendation": "BUY",
+    "buy_signals": 14,
+    "sell_signals": 3,
+    "rsi_14": 58.55,
+    "macd_bullish": false,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "BBRI",
+    "price": 2990,
+    "recommendation": "BUY",
+    "buy_signals": 13,
+    "sell_signals": 4,
+    "rsi_14": 55.86,
+    "macd_bullish": true,
+    "ma_alignment": "Neutral"
+  },
+  {
+    "ticker": "BBNI",
+    "price": 3550,
+    "recommendation": "BUY",
+    "buy_signals": 12,
+    "sell_signals": 5,
+    "rsi_14": 53.54,
+    "macd_bullish": true,
+    "ma_alignment": "Neutral"
+  },
+  {
+    "ticker": "ESSA",
+    "price": 635,
+    "recommendation": "BUY",
+    "buy_signals": 12,
+    "sell_signals": 4,
+    "rsi_14": 56.0,
+    "macd_bullish": true,
+    "ma_alignment": "Neutral"
+  },
+  {
+    "ticker": "BYAN",
+    "price": 12075,
+    "recommendation": "BUY",
+    "buy_signals": 11,
+    "sell_signals": 5,
+    "rsi_14": 59.74,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "ASII",
+    "price": 4950,
+    "recommendation": "SELL",
+    "buy_signals": 6,
+    "sell_signals": 10,
+    "rsi_14": 49.7,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "ADMR",
+    "price": 1490,
+    "recommendation": "SELL",
+    "buy_signals": 6,
+    "sell_signals": 11,
+    "rsi_14": 49.54,
+    "macd_bullish": false,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  }
+]

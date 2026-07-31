@@ -251,6 +251,7 @@ export default function AIPerformancePage() {
   const [mlSearchQuery, setMlSearchQuery] = useState<string>('');
   const [mlLoading, setMlLoading] = useState<boolean>(false);
   const [mlPage, setMlPage] = useState<number>(1);
+  const [minProbability, setMinProbability] = useState<number>(55);
   const mlItemsPerPage = 10;
 
   const fetchMlPredictions = async (date?: string, horizon?: string, dir?: string) => {
@@ -390,7 +391,8 @@ export default function AIPerformancePage() {
   const paginatedRows = historyRows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const filteredMlRows = mlPredictions.filter(row => 
-    row.ticker.toLowerCase().includes(mlSearchQuery.trim().toLowerCase())
+    row.ticker.toLowerCase().includes(mlSearchQuery.trim().toLowerCase()) &&
+    row.probability_pct >= minProbability
   );
   const totalMlPages = Math.ceil(filteredMlRows.length / mlItemsPerPage) || 1;
   const paginatedMlRows = filteredMlRows.slice((mlPage - 1) * mlItemsPerPage, mlPage * mlItemsPerPage);
@@ -528,6 +530,26 @@ export default function AIPerformancePage() {
                         {dir.label}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Min Probability Slider */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-secondary">Min Probabilitas</label>
+                  <div className="flex items-center gap-2 bg-background/60 border border-border px-3 py-1.5 rounded-xl">
+                    <input
+                      type="range"
+                      min={50}
+                      max={70}
+                      step={1}
+                      value={minProbability}
+                      onChange={(e) => {
+                        setMinProbability(Number(e.target.value));
+                        setMlPage(1);
+                      }}
+                      className="w-20 h-1 accent-accent cursor-pointer"
+                    />
+                    <span className="text-xs font-mono font-bold text-accent min-w-[36px]">{minProbability}%</span>
                   </div>
                 </div>
               </div>

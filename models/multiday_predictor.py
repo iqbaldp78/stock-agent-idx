@@ -73,14 +73,17 @@ class MultiDayPredictor:
                 'metric': 'binary_logloss',
                 'verbosity': -1,
                 'boosting_type': 'gbdt',
-                'learning_rate': 0.05,
-                'num_leaves': 15,
-                'min_child_samples': 10,
+                'learning_rate': 0.03,
+                'num_leaves': 31,
+                'min_child_samples': 20,
                 'bagging_fraction': 0.8,
-                'feature_fraction': 0.8,
+                'feature_fraction': 0.7,
                 'bagging_freq': 1,
                 'is_unbalance': True,
-                'seed': 42
+                'seed': 42,
+                'reg_alpha': 0.1,
+                'reg_lambda': 1.0,
+                'min_gain_to_split': 0.01,
             }
 
             dtrain = lgb.Dataset(X_tr, label=y_tr, weight=weights)
@@ -100,14 +103,14 @@ class MultiDayPredictor:
                     dfold_val = lgb.Dataset(X_fold_val, label=y_fold_val, reference=dfold_train)
                     
                     fold_callbacks = [
-                        lgb.early_stopping(stopping_rounds=15, verbose=False),
+                        lgb.early_stopping(stopping_rounds=30, verbose=False),
                         lgb.log_evaluation(period=0)
                     ]
                     
                     fold_model = lgb.train(
                         params,
                         dfold_train,
-                        num_boost_round=200,
+                        num_boost_round=500,
                         valid_sets=[dfold_val],
                         callbacks=fold_callbacks
                     )
@@ -116,7 +119,7 @@ class MultiDayPredictor:
             if best_rounds:
                 opt_rounds = int(np.mean(best_rounds))
                 # Ensure a sensible range of boosting rounds
-                opt_rounds = max(10, min(opt_rounds, 200))
+                opt_rounds = max(20, min(opt_rounds, 500))
             else:
                 opt_rounds = 50  # Fallback default
                 
