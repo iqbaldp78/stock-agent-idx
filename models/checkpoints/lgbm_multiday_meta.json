@@ -1,165 +1,83 @@
 {
-  "run_date": "2026-08-01T00:08:19.233458",
+  "run_date": "2026-08-01T07:58:46.934091",
   "checkpoints_dir": "models/checkpoints",
   "config": {
-    "period": "2y",
+    "period": "3y",
     "min_rows": 120,
     "test_size": 0.2
   },
   "rows": {
-    "tickers_requested": 3,
-    "tickers_trained": 3,
-    "holdout_train_rows": 1149,
-    "holdout_test_rows": 288,
-    "final_train_rows": 1437
+    "tickers_requested": 1,
+    "tickers_trained": 1,
+    "holdout_train_rows": 548,
+    "holdout_test_rows": 138,
+    "final_train_rows": 686
   },
   "holdout_metrics_macro_avg": {
     "1d": {
-      "test_rows": 288,
-      "accuracy": 49.65,
-      "buy_precision": 44.78,
-      "buy_recall": 88.75
+      "test_rows": 138,
+      "accuracy": 55.07,
+      "buy_precision": 41.33,
+      "buy_recall": 63.27
     },
     "3d": {
-      "test_rows": 288,
-      "accuracy": 64.24,
-      "buy_precision": 51.83,
-      "buy_recall": 69.09
+      "test_rows": 138,
+      "accuracy": 58.7,
+      "buy_precision": 46.25,
+      "buy_recall": 72.55
     },
     "5d": {
-      "test_rows": 288,
-      "accuracy": 59.72,
-      "buy_precision": 51.11,
-      "buy_recall": 79.23
+      "test_rows": 138,
+      "accuracy": 53.62,
+      "buy_precision": 40.58,
+      "buy_recall": 54.9
     },
     "7d": {
-      "test_rows": 288,
-      "accuracy": 68.05,
-      "buy_precision": 54.72,
-      "buy_recall": 77.38
+      "test_rows": 138,
+      "accuracy": 44.2,
+      "buy_precision": 39.82,
+      "buy_recall": 83.33
     }
   },
   "tickers": [
     {
-      "ticker": "BBCA",
-      "ohlcv_rows": 479,
-      "training_rows": 479,
-      "train_rows": 383,
-      "test_rows": 96,
+      "ticker": "PADI",
+      "ohlcv_rows": 686,
+      "training_rows": 686,
+      "train_rows": 548,
+      "test_rows": 138,
       "metrics": {
         "1d": {
-          "test_rows": 96,
-          "accuracy": 61.46,
-          "buy_precision": 52.94,
-          "buy_recall": 87.8,
-          "optimal_threshold": 0.34,
-          "n_features": 41
+          "test_rows": 138,
+          "accuracy": 55.07,
+          "buy_precision": 41.33,
+          "buy_recall": 63.27,
+          "optimal_threshold": 0.35,
+          "n_features": 50
         },
         "3d": {
-          "test_rows": 96,
-          "accuracy": 75.0,
-          "buy_precision": 61.29,
-          "buy_recall": 61.29,
-          "optimal_threshold": 0.66,
-          "n_features": 40
+          "test_rows": 138,
+          "accuracy": 58.7,
+          "buy_precision": 46.25,
+          "buy_recall": 72.55,
+          "optimal_threshold": 0.35,
+          "n_features": 49
         },
         "5d": {
-          "test_rows": 96,
-          "accuracy": 68.75,
-          "buy_precision": 50.0,
-          "buy_recall": 90.0,
-          "optimal_threshold": 0.34,
-          "n_features": 40
+          "test_rows": 138,
+          "accuracy": 53.62,
+          "buy_precision": 40.58,
+          "buy_recall": 54.9,
+          "optimal_threshold": 0.37,
+          "n_features": 49
         },
         "7d": {
-          "test_rows": 96,
-          "accuracy": 78.12,
-          "buy_precision": 60.98,
+          "test_rows": 138,
+          "accuracy": 44.2,
+          "buy_precision": 39.82,
           "buy_recall": 83.33,
-          "optimal_threshold": 0.61,
-          "n_features": 40
-        }
-      }
-    },
-    {
-      "ticker": "BMRI",
-      "ohlcv_rows": 479,
-      "training_rows": 479,
-      "train_rows": 383,
-      "test_rows": 96,
-      "metrics": {
-        "1d": {
-          "test_rows": 96,
-          "accuracy": 45.83,
-          "buy_precision": 39.47,
-          "buy_recall": 83.33,
-          "optimal_threshold": 0.25,
-          "n_features": 41
-        },
-        "3d": {
-          "test_rows": 96,
-          "accuracy": 59.38,
-          "buy_precision": 43.48,
-          "buy_recall": 60.61,
-          "optimal_threshold": 0.47,
-          "n_features": 41
-        },
-        "5d": {
-          "test_rows": 96,
-          "accuracy": 36.46,
-          "buy_precision": 33.33,
-          "buy_recall": 79.41,
-          "optimal_threshold": 0.21,
-          "n_features": 41
-        },
-        "7d": {
-          "test_rows": 96,
-          "accuracy": 53.12,
-          "buy_precision": 36.51,
-          "buy_recall": 82.14,
-          "optimal_threshold": 0.27,
-          "n_features": 40
-        }
-      }
-    },
-    {
-      "ticker": "TLKM",
-      "ohlcv_rows": 479,
-      "training_rows": 479,
-      "train_rows": 383,
-      "test_rows": 96,
-      "metrics": {
-        "1d": {
-          "test_rows": 96,
-          "accuracy": 41.67,
-          "buy_precision": 41.94,
-          "buy_recall": 95.12,
-          "optimal_threshold": 0.21,
-          "n_features": 40
-        },
-        "3d": {
-          "test_rows": 96,
-          "accuracy": 58.33,
-          "buy_precision": 50.72,
-          "buy_recall": 85.37,
-          "optimal_threshold": 0.29,
-          "n_features": 40
-        },
-        "5d": {
-          "test_rows": 96,
-          "accuracy": 73.96,
-          "buy_precision": 70.0,
-          "buy_recall": 68.29,
-          "optimal_threshold": 0.6,
-          "n_features": 41
-        },
-        "7d": {
-          "test_rows": 96,
-          "accuracy": 72.92,
-          "buy_precision": 66.67,
-          "buy_recall": 66.67,
-          "optimal_threshold": 0.62,
-          "n_features": 41
+          "optimal_threshold": 0.38,
+          "n_features": 50
         }
       }
     }

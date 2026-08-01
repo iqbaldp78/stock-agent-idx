@@ -10,6 +10,13 @@ Ditingkatkan dengan:
 - Probability Calibration (CalibratedClassifierCV)
 - Per-ticker per-horizon Optimal F1 Threshold Selection
 """
+import warnings
+try:
+    from sklearn.exceptions import InconsistentVersionWarning
+    warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
+except ImportError:
+    pass
+
 import lightgbm as lgb
 import pandas as pd
 import numpy as np
@@ -48,16 +55,17 @@ class PurgedTimeSeriesSplit:
                 yield train_indices, val_indices
 
 
-def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision: float = 0.20, default: float = 0.50) -> float:
+def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision: float = 0.40, default: float = 0.50) -> float:
     """
-    Pick threshold in [0.20, 0.70] that maximizes F1 score for positive class (BUY).
+    Pick threshold in [0.35, 0.65] that maximizes combined Accuracy and F1 score.
     """
     if len(y_true) == 0 or len(y_prob) == 0:
         return default
 
     candidates = []
-    for thr in np.linspace(0.20, 0.70, 51):
+    for thr in np.linspace(0.35, 0.65, 31):
         pred_buy = (y_prob >= thr).astype(int)
+        acc = np.mean(pred_buy == y_true)
         tp = np.sum((pred_buy == 1) & (y_true == 1))
         fp = np.sum((pred_buy == 1) & (y_true == 0))
         fn = np.sum((pred_buy == 0) & (y_true == 1))
@@ -66,27 +74,28 @@ def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision
         rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
 
+        combined_score = 0.5 * acc + 0.5 * f1
         if prec >= min_precision:
-            candidates.append((f1, prec, rec, thr))
+            candidates.append((combined_score, acc, prec, rec, thr))
 
     if candidates:
         candidates.sort(reverse=True)
-        return float(candidates[0][3])
+        return float(candidates[0][4])
 
-    # Fallback to absolute max F1 if min_precision wasn't met
-    best_f1 = -1.0
+    best_score = -1.0
     best_thr = default
-    for thr in np.linspace(0.20, 0.70, 51):
+    for thr in np.linspace(0.35, 0.65, 31):
         pred_buy = (y_prob >= thr).astype(int)
+        acc = np.mean(pred_buy == y_true)
         tp = np.sum((pred_buy == 1) & (y_true == 1))
         fp = np.sum((pred_buy == 1) & (y_true == 0))
         fn = np.sum((pred_buy == 0) & (y_true == 1))
-
         prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
-        if f1 > best_f1:
-            best_f1 = f1
+        combined_score = 0.5 * acc + 0.5 * f1
+        if combined_score > best_score:
+            best_score = combined_score
             best_thr = float(thr)
 
     return float(best_thr)
@@ -226,13 +235,17 @@ class MultiDayPredictor:
                 'n_estimators': [50, 100, 150, 200]
             }
 
+            from sklearn.metrics import make_scorer, f1_score
+            f1_scorer = make_scorer(f1_score, zero_division=0)
+
             estimator = lgb.LGBMClassifier(verbosity=-1, random_state=42)
             search = RandomizedSearchCV(
                 estimator=estimator,
                 param_distributions=param_dist,
                 n_iter=15,
                 cv=purged_cv,
-                scoring='f1',
+                scoring=f1_scorer,
+                error_score=0.0,
                 random_state=42,
                 n_jobs=1
             )

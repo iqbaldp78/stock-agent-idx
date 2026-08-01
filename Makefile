@@ -282,52 +282,54 @@ validate-ml: ## [DEPRECATED] Validate ML Day-1 accuracy for all universe tickers
 	@echo "⚠️ WARNING: validate-ml is deprecated."
 	docker compose exec app python scripts/validate_ml_accuracy.py --all
 
-.PHONY: train-ml
-train-ml: ## [DEPRECATED] Train ML Day-1 model (Use train-ml-multiday instead)
-	@echo "⚠️ WARNING: train-ml is deprecated. Please use 'make train-ml-multiday' instead."
-	docker compose exec app python scripts/train_day1_model.py --all
+# .PHONY: train-ml
+# train-ml: ## [DEPRECATED] Train ML Day-1 model (Use train-ml-multiday instead)
+# 	@echo "⚠️ WARNING: train-ml is deprecated. Please use 'make train-ml-multiday' instead."
+# 	docker compose exec app python scripts/train_day1_model.py --all
 
-.PHONY: train-ml-ticker
-train-ml-ticker: ## [DEPRECATED] Train ML Day-1 model for one ticker (Use train-ml-multiday-ticker instead)
-	@if [ -z "$(TICKER)" ]; then \
-		echo "Error: TICKER is required. Usage: make train-ml-ticker TICKER=BBCA"; \
-		exit 1; \
-	fi
-	@echo "⚠️ WARNING: train-ml-ticker is deprecated. Please use 'make train-ml-multiday-ticker TICKER=$(TICKER)' instead."
-	docker compose exec app python scripts/train_day1_model.py --tickers $(TICKER)
+# .PHONY: train-ml-ticker
+# train-ml-ticker: ## [DEPRECATED] Train ML Day-1 model for one ticker (Use train-ml-multiday-ticker instead)
+# 	@if [ -z "$(TICKER)" ]; then \
+# 		echo "Error: TICKER is required. Usage: make train-ml-ticker TICKER=BBCA"; \
+# 		exit 1; \
+# 	fi
+# 	@echo "⚠️ WARNING: train-ml-ticker is deprecated. Please use 'make train-ml-multiday-ticker TICKER=$(TICKER)' instead."
+# 	docker compose exec app python scripts/train_day1_model.py --tickers $(TICKER)
+
+PERIOD ?= 5y
 
 .PHONY: train-ml-multiday
-train-ml-multiday: ## Train ML Multi-Day model (T+1, T+3, T+5, T+7) for all universe tickers
-	docker compose exec app python scripts/train_multiday_model.py --all
+train-ml-multiday: ## Train ML Multi-Day model (T+1, T+3, T+5, T+7) for all universe tickers (usage: make train-ml-multiday PERIOD=3y)
+	docker compose exec app python scripts/train_multiday_model.py --all --period $(PERIOD)
 
 .PHONY: train-ml-multiday-ticker
-train-ml-multiday-ticker: ## Train ML Multi-Day model for one ticker (usage: make train-ml-multiday-ticker TICKER=BBCA)
+train-ml-multiday-ticker: ## Train ML Multi-Day model for one ticker (usage: make train-ml-multiday-ticker TICKER=BBCA PERIOD=3y)
 	@if [ -z "$(TICKER)" ]; then \
-		echo "Error: TICKER is required. Usage: make train-ml-multiday-ticker TICKER=BBCA"; \
+		echo "Error: TICKER is required. Usage: make train-ml-multiday-ticker TICKER=BBCA PERIOD=3y"; \
 		exit 1; \
 	fi
-	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER)
+	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER) --period $(PERIOD)
 
 .PHONY: validate-ml-multiday
-validate-ml-multiday: ## Validate ML Multi-Day model accuracy for all universe tickers
-	docker compose exec app python scripts/train_multiday_model.py --all --validate-only
+validate-ml-multiday: ## Validate ML Multi-Day model accuracy for all universe tickers (usage: make validate-ml-multiday PERIOD=3y)
+	docker compose exec app python scripts/train_multiday_model.py --all --period $(PERIOD) --validate-only
 
 .PHONY: validate-ml-multiday-ticker
-validate-ml-multiday-ticker: ## Validate ML Multi-Day model accuracy for one ticker (usage: make validate-ml-multiday-ticker TICKER=BBCA)
+validate-ml-multiday-ticker: ## Validate ML Multi-Day model accuracy for one ticker (usage: make validate-ml-multiday-ticker TICKER=BBCA PERIOD=3y)
 	@if [ -z "$(TICKER)" ]; then \
-		echo "Error: TICKER is required. Usage: make validate-ml-multiday-ticker TICKER=BBCA"; \
+		echo "Error: TICKER is required. Usage: make validate-ml-multiday-ticker TICKER=BBCA PERIOD=3y"; \
 		exit 1; \
 	fi
-	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER) --validate-only
+	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER) --period $(PERIOD) --validate-only
 
-.PHONY: validate-ml-ticker
-validate-ml-ticker: ## [DEPRECATED] Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
-	@if [ -z "$(TICKER)" ]; then \
-		echo "Error: TICKER is required. Usage: make validate-ml-ticker TICKER=BBCA"; \
-		exit 1; \
-	fi
-	@echo "⚠️ WARNING: validate-ml-ticker is deprecated."
-	docker compose exec app python scripts/validate_ml_accuracy.py --ticker $(TICKER)
+# .PHONY: validate-ml-ticker
+# validate-ml-ticker: ## [DEPRECATED] Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
+# 	@if [ -z "$(TICKER)" ]; then \
+# 		echo "Error: TICKER is required. Usage: make validate-ml-ticker TICKER=BBCA"; \
+# 		exit 1; \
+# 	fi
+# 	@echo "⚠️ WARNING: validate-ml-ticker is deprecated."
+# 	docker compose exec app python scripts/validate_ml_accuracy.py --ticker $(TICKER)
 
 # ============================================================
 # TESTING & SMOKE TESTS
@@ -385,6 +387,24 @@ backfill-bandarm-check: ## Cek jumlah data broker_accumulation yang sudah ada (u
 		docker compose exec postgres psql -U stockuser -d stockagent -c \
 			"SELECT ticker, trade_date, COUNT(*) as brokers FROM broker_accumulation WHERE ticker='$(TICKER)' GROUP BY ticker, trade_date ORDER BY trade_date DESC LIMIT 30;"; \
 	fi
+
+.PHONY: fulfill-history
+fulfill-history: ## Fullfill data OHLCV & Bandarmologi 5 tahun ke belakang untuk semua ticker (usage: make fulfill-history YEARS=5)
+	@echo "Starting 5-year data fulfillment untuk semua ticker universe..."
+	docker compose exec app python scripts/fulfill_history_5y.py --years $(or $(YEARS),5)
+
+.PHONY: fulfill-history-dry
+fulfill-history-dry: ## Dry-run preview scan 5-year data fulfillment (usage: make fulfill-history-dry YEARS=5)
+	@echo "[DRY-RUN] Preview 5-year data fulfillment scan..."
+	docker compose exec app python scripts/fulfill_history_5y.py --years $(or $(YEARS),5) --dry-run
+
+.PHONY: fulfill-history-ticker
+fulfill-history-ticker: ## Fullfill data 5 tahun untuk ticker tertentu (usage: make fulfill-history-ticker TICKER=BBCA YEARS=5)
+	@if [ -z "$(TICKER)" ]; then \
+		echo "Error: TICKER is required. Usage: make fulfill-history-ticker TICKER=BBCA"; \
+		exit 1; \
+	fi
+	docker compose exec app python scripts/fulfill_history_5y.py --tickers $(TICKER) --years $(or $(YEARS),5)
 
 # ============================================================
 # DATA & DATABASE

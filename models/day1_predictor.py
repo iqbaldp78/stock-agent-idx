@@ -2,6 +2,13 @@
 ML Predictor Engine (LightGBM)
 Training dan inference untuk prediksi return Day-1 (T+1).
 """
+import warnings
+try:
+    from sklearn.exceptions import InconsistentVersionWarning
+    warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
+except ImportError:
+    pass
+
 import lightgbm as lgb
 import pandas as pd
 import numpy as np
