@@ -849,11 +849,11 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df = df.sort_index()
 
     # Targets: Binary classification — 1 for significant price increase, 0 otherwise
-    # Thresholds tuned to filter noise: 1D=0.5%, 3D=1.5%, 5D=1.5%, 7D=2.5%
-    df['target_1d'] = (df['Close'].shift(-1) > df['Close'] * 1.005).astype(int)
-    df['target_3d'] = (df['Close'].shift(-3) > df['Close'] * 1.015).astype(int)
-    df['target_5d'] = (df['Close'].shift(-5) > df['Close'] * 1.015).astype(int)
-    df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.025).astype(int)
+    # Thresholds tuned for balanced class distribution: 1D=0.3%, 3D=0.8%, 5D=1.0%, 7D=1.5%
+    df['target_1d'] = (df['Close'].shift(-1) > df['Close'] * 1.003).astype(int)
+    df['target_3d'] = (df['Close'].shift(-3) > df['Close'] * 1.008).astype(int)
+    df['target_5d'] = (df['Close'].shift(-5) > df['Close'] * 1.010).astype(int)
+    df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.015).astype(int)
 
     # Simple Technical Features for History
     df['ret_1d'] = df['Close'].pct_change()

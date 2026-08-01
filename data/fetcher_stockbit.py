@@ -1296,3 +1296,60 @@ def get_stock_info(ticker: str) -> dict:
 def get_multiple_ohlcv(tickers: list[str], period: str = "3mo") -> dict[str, pd.DataFrame]:
     """Ambil OHLCV untuk banyak saham sekaligus."""
     return {ticker: get_ohlcv(ticker, period) for ticker in tickers}
+
+
+@_retry_on_rate_limit(max_attempts=3, base_delay=1.0)
+def fetch_report_notifications(limit: int = 25) -> dict:
+    """
+    Fetch report notifications (Research reports, Newsfeed, Corp action, Dividends, etc.) from Stockbit API.
+    """
+    api_key = _get_api_key()
+    if not api_key:
+        api_key = refresh_stockbit_token()
+        
+    url = (
+        "https://exodus.stockbit.com/notification?"
+        "types=NOTIF_TYPE_NEW_REPORT&"
+        "types=NOTIF_TYPE_NEWSFEED&"
+        "types=NOTIF_TYPE_COMPANY_PUBLIC_EXPOSE&"
+        "types=NOTIF_TYPE_COMPANY_SHAREHOLDING&"
+        "types=NOTIF_TYPE_COMPANY_DIVIDEND&"
+        "types=NOTIF_TYPE_COMPANY_CORP_ACTION&"
+        "types=NOTIF_TYPE_COMPANY_OTHERS&"
+        f"limit={limit}"
+    )
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Origin": "https://stockbit.com",
+        "Referer": "https://stockbit.com/"
+    }
+    with httpx.Client(timeout=15.0) as client:
+        response = client.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+
+@_retry_on_rate_limit(max_attempts=3, base_delay=1.0)
+def fetch_post_detail(post_id: str | int) -> dict:
+    """
+    Fetch post detail content from Stockbit API by post_id.
+    """
+    api_key = _get_api_key()
+    if not api_key:
+        api_key = refresh_stockbit_token()
+
+    url = f"https://exodus.stockbit.com/stream/v3/post/{post_id}"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Origin": "https://stockbit.com",
+        "Referer": "https://stockbit.com/"
+    }
+    with httpx.Client(timeout=15.0) as client:
+        response = client.post(url, headers=headers, json={})
+        response.raise_for_status()
+        return response.json()
+

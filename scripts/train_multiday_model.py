@@ -60,19 +60,27 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
         y_true = y_true_raw[valid_idx].values
         X_valid = X_test[valid_idx]
 
-        # preds is now probabilities
-        preds = model.predict(X_valid[predictor.feature_cols].fillna(0.0))
-        
-        binary_preds = (preds >= 0.55).astype(int)
+        selected_cols = predictor.selected_features.get(h, predictor.feature_cols)
+        aligned = X_valid.copy()
+        for col in selected_cols:
+            if col not in aligned.columns:
+                aligned[col] = 0.0
+
+        if hasattr(model, "predict_proba"):
+            preds = model.predict_proba(aligned[selected_cols].fillna(0.0))[:, 1]
+        else:
+            preds = model.predict(aligned[selected_cols].fillna(0.0))
+
+        thr = predictor.thresholds.get(h, 0.50)
+        binary_preds = (preds >= thr).astype(int)
         y_true_int = y_true.astype(int)
-        
-        # Manual metrics
+
         acc = np.mean(binary_preds == y_true_int)
-        
+
         true_positives = np.sum((binary_preds == 1) & (y_true_int == 1))
         predicted_positives = np.sum(binary_preds == 1)
         actual_positives = np.sum(y_true_int == 1)
-        
+
         prec = true_positives / predicted_positives if predicted_positives > 0 else 0.0
         rec = true_positives / actual_positives if actual_positives > 0 else 0.0
 
@@ -81,6 +89,8 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
             "accuracy": round(acc * 100, 2),
             "buy_precision": round(prec * 100, 2),
             "buy_recall": round(rec * 100, 2),
+            "optimal_threshold": round(thr, 3),
+            "n_features": len(selected_cols)
         }
     return results
 

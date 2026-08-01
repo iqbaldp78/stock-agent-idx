@@ -5,6 +5,16 @@ load_dotenv()
 
 # Universe diambil dinamis dari database table `universe`
 
+DEFAULT_UNIVERSE = [
+    "BBCA", "BMRI", "TLKM", "BBNI", "BBRI", "ASII", "UNVR", "ICBP", "AMRT", "GOTO",
+    "MDKA", "ANTM", "INCO", "PTBA", "ADRO", "ITMG", "PGAS", "EXCL", "ISAT", "KLBF",
+    "MYOR", "SIDO", "TBIG", "TOWR", "BREN", "CUAN", "BRPT", "AMMN", "MBMA", "PGEO",
+    "NCKL", "TINS", "ESSA", "MEDC", "AKRA", "BRMS", "DEWA", "BUMI", "PANI", "DSSA",
+    "BYAN", "ARCI", "OASA", "MSIN", "BUVA", "BNBR", "BIPI", "MINA", "PADI", "PACK",
+    "CBDK", "CDIA", "EMAS", "ENRG", "INET", "RATU", "VKTR", "ACES", "BBTN", "BULL",
+    "BRIS", "RAJA", "SSIA", "TPIA"
+]
+
 CUSTOM_WATCHLIST: list[str] = []
 
 
@@ -16,11 +26,13 @@ def get_universe() -> list[str]:
         active_universes = db.query(Universe.ticker).filter(Universe.active == True).all()
         db_tickers = [row[0] for row in active_universes]
         db.close()
-        return list(set(db_tickers + CUSTOM_WATCHLIST))
+        if db_tickers:
+            return list(set(db_tickers + CUSTOM_WATCHLIST))
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(f"Failed to fetch universe from DB: {e}")
-        return list(set(CUSTOM_WATCHLIST))
+
+    return list(set(DEFAULT_UNIVERSE + CUSTOM_WATCHLIST))
 
 
 def to_yahoo_ticker(code: str) -> str:

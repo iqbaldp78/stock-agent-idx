@@ -2,6 +2,13 @@
 ML Predictor Engine (LightGBM)
 Training dan inference untuk prediksi return T+1, T+3, T+5, T+7.
 Menggunakan 4 model independen untuk mempelajari pola pergerakan harga di masing-masing horizon waktu.
+Ditingkatkan dengan:
+- Purged TimeSeriesSplit CV (mencegah data leakage)
+- Feature Selection 2-stage (eliminasi 0-importance noise features)
+- Hyperparameter Tuning (RandomizedSearchCV)
+- Class Imbalance & Scale Pos Weight Tuning
+- Probability Calibration (CalibratedClassifierCV)
+- Per-ticker per-horizon Optimal F1 Threshold Selection
 """
 import lightgbm as lgb
 import pandas as pd
@@ -9,10 +16,81 @@ import numpy as np
 import logging
 import joblib
 import os
-from sklearn.model_selection import TimeSeriesSplit
+import json
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.calibration import CalibratedClassifierCV
 from data.ml_features import ML_TRAIN_FEATURES
 
 logger = logging.getLogger(__name__)
+
+
+class PurgedTimeSeriesSplit:
+    """
+    Time-Series Split with Purging Gap to prevent label overlap leakage.
+    """
+    def __init__(self, n_splits=3, gap=7):
+        self.n_splits = n_splits
+        self.gap = gap
+
+    def get_n_splits(self, X=None, y=None, groups=None):
+        return self.n_splits
+
+    def split(self, X, y=None, groups=None):
+        n_samples = len(X)
+        fold_size = n_samples // (self.n_splits + 1)
+        for i in range(self.n_splits):
+            train_end = fold_size * (i + 1)
+            val_start = train_end + self.gap
+            val_end = min(val_start + fold_size, n_samples)
+            if val_start < n_samples and (val_end - val_start) > 0:
+                train_indices = np.arange(0, train_end)
+                val_indices = np.arange(val_start, val_end)
+                yield train_indices, val_indices
+
+
+def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision: float = 0.20, default: float = 0.50) -> float:
+    """
+    Pick threshold in [0.20, 0.70] that maximizes F1 score for positive class (BUY).
+    """
+    if len(y_true) == 0 or len(y_prob) == 0:
+        return default
+
+    candidates = []
+    for thr in np.linspace(0.20, 0.70, 51):
+        pred_buy = (y_prob >= thr).astype(int)
+        tp = np.sum((pred_buy == 1) & (y_true == 1))
+        fp = np.sum((pred_buy == 1) & (y_true == 0))
+        fn = np.sum((pred_buy == 0) & (y_true == 1))
+
+        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
+
+        if prec >= min_precision:
+            candidates.append((f1, prec, rec, thr))
+
+    if candidates:
+        candidates.sort(reverse=True)
+        return float(candidates[0][3])
+
+    # Fallback to absolute max F1 if min_precision wasn't met
+    best_f1 = -1.0
+    best_thr = default
+    for thr in np.linspace(0.20, 0.70, 51):
+        pred_buy = (y_prob >= thr).astype(int)
+        tp = np.sum((pred_buy == 1) & (y_true == 1))
+        fp = np.sum((pred_buy == 1) & (y_true == 0))
+        fn = np.sum((pred_buy == 0) & (y_true == 1))
+
+        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
+        if f1 > best_f1:
+            best_f1 = f1
+            best_thr = float(thr)
+
+    return float(best_thr)
+
 
 class MultiDayPredictor:
     def __init__(self, ticker: str = "GLOBAL", checkpoints_dir: str = "models/checkpoints"):
@@ -20,12 +98,21 @@ class MultiDayPredictor:
         self.checkpoints_dir = checkpoints_dir
         self.feature_cols = ML_TRAIN_FEATURES
         self.horizons = ['1d', '3d', '5d', '7d']
+        self.horizon_gaps = {'1d': 1, '3d': 3, '5d': 5, '7d': 7}
         self.models = {h: None for h in self.horizons}
+        self.thresholds = {h: 0.50 for h in self.horizons}
+        self.selected_features = {h: ML_TRAIN_FEATURES for h in self.horizons}
 
         self._load_models()
 
     def _get_model_path(self, horizon: str) -> str:
         return os.path.join(self.checkpoints_dir, f"lgbm_{self.ticker}_{horizon}.pkl")
+
+    def _get_threshold_path(self, horizon: str) -> str:
+        return os.path.join(self.checkpoints_dir, f"lgbm_{self.ticker}_{horizon}_threshold.json")
+
+    def _get_features_path(self, horizon: str) -> str:
+        return os.path.join(self.checkpoints_dir, f"lgbm_{self.ticker}_{horizon}_features.json")
 
     def _load_models(self):
         for h in self.horizons:
@@ -36,9 +123,36 @@ class MultiDayPredictor:
                 except Exception as e:
                     logger.debug(f"Failed to load {h} model for {self.ticker}: {e}")
 
-    def train_incremental(self, X_train: pd.DataFrame, Y_targets_train: pd.DataFrame, X_val: pd.DataFrame = None, Y_targets_val: pd.DataFrame = None):
+            thr_path = self._get_threshold_path(h)
+            if os.path.exists(thr_path):
+                try:
+                    with open(thr_path, "r") as f:
+                        data = json.load(f)
+                        self.thresholds[h] = float(data.get("buy_threshold", 0.50))
+                except Exception as e:
+                    logger.debug(f"Failed to load threshold for {h}: {e}")
+
+            feat_path = self._get_features_path(h)
+            if os.path.exists(feat_path):
+                try:
+                    with open(feat_path, "r") as f:
+                        data = json.load(f)
+                        feats = data.get("selected_features", [])
+                        if feats:
+                            self.selected_features[h] = feats
+                except Exception as e:
+                    logger.debug(f"Failed to load features for {h}: {e}")
+
+    def train_incremental(
+        self,
+        X_train: pd.DataFrame,
+        Y_targets_train: pd.DataFrame,
+        X_val: pd.DataFrame = None,
+        Y_targets_val: pd.DataFrame = None
+    ):
         """
-        Train 4 independent models for 1d, 3d, 5d, and 7d horizons with early stopping.
+        Train 4 independent models for 1d, 3d, 5d, and 7d horizons.
+        Includes Feature Selection, Hyperparameter Tuning, Purged CV, Calibration, and Optimal Threshold.
         """
         if len(X_train) < 10:
             logger.warning(f"Not enough data to train {self.ticker}.")
@@ -60,7 +174,12 @@ class MultiDayPredictor:
                 continue
 
             X_tr = X_train_aligned[valid_idx].copy()
-            y_tr = y_train[valid_idx].astype(float)
+            y_tr = y_train[valid_idx].astype(int)
+
+            # Check positive class availability
+            if y_tr.nunique() < 2:
+                logger.warning(f"Only one class present in target_{h} for {self.ticker}. Skipping.")
+                continue
 
             # Time-decay sample weights
             n_samples = len(X_tr)
@@ -68,101 +187,140 @@ class MultiDayPredictor:
             weights = np.exp(np.linspace(0, np.log(decay_factor), n_samples))
             weights = weights / weights.mean()
 
-            params = {
-                'objective': 'binary',
-                'metric': 'binary_logloss',
-                'verbosity': -1,
-                'boosting_type': 'gbdt',
-                'learning_rate': 0.03,
-                'num_leaves': 31,
-                'min_child_samples': 20,
-                'bagging_fraction': 0.8,
-                'feature_fraction': 0.7,
-                'bagging_freq': 1,
-                'is_unbalance': True,
-                'seed': 42,
-                'reg_alpha': 0.1,
-                'reg_lambda': 1.0,
-                'min_gain_to_split': 0.01,
+            # ── 1. Feature Selection (Stage 1: Initial Discovery) ─────────
+            base_discovery = lgb.LGBMClassifier(
+                verbosity=-1,
+                random_state=42,
+                n_estimators=50,
+                learning_rate=0.05,
+                subsample=0.8,
+                colsample_bytree=0.8
+            )
+            base_discovery.fit(X_tr, y_tr, sample_weight=weights)
+            importances = base_discovery.feature_importances_
+            
+            # Select features with non-zero importance
+            selected_cols = [col for col, imp in zip(self.feature_cols, importances) if imp > 0]
+            if len(selected_cols) < 5:
+                # Fallback if too few features selected
+                top_indices = np.argsort(importances)[::-1][:15]
+                selected_cols = [self.feature_cols[i] for i in top_indices if i < len(self.feature_cols)]
+
+            self.selected_features[h] = selected_cols
+            X_tr_sel = X_tr[selected_cols]
+
+            # ── 2. Purged Cross-Validation & Hyperparameter Tuning ────────
+            n_splits = 3 if len(X_tr) < 100 else 4
+            gap = self.horizon_gaps.get(h, 7)
+            purged_cv = PurgedTimeSeriesSplit(n_splits=n_splits, gap=gap)
+
+            param_dist = {
+                'learning_rate': [0.01, 0.03, 0.05, 0.1],
+                'num_leaves': [7, 15, 31, 63],
+                'min_child_samples': [10, 20, 50],
+                'subsample': [0.6, 0.7, 0.8],
+                'colsample_bytree': [0.6, 0.7, 0.8],
+                'reg_alpha': [0.0, 0.1, 0.5, 1.0],
+                'reg_lambda': [0.0, 0.1, 0.5, 1.0],
+                'scale_pos_weight': [1.0, 1.5, 2.0, 2.5],
+                'n_estimators': [50, 100, 150, 200]
             }
 
-            dtrain = lgb.Dataset(X_tr, label=y_tr, weight=weights)
-            
-            # Use Time-Series Cross Validation (k-fold split) to find the optimal boosting rounds
-            best_rounds = []
-            n_splits = 3 if len(X_tr) < 100 else 5
-            
-            if len(X_tr) >= 30:
-                tscv = TimeSeriesSplit(n_splits=n_splits)
-                for train_idx, val_idx in tscv.split(X_tr):
-                    X_fold_train, X_fold_val = X_tr.iloc[train_idx], X_tr.iloc[val_idx]
-                    y_fold_train, y_fold_val = y_tr.iloc[train_idx], y_tr.iloc[val_idx]
-                    w_fold_train = weights[train_idx]
-                    
-                    dfold_train = lgb.Dataset(X_fold_train, label=y_fold_train, weight=w_fold_train)
-                    dfold_val = lgb.Dataset(X_fold_val, label=y_fold_val, reference=dfold_train)
-                    
-                    fold_callbacks = [
-                        lgb.early_stopping(stopping_rounds=30, verbose=False),
-                        lgb.log_evaluation(period=0)
-                    ]
-                    
-                    fold_model = lgb.train(
-                        params,
-                        dfold_train,
-                        num_boost_round=500,
-                        valid_sets=[dfold_val],
-                        callbacks=fold_callbacks
-                    )
-                    best_rounds.append(fold_model.best_iteration)
-            
-            if best_rounds:
-                opt_rounds = int(np.mean(best_rounds))
-                # Ensure a sensible range of boosting rounds
-                opt_rounds = max(20, min(opt_rounds, 500))
-            else:
-                opt_rounds = 50  # Fallback default
-                
-            logger.debug(f"Training final {self.ticker} model for horizon: {h} with {opt_rounds} rounds (determined by {n_splits}-fold TimeSeriesSplit)")
-            
-            self.models[h] = lgb.train(
-                params, 
-                dtrain, 
-                num_boost_round=opt_rounds,
-                callbacks=[lgb.log_evaluation(period=0)]
+            estimator = lgb.LGBMClassifier(verbosity=-1, random_state=42)
+            search = RandomizedSearchCV(
+                estimator=estimator,
+                param_distributions=param_dist,
+                n_iter=15,
+                cv=purged_cv,
+                scoring='f1',
+                random_state=42,
+                n_jobs=1
             )
 
-            # Save model
+            search.fit(X_tr_sel, y_tr, sample_weight=weights)
+            best_model = search.best_estimator_
+
+            # ── 3. Probability Calibration & Optimal Threshold Selection ─
+            final_model = best_model
+            opt_thr = 0.50
+
+            if X_val_aligned is not None and col_name in Y_targets_val.columns:
+                y_val_raw = Y_targets_val[col_name]
+                val_idx = ~y_val_raw.isna()
+                if val_idx.any():
+                    X_v_sel = X_val_aligned[val_idx][selected_cols]
+                    y_v = y_val_raw[val_idx].astype(int)
+
+                    if len(y_v) >= 10 and y_v.nunique() > 1:
+                        # Calibrate model using validation fold
+                        try:
+                            calibrator = CalibratedClassifierCV(best_model, cv='prefit', method='sigmoid')
+                            calibrator.fit(X_v_sel, y_v)
+                            final_model = calibrator
+                        except Exception as e:
+                            logger.debug(f"Calibration failed for {h}: {e}")
+
+                    # Predict probabilities on validation set for threshold tuning
+                    val_probs = final_model.predict_proba(X_v_sel)[:, 1]
+                    opt_thr = pick_optimal_threshold(y_v.values, val_probs)
+            else:
+                # OOF predictions on train set for threshold tuning fallback
+                try:
+                    train_probs = best_model.predict_proba(X_tr_sel)[:, 1]
+                    opt_thr = pick_optimal_threshold(y_tr.values, train_probs)
+                except Exception:
+                    opt_thr = 0.50
+
+            self.models[h] = final_model
+            self.thresholds[h] = opt_thr
+
+            # ── 4. Save Model & Sidecar Metadata ─────────────────────────
             model_path = self._get_model_path(h)
-            joblib.dump(self.models[h], model_path)
+            joblib.dump(final_model, model_path)
+
+            thr_path = self._get_threshold_path(h)
+            with open(thr_path, "w") as f:
+                json.dump({"buy_threshold": float(opt_thr)}, f)
+
+            feat_path = self._get_features_path(h)
+            with open(feat_path, "w") as f:
+                json.dump({"selected_features": selected_cols}, f)
+
+            logger.info(
+                f"Trained {self.ticker} [{h}]: {len(selected_cols)} features, "
+                f"best_params={search.best_params_}, opt_thr={opt_thr:.3f}"
+            )
 
     def predict(self, feature_row: pd.DataFrame) -> dict:
         """
-        Predict return for 1d, 3d, 5d, 7d.
-        Returns a dictionary with raw percentage predictions.
+        Predict probability of positive price movement for 1d, 3d, 5d, 7d horizons.
+        Returns dictionary with predicted probabilities.
         """
         predictions = {}
 
         for h in self.horizons:
             model = self.models[h]
             if model is None:
-                # Fallback rule-based if ML not available
                 predictions[h] = self._rule_based_prediction(feature_row, h)
                 continue
 
             try:
-                model_cols = model.feature_name() if hasattr(model, "feature_name") else []
-                if model_cols:
-                    aligned = feature_row.copy()
-                    for col in model_cols:
-                        if col not in aligned.columns:
-                            aligned[col] = 0.0
-                    pred = model.predict(aligned[model_cols])
+                selected_cols = self.selected_features.get(h, self.feature_cols)
+                aligned = feature_row.copy()
+                for col in selected_cols:
+                    if col not in aligned.columns:
+                        aligned[col] = 0.0
+
+                input_data = aligned[selected_cols].fillna(0.0)
+
+                if hasattr(model, "predict_proba"):
+                    probs = model.predict_proba(input_data)
+                    predictions[h] = float(probs[0, 1])
                 else:
-                    pred = model.predict(self._align_feature_frame(feature_row))
-                predictions[h] = float(pred[0])
+                    preds = model.predict(input_data)
+                    predictions[h] = float(preds[0])
             except Exception as e:
-                logger.warning("Model predict failed for %s (%s), fallback to rule-based.", h, e)
+                logger.warning(f"Model predict failed for {h} ({e}), fallback to rule-based.")
                 predictions[h] = self._rule_based_prediction(feature_row, h)
 
         return predictions
@@ -177,23 +335,26 @@ class MultiDayPredictor:
     def _rule_based_prediction(self, feature_row: pd.DataFrame, horizon: str) -> float:
         """
         Emergency fallback prediction if ML model is missing.
-        Uses original linear logic but maps to a probability [0.0, 1.0].
         """
-        score = (
-            feature_row['bandarm_score'].iloc[0] * 0.4 +
-            feature_row['technical_score'].iloc[0] * 0.3 +
-            (1.0 if feature_row['is_bullish_trend'].iloc[0] > 0.5 else -0.5) * 0.2 +
-            feature_row['macro_score'].iloc[0] * 0.1
-        )
-        # Map 1-10 score to roughly 0.40 to 0.60 probability
-        prob = 0.50 + (score - 5.5) * 0.02
-        return max(0.0, min(1.0, prob))
+        bandarm = feature_row.get('bandarm_score', pd.Series([5.0])).iloc[0]
+        tech = feature_row.get('technical_score', pd.Series([5.0])).iloc[0]
+        is_bull = 1.0 if feature_row.get('is_bullish_trend', pd.Series([0.0])).iloc[0] > 0.5 else -0.5
+        macro = feature_row.get('macro_score', pd.Series([5.0])).iloc[0]
 
-    def get_signal(self, pred_prob_1d: float) -> str:
+        score = bandarm * 0.4 + tech * 0.3 + is_bull * 0.2 + macro * 0.1
+        prob = 0.50 + (score - 5.5) * 0.02
+        return float(max(0.0, min(1.0, prob)))
+
+    def get_signal(self, pred_prob_1d: float, horizon: str = '1d') -> str:
         """
-        Convert predicted 1d probability to signal string.
+        Convert predicted probability to signal string using per-ticker optimal threshold.
         """
-        if pred_prob_1d >= 0.55: return "STRONG BUY"
-        if pred_prob_1d >= 0.51: return "BUY"
-        if pred_prob_1d <= 0.48: return "AVOID"
+        thr = self.thresholds.get(horizon, 0.50)
+
+        if pred_prob_1d >= thr * 1.10:
+            return "STRONG BUY"
+        if pred_prob_1d >= thr:
+            return "BUY"
+        if pred_prob_1d <= max(0.20, thr * 0.80):
+            return "AVOID"
         return "HOLD"
