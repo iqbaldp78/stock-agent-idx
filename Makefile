@@ -25,6 +25,20 @@ down: ## Stop all services
 .PHONY: restart
 restart: down up ## Restart all services
 
+.PHONY: reload-env
+reload-env: ## Recreate containers to apply updated .env variables (docker compose up -d --force-recreate)
+	docker compose up -d --force-recreate
+	@NET_ID=$$(docker network inspect stock-agent-idx_stock_net --format '{{.Id}}' 2>/dev/null | cut -c 1-12); \
+	if [ ! -z "$$NET_ID" ]; then \
+		echo "Allowing port 20128 traffic for bridge br-$$NET_ID..."; \
+		sudo iptables -C INPUT -i br-$$NET_ID -p tcp --dport 20128 -j ACCEPT 2>/dev/null || \
+		sudo iptables -A INPUT -i br-$$NET_ID -p tcp --dport 20128 -j ACCEPT; \
+	fi
+
+.PHONY: restart-env
+restart-env: reload-env ## Alias for reload-env
+
+
 .PHONY: logs
 logs: ## Show logs for all services
 	docker compose logs -f
@@ -202,6 +216,15 @@ agent-news: ## Run news agent (usage: make agent-news TICKER=BBCA)
 		exit 1; \
 	fi
 	docker compose exec app python -m agents.news $(TICKER)
+
+.PHONY: fetch-news
+fetch-news: ## Fetch & ingest real-time news & report stream from Stockbit into Vector DB
+	@echo "Fetching latest news feed from Stockbit..."
+	docker compose exec app python scripts/news_ingester.py
+
+.PHONY: ingest-news
+ingest-news: fetch-news ## Alias for fetch-news
+
 
 .PHONY: agent-price-predictor
 agent-price-predictor: ## Run price predictor (usage: make agent-price-predictor TICKER=BBCA)

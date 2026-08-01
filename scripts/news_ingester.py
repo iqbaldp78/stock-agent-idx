@@ -8,11 +8,13 @@ import logging
 import requests
 import psycopg2
 from data.fetcher_stockbit import (
+    _get_api_key,
     _retry_on_rate_limit,
     refresh_stockbit_token,
     fetch_report_notifications,
     fetch_post_detail,
 )
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ def get_db_connection():
 
 @_retry_on_rate_limit(max_attempts=3, base_delay=1.0)
 def fetch_news_stream(limit: int = 10):
-    api_key = os.getenv("STOCKBIT_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         api_key = refresh_stockbit_token()
         
@@ -48,9 +50,10 @@ def fetch_news_stream(limit: int = 10):
         "Referer": "https://stockbit.com/"
     }
     
-    response = requests.post(url, headers=headers, data='')
-    response.raise_for_status()
-    return response.json()
+    with httpx.Client(timeout=15.0) as client:
+        response = client.post(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
 
 
 def analyze_and_embed(content: str, is_report: bool = False):
@@ -230,9 +233,14 @@ def run_report_ingester(limit: int = 25):
     # Extract items and target stream_id / post_id
     valid_reports = []
     for item in notif_items:
+        if not isinstance(item, dict):
+            continue
         n_id = item.get("id") or item.get("notif_id")
         data_obj = item.get("data", {}) or {}
-        post_id = data_obj.get("post_id") or data_obj.get("stream_id") or n_id
+        if isinstance(data_obj, dict):
+            post_id = data_obj.get("post_id") or data_obj.get("stream_id") or n_id
+        else:
+            post_id = n_id
         
         if post_id:
             try:
