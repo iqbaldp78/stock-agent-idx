@@ -94,6 +94,73 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
         }
     return results
 
+def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, final_dir, validate_only=False):
+    """Walk-forward validation dengan expanding train window."""
+    from data.ml_features import prepare_training_data
+    from models.multiday_predictor import MultiDayPredictor
+
+    try:
+        X, Y = prepare_training_data(ohlcv, ticker=ticker)
+    except Exception as e:
+        return None, {"ticker": ticker, "error": f"prepare_training_data failed: {e}"}
+
+    if len(X) < min_rows:
+        return None, {"ticker": ticker, "error": f"Training rows terlalu sedikit ({len(X)} < {min_rows})"}
+
+    fold_results = {"1d": [], "3d": [], "5d": [], "7d": []}
+    total_rows = len(X)
+    fold_size = total_rows // (n_folds + 1)
+
+    for fold_idx in range(n_folds):
+        train_end = fold_size * (fold_idx + 1)
+        test_end = min(fold_size * (fold_idx + 2), total_rows)
+        if test_end <= train_end or train_end < min_rows:
+            continue
+
+        X_train = X.iloc[:train_end].copy()
+        Y_train = Y.iloc[:train_end].copy()
+        X_test = X.iloc[train_end:test_end].copy()
+        Y_test = Y.iloc[train_end:test_end].copy()
+        if X_test.empty:
+            continue
+
+        fold_predictor = MultiDayPredictor(ticker=f"{ticker}_wf_f{fold_idx}", checkpoints_dir=holdout_dir)
+        fold_predictor.train_incremental(X_train, Y_train, X_val=X_test, Y_targets_val=Y_test)
+        fold_metrics = evaluate_multiday_model(fold_predictor, X_test, Y_test)
+        for h in ["1d", "3d", "5d", "7d"]:
+            if h in fold_metrics:
+                fold_results[h].append(fold_metrics[h])
+
+    horizons_avg = {}
+    for h in ["1d", "3d", "5d", "7d"]:
+        fold_data = fold_results[h]
+        if fold_data:
+            horizons_avg[h] = {
+                "test_rows": sum(m["test_rows"] for m in fold_data),
+                "accuracy": round(np.mean([m["accuracy"] for m in fold_data]), 2),
+                "buy_precision": round(np.mean([m["buy_precision"] for m in fold_data]), 2),
+                "buy_recall": round(np.mean([m["buy_recall"] for m in fold_data]), 2),
+                "n_folds_evaluated": len(fold_data),
+            }
+
+    if not validate_only:
+        final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
+        val_rows = max(1, int(len(X) * 0.2))
+        final_predictor.train_incremental(X, Y, X_val=X.iloc[-val_rows:], Y_targets_val=Y.iloc[-val_rows:])
+
+    summary = {
+        "ticker": ticker,
+        "ohlcv_rows": len(ohlcv),
+        "training_rows": len(X),
+        "train_rows": len(X),
+        "test_rows": sum(sum(m["test_rows"] for m in fold_results[h]) for h in fold_results),
+        "metrics": horizons_avg,
+        "walk_forward": True,
+        "n_folds": n_folds,
+    }
+    return summary, None
+
+
 def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, final_dir, validate_only=False):
     from data.ml_features import prepare_training_data
     from models.multiday_predictor import MultiDayPredictor
@@ -145,6 +212,8 @@ def main():
     parser.add_argument("--checkpoints-dir", default="models/checkpoints", help="Output model directory")
     parser.add_argument("--metadata-output", default="models/checkpoints/lgbm_multiday_meta.json", help="Output metadata JSON")
     parser.add_argument("--validate-only", action="store_true", help="Only validate accuracy on holdout, do not save production models")
+    parser.add_argument("--walk-forward", action="store_true", help="Use expanding walk-forward validation instead of single holdout split")
+    parser.add_argument("--n-folds", type=int, default=4, help="Number of walk-forward folds")
     args = parser.parse_args()
 
     tickers = get_universe_tickers() if args.all else [t.upper() for t in args.tickers]
@@ -161,11 +230,16 @@ def main():
         if ohlcv.empty:
             errors.append({"ticker": ticker, "error": "No OHLCV data"})
             continue
-            
-        summary, err = train_and_evaluate_ticker(
-            ticker, ohlcv, args.min_rows, args.test_size, holdout_dir, args.checkpoints_dir, validate_only=args.validate_only
-        )
-        
+
+        if args.walk_forward:
+            summary, err = walk_forward_evaluate_ticker(
+                ticker, ohlcv, args.min_rows, args.n_folds, holdout_dir, args.checkpoints_dir, validate_only=args.validate_only
+            )
+        else:
+            summary, err = train_and_evaluate_ticker(
+                ticker, ohlcv, args.min_rows, args.test_size, holdout_dir, args.checkpoints_dir, validate_only=args.validate_only
+            )
+
         if err:
             logger.warning(f"{ticker} skipped: {err['error']}")
             errors.append(err)
@@ -175,23 +249,38 @@ def main():
     if not summaries:
         raise SystemExit("Tidak ada data training yang berhasil diproses.")
 
-    # Aggregate global metrics (macro average)
-    global_metrics = {}
-    horizons = ['1d', '3d', '5d', '7d']
-    
-    total_train_rows = sum(s["train_rows"] for s in summaries)
-    total_test_rows = sum(s["test_rows"] for s in summaries)
-    total_final_rows = sum(s["training_rows"] for s in summaries)
-    
-    for h in horizons:
-        h_metrics = [s["metrics"][h] for s in summaries if h in s["metrics"]]
-        if h_metrics:
-            global_metrics[h] = {
-                "test_rows": sum(m["test_rows"] for m in h_metrics),
-                "accuracy": round(sum(m["accuracy"] for m in h_metrics) / len(h_metrics), 2),
-                "buy_precision": round(sum(m["buy_precision"] for m in h_metrics) / len(h_metrics), 2),
-                "buy_recall": round(sum(m["buy_recall"] for m in h_metrics) / len(h_metrics), 2),
+    def aggregate_metrics(items):
+        out = {}
+        for h in ['1d', '3d', '5d', '7d']:
+            h_metrics = [s["metrics"][h] for s in items if h in s.get("metrics", {})]
+            if not h_metrics:
+                continue
+            total_rows = sum(m["test_rows"] for m in h_metrics)
+            weighted = lambda key: round(sum(m[key] * m["test_rows"] for m in h_metrics) / total_rows, 2) if total_rows else 0.0
+            acc_vals = [m["accuracy"] for m in h_metrics]
+            prec_vals = [m["buy_precision"] for m in h_metrics]
+            rec_vals = [m["buy_recall"] for m in h_metrics]
+            out[h] = {
+                "test_rows": total_rows,
+                "accuracy": round(sum(acc_vals) / len(acc_vals), 2),
+                "buy_precision": round(sum(prec_vals) / len(prec_vals), 2),
+                "buy_recall": round(sum(rec_vals) / len(rec_vals), 2),
+                "accuracy_weighted": weighted("accuracy"),
+                "buy_precision_weighted": weighted("buy_precision"),
+                "buy_recall_weighted": weighted("buy_recall"),
+                "p10_accuracy": round(np.percentile(acc_vals, 10), 2),
+                "p50_accuracy": round(np.percentile(acc_vals, 50), 2),
+                "p90_accuracy": round(np.percentile(acc_vals, 90), 2),
+                "p10_buy_precision": round(np.percentile(prec_vals, 10), 2),
+                "p50_buy_precision": round(np.percentile(prec_vals, 50), 2),
+                "p90_buy_precision": round(np.percentile(prec_vals, 90), 2),
             }
+        return out
+
+    global_metrics = aggregate_metrics(summaries)
+    total_train_rows = sum(s.get("train_rows", 0) for s in summaries)
+    total_test_rows = sum(s.get("test_rows", 0) for s in summaries)
+    total_final_rows = sum(s.get("training_rows", 0) for s in summaries)
 
     metadata = {
         "run_date": datetime.now().isoformat(),
@@ -200,6 +289,8 @@ def main():
             "period": args.period,
             "min_rows": args.min_rows,
             "test_size": args.test_size,
+            "walk_forward": args.walk_forward,
+            "n_folds": args.n_folds,
         },
         "rows": {
             "tickers_requested": len(tickers),
@@ -209,6 +300,7 @@ def main():
             "final_train_rows": total_final_rows,
         },
         "holdout_metrics_macro_avg": global_metrics,
+        "holdout_metrics_weighted_avg": global_metrics,
         "tickers": summaries,
         "errors": errors,
     }
