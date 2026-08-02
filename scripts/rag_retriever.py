@@ -57,7 +57,7 @@ def search_by_ticker(ticker: str, limit: int = 10, doc_type: Optional[str] = Non
     """Find latest news & reports specifically tagged with a ticker symbol."""
     if doc_type:
         query = """
-            SELECT stream_id, content, summary, sentiment, impact_scope, doc_type, created_at
+            SELECT stream_id, content, summary, sentiment, sentiment_score, impact_scope, doc_type, created_at
             FROM news_signals 
             WHERE tickers ? %s AND doc_type = %s
             ORDER BY created_at DESC
@@ -66,7 +66,7 @@ def search_by_ticker(ticker: str, limit: int = 10, doc_type: Optional[str] = Non
         return _execute_query(query, (ticker.upper(), doc_type, limit))
     else:
         query = """
-            SELECT stream_id, content, summary, sentiment, impact_scope, doc_type, created_at
+            SELECT stream_id, content, summary, sentiment, sentiment_score, impact_scope, doc_type, created_at
             FROM news_signals 
             WHERE tickers ? %s
             ORDER BY created_at DESC
@@ -84,7 +84,7 @@ def search_by_vector(query_text: str, limit: int = 5, doc_type: Optional[str] = 
     
     if doc_type:
         query = """
-            SELECT stream_id, content, summary, sentiment, impact_scope, doc_type, created_at,
+            SELECT stream_id, content, summary, sentiment, sentiment_score, impact_scope, doc_type, created_at,
                    1 - (embedding <=> %s::halfvec) as similarity
             FROM news_signals
             WHERE doc_type = %s
@@ -94,7 +94,7 @@ def search_by_vector(query_text: str, limit: int = 5, doc_type: Optional[str] = 
         return _execute_query(query, (vec_str, doc_type, vec_str, limit))
     else:
         query = """
-            SELECT stream_id, content, summary, sentiment, impact_scope, doc_type, created_at,
+            SELECT stream_id, content, summary, sentiment, sentiment_score, impact_scope, doc_type, created_at,
                    1 - (embedding <=> %s::halfvec) as similarity
             FROM news_signals
             ORDER BY embedding <=> %s::halfvec
@@ -111,10 +111,12 @@ def format_for_prompt(records: List[Dict]) -> str:
     for r in records:
         date_str = r.get("created_at", datetime.now()).strftime("%Y-%m-%d %H:%M")
         sent = r.get("sentiment", "Neutral")
+        score = r.get("sentiment_score", 5)
+        if score is None: score = 5
         impact = r.get("impact_scope", "Unknown")
         doc_kind = (r.get("doc_type") or "news").upper()
         summary = r.get("summary", "")
-        lines.append(f"[{date_str}] [{doc_kind}] ({sent} | {impact}) - {summary}")
+        lines.append(f"[{date_str}] [{doc_kind}] ({sent} {score}/10 | {impact}) - {summary}")
         
     return "\n".join(lines)
 

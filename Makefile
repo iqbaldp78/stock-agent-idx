@@ -225,6 +225,18 @@ fetch-news: ## Fetch & ingest real-time news & report stream from Stockbit into 
 .PHONY: ingest-news
 ingest-news: fetch-news ## Alias for fetch-news
 
+.PHONY: fetch-reports-month
+fetch-reports-month: ## Backfill & ingest all report notifications for the entire month (usage: make fetch-reports-month PAGES=15)
+	@echo "Fetching report notifications for the entire month..."
+	docker compose exec app python scripts/news_ingester.py --report-pages $(or $(PAGES),15)
+
+.PHONY: backfill-sentiment
+backfill-sentiment: ## Re-analyze all reports in DB to fill sentiment_score 1-10
+	@echo "Re-analyzing reports & news in DB to update sentiment score (1-10)..."
+	docker compose exec app python scripts/backfill_sentiment_score.py
+
+
+
 
 .PHONY: agent-price-predictor
 agent-price-predictor: ## Run price predictor (usage: make agent-price-predictor TICKER=BBCA)

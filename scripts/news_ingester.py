@@ -57,23 +57,32 @@ def fetch_news_stream(limit: int = 10):
 
 
 def analyze_and_embed(content: str, is_report: bool = False):
-    # 1. Analyze text (summary, sentiment, tickers)
+    # 1. Analyze text (summary, sentiment, sentiment_score, tickers)
     if is_report:
         sys_prompt = (
-            "You are a senior financial analyst analyzing corporate reports, research notes, and stock market announcements. "
-            "Extract a brief summary, sentiment (Bullish/Bearish/Neutral), impact_scope (Macro/Micro), and a list of related stock tickers from the text. "
-            "IMPORTANT: Be proactive. If a report shows earnings growth, dividend payout, beat-expectations, or positive expansion, tag as 'Bullish'. "
-            "If it shows declining profits, lawsuits, or negative outlook, tag as 'Bearish'. "
-            "Only tag 'Neutral' for strictly non-financial or purely factual, non-indicative events. "
-            "Respond ONLY with a JSON object containing keys: 'summary', 'sentiment', 'impact_scope', 'tickers'."
+            "You are an expert equity analyst evaluating Indonesian stock market (IDX) corporate filings, financial reports, and announcements.\n"
+            "Your task is to analyze the announcement, assign a granular sentiment_score (1 to 10), and determine if the report is GOOD, BAD, or ROUTINE.\n\n"
+            "SCORING SCALE (1-10):\n"
+            "• 9-10 (Strong Bullish): Net profit growth >30% YoY, revenue beat, major dividend hike, or highly lucrative strategic acquisition.\n"
+            "• 7-8 (Bullish): Net profit growth 10-30% YoY, revenue growth, margin improvement, or solid positive expansion.\n"
+            "• 5-6 (Neutral): Routine filing without financial figures, flat growth (±5%), or non-indicative administrative update.\n"
+            "• 3-4 (Bearish): Net profit drop 10-30% YoY, revenue decline, margin compression, or increased debt burden.\n"
+            "• 1-2 (Strong Bearish): Net loss, net profit crash >30% YoY, debt default, or severe material lawsuit.\n\n"
+            "INSTRUCTIONS:\n"
+            "1. TICKERS: Extract all stock ticker codes (e.g. '[VKTR]', '[MAPI]' -> ['VKTR'], ['MAPI']). Never leave tickers empty if a ticker code is in the text!\n"
+            "2. SUMMARY: Write a concise summary in Indonesian. State the ticker, report type, and explicit evaluation (e.g., 'Evaluasi: Kinerja Bagus (Laba Tumbuh 35%)' or 'Evaluasi: Sentimen Negatif (Rugi Bersih)').\n"
+            "3. SENTIMENT: 'Bullish' if score >= 7, 'Bearish' if score <= 4, 'Neutral' if score 5-6.\n"
+            "4. SENTIMENT_SCORE: An integer from 1 to 10 based on the scale above.\n"
+            "5. IMPACT_SCOPE: 'Micro' for company-specific, 'Macro' for sector/market-wide.\n\n"
+            "Respond ONLY with a JSON object containing keys: 'summary', 'sentiment', 'sentiment_score', 'impact_scope', 'tickers'."
         )
     else:
         sys_prompt = (
-            "You are a financial news analyst. Extract a brief summary, sentiment (Bullish/Bearish/Neutral), impact_scope (Macro/Micro), and a list of related stock tickers from the text. "
-            "IMPORTANT: Be proactive. If a report shows earnings growth, beat-expectations, or positive expansion, tag as 'Bullish'. "
-            "If it shows declining profits, lawsuits, or negative outlook, tag as 'Bearish'. "
-            "Only tag 'Neutral' for strictly non-financial or purely factual, non-indicative events. "
-            "Respond ONLY with a JSON object containing keys: 'summary', 'sentiment', 'impact_scope', 'tickers'."
+            "You are a financial news analyst evaluating IDX stock market news.\n"
+            "Extract a brief summary in Indonesian, sentiment (Bullish/Bearish/Neutral), sentiment_score (1-10), impact_scope (Macro/Micro), and related stock tickers.\n"
+            "SCORING: 9-10 (Strong Bullish), 7-8 (Bullish), 5-6 (Neutral), 3-4 (Bearish), 1-2 (Strong Bearish).\n"
+            "Always extract ticker symbols from bracketed text e.g. [BBCA].\n"
+            "Respond ONLY with a JSON object containing keys: 'summary', 'sentiment', 'sentiment_score', 'impact_scope', 'tickers'."
         )
 
     chat_payload = {
@@ -114,7 +123,12 @@ def analyze_and_embed(content: str, is_report: bool = False):
         analysis = json.loads(analysis_str)
     except Exception as e:
         logger.error(f"Failed to analyze text: {e}")
-        analysis = {"summary": content[:300], "sentiment": "Neutral", "impact_scope": "Micro", "tickers": []}
+        analysis = {"summary": content[:300], "sentiment": "Neutral", "sentiment_score": 5, "impact_scope": "Micro", "tickers": []}
+
+    # Ensure sentiment_score exists in analysis dict
+    if "sentiment_score" not in analysis or not isinstance(analysis.get("sentiment_score"), int):
+        sent = (analysis.get("sentiment") or "Neutral").lower()
+        analysis["sentiment_score"] = 7 if sent == "bullish" else (3 if sent == "bearish" else 5)
 
     # 2. Get embeddings for the summary
     embed_payload = {
@@ -139,16 +153,19 @@ def save_to_db(stream_id: int, content: str, analysis: dict, embedding: list, do
         conn = get_db_connection()
         cur = conn.cursor()
         
+        score = analysis.get("sentiment_score", 5)
+        
         cur.execute("""
             INSERT INTO news_signals 
-            (stream_id, content, summary, sentiment, impact_scope, tickers, embedding, doc_type)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            (stream_id, content, summary, sentiment, sentiment_score, impact_scope, tickers, embedding, doc_type)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (stream_id) DO NOTHING
         """, (
             stream_id, 
             content, 
             analysis.get("summary"), 
             analysis.get("sentiment"), 
+            score,
             analysis.get("impact_scope"), 
             json.dumps(analysis.get("tickers", [])),
             embedding,
@@ -217,94 +234,142 @@ def run_news_ingester(limit: int = 50):
     return processed
 
 
-def run_report_ingester(limit: int = 25):
-    logger.info("Fetching report notifications...")
-    try:
-        res = fetch_report_notifications(limit=limit)
-        notif_items = res.get("data", [])
-    except Exception as e:
-        logger.error(f"Failed to fetch report notifications: {e}")
-        return 0
+def run_report_ingester(limit: int = 25, max_pages: int = 1):
+    logger.info(f"Fetching report notifications (max_pages={max_pages})...")
+    import re
+    
+    total_processed = 0
+    last_id = None
 
-    if not notif_items:
-        logger.info("[Report] No report notifications found.")
-        return 0
-
-    # Extract items and target stream_id / post_id
-    valid_reports = []
-    for item in notif_items:
-        if not isinstance(item, dict):
-            continue
-        n_id = item.get("id") or item.get("notif_id")
-        data_obj = item.get("data", {}) or {}
-        if isinstance(data_obj, dict):
-            post_id = data_obj.get("post_id") or data_obj.get("stream_id") or n_id
-        else:
-            post_id = n_id
-        
-        if post_id:
-            try:
-                numeric_id = int(post_id)
-                valid_reports.append({
-                    "stream_id": numeric_id,
-                    "post_id": post_id,
-                    "title": item.get("title") or item.get("subject") or "",
-                    "message": item.get("message") or item.get("description") or "",
-                    "notif_type": item.get("type") or "NOTIF_TYPE_NEW_REPORT"
-                })
-            except Exception:
-                pass
-
-    if not valid_reports:
-        logger.info("[Report] No valid report IDs found.")
-        return 0
-
-    all_ids = [r["stream_id"] for r in valid_reports]
-    existing_ids = get_existing_stream_ids(all_ids)
-    if existing_ids:
-        logger.info(f"[Report] Found {len(existing_ids)} existing report items in DB. Skipping.")
-
-    processed = 0
-    for rep in valid_reports:
-        stream_id = rep["stream_id"]
-        if stream_id in existing_ids:
-            continue
-
-        logger.info(f"[Report] Processing NEW report stream_id: {stream_id}")
-        
-        # Try fetching detail post for full report content
-        detail_content = ""
+    for page in range(max_pages):
         try:
-            detail_res = fetch_post_detail(rep["post_id"])
-            post_data = detail_res.get("data", {})
-            if isinstance(post_data, dict):
-                detail_content = post_data.get("content") or post_data.get("post", {}).get("content") or ""
+            res = fetch_report_notifications(limit=limit, last_id=last_id)
+            data_field = res.get("data", {})
+            if isinstance(data_field, dict):
+                notif_items = data_field.get("result", [])
+            elif isinstance(data_field, list):
+                notif_items = data_field
+            else:
+                notif_items = []
         except Exception as e:
-            logger.warning(f"[Report] Detail post fetch failed for post_id={rep['post_id']}: {e}. Fallback to snippet.")
+            logger.error(f"Failed to fetch report notifications: {e}")
+            break
 
-        if not detail_content:
-            detail_content = f"{rep['title']}: {rep['message']}".strip()
+        if not notif_items:
+            logger.info(f"[Report] No more report notifications found at page {page+1}.")
+            break
 
-        # Prefix content with notification metadata context
-        full_report_text = f"[{rep['notif_type']}] {rep['title']}\n{detail_content}"
+        # Update last_id for next page pagination
+        last_item = notif_items[-1]
+        if isinstance(last_item, dict):
+            last_id = last_item.get("id") or last_item.get("notif_id") or last_id
 
-        analysis, embedding = analyze_and_embed(full_report_text, is_report=True)
+        # Extract items and target stream_id / post_id
+        valid_reports = []
+        for item in notif_items:
+            if not isinstance(item, dict):
+                continue
+            n_id = item.get("id") or item.get("notif_id")
+            data_obj = item.get("data", {}) or {}
+            post_id = None
+            msg = ""
+            if isinstance(data_obj, dict):
+                link_to = data_obj.get("link_to", {}) or {}
+                post_id = data_obj.get("post_id") or data_obj.get("stream_id") or (link_to.get("value") if isinstance(link_to, dict) else None) or n_id
+                msg = data_obj.get("message") or ""
+            else:
+                post_id = n_id
+                msg = ""
+            
+            clean_msg = re.sub(r'\[%[^%]+%\]\s*', '', msg).strip()
 
-        if save_to_db(stream_id, full_report_text, analysis, embedding, doc_type="report"):
-            logger.info(f"[Report] Successfully saved report stream_id: {stream_id}")
-            processed += 1
+            if post_id:
+                try:
+                    numeric_id = int(post_id)
+                    valid_reports.append({
+                        "stream_id": numeric_id,
+                        "post_id": post_id,
+                        "title": item.get("title") or item.get("subject") or clean_msg,
+                        "message": clean_msg,
+                        "notif_type": item.get("type") or "NOTIF_TYPE_NEW_REPORT"
+                    })
+                except Exception:
+                    pass
 
-    logger.info(f"[Report] Ingestion complete. Processed {processed} new report items.")
-    return processed
+        if not valid_reports:
+            continue
+
+        all_ids = [r["stream_id"] for r in valid_reports]
+        existing_ids = get_existing_stream_ids(all_ids)
+
+        processed = 0
+        for rep in valid_reports:
+            stream_id = rep["stream_id"]
+            if stream_id in existing_ids:
+                continue
+
+            logger.info(f"[Report] Processing NEW report stream_id: {stream_id}")
+            
+            # Try fetching detail post for full report content & AI summary
+            detail_content = ""
+            try:
+                detail_res = fetch_post_detail(rep["post_id"])
+                post_data = detail_res.get("data", {})
+                if isinstance(post_data, dict):
+                    content_text = post_data.get("content") or post_data.get("post", {}).get("content") or ""
+                    
+                    # Extract Stockbit AI Summary if present (contains exact financial metrics & key points)
+                    summary_obj = post_data.get("summary") or {}
+                    ai_parts = []
+                    if isinstance(summary_obj, dict):
+                        st_sum = summary_obj.get("summary") or ""
+                        st_takeaway = summary_obj.get("key_takeaway") or ""
+                        st_kp = summary_obj.get("key_points") or []
+                        
+                        if st_sum:
+                            ai_parts.append(f"Ringkasan Kinerja: {st_sum}")
+                        if isinstance(st_kp, list) and st_kp:
+                            ai_parts.append("Poin Kunci:\n- " + "\n- ".join(st_kp))
+                        if st_takeaway:
+                            ai_parts.append(f"Kesimpulan: {st_takeaway}")
+                            
+                    ai_summary_text = "\n".join(ai_parts)
+                    detail_content = f"{content_text}\n\n{ai_summary_text}".strip()
+            except Exception as e:
+                logger.warning(f"[Report] Detail post fetch failed for post_id={rep['post_id']}: {e}. Fallback to snippet.")
+
+            if not detail_content:
+                detail_content = f"{rep['title']}: {rep['message']}".strip()
+
+            # Prefix content with notification metadata context
+            full_report_text = f"[{rep['notif_type']}] {rep['title']}\n{detail_content}"
+
+            analysis, embedding = analyze_and_embed(full_report_text, is_report=True)
+
+            if save_to_db(stream_id, full_report_text, analysis, embedding, doc_type="report"):
+                logger.info(f"[Report] Successfully saved report stream_id: {stream_id}")
+                processed += 1
+                total_processed += 1
+
+        logger.info(f"[Report] Page {page+1}/{max_pages} complete. Processed {processed} new report items.")
+
+    logger.info(f"[Report] Ingestion complete. Total processed {total_processed} new report items.")
+    return total_processed
 
 
-def run(limit: int = 50):
+def run(limit: int = 50, report_pages: int = 1):
     logger.info("=== START UNIFIED INGESTER (NEWS & REPORT) ===")
     p_news = run_news_ingester(limit)
-    p_report = run_report_ingester(limit=25)
+    p_report = run_report_ingester(limit=25, max_pages=report_pages)
     logger.info(f"=== UNIFIED INGESTER COMPLETED: {p_news} news, {p_report} reports ===")
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Stockbit News & Report Ingester")
+    parser.add_argument("--limit", type=int, default=50, help="News limit")
+    parser.add_argument("--report-pages", type=int, default=1, help="Number of notification pages for reports (25 items/page)")
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.INFO)
-    run(50)
+    run(limit=args.limit, report_pages=args.report_pages)

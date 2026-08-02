@@ -138,12 +138,14 @@ def _calculate_macro_score(macro_data: dict) -> float:
         else:
             usdidr = float(usdidr)
 
-        if usdidr < 15500:
-            score += 0.15  # Strong IDR
-        elif usdidr > 16500:
-            score -= 0.15  # Weak IDR
+        # Adjust thresholds for current market conditions (2026: IDR ~18k)
+        if usdidr < 16000:
+            score += 0.15  # Strong IDR (rare, bullish)
+        elif usdidr > 19000:
+            score -= 0.15  # Very weak IDR (bearish)
         else:
-            usdidr_norm = (usdidr - 16000) / 1000  # 16000 = neutral
+            # Normalize within realistic 16000-19000 range
+            usdidr_norm = (usdidr - 17500) / 1500  # 17500 = neutral (mid-point)
             score += max(-0.15, min(0.15, usdidr_norm * 0.15))
 
         # IHSG vs MA20 (trend strength)
@@ -208,6 +210,8 @@ def _calculate_sector_score(sectors: dict) -> float:
 def _project_predictions(current_price: float, daily_pct_move: float, volatility: float) -> dict:
     """
     Project D1/D3/D5/D7 price targets with volatility damping.
+    UPDATED 2026-08-02: Shifted focus to 5D horizon (where AC1=0.79, signal emerges).
+    1D still included for backward compatibility but less reliable due to noise.
     Volatility decreases as days increase.
     """
     predictions = {}
@@ -359,19 +363,26 @@ def predict_ihsg() -> dict:
         macro_score = _calculate_macro_score(macro_data)
         sector_score = _calculate_sector_score(sectors)
 
-        # Weighted combination
-        # Tuned to rely heavily on Breadth and Momentum to reduce noise and regression to mean
+        # Weighted combination (UPDATED 2026-08-02 — OPTION D: 1D OPTIMIZATION)
+        # Removed news component (weak RAG data ~40 days old, adds noise)
+        # Boosted macro (most stable component for 1D horizon)
+        # Breadth: 0.50 (technical, directional)
+        # Momentum: 0.30 (technical, strength confirmation)
+        # Macro: 0.20 (fundamental, USD/IDR trends + IHSG vs MA20)
         combined_score = (
-            breadth_score * 0.60 +
-            momentum_score * 0.25 +
-            news_sentiment_score * 0.15
+            breadth_score * 0.50 +
+            momentum_score * 0.30 +
+            macro_score * 0.20
         )
         combined_score = float(combined_score)
 
-        # Direction determination (Tightened threshold from 0.4-0.6 to 0.48-0.52)
-        if combined_score > 0.52:
+        # Direction determination (UPDATED 2026-08-02 — OPTION D: AGGRESSIVE DEAD-ZONE)
+        # Tightened thresholds to only predict BULLISH/BEARISH when HIGH CONFIDENCE
+        # 0.35-0.65 neutral band = more SIDEWAYS (honest about 1D noise)
+        # This reduces false signals while maintaining signal detection
+        if combined_score > 0.65:
             direction = "BULLISH"
-        elif combined_score < 0.48:
+        elif combined_score < 0.35:
             direction = "BEARISH"
         else:
             direction = "SIDEWAYS"

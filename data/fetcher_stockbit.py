@@ -1299,7 +1299,7 @@ def get_multiple_ohlcv(tickers: list[str], period: str = "3mo") -> dict[str, pd.
 
 
 @_retry_on_rate_limit(max_attempts=3, base_delay=1.0)
-def fetch_report_notifications(limit: int = 25) -> dict:
+def fetch_report_notifications(limit: int = 25, last_id: int | str = None) -> dict:
     """
     Fetch report notifications (Research reports, Newsfeed, Corp action, Dividends, etc.) from Stockbit API.
     """
@@ -1318,6 +1318,8 @@ def fetch_report_notifications(limit: int = 25) -> dict:
         "types=NOTIF_TYPE_COMPANY_OTHERS&"
         f"limit={limit}"
     )
+    if last_id:
+        url += f"&last_id={last_id}"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
