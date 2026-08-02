@@ -73,7 +73,16 @@ def main():
                 continue
 
             actuals = y_test.values
-            pred_buy = preds >= 0.55
+            # FIXED (Fase 0.3): Baca threshold training per ticker/horizon, bukan hardcode 0.55
+            threshold_path = os.path.join(model_dir, f"lgbm_{ticker.lower()}_{horizon}_threshold.json")
+            buy_threshold = 0.55
+            if os.path.exists(threshold_path):
+                try:
+                    with open(threshold_path, "r") as f:
+                        buy_threshold = float(json.load(f).get("buy_threshold", buy_threshold))
+                except Exception:
+                    pass
+            pred_buy = preds >= buy_threshold
             actual_up = actuals > 0
             tp = int((pred_buy & actual_up).sum())
             fp = int((pred_buy & ~actual_up).sum())

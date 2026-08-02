@@ -103,6 +103,9 @@ def run_ml_prediction(target_date: date = None, tickers: list = None) -> int:
                 target_pct = (prob_val - 0.50) * 0.05
                 pred_price = last_close * (1 + target_pct)
 
+                # FIXED (Fase 0.3): Baca threshold dari predictor, bukan hardcode 0.55
+                buy_threshold = predictor.thresholds.get(horizon, 0.55)
+
                 existing = session.query(MlPredictionLog).filter_by(
                     trade_date=target_date, ticker=ticker, horizon=horizon
                 ).first()
@@ -114,13 +117,13 @@ def run_ml_prediction(target_date: date = None, tickers: list = None) -> int:
                         horizon=horizon,
                         pred_return_pct=prob_val,
                         pred_price=pred_price,
-                        predicted_direction="NAIK" if prob_val >= 0.55 else "TURUN"
+                        predicted_direction="NAIK" if prob_val >= buy_threshold else "TURUN"
                     )
                     session.add(new_log)
                 else:
                     existing.pred_return_pct = prob_val
                     existing.pred_price = pred_price
-                    existing.predicted_direction = "NAIK" if prob_val >= 0.55 else "TURUN"
+                    existing.predicted_direction = "NAIK" if prob_val >= buy_threshold else "TURUN"
 
             session.commit()
             count += 1

@@ -69,7 +69,9 @@ def main():
             except Exception as e:
                 continue
 
-            binary_preds = (preds >= 0.55).astype(int)
+            # FIXED (Fase 0.3): Baca threshold hasil training, bukan hardcode 0.55
+            buy_threshold = predictor.thresholds.get(h, 0.55)
+            binary_preds = (preds >= buy_threshold).astype(int)
             y_true_int = y_true.astype(int)
 
             acc = float(np.mean(binary_preds == y_true_int))

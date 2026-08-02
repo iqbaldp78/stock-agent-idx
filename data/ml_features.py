@@ -692,7 +692,16 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
     """
     Extract vector features for a single stock.
     Returns a single-row DataFrame.
+    
+    FIXED (Fase 0B): Now computes all missing features that training uses:
+    - IHSG context (ihsg_ret_1d/5d, ihsg_rsi, ihsg_ma_dist_20, ihsg_volatility, ihsg_trend, stock_vs_ihsg_1d)
+    - Day-of-week
+    - Lag returns (ret_1d_lag1..5, ret_2d, ret_10d)
+    - Additional volatility & technical (volatility_10d, ret_1d_zscore, vol_trend_5d, close_to_high/low)
     """
+    from datetime import date
+    import numpy as np
+    
     ticker_scores = scores.get(ticker, {})
     bandarm = ticker_scores.get("bandarm", {})
     tech = ticker_scores.get("technical", {})
@@ -700,7 +709,6 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
 
     # 1. Bandar Features
     price_analysis = bandarm.get("price_analysis", {})
-    from datetime import date
     bandar_ratios = get_historical_bandar_features(ticker, date.today())
 
     bandar_features = {
@@ -721,7 +729,7 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         "is_fomo_trap": 1.0 if bandarm.get("insight_fomo_trap", {}).get("type") == "risk" else 0.0,
     }
 
-    # 2. Technical Features
+    # 2. Technical Features (from agent scores)
     divergence = tech.get("divergence", {})
     data_used = tech.get("data_used", [])
 
@@ -734,14 +742,14 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         "vol_ratio": _extract_first_numeric(data_used, "Vol ratio", 1.0),
     }
 
-    # 3. Macro Features
+    # 3. Macro Features (from agent scores)
     macro_features = {
         "macro_score": _parse_number(macro_data.get("score"), 5.0),
         "ihsg_vs_ma20": _parse_number(macro_data.get("ihsg_vs_ma20"), 0.0),
         "usdidr_val": _parse_number(macro_data.get("usdidr"), 16000.0) / 1000, # Scaled
     }
 
-    # 4. OHLCV Features (Recent Price Action)
+    # 4. OHLCV Features (Recent Price Action) + Missing Training Features
     if ohlcv is not None and not ohlcv.empty:
         closes = pd.to_numeric(ohlcv["Close"], errors="coerce")
         highs = pd.to_numeric(ohlcv["High"], errors="coerce") if "High" in ohlcv else None
@@ -751,8 +759,33 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
 
         closes = closes.dropna()
         returns = closes.pct_change()
+        
+        # FIXED: Add lag returns (ret_1d_lag1..5, ret_2d, ret_10d)
+        ret_1d_lag1 = returns.iloc[-2] if len(returns) > 1 else 0.0
+        ret_1d_lag2 = returns.iloc[-3] if len(returns) > 2 else 0.0
+        ret_1d_lag3 = returns.iloc[-4] if len(returns) > 3 else 0.0
+        ret_1d_lag4 = returns.iloc[-5] if len(returns) > 4 else 0.0
+        ret_1d_lag5 = returns.iloc[-6] if len(returns) > 5 else 0.0
+        ret_2d = (closes.iloc[-1] / closes.iloc[-3] - 1) if len(closes) > 2 else 0.0
+        ret_10d = (closes.iloc[-1] / closes.iloc[-11] - 1) if len(closes) > 10 else 0.0
+        
+        # FIXED: Add volatility_10d
+        volatility_10d = returns.tail(10).std() if len(returns) > 10 else 0.0
+        volatility_20d = returns.tail(20).std() if len(returns) > 20 else 0.0
+        
+        # FIXED: Add ret_1d_zscore (standardized return)
+        mean_ret = returns.tail(20).mean() if len(returns) > 20 else 0.0
+        std_ret = returns.tail(20).std() if len(returns) > 20 else 1.0
+        ret_1d_current = returns.iloc[-1] if len(returns) > 1 else 0.0
+        ret_1d_zscore = (ret_1d_current - mean_ret) / std_ret if std_ret > 0 else 0.0
+        
+        # FIXED: Add vol_trend_5d
+        vol_trend_5d = volatility_20d - volatility_10d if volatility_10d > 0 else 0.0
+        
+        ma5 = closes.rolling(5).mean()
         ma20 = closes.rolling(20).mean()
         ma50 = closes.rolling(50).mean()
+        ma200 = closes.rolling(200).mean()
 
         current_price = float(closes.iloc[-1]) if len(closes) > 0 else 0.0
         support_near = _parse_number(tech.get("support_near"))
@@ -769,20 +802,45 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             latest_low = float(lows.dropna().iloc[-1])
             range_pct = (latest_high - latest_low) / current_price
 
+        # FIXED: Add close_to_high / close_to_low
+        close_to_high = (current_price / float(highs.dropna().iloc[-1]) - 1) if highs is not None and len(highs.dropna()) > 0 and current_price > 0 else 0.0
+        close_to_low = (current_price / float(lows.dropna().iloc[-1]) - 1) if lows is not None and len(lows.dropna()) > 0 and current_price > 0 else 0.0
+
         # Advanced Indicators
         macd, macd_hist = _compute_macd(closes)
         bb_upper, bb_lower = _compute_bb(closes)
         stoch_k, stoch_d = _compute_stoch(highs, lows, closes) if highs is not None and lows is not None else (closes*0, closes*0)
         atr = _compute_atr(highs, lows, closes) if highs is not None and lows is not None else closes*0
 
+        # FIXED: Add day_of_week
+        day_of_week = float(pd.Timestamp(date.today()).dayofweek)
+        
+        # FIXED: Add ma_dist_5 and ma_dist_200 (was missing)
+        ma_dist_5 = (current_price / ma5.iloc[-1] - 1) if len(ma5.dropna()) > 0 and ma5.iloc[-1] else 0.0
+        ma_dist_200 = (current_price / ma200.iloc[-1] - 1) if len(ma200.dropna()) > 0 and ma200.iloc[-1] else 0.0
+
         price_features = {
-            "ret_1d": returns.iloc[-1] if len(returns) > 1 else 0.0,
+            "ret_1d": ret_1d_current,
+            "ret_1d_lag1": ret_1d_lag1,
+            "ret_1d_lag2": ret_1d_lag2,
+            "ret_1d_lag3": ret_1d_lag3,
+            "ret_1d_lag4": ret_1d_lag4,
+            "ret_1d_lag5": ret_1d_lag5,
+            "ret_2d": ret_2d,
             "ret_3d": (closes.iloc[-1] / closes.iloc[-4] - 1) if len(closes) > 4 else 0.0,
             "ret_5d": (closes.iloc[-1] / closes.iloc[-6] - 1) if len(closes) > 6 else 0.0,
-            "volatility_20d": returns.tail(20).std() if len(returns) > 20 else 0.0,
+            "ret_10d": ret_10d,
+            "volatility_10d": volatility_10d,
+            "volatility_20d": volatility_20d,
+            "ret_1d_zscore": ret_1d_zscore,
+            "vol_trend_5d": vol_trend_5d,
             "gap_open": (opens.dropna().iloc[-1] / closes.iloc[-2] - 1) if opens is not None and len(opens.dropna()) > 0 and len(closes) > 2 else 0.0,
+            "ma_dist_5": ma_dist_5,
             "ma_dist_20": (current_price / ma20.iloc[-1] - 1) if len(ma20.dropna()) > 0 and ma20.iloc[-1] else 0.0,
             "ma_dist_50": (current_price / ma50.iloc[-1] - 1) if len(ma50.dropna()) > 0 and ma50.iloc[-1] else 0.0,
+            "ma_dist_200": ma_dist_200,
+            "close_to_high": close_to_high,
+            "close_to_low": close_to_low,
             "volume_spike": volume_spike,
             "support_proximity": _proximity(current_price, support_near),
             "resistance_proximity": _proximity(current_price, resistance_near),
@@ -794,6 +852,7 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "stoch_k": float(stoch_k.iloc[-1]) if len(stoch_k.dropna()) > 0 else 0.0,
             "stoch_d": float(stoch_d.iloc[-1]) if len(stoch_d.dropna()) > 0 else 0.0,
             "atr": float(atr.iloc[-1] / current_price) if len(atr.dropna()) > 0 and current_price > 0 else 0.0,
+            "day_of_week": day_of_week,
         }
 
         # Candlestick Pattern Features for Live ML Inference
@@ -810,12 +869,21 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             price_features["is_bullish_pattern"] = 0.0
             price_features["is_bearish_pattern"] = 0.0
     else:
-        price_features = {f"ret_{i}d": 0.0 for i in [1, 3, 5]}
+        # Fallback: all zeros if OHLCV missing
+        price_features = {f"ret_{i}d": 0.0 for i in [1, 2, 3, 5, 10]}
+        price_features.update({f"ret_1d_lag{i}": 0.0 for i in range(1, 6)})
         price_features.update({
+            "volatility_10d": 0.0,
             "volatility_20d": 0.0,
+            "ret_1d_zscore": 0.0,
+            "vol_trend_5d": 0.0,
             "gap_open": 0.0,
+            "ma_dist_5": 0.0,
             "ma_dist_20": 0.0,
             "ma_dist_50": 0.0,
+            "ma_dist_200": 0.0,
+            "close_to_high": 0.0,
+            "close_to_low": 0.0,
             "volume_spike": 0.0,
             "support_proximity": 0.0,
             "resistance_proximity": 0.0,
@@ -827,6 +895,10 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "stoch_k": 0.0,
             "stoch_d": 0.0,
             "atr": 0.0,
+            "day_of_week": 0.0,
+            "candlestick_winrate": 0.50,
+            "is_bullish_pattern": 0.0,
+            "is_bearish_pattern": 0.0,
         })
 
     # Combine all

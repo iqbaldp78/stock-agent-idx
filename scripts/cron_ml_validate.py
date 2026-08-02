@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from db import SessionLocal
 from db.models import MlPredictionLog
 from scripts.train_day1_model import get_universe_tickers, fetch_ohlcv
+from models.multiday_predictor import MultiDayPredictor
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -29,6 +30,10 @@ def main():
             raw = fetch_ohlcv(ticker, "2m")
             if raw.empty:
                 continue
+
+            # FIXED (Fase 0.3): pakai threshold hasil training per ticker/horizon,
+            # bukan cutoff hardcode 0.55, supaya validasi live konsisten dengan training.
+            predictor = MultiDayPredictor(ticker=ticker)
                 
             for log in logs:
                 # Validasi T+1
@@ -44,9 +49,9 @@ def main():
                         
                         log.actual_close_price = target_close
                         log.actual_return_pct = actual_return
-                        # Threshold 0.55 (55%) untuk NAIK agar sinyal lebih selektif
                         pred_val = float(log.pred_return_pct) if log.pred_return_pct is not None else 0.0
-                        if pred_val >= 0.55:
+                        buy_threshold = predictor.thresholds.get(log.horizon, 0.55)
+                        if pred_val >= buy_threshold:
                             log.is_correct = bool(actual_return > 0)
                         else:
                             log.is_correct = bool(actual_return <= 0)
@@ -65,9 +70,9 @@ def main():
                         log.actual_close_price = target_close
                         log.actual_return_pct = actual_return
                         
-                        # Threshold 0.55 (55%) untuk NAIK
                         pred_val = float(log.pred_return_pct) if log.pred_return_pct is not None else 0.0
-                        if pred_val >= 0.55:
+                        buy_threshold = predictor.thresholds.get(log.horizon, 0.55)
+                        if pred_val >= buy_threshold:
                             log.is_correct = bool(actual_return > 0)
                         else:
                             log.is_correct = bool(actual_return <= 0)
