@@ -715,6 +715,15 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         "bandarm_score": bandarm.get("score", 5.0),
         "dist_avg_7d": _parse_pct(price_analysis.get("distance_from_7d")),
         "dist_avg_1m": _parse_pct(price_analysis.get("distance_from_1m")),
+        "day_foreign_net": _parse_number(
+            bandarm.get("day_foreign_net", bandarm.get("foreign_net", 0.0)), 0.0
+        ) / 1e9,
+        "frequency_1d": _parse_number(
+            bandarm.get("frequency_1d", bandarm.get("frequency", 0.0)), 0.0
+        ),
+        "close_vs_avg": _parse_pct(
+            bandarm.get("close_vs_avg", price_analysis.get("close_vs_avg", 0.0))
+        ),
         "foreign_net_7d": _parse_number(bandarm.get("window_7d", {}).get("foreign_net_7d"), 0.0) / 1e9, # In Billions
         "foreign_net_1m": _parse_number(bandarm.get("window_1m", {}).get("foreign_net_1m"), 0.0) / 1e9,
         "top3_buy_ratio_7d": bandar_ratios.get("top3_buy_ratio_7d", 0.0),
@@ -728,6 +737,12 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         "haka_score": 1.0 if bandarm.get("insight_aggressiveness", {}).get("type") == "driver" else (-1.0 if bandarm.get("insight_aggressiveness", {}).get("type") == "risk" else 0.0),
         "is_fomo_trap": 1.0 if bandarm.get("insight_fomo_trap", {}).get("type") == "risk" else 0.0,
     }
+    bandar_features["bandar_accum_ratio"] = 1.0 if (
+        bandar_features["foreign_net_1m"] > 0 and bandar_features["dist_avg_1m"] < 5.0
+    ) else 0.0
+    # Live hanya punya current rolling foreign net, jadi z-score historis fallback aman 0.0
+    # sampai history window tersedia dari DB path yang lebih lengkap.
+    bandar_features["foreign_flow_zscore"] = _parse_number(bandarm.get("foreign_flow_zscore"), 0.0)
 
     # 2. Technical Features (from agent scores)
     divergence = tech.get("divergence", {})
@@ -819,6 +834,41 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         ma_dist_5 = (current_price / ma5.iloc[-1] - 1) if len(ma5.dropna()) > 0 and ma5.iloc[-1] else 0.0
         ma_dist_200 = (current_price / ma200.iloc[-1] - 1) if len(ma200.dropna()) > 0 and ma200.iloc[-1] else 0.0
 
+        # FIXED (Fase 0.2): live parity for features used in ML_TRAIN_FEATURES
+        candle_range = (float(highs.dropna().iloc[-1]) - float(lows.dropna().iloc[-1])) if highs is not None and lows is not None and len(highs.dropna()) > 0 and len(lows.dropna()) > 0 else 0.0
+        latest_open = float(opens.dropna().iloc[-1]) if opens is not None and len(opens.dropna()) > 0 else current_price
+        body_ratio = abs(current_price - latest_open) / candle_range if candle_range > 0 else 0.0
+        gap_continuation = ((opens.dropna().iloc[-1] / closes.iloc[-2] - 1) * returns.iloc[-2]) if opens is not None and len(opens.dropna()) > 0 and len(closes) > 2 and len(returns) > 1 else 0.0
+        rsi_series = _compute_rsi(closes, 14)
+        rsi_14_prev = float(rsi_series.iloc[-2]) if len(rsi_series.dropna()) > 1 else 50.0
+        vol_clean = volumes.dropna() if volumes is not None else pd.Series(dtype=float)
+        prev_vol_mean = vol_clean.tail(21).iloc[:-1].mean() if len(vol_clean) > 21 else 0.0
+        volume_spike_prev = float(vol_clean.iloc[-2] / prev_vol_mean) if len(vol_clean) > 21 and prev_vol_mean else 0.0
+
+        vwap_deviation_20d = 0.0
+        ob_imbalance_proxy_20d = 0.0
+        range_concentration_20d = 0.0
+        if highs is not None and lows is not None and volumes is not None and len(ohlcv) >= 20:
+            tmp = pd.DataFrame({
+                "High": highs,
+                "Low": lows,
+                "Close": closes,
+                "Volume": volumes,
+            }).dropna().tail(20)
+            if len(tmp) >= 10:
+                tp20 = (tmp["High"] + tmp["Low"] + tmp["Close"]) / 3.0
+                vol_sum = tmp["Volume"].sum()
+                if vol_sum:
+                    vwap20 = float((tp20 * tmp["Volume"]).sum() / vol_sum)
+                    vwap_deviation_20d = (current_price / vwap20 - 1) if vwap20 else 0.0
+                upper = (tmp["High"] - tp20).clip(lower=0)
+                lower = (tp20 - tmp["Low"]).clip(lower=0)
+                ob_imbalance_proxy_20d = float(((upper - lower) / tmp["Volume"].replace(0, np.nan)).mean()) if len(tmp) else 0.0
+                price_range20 = float(tmp["High"].max() - tmp["Low"].min())
+                if price_range20 > 0:
+                    recent5 = tmp.tail(5)
+                    range_concentration_20d = float((recent5["High"].max() - recent5["Low"].min()) / price_range20)
+
         price_features = {
             "ret_1d": ret_1d_current,
             "ret_1d_lag1": ret_1d_lag1,
@@ -841,10 +891,15 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "ma_dist_200": ma_dist_200,
             "close_to_high": close_to_high,
             "close_to_low": close_to_low,
+            "body_ratio": body_ratio,
             "volume_spike": volume_spike,
+            "volume_spike_prev": volume_spike_prev,
             "support_proximity": _proximity(current_price, support_near),
             "resistance_proximity": _proximity(current_price, resistance_near),
             "range_pct": range_pct,
+            "vwap_deviation_20d": vwap_deviation_20d,
+            "ob_imbalance_proxy_20d": ob_imbalance_proxy_20d,
+            "range_concentration_20d": range_concentration_20d,
             "macd": float(macd.iloc[-1] / current_price) if len(macd.dropna()) > 0 and current_price > 0 else 0.0,
             "macd_hist": float(macd_hist.iloc[-1] / current_price) if len(macd_hist.dropna()) > 0 and current_price > 0 else 0.0,
             "bb_upper_dist": float(current_price / bb_upper.iloc[-1] - 1) if len(bb_upper.dropna()) > 0 else 0.0,
@@ -853,6 +908,8 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "stoch_d": float(stoch_d.iloc[-1]) if len(stoch_d.dropna()) > 0 else 0.0,
             "atr": float(atr.iloc[-1] / current_price) if len(atr.dropna()) > 0 and current_price > 0 else 0.0,
             "day_of_week": day_of_week,
+            "gap_continuation": gap_continuation,
+            "rsi_14_prev": rsi_14_prev,
         }
 
         # Candlestick Pattern Features for Live ML Inference
@@ -885,9 +942,13 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "close_to_high": 0.0,
             "close_to_low": 0.0,
             "volume_spike": 0.0,
+            "volume_spike_prev": 0.0,
             "support_proximity": 0.0,
             "resistance_proximity": 0.0,
             "range_pct": 0.0,
+            "vwap_deviation_20d": 0.0,
+            "ob_imbalance_proxy_20d": 0.0,
+            "range_concentration_20d": 0.0,
             "macd": 0.0,
             "macd_hist": 0.0,
             "bb_upper_dist": 0.0,
@@ -896,13 +957,49 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
             "stoch_d": 0.0,
             "atr": 0.0,
             "day_of_week": 0.0,
+            "gap_continuation": 0.0,
+            "rsi_14_prev": 50.0,
+            "body_ratio": 0.0,
             "candlestick_winrate": 0.50,
             "is_bullish_pattern": 0.0,
             "is_bearish_pattern": 0.0,
         })
 
+    # 5. IHSG market context features for live inference parity with training
+    ihsg_features = {
+        "ihsg_ret_1d": 0.0,
+        "ihsg_ret_5d": 0.0,
+        "ihsg_rsi": 0.0,
+        "ihsg_ma_dist_20": 0.0,
+        "ihsg_volatility": 0.0,
+        "ihsg_trend": 0.0,
+        "stock_vs_ihsg_1d": 0.0,
+        "ihsg_trend_3d": 0.0,
+    }
+    try:
+        ihsg_df = _fetch_ihsg_history()
+        if ihsg_df is not None and not ihsg_df.empty and "close" in ihsg_df:
+            ihsg_close = pd.to_numeric(ihsg_df["close"], errors="coerce").dropna()
+            if len(ihsg_close) > 1:
+                ihsg_ret_1d_series = ihsg_close.pct_change()
+                ihsg_features["ihsg_ret_1d"] = float(ihsg_ret_1d_series.iloc[-1]) if pd.notna(ihsg_ret_1d_series.iloc[-1]) else 0.0
+                ihsg_features["stock_vs_ihsg_1d"] = float(price_features.get("ret_1d", 0.0) - ihsg_features["ihsg_ret_1d"])
+                ihsg_features["ihsg_volatility"] = float(ihsg_ret_1d_series.tail(20).std()) if len(ihsg_ret_1d_series.dropna()) >= 20 else 0.0
+            if len(ihsg_close) > 5:
+                ihsg_features["ihsg_ret_5d"] = float(ihsg_close.iloc[-1] / ihsg_close.iloc[-6] - 1)
+            if len(ihsg_close) > 3:
+                ihsg_features["ihsg_trend_3d"] = float(ihsg_close.iloc[-1] / ihsg_close.iloc[-4] - 1)
+            ihsg_rsi_series = _compute_rsi(ihsg_close, 14)
+            ihsg_features["ihsg_rsi"] = float(ihsg_rsi_series.iloc[-1]) if len(ihsg_rsi_series.dropna()) > 0 else 0.0
+            ihsg_ma20 = ihsg_close.rolling(20).mean()
+            ihsg_ma50 = ihsg_close.rolling(50).mean()
+            ihsg_features["ihsg_ma_dist_20"] = float(ihsg_close.iloc[-1] / ihsg_ma20.iloc[-1] - 1) if len(ihsg_ma20.dropna()) > 0 and ihsg_ma20.iloc[-1] else 0.0
+            ihsg_features["ihsg_trend"] = 1.0 if len(ihsg_ma50.dropna()) > 0 and ihsg_ma20.iloc[-1] > ihsg_ma50.iloc[-1] else 0.0
+    except Exception as e:
+        logger.warning(f"Failed to compute live IHSG features for {ticker}: {e}")
+
     # Combine all
-    all_features = {**bandar_features, **tech_features, **macro_features, **price_features}
+    all_features = {**bandar_features, **tech_features, **macro_features, **price_features, **ihsg_features}
     for col in FEATURE_COLUMNS:
         all_features.setdefault(col, 0.0)
     row = pd.DataFrame([all_features])[FEATURE_COLUMNS]
