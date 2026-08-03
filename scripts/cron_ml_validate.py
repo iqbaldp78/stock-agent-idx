@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys, os, logging
-from datetime import date
+from datetime import date, datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from db import SessionLocal
 from db.models import MlPredictionLog
@@ -49,6 +49,7 @@ def main():
                         
                         log.actual_close_price = target_close
                         log.actual_return_pct = actual_return
+                        log.validated_at = datetime.now()
                         pred_val = float(log.pred_return_pct) if log.pred_return_pct is not None else 0.0
                         buy_threshold = predictor.thresholds.get(log.horizon, 0.55)
                         if pred_val >= buy_threshold:
@@ -69,6 +70,7 @@ def main():
                         
                         log.actual_close_price = target_close
                         log.actual_return_pct = actual_return
+                        log.validated_at = datetime.now()
                         
                         pred_val = float(log.pred_return_pct) if log.pred_return_pct is not None else 0.0
                         buy_threshold = predictor.thresholds.get(log.horizon, 0.55)

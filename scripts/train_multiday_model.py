@@ -96,6 +96,7 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
 
 # Purge gap = horizon terpanjang (7d). Mencegah label overlap antar blok,
 # konsisten dengan PurgedTimeSeriesSplit di models/multiday_predictor.py.
+# Dapat di-override via --purge-days CLI arg.
 GAP_DAYS = 7
 MIN_VAL_ROWS = 10  # train_incremental hanya mengkalibrasi kalau val >= 10 baris
 
@@ -141,7 +142,7 @@ def fit_final_model(predictor, X, Y, min_rows):
     )
 
 
-def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, final_dir, validate_only=False):
+def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, final_dir, validate_only=False, purge_days=7):
     """Walk-forward validation dengan expanding train window."""
     from data.ml_features import prepare_training_data
     from models.multiday_predictor import MultiDayPredictor
@@ -167,7 +168,7 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
 
         # Carve val dari ekor blok train — test tidak boleh dipakai saat training.
         val_size = max(30, int(fold_size * 0.2))
-        split = make_purged_split(train_end, min_rows, val_size)
+        split = make_purged_split(train_end, min_rows, val_size, gap=purge_days)
         if split is None:
             logger.debug(f"{ticker} fold {fold_idx} dilewati: data kurang untuk split train/val/test")
             continue
@@ -301,6 +302,7 @@ def main():
     parser.add_argument("--validate-only", action="store_true", help="Only validate accuracy on holdout, do not save production models")
     parser.add_argument("--walk-forward", action="store_true", help="Use expanding walk-forward validation instead of single holdout split")
     parser.add_argument("--n-folds", type=int, default=4, help="Number of walk-forward folds")
+    parser.add_argument("--purge-days", type=int, default=7, help="Purge gap days between train/val/test (default: 7)")
     parser.add_argument("--exclude-tickers", nargs="*", default=[], help="Ticker(s) to exclude from per-ticker training/validation")
     args = parser.parse_args()
 
@@ -311,6 +313,7 @@ def main():
         tickers = [t for t in tickers if t.upper() not in excluded]
         logger.info(f"Excluded {before_count - len(tickers)} ticker(s): {', '.join(sorted(excluded))}")
     logger.info(f"Training universe: {len(tickers)} ticker(s): {', '.join(tickers)}")
+    logger.info(f"Purge gap: {args.purge_days} days")
 
     summaries = []
     errors = []
@@ -326,7 +329,8 @@ def main():
 
         if args.walk_forward:
             summary, err = walk_forward_evaluate_ticker(
-                ticker, ohlcv, args.min_rows, args.n_folds, holdout_dir, args.checkpoints_dir, validate_only=args.validate_only
+                ticker, ohlcv, args.min_rows, args.n_folds, holdout_dir, args.checkpoints_dir, 
+                validate_only=args.validate_only, purge_days=args.purge_days
             )
         else:
             summary, err = train_and_evaluate_ticker(

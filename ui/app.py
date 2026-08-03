@@ -2411,7 +2411,8 @@ elif page == "📈 IHSG Predictor":
 elif page == "🤖 ML Validation":
     st.title("🤖 ML Validation (Multi-Day & Live Predictions)")
     
-    tab_live, tab_nextday, tab_backtest, tab_sim, tab_candle = st.tabs([
+    tab_perf, tab_live, tab_nextday, tab_backtest, tab_sim, tab_candle = st.tabs([
+        "📊 ML Performance & Live Validation",
         "🔴 Live Predictions", 
         "🔮 Next-Day Predictions", 
         "🧪 Backtest Metrics", 
@@ -2419,6 +2420,273 @@ elif page == "🤖 ML Validation":
         "🕯️ Candlestick Screener"
     ])
     
+    with tab_perf:
+        st.header("📊 ML Prediction Performance & Live Validation Analytics")
+        st.caption("Evaluasi statistik performa riil, akurasi sinyal, realized return, dan visualisasi hasil prediksi machine learning yang divalidasi EOD.")
+        
+        from datetime import datetime, timedelta
+        from db import SessionLocal
+        from db.models import MlPredictionLog
+        import pandas as pd
+        import numpy as np
+        import plotly.express as px
+        import plotly.graph_objects as go
+        
+        # --- TOP CONTROLS & FILTERS ---
+        col_f1, col_f2, col_f3, col_f4, col_f5 = st.columns([2, 1.2, 1.5, 2, 2])
+        with col_f1:
+            end_default = datetime.now().date()
+            start_default = end_default - timedelta(days=90)
+            date_filter = st.date_input(
+                "📅 Periode Trade Date",
+                value=(start_default, end_default),
+                key="perf_date_range_picker"
+            )
+        with col_f2:
+            horizon_filter = st.selectbox("⏳ Horizon", ["ALL", "1d", "3d", "5d", "7d"], index=0, key="perf_horizon_sel")
+        with col_f3:
+            ticker_filter = st.text_input("🔍 Filter Ticker", value="", placeholder="cth: BBCA", key="perf_ticker_input").strip().upper()
+        with col_f4:
+            min_prob_filter = st.slider("🎯 Min Prob (%)", min_value=40.0, max_value=90.0, value=50.0, step=1.0, key="perf_min_prob_slider")
+        with col_f5:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            if st.button("🔄 Validate Unverified Now", type="primary", key="btn_run_val_perf_top"):
+                with st.spinner("Menjalankan validasi EOD untuk log prediksi di DB..."):
+                    import subprocess, sys
+                    res = subprocess.run([sys.executable, "scripts/cron_ml_validate.py"], capture_output=True, text=True)
+                    if res.returncode == 0:
+                        st.success("✅ Validasi EOD selesai dijalankan!")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Validasi error: {res.stderr}")
+
+        st.divider()
+
+        # Fetch Data from Database
+        session = SessionLocal()
+        try:
+            query = session.query(MlPredictionLog)
+            
+            # Apply Date Range filter
+            if isinstance(date_filter, (tuple, list)) and len(date_filter) == 2:
+                query = query.filter(MlPredictionLog.trade_date >= date_filter[0], MlPredictionLog.trade_date <= date_filter[1])
+            elif isinstance(date_filter, (tuple, list)) and len(date_filter) == 1:
+                query = query.filter(MlPredictionLog.trade_date >= date_filter[0])
+                
+            # Apply Horizon filter
+            if horizon_filter != "ALL":
+                query = query.filter(MlPredictionLog.horizon == horizon_filter)
+                
+            # Apply Ticker filter
+            if ticker_filter:
+                query = query.filter(MlPredictionLog.ticker.like(f"%{ticker_filter}%"))
+                
+            all_logs = query.order_by(MlPredictionLog.trade_date.desc(), MlPredictionLog.ticker).all()
+            
+            if not all_logs:
+                st.warning("⚠️ Tidak ada log prediksi ML yang ditemukan dengan filter saat ini.")
+            else:
+                # Convert logs to DataFrame
+                records = []
+                for l in all_logs:
+                    raw_prob = float(l.pred_return_pct) if l.pred_return_pct is not None else 0.0
+                    prob_pct = raw_prob * 100.0 if raw_prob <= 1.0 else raw_prob
+                    act_ret = float(l.actual_return_pct) if l.actual_return_pct is not None else None
+                    act_close = float(l.actual_close_price) if l.actual_close_price is not None else None
+                    
+                    records.append({
+                        "id": l.id,
+                        "trade_date": l.trade_date,
+                        "ticker": l.ticker,
+                        "horizon": l.horizon,
+                        "prob_pct": prob_pct,
+                        "pred_price": float(l.pred_price) if l.pred_price else None,
+                        "actual_close": act_close,
+                        "actual_return_pct": act_ret,
+                        "is_correct": l.is_correct,
+                        "validated": act_close is not None
+                    })
+                
+                df_perf = pd.DataFrame(records)
+                
+                # Filter by Min Prob
+                df_filtered = df_perf[df_perf["prob_pct"] >= min_prob_filter].copy()
+                df_validated = df_filtered[df_filtered["validated"] & df_filtered["actual_return_pct"].notnull()].copy()
+                
+                # --- KPI CARDS ---
+                st.subheader("🎯 Ringkasan Kinerja & Indikator Validasi")
+                kpi_col1, kpi_col2, kpi_col3, kpi_col4, kpi_col5 = st.columns(5)
+                
+                total_val = len(df_validated)
+                if total_val > 0:
+                    correct_cnt = int(df_validated["is_correct"].sum())
+                    hit_rate = (correct_cnt / total_val) * 100.0
+                    
+                    buy_signals = df_validated[df_validated["prob_pct"] >= min_prob_filter]
+                    win_trades = len(buy_signals[buy_signals["actual_return_pct"] > 0])
+                    loss_trades = len(buy_signals[buy_signals["actual_return_pct"] <= 0])
+                    
+                    avg_ret = buy_signals["actual_return_pct"].mean() if not buy_signals.empty else 0.0
+                    total_cum_ret = buy_signals["actual_return_pct"].sum() if not buy_signals.empty else 0.0
+                    
+                    kpi_col1.metric("🎯 Hit Rate (Accuracy)", f"{hit_rate:.1f}%", f"{correct_cnt} benar dari {total_val}")
+                    kpi_col2.metric("💰 Realized Return", f"{total_cum_ret:+.2f}%", f"Kumulatif {len(buy_signals)} sinyal")
+                    kpi_col3.metric("⚖️ Win / Loss", f"{win_trades} W / {loss_trades} L", f"Win Rate: {(win_trades/max(1, win_trades+loss_trades))*100:.1f}%")
+                    kpi_col4.metric("📈 Rata-rata Return / Trade", f"{avg_ret:+.2f}%", "Per Sinyal Validated")
+                    kpi_col5.metric("📦 Validated Logs", f"{total_val} Log", f"Dari {len(df_filtered)} total log")
+                else:
+                    kpi_col1.metric("🎯 Hit Rate (Accuracy)", "N/A", "Belum ada log tervalidasi")
+                    kpi_col2.metric("💰 Realized Return", "N/A", "-")
+                    kpi_col3.metric("⚖️ Win / Loss", "N/A", "-")
+                    kpi_col4.metric("📈 Rata-rata Return", "N/A", "-")
+                    kpi_col5.metric("📦 Validated Logs", "0 Log", f"Dari {len(df_filtered)} total log")
+                    st.info("💡 Belum ada data tervalidasi EOD. Klik tombol **🔄 Validate Unverified Now** di atas untuk mengambil harga EOD terbaru.")
+
+                st.write("---")
+
+                if not df_validated.empty:
+                    # --- CHARTS SECTION 1: EQUITY CURVE & PROBABILITY BINS ---
+                    ch_col1, ch_col2 = st.columns(2)
+                    
+                    with ch_col1:
+                        st.subheader("📈 Kurva Returns Kumulatif (Equity Curve)")
+                        df_daily = df_validated.groupby("trade_date")["actual_return_pct"].agg(["mean", "sum", "count"]).reset_index()
+                        df_daily = df_daily.sort_values("trade_date")
+                        df_daily["cum_return"] = df_daily["sum"].cumsum()
+                        
+                        fig_eq = px.line(
+                            df_daily, 
+                            x="trade_date", 
+                            y="cum_return", 
+                            markers=True,
+                            title="Akumulasi Realized Return (%) dari Sinyal ML Validated",
+                            labels={"trade_date": "Tanggal Trade", "cum_return": "Cumulative Return (%)"}
+                        )
+                        fig_eq.update_traces(line_color="#00CC96", line_width=3)
+                        fig_eq.update_layout(template="plotly_dark", height=380)
+                        st.plotly_chart(fig_eq, use_container_width=True)
+
+                    with ch_col2:
+                        st.subheader("📊 Akurasi Berdasarkan Level Keyakinan (Probability Bin)")
+                        bins = [40, 50, 55, 60, 65, 70, 100]
+                        labels = ["40-50%", "50-55%", "55-60%", "60-65%", "65-70%", "70%+"]
+                        df_validated["prob_bin"] = pd.cut(df_validated["prob_pct"], bins=bins, labels=labels, right=False)
+                        
+                        bin_stats = df_validated.groupby("prob_bin", observed=False).agg(
+                            total=("is_correct", "count"),
+                            correct=("is_correct", lambda x: int(x.sum())),
+                            avg_return=("actual_return_pct", "mean")
+                        ).reset_index()
+                        bin_stats["accuracy"] = np.where(bin_stats["total"] > 0, (bin_stats["correct"] / bin_stats["total"]) * 100.0, 0.0)
+                        
+                        fig_bin = px.bar(
+                            bin_stats,
+                            x="prob_bin",
+                            y="accuracy",
+                            text="total",
+                            color="accuracy",
+                            color_continuous_scale="Viridis",
+                            title="Tingkat Akurasi (%) per Range Probabilitas AI",
+                            labels={"prob_bin": "Probability Bin (%)", "accuracy": "Accuracy (%)"}
+                        )
+                        fig_bin.update_traces(texttemplate="%{text} log", textposition="outside")
+                        fig_bin.update_layout(template="plotly_dark", height=380, yaxis_range=[0, 100])
+                        st.plotly_chart(fig_bin, use_container_width=True)
+
+                    st.write("---")
+
+                    # --- CHARTS SECTION 2: TICKER LEADERBOARD & CONFUSION MATRIX ---
+                    ch_col3, ch_col4 = st.columns(2)
+                    
+                    with ch_col3:
+                        st.subheader("🏆 Leaderboard Performa Ticker Saham")
+                        ticker_stats = df_validated.groupby("ticker").agg(
+                            total=("is_correct", "count"),
+                            correct=("is_correct", lambda x: int(x.sum())),
+                            tot_return=("actual_return_pct", "sum"),
+                            avg_return=("actual_return_pct", "mean")
+                        ).reset_index()
+                        ticker_stats["acc_pct"] = (ticker_stats["correct"] / ticker_stats["total"]) * 100.0
+                        ticker_stats = ticker_stats.sort_values(by=["acc_pct", "tot_return"], ascending=[False, False])
+                        
+                        st.markdown("**Top 5 Ticker Terakurat ML:**")
+                        top_5 = ticker_stats.head(5).copy()
+                        top_5["acc_str"] = top_5["acc_pct"].apply(lambda x: f"{x:.1f}%")
+                        top_5["ret_str"] = top_5["tot_return"].apply(lambda x: f"{x:+.2f}%")
+                        st.dataframe(top_5[["ticker", "total", "acc_str", "ret_str"]].rename(columns={
+                            "ticker": "Ticker", "total": "Total Validated", "acc_str": "Accuracy", "ret_str": "Tot Return"
+                        }), use_container_width=True, hide_index=True)
+                        
+                        st.markdown("**5 Ticker dengan Performa Terendah:**")
+                        bot_5 = ticker_stats.tail(5).copy()
+                        bot_5["acc_str"] = bot_5["acc_pct"].apply(lambda x: f"{x:.1f}%")
+                        bot_5["ret_str"] = bot_5["tot_return"].apply(lambda x: f"{x:+.2f}%")
+                        st.dataframe(bot_5[["ticker", "total", "acc_str", "ret_str"]].rename(columns={
+                            "ticker": "Ticker", "total": "Total Validated", "acc_str": "Accuracy", "ret_str": "Tot Return"
+                        }), use_container_width=True, hide_index=True)
+
+                    with ch_col4:
+                        st.subheader("🧩 Confusion Matrix & Performa Per Horizon")
+                        tp = len(df_validated[(df_validated["prob_pct"] >= min_prob_filter) & (df_validated["actual_return_pct"] > 0)])
+                        fp = len(df_validated[(df_validated["prob_pct"] >= min_prob_filter) & (df_validated["actual_return_pct"] <= 0)])
+                        tn = len(df_validated[(df_validated["prob_pct"] < min_prob_filter) & (df_validated["actual_return_pct"] <= 0)])
+                        fn = len(df_validated[(df_validated["prob_pct"] < min_prob_filter) & (df_validated["actual_return_pct"] > 0)])
+                        
+                        cm_matrix = [[tp, fp], [fn, tn]]
+                        
+                        fig_cm = px.imshow(
+                            cm_matrix,
+                            labels=dict(x="Actual Movement", y="Predicted Signal", color="Count"),
+                            x=["Price NAIK (>0%)", "Price TURUN/FLAT (<=0%)"],
+                            y=["BUY Signal (High Prob)", "NO BUY Signal (Low Prob)"],
+                            text_auto=True,
+                            color_continuous_scale="Blues",
+                            title="Matriks Prediksi vs Pergerakan Riil"
+                        )
+                        fig_cm.update_layout(template="plotly_dark", height=320)
+                        st.plotly_chart(fig_cm, use_container_width=True)
+                        
+                        horiz_stats = df_validated.groupby("horizon").agg(
+                            total=("is_correct", "count"),
+                            correct=("is_correct", lambda x: int(x.sum())),
+                            tot_return=("actual_return_pct", "sum")
+                        ).reset_index()
+                        horiz_stats["Accuracy (%)"] = (horiz_stats["correct"] / horiz_stats["total"]) * 100.0
+                        horiz_stats["Accuracy (%)"] = horiz_stats["Accuracy (%)"].map("{:.1f}%".format)
+                        horiz_stats["Total Return (%)"] = horiz_stats["tot_return"].map("{:+.2f}%".format)
+                        st.dataframe(horiz_stats[["horizon", "total", "Accuracy (%)", "Total Return (%)"]].rename(columns={"horizon": "Horizon", "total": "Validated Logs"}), use_container_width=True, hide_index=True)
+
+                # --- DATA TABLE OF ALL LOGS ---
+                st.write("---")
+                st.subheader("📋 Log Detail Prediksi & Validasi ML")
+                
+                df_table = df_filtered.copy()
+                df_table["Status"] = df_table.apply(
+                    lambda r: "✅ Correct" if r["is_correct"] == True else ("❌ Incorrect" if r["is_correct"] == False else "⏳ Pending Validasi"),
+                    axis=1
+                )
+                df_table["Prob %"] = df_table["prob_pct"].apply(lambda x: f"{x:.2f}%")
+                df_table["Actual Close"] = df_table["actual_close"].apply(lambda x: f"Rp {x:,.0f}" if x is not None else "-")
+                df_table["Actual Return"] = df_table["actual_return_pct"].apply(lambda x: f"{x:+.2f}%" if x is not None else "-")
+                df_table["Pred Price"] = df_table["pred_price"].apply(lambda x: f"Rp {x:,.0f}" if x is not None else "-")
+                
+                display_cols = ["trade_date", "ticker", "horizon", "Prob %", "Pred Price", "Actual Close", "Actual Return", "Status"]
+                st.dataframe(df_table[display_cols].rename(columns={
+                    "trade_date": "Trade Date", "ticker": "Ticker", "horizon": "Horizon"
+                }), use_container_width=True, hide_index=True)
+                
+                csv_data = df_table.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Download CSV Detailed Performance Logs",
+                    data=csv_data,
+                    file_name=f"ml_performance_validation_{datetime.now().strftime('%Y%m%d')}.csv",
+                    mime="text/csv"
+                )
+        except Exception as e:
+            st.error(f"❌ Gagal memuat data ML Performance: {e}")
+        finally:
+            session.close()
+
     with tab_nextday:
         st.header("🔮 Prediksi ML Hari Perdagangan Berikutnya (Next-Day)")
         st.caption("Memprediksi pergerakan harga saham untuk hari bursa berikutnya berdasarkan penutupan bursa terakhir (EOD). Hasil otomatis tersimpan di Database.")
@@ -2764,7 +3032,11 @@ elif page == "🤖 ML Validation":
                 st.write("**Detail Metrik per Horizon Timeframe:**")
                 st.dataframe(df_metrics_pd, use_container_width=True)
                 
-                st.info("💡 **Penjelasan Singkat:**\n- **Accuracy**: Seberapa sering model menebak benar arah harga secara keseluruhan.\n- **Buy Precision**: Tingkat 'Keberanian' yang terbukti menguntungkan. Jika 40%, berarti dari 10 kali AI menyuruh BUY, 4 kali tepat sasaran (Profit).")
+                st.info("💡 **Penjelasan Singkat Metrik Model:**\n"
+                        "- **Accuracy**: Seberapa sering model menebak benar arah harga (Naik/Turun) secara keseluruhan.\n"
+                        "- **Buy Precision**: Tingkat ketepatan sinyal BUY. Jika 40%, berarti dari 10 kali AI merekomendasikan BUY, 4 kali terbukti profit.\n"
+                        "- **Buy Recall**: Sensitivitas AI menangkap peluang naik. Dari 100 saham yang sebenarnya terbang/naik di pasar, berapa % yang berhasil ditemukan & direkomendasikan BUY oleh AI.\n"
+                        "- **Holdout Rows**: Jumlah total sampel baris data uji/test (data historis murni yang **disimpan/diisolasi** dan TIDAK PERNAH dipakai saat training) untuk mengevaluasi keakuratan AI secara objektif.")
                 
             else:
                 st.warning("Belum ada data evaluasi holdout di metadata saat ini.")
