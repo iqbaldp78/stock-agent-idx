@@ -80,11 +80,16 @@ def analyze(ticker: str) -> dict:
             f"cenderung {'positif' if score > 6.0 else 'negatif' if score < 4.0 else 'netral'} (score: {score})."
         )
         
+        reports = [item for item in items if item.get("doc_type") == "report"]
+        news_articles = [item for item in items if item.get("doc_type") != "report"]
+
         return {
             "ticker": ticker,
             "score": score,
             "summary": summary,
             "articles": items,
+            "reports": reports,
+            "news_articles": news_articles,
         }
     
     except Exception as e:

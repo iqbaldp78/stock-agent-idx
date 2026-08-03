@@ -103,22 +103,41 @@ def search_by_vector(query_text: str, limit: int = 5, doc_type: Optional[str] = 
         return _execute_query(query, (vec_str, vec_str, limit))
 
 def format_for_prompt(records: List[Dict]) -> str:
-    """Formats retrieved DB rows into a clean string for LLM injection."""
+    """Formats retrieved DB rows into clean strings for LLM injection, highlighting research reports as key drivers."""
     if not records:
         return "No recent news or reports available."
         
-    lines = []
-    for r in records:
-        date_str = r.get("created_at", datetime.now()).strftime("%Y-%m-%d %H:%M")
-        sent = r.get("sentiment", "Neutral")
-        score = r.get("sentiment_score", 5)
-        if score is None: score = 5
-        impact = r.get("impact_scope", "Unknown")
-        doc_kind = (r.get("doc_type") or "news").upper()
-        summary = r.get("summary", "")
-        lines.append(f"[{date_str}] [{doc_kind}] ({sent} {score}/10 | {impact}) - {summary}")
-        
-    return "\n".join(lines)
+    reports = [r for r in records if r.get("doc_type") == "report"]
+    news = [r for r in records if r.get("doc_type") != "report"]
+    
+    sections = []
+    if reports:
+        lines = ["[KEY DRIVER — RESEARCH & COMPANY REPORTS]"]
+        for r in reports:
+            created_at = r.get("created_at")
+            date_str = created_at.strftime("%Y-%m-%d %H:%M") if hasattr(created_at, "strftime") else str(created_at or "")
+            sent = r.get("sentiment", "Neutral")
+            score = r.get("sentiment_score", 5)
+            if score is None: score = 5
+            impact = r.get("impact_scope", "Unknown")
+            summary = r.get("summary", "")
+            lines.append(f"• [{date_str}] ({sent} {score}/10 | {impact}) - {summary}")
+        sections.append("\n".join(lines))
+
+    if news:
+        lines = ["[NEWS HEADLINES]"]
+        for r in news:
+            created_at = r.get("created_at")
+            date_str = created_at.strftime("%Y-%m-%d %H:%M") if hasattr(created_at, "strftime") else str(created_at or "")
+            sent = r.get("sentiment", "Neutral")
+            score = r.get("sentiment_score", 5)
+            if score is None: score = 5
+            impact = r.get("impact_scope", "Unknown")
+            summary = r.get("summary", "")
+            lines.append(f"• [{date_str}] ({sent} {score}/10 | {impact}) - {summary}")
+        sections.append("\n".join(lines))
+
+    return "\n\n".join(sections)
 
 if __name__ == "__main__":
     print("Testing Ticker Search (MYOR):")

@@ -214,9 +214,15 @@ def main():
     parser.add_argument("--validate-only", action="store_true", help="Only validate accuracy on holdout, do not save production models")
     parser.add_argument("--walk-forward", action="store_true", help="Use expanding walk-forward validation instead of single holdout split")
     parser.add_argument("--n-folds", type=int, default=4, help="Number of walk-forward folds")
+    parser.add_argument("--exclude-tickers", nargs="*", default=[], help="Ticker(s) to exclude from per-ticker training/validation")
     args = parser.parse_args()
 
     tickers = get_universe_tickers() if args.all else [t.upper() for t in args.tickers]
+    excluded = {t.upper() for t in args.exclude_tickers}
+    if excluded:
+        before_count = len(tickers)
+        tickers = [t for t in tickers if t.upper() not in excluded]
+        logger.info(f"Excluded {before_count - len(tickers)} ticker(s): {', '.join(sorted(excluded))}")
     logger.info(f"Training universe: {len(tickers)} ticker(s): {', '.join(tickers)}")
 
     summaries = []

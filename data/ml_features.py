@@ -102,6 +102,15 @@ FEATURE_COLUMNS = [
     "candlestick_winrate",
     "is_bullish_pattern",
     "is_bearish_pattern",
+    # Report vs News Sentiment & Count features (7d & 30d)
+    "report_sent_7d",
+    "report_sent_30d",
+    "report_count_7d",
+    "report_count_30d",
+    "news_sent_7d",
+    "news_sent_30d",
+    "news_count_7d",
+    "news_count_30d",
 ]
 
 # Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
@@ -175,6 +184,15 @@ ML_TRAIN_FEATURES = [
     "is_bullish_pattern",
     "is_bearish_pattern",
     "ihsg_trend_3d",
+    # Report vs News Sentiment & Count features
+    "report_sent_7d",
+    "report_sent_30d",
+    "report_count_7d",
+    "report_count_30d",
+    "news_sent_7d",
+    "news_sent_30d",
+    "news_count_7d",
+    "news_count_30d",
 ]
 
 # ─── IHSG History Cache ──────────────────────────────────────────────────────
@@ -688,6 +706,81 @@ def get_historical_bandar_features(ticker: str, target_date) -> dict:
         logger.warning(f"Failed to calculate live bandar ratios for {ticker}: {e}")
         return {}
 
+def fetch_news_report_features(ticker: str) -> dict:
+    """
+    Mengambil fitur sentimen dan jumlah dokumen terpisah untuk 'report' vs 'news' 
+    dalam rentang 7 hari dan 30 hari dari tabel news_signals.
+    """
+    from datetime import datetime
+    import numpy as np
+    defaults = {
+        "report_sent_7d": 5.0,
+        "report_sent_30d": 5.0,
+        "report_count_7d": 0.0,
+        "report_count_30d": 0.0,
+        "news_sent_7d": 5.0,
+        "news_sent_30d": 5.0,
+        "news_count_7d": 0.0,
+        "news_count_30d": 0.0,
+    }
+    if not ticker:
+        return defaults
+    try:
+        from scripts.rag_retriever import _execute_query
+        query = """
+            SELECT doc_type, sentiment_score, created_at
+            FROM news_signals
+            WHERE tickers ? %s AND created_at >= NOW() - INTERVAL '30 days'
+        """
+        rows = _execute_query(query, (ticker.upper(),))
+        if not rows:
+            return defaults
+            
+        now = datetime.now()
+        report_7d_scores, report_30d_scores = [], []
+        news_7d_scores, news_30d_scores = [], []
+        
+        for r in rows:
+            doc_type = r.get("doc_type") or "news"
+            score = r.get("sentiment_score")
+            if score is None:
+                score = 5.0
+            else:
+                score = float(score)
+                
+            created_at = r.get("created_at")
+            if not created_at:
+                continue
+            
+            if hasattr(created_at, "replace"):
+                age_days = (now - created_at.replace(tzinfo=None)).days
+            else:
+                age_days = 0
+                
+            if doc_type == "report":
+                report_30d_scores.append(score)
+                if age_days <= 7:
+                    report_7d_scores.append(score)
+            else:
+                news_30d_scores.append(score)
+                if age_days <= 7:
+                    news_7d_scores.append(score)
+                    
+        return {
+            "report_sent_7d": float(np.mean(report_7d_scores)) if report_7d_scores else 5.0,
+            "report_sent_30d": float(np.mean(report_30d_scores)) if report_30d_scores else 5.0,
+            "report_count_7d": float(len(report_7d_scores)),
+            "report_count_30d": float(len(report_30d_scores)),
+            "news_sent_7d": float(np.mean(news_7d_scores)) if news_7d_scores else 5.0,
+            "news_sent_30d": float(np.mean(news_30d_scores)) if news_30d_scores else 5.0,
+            "news_count_7d": float(len(news_7d_scores)),
+            "news_count_30d": float(len(news_30d_scores)),
+        }
+    except Exception as e:
+        logger.warning(f"Error fetching news/report features for {ticker}: {e}")
+        return defaults
+
+
 def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.DataFrame) -> pd.DataFrame:
     """
     Extract vector features for a single stock.
@@ -699,13 +792,15 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
     - Lag returns (ret_1d_lag1..5, ret_2d, ret_10d)
     - Additional volatility & technical (volatility_10d, ret_1d_zscore, vol_trend_5d, close_to_high/low)
     """
-    from datetime import date
+    from datetime import date, datetime
     import numpy as np
     
     ticker_scores = scores.get(ticker, {})
     bandarm = ticker_scores.get("bandarm", {})
     tech = ticker_scores.get("technical", {})
     fund = ticker_scores.get("fundamental", {})
+
+    news_report_feats = fetch_news_report_features(ticker)
 
     # 1. Bandar Features
     price_analysis = bandarm.get("price_analysis", {})
@@ -999,7 +1094,7 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         logger.warning(f"Failed to compute live IHSG features for {ticker}: {e}")
 
     # Combine all
-    all_features = {**bandar_features, **tech_features, **macro_features, **price_features, **ihsg_features}
+    all_features = {**bandar_features, **tech_features, **macro_features, **price_features, **ihsg_features, **news_report_feats}
     for col in FEATURE_COLUMNS:
         all_features.setdefault(col, 0.0)
     row = pd.DataFrame([all_features])[FEATURE_COLUMNS]

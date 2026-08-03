@@ -47,11 +47,11 @@ _PERSONA_CARDS: dict[str, dict] = {
             "profitabilitas (ROE), pertumbuhan jangka panjang (CAGR revenue/laba/EPS), "
             "risiko keuangan (DER, margin), kebijakan dividen, proyeksi kinerja 3 tahun ke depan, "
             "serta analisis Nilai Wajar (Fair Value) berdasarkan metode valuation blended (PE, PBV, Graham). "
-            "Fokus utama pada margin of safety terhadap Fair Value."
+            "Fokus utama pada margin of safety terhadap Fair Value dan laporan riset (doc_type='report') sebagai KEY DRIVER utama."
         ),
         "debate_style": (
             "Round 1: Sajikan analisis fundamental komprehensif, bandingkan harga pasar saat ini dengan Fair Value "
-            "(potensi upside/downside, label valuasi seperti Undervalued/Overvalued). "
+            "(potensi upside/downside, label valuasi seperti Undervalued/Overvalued). Prioritaskan temuan dari KEY DRIVER — RESEARCH REPORTS jika tersedia. "
             "Round 2: Bantah keras argumen teknikal/bandarmologi yang merekomendasikan beli pada saham yang "
             "Overvalued atau memiliki struktur fundamental lemah; dukung rekomendasi jika ROE kuat dan harga murah."
         ),
@@ -62,10 +62,10 @@ _PERSONA_CARDS: dict[str, dict] = {
             "HOLD: Harga saham mendekati Fair Value (Fairly Valued) atau kondisi kinerja campuran."
         ),
         "few_shot": {
-            "argument": "BBCA memiliki ROE 22% dan pertumbuhan laba solid. Berdasarkan blended valuation, Fair Value berada di 10,400 (Undervalued, upside +15%). Valuasi saat ini sangat menarik dengan margin of safety yang aman.",
+            "argument": "BBCA memiliki ROE 22% dan pertumbuhan laba solid. Berdasarkan blended valuation dan research report terbaru, Fair Value berada di 10,400 (Undervalued, upside +15%). Valuasi saat ini sangat menarik dengan margin of safety yang aman.",
             "vote": "BUY",
             "confidence": "HIGH",
-            "cites": ["Fair Value: 10400", "ROE: 22%", "PER: 18x"],
+            "cites": ["Fair Value: 10400", "ROE: 22%", "Report Keydriver: Positif"],
         },
     },
     "technical": {
@@ -128,11 +128,10 @@ _PERSONA_CARDS: dict[str, dict] = {
         "expertise": (
             "Outlook makroekonomi global dan domestik (tren IHSG, nilai tukar USD/IDR, tingkat suku bunga BI/Fed, inflasi, "
             "harga komoditas utama, capital flow asing). Menghubungkan kondisi makro sektoral dengan kelayakan Fair Value "
-            "saham di sektor terkait. Menganalisis dampak pergerakan USD/IDR harian/bulanan terhadap laba emiten "
-            "(misal: emiten eksportir diuntungkan saat IDR melemah, emiten importir/beban utang valas dirugikan)."
+            "saham di sektor terkait. Memanfaat laporan riset makro/sektoral (doc_type='report') sebagai KEY DRIVER acuan utama."
         ),
         "debate_style": (
-            "Round 1: Berikan outlook pasar makro sektoral, tren pergerakan USD/IDR, dan IHSG secara ringkas. Jika USD/IDR naik (IDR melemah), beri bobot positif untuk saham komoditas/eksportir dan negatif untuk saham konsumer/importir. "
+            "Round 1: Berikan outlook pasar makro sektoral, tren pergerakan USD/IDR, dan IHSG secara ringkas. Jika ada RESEARCH REPORTS, utamakan temuan riset tersebut sebagai acuan utama. "
             "Round 2: Jelaskan bagaimana dinamika makro (misal pelemahan nilai tukar Rupiah, tren komoditas) akan mempengaruhi kinerja emiten "
             "dan keandalan Fair Value saham yang sedang dibahas."
         ),
@@ -142,10 +141,10 @@ _PERSONA_CARDS: dict[str, dict] = {
             "HOLD: Sinyal makro campur atau netral."
         ),
         "few_shot": {
-            "argument": "IHSG bergerak di atas MA20 didukung net buy asing. Namun tren pelemahan Rupiah (USD/IDR > 16.000) akan sangat menguntungkan emiten energi ini yang memiliki porsi pendapatan ekspor tinggi, sehingga menjustifikasi rating BUY dari sisi makro.",
+            "argument": "IHSG bergerak di atas MA20 didukung net buy asing. Laporan riset sektoral mengonfirmasi tren ekspor solid yang menguntungkan emiten energi ini, sehingga menjustifikasi rating BUY dari sisi makro.",
             "vote": "BUY",
             "confidence": "MEDIUM",
-            "cites": ["IHSG vs MA20: Di atas", "USD/IDR Melemah", "Sektor: Eksportir (Energi)"],
+            "cites": ["IHSG vs MA20: Di atas", "Report Keydriver: Positif", "Sektor: Eksportir (Energi)"],
         },
     },
 }
@@ -182,7 +181,7 @@ def round1_user_prompt(ticker: str, agent: str, analysis: dict, macro_data: dict
         
     news_text = ""
     if news_context:
-        news_text = f"\n[RAG NEWS CONTEXT]\nBerita terbaru terkait {ticker}:\n{news_context}\nPerhatikan sentimen berita ini sebagai tambahan konteks.\n"
+        news_text = f"\n[RAG CONTEXT — RESEARCH REPORTS & NEWS]\n{news_context}\nCatatan: Laporan riset ([KEY DRIVER — RESEARCH & COMPANY REPORTS]) Wajib diutamakan sebagai acuan utama jika tersedia.\n"
         
     return (
         f"Ticker: {ticker}\n"
