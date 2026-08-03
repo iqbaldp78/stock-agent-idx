@@ -123,6 +123,30 @@ def make_purged_split(train_end, min_rows, val_size, gap=GAP_DAYS, trailing_gap=
     return train_stop, val_start, val_end
 
 
+def find_constant_features(X: pd.DataFrame) -> list:
+    """
+    Deteksi fitur ML yang variansnya nol di matriks training.
+
+    Fitur konstan otomatis dibuang feature-selection stage-1 (importance == 0),
+    jadi ia tidak pernah dipakai model walau terdaftar di ML_TRAIN_FEATURES.
+    Ini biasanya gejala bug pipeline (nama kolom tidak cocok, data source kosong,
+    fitur cuma diisi saat live inference) — bukan sifat wajar dari fiturnya.
+    """
+    from data.ml_features import ML_TRAIN_FEATURES
+
+    constant = []
+    for col in ML_TRAIN_FEATURES:
+        if col not in X.columns:
+            constant.append(col)
+            continue
+        try:
+            if X[col].nunique(dropna=False) <= 1:
+                constant.append(col)
+        except Exception:
+            continue
+    return constant
+
+
 def fit_final_model(predictor, X, Y, min_rows):
     """
     Latih model produksi dengan val terpisah yang TIDAK ikut dilatih, supaya
@@ -154,6 +178,13 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
 
     if len(X) < min_rows:
         return None, {"ticker": ticker, "error": f"Training rows terlalu sedikit ({len(X)} < {min_rows})"}
+
+    constant_features = find_constant_features(X)
+    if constant_features:
+        logger.warning(
+            f"{ticker}: {len(constant_features)} fitur konstan (akan dibuang feature-selection): "
+            f"{', '.join(constant_features)}"
+        )
 
     fold_results = {"1d": [], "3d": [], "5d": [], "7d": []}
     fold_row_counts = []
@@ -226,6 +257,7 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
         "train_rows": sum(f["train"] for f in fold_row_counts),
         "val_rows": sum(f["val"] for f in fold_row_counts),
         "test_rows": sum(f["test"] for f in fold_row_counts),
+        "constant_features": constant_features,
         "metrics": horizons_avg,
         "walk_forward": True,
         "n_folds": n_folds,
@@ -245,6 +277,13 @@ def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, f
 
     if len(X) < min_rows:
         return None, {"ticker": ticker, "error": f"Training rows terlalu sedikit ({len(X)} < {min_rows})"}
+
+    constant_features = find_constant_features(X)
+    if constant_features:
+        logger.warning(
+            f"{ticker}: {len(constant_features)} fitur konstan (akan dibuang feature-selection): "
+            f"{', '.join(constant_features)}"
+        )
 
     split_i = int(len(X) * (1 - test_size))
     split_i = max(1, min(split_i, len(X) - 1))
@@ -285,6 +324,7 @@ def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, f
         "train_rows": len(X_train),
         "val_rows": len(X_val),
         "test_rows": len(X_test),
+        "constant_features": constant_features,
         "metrics": holdout_metrics
     }
     return summary, None
@@ -379,6 +419,11 @@ def main():
     total_test_rows = sum(s.get("test_rows", 0) for s in summaries)
     total_final_rows = sum(s.get("training_rows", 0) for s in summaries)
 
+    # Fitur yang konstan di SEMUA ticker = indikasi bug pipeline, bukan sifat fiturnya.
+    constant_everywhere = sorted(
+        set.intersection(*(set(s.get("constant_features", [])) for s in summaries))
+    ) if summaries else []
+
     metadata = {
         "run_date": datetime.now().isoformat(),
         "checkpoints_dir": args.checkpoints_dir,
@@ -396,8 +441,11 @@ def main():
             "holdout_test_rows": total_test_rows,
             "final_train_rows": total_final_rows,
         },
+        # Satu payload per horizon; sudah memuat varian macro (accuracy/buy_*),
+        # varian weighted (*_weighted), dan percentile sekaligus. Nama key
+        # dipertahankan karena dibaca ui/app.py dan compare_multiday_metrics.py.
         "holdout_metrics_macro_avg": global_metrics,
-        "holdout_metrics_weighted_avg": global_metrics,
+        "constant_features_all_tickers": constant_everywhere,
         "tickers": summaries,
         "errors": errors,
     }
@@ -426,6 +474,12 @@ def main():
     else:
         print(f"Models saved to  : {args.checkpoints_dir} (lgbm_<ticker>_<horizon>.pkl)")
     print(f"Metadata         : {metadata_path}")
+    if constant_everywhere:
+        print("-" * 72)
+        print(f"⚠️  {len(constant_everywhere)} FITUR KONSTAN di SEMUA ticker (dibuang feature-selection,")
+        print("    biasanya gejala bug pipeline — bukan sifat wajar fiturnya):")
+        for feat in constant_everywhere:
+            print(f"      - {feat}")
     print("-" * 72)
     print("MACRO AVERAGE ACCURACY (Across all tickers):")
     for h, metrics in global_metrics.items():

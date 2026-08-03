@@ -68,12 +68,34 @@ def fetch_ohlcv(ticker: str, period: str) -> pd.DataFrame:
     return pd.DataFrame()
 
 
+# Pemetaan nama kolom OHLCV ke bentuk kanonik, dicocokkan case-insensitive.
+# Penting: JANGAN pakai str.title() untuk menormalkan — nama camelCase rusak
+# ("NetForeign" -> "Netforeign", "AveragePrice" -> "Averageprice"), sehingga
+# prepare_training_data() gagal menemukannya dan fitur foreign-flow/bandarmologi
+# jatuh ke default 0.0 di SELURUH baris training.
+CANONICAL_OHLCV_COLUMNS = {
+    "open": "Open",
+    "high": "High",
+    "low": "Low",
+    "close": "Close",
+    "volume": "Volume",
+    "frequency": "Frequency",
+    "netforeign": "NetForeign",
+    "averageprice": "AveragePrice",
+    "changepercentage": "ChangePercentage",
+}
+
+
 def normalize_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
         return pd.DataFrame()
 
     out = df.copy()
-    out.columns = [str(c).title() for c in out.columns]
+    # Kolom di luar whitelist dibiarkan apa adanya, tidak diubah bentuknya.
+    out.columns = [
+        CANONICAL_OHLCV_COLUMNS.get(str(c).strip().lower(), str(c))
+        for c in out.columns
+    ]
     required = ["Open", "High", "Low", "Close", "Volume"]
     for col in required:
         if col not in out.columns:

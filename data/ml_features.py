@@ -195,6 +195,19 @@ ML_TRAIN_FEATURES = [
     "news_count_30d",
 ]
 
+def _pick_col(df: pd.DataFrame, name: str) -> str | None:
+    """
+    Cari kolom secara case-insensitive, kembalikan nama aslinya (atau None).
+    Dipakai agar fitur tidak diam-diam jadi 0 hanya karena beda kapitalisasi
+    nama kolom antar sumber data (Stockbit vs yfinance vs hasil normalisasi).
+    """
+    target = name.strip().lower()
+    for col in df.columns:
+        if str(col).strip().lower() == target:
+            return col
+    return None
+
+
 # ─── IHSG History Cache ──────────────────────────────────────────────────────
 _ihsg_cache = None
 
@@ -1155,21 +1168,34 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df['gap_open'] = df['Open'] / df['Close'].shift(1) - 1
 
     # New Stockbit Metadata Features
-    if 'NetForeign' in df.columns:
-        df['day_foreign_net'] = df['NetForeign'] / 1e9
+    # Dicocokkan case-insensitive lewat _pick_col() supaya tidak bergantung
+    # pemanggil sudah menormalkan nama kolom atau belum. Kalau kolomnya benar-benar
+    # tidak ada, log warning — bug sebelumnya lolos berbulan-bulan justru karena
+    # diam-diam jatuh ke default 0.0 tanpa jejak.
+    nf_col = _pick_col(df, 'NetForeign')
+    if nf_col:
+        df['day_foreign_net'] = df[nf_col] / 1e9
     else:
+        logger.warning(
+            f"{ticker or '?'}: kolom NetForeign tidak ada — day_foreign_net, "
+            f"foreign_net_7d/1m, foreign_flow_zscore, bandar_accum_ratio akan konstan 0"
+        )
         df['day_foreign_net'] = 0.0
     df['foreign_net_7d'] = df['day_foreign_net'].rolling(7).sum().fillna(0.0)
     df['foreign_net_1m'] = df['day_foreign_net'].rolling(30).sum().fillna(0.0)
-    
-    if 'Frequency' in df.columns:
-        df['frequency_1d'] = df['Frequency']
+
+    freq_col = _pick_col(df, 'Frequency')
+    if freq_col:
+        df['frequency_1d'] = df[freq_col]
     else:
+        logger.warning(f"{ticker or '?'}: kolom Frequency tidak ada — frequency_1d konstan 0")
         df['frequency_1d'] = 0.0
-        
-    if 'AveragePrice' in df.columns:
-        df['close_vs_avg'] = (df['Close'] / df['AveragePrice'].replace(0, np.nan) - 1).fillna(0.0)
+
+    avg_col = _pick_col(df, 'AveragePrice')
+    if avg_col:
+        df['close_vs_avg'] = (df['Close'] / df[avg_col].replace(0, np.nan) - 1).fillna(0.0)
     else:
+        logger.warning(f"{ticker or '?'}: kolom AveragePrice tidak ada — close_vs_avg konstan 0")
         df['close_vs_avg'] = 0.0
 
     # Advanced Indicators

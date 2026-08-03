@@ -227,7 +227,7 @@ def main():
     parser.add_argument("--all", action="store_true", help="Semua ticker di universe")
     parser.add_argument("--folds", type=int, default=3, help="Jumlah fold walk-forward (default: 3)")
     parser.add_argument("--min-rows", type=int, default=60, help="Min baris training per fold (default: 60)")
-    parser.add_argument("--period", default="max", help="Periode data OHLCV (default: max)")
+    parser.add_argument("--period", default=os.getenv("ML_AUTO_TRAIN_PERIOD", "5y"), help="Periode data OHLCV (default: env/5y)")
     parser.add_argument("--target", default="target_1d", help="Target horizon model (default: target_1d)")
     parser.add_argument("--output", default="validate_ml_result.json", help="File output JSON")
     args = parser.parse_args()
