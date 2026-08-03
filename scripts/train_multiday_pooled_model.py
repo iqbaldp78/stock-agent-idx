@@ -26,13 +26,14 @@ import pandas as pd
 from data.ml_features import ML_TRAIN_FEATURES, prepare_training_data
 from models.multiday_predictor import MultiDayPredictor
 from scripts.train_day1_model import fetch_ohlcv, normalize_ohlcv
-from scripts.train_multiday_model import evaluate_multiday_model
+from scripts.train_multiday_model import evaluate_multiday_model, make_purged_split
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 
 POOLED_FEATURES = ["ticker_id"] + [c for c in ML_TRAIN_FEATURES if c != "ticker_id"]
 HORIZONS = ["1d", "3d", "5d", "7d"]
+MIN_TRAIN_ROWS = 120
 
 
 def make_pooled_predictor(name: str, checkpoints_dir: str) -> MultiDayPredictor:
@@ -94,18 +95,34 @@ def evaluate_by_ticker(predictor, test_sets):
 
 def single_holdout_validate(datasets, test_size, checkpoints_dir, validate_only):
     train_X, train_Y = [], []
+    val_X, val_Y = [], []
     test_sets = {}
     for ticker, payload in datasets.items():
         X, Y = payload["X"], payload["Y"]
         split_i = max(1, min(int(len(X) * (1 - test_size)), len(X) - 1))
-        train_X.append(X.iloc[:split_i].copy())
-        train_Y.append(Y.iloc[:split_i].copy())
+
+        # Carve val dari ekor blok train — test tidak boleh dilihat saat training.
+        val_size = max(30, int(split_i * 0.2))
+        split = make_purged_split(split_i, MIN_TRAIN_ROWS, val_size)
+        if split is None:
+            logger.warning("%s dilewati: data kurang untuk split train/val/test", ticker)
+            continue
+        train_stop, val_start, val_end = split
+
+        train_X.append(X.iloc[:train_stop].copy())
+        train_Y.append(Y.iloc[:train_stop].copy())
+        val_X.append(X.iloc[val_start:val_end].copy())
+        val_Y.append(Y.iloc[val_start:val_end].copy())
         test_sets[ticker] = {"X_test": X.iloc[split_i:].copy(), "Y_test": Y.iloc[split_i:].copy()}
+
+    if not train_X or not test_sets:
+        logger.warning("Tidak ada ticker dengan data cukup untuk holdout validate")
+        return []
 
     predictor = make_pooled_predictor("POOLED_SMALLCAP", checkpoints_dir)
     predictor.train_incremental(pd.concat(train_X), pd.concat(train_Y),
-                                X_val=pd.concat([v["X_test"] for v in test_sets.values()]),
-                                Y_targets_val=pd.concat([v["Y_test"] for v in test_sets.values()]))
+                                X_val=pd.concat(val_X),
+                                Y_targets_val=pd.concat(val_Y))
     ticker_summaries = evaluate_by_ticker(predictor, test_sets)
     return ticker_summaries
 
@@ -116,16 +133,27 @@ def walk_forward_validate(datasets, n_folds, checkpoints_dir, validate_only):
 
     for fold_idx in range(n_folds):
         train_X, train_Y = [], []
+        val_X, val_Y = [], []
         test_sets = {}
         for ticker, payload in datasets.items():
             X, Y = payload["X"], payload["Y"]
             fold_size = len(X) // (n_folds + 1)
             train_end = fold_size * (fold_idx + 1)
             test_end = min(fold_size * (fold_idx + 2), len(X))
-            if test_end <= train_end or train_end < 120:
+            if test_end <= train_end:
                 continue
-            train_X.append(X.iloc[:train_end].copy())
-            train_Y.append(Y.iloc[:train_end].copy())
+
+            # Carve val dari ekor blok train — test tidak boleh dilihat saat training.
+            val_size = max(30, int(fold_size * 0.2))
+            split = make_purged_split(train_end, MIN_TRAIN_ROWS, val_size)
+            if split is None:
+                continue
+            train_stop, val_start, val_end = split
+
+            train_X.append(X.iloc[:train_stop].copy())
+            train_Y.append(Y.iloc[:train_stop].copy())
+            val_X.append(X.iloc[val_start:val_end].copy())
+            val_Y.append(Y.iloc[val_start:val_end].copy())
             test_sets[ticker] = {"X_test": X.iloc[train_end:test_end].copy(), "Y_test": Y.iloc[train_end:test_end].copy()}
 
         if not train_X or not test_sets:
@@ -134,8 +162,8 @@ def walk_forward_validate(datasets, n_folds, checkpoints_dir, validate_only):
 
         predictor = make_pooled_predictor(f"POOLED_SMALLCAP_WF_F{fold_idx}", checkpoints_dir)
         predictor.train_incremental(pd.concat(train_X), pd.concat(train_Y),
-                                    X_val=pd.concat([v["X_test"] for v in test_sets.values()]),
-                                    Y_targets_val=pd.concat([v["Y_test"] for v in test_sets.values()]))
+                                    X_val=pd.concat(val_X),
+                                    Y_targets_val=pd.concat(val_Y))
         fold_summaries = evaluate_by_ticker(predictor, test_sets)
         for s in fold_summaries:
             ticker = s["ticker"]
@@ -213,8 +241,9 @@ def main():
             "total_training_rows": sum(len(v["X"]) for v in datasets.values()),
             "total_test_rows": sum(s.get("test_rows", 0) for s in ticker_summaries),
         },
-        "holdout_metrics_macro_avg": metrics,
-        "holdout_metrics_weighted_avg": metrics,
+        # Satu payload per horizon; sudah memuat varian macro (accuracy/buy_*)
+        # sekaligus varian weighted (*_weighted) dan percentile.
+        "holdout_metrics": metrics,
         "ticker_metrics": ticker_summaries,
         "errors": errors,
     }

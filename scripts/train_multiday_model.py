@@ -94,6 +94,53 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
         }
     return results
 
+# Purge gap = horizon terpanjang (7d). Mencegah label overlap antar blok,
+# konsisten dengan PurgedTimeSeriesSplit di models/multiday_predictor.py.
+GAP_DAYS = 7
+MIN_VAL_ROWS = 10  # train_incremental hanya mengkalibrasi kalau val >= 10 baris
+
+
+def make_purged_split(train_end, min_rows, val_size, gap=GAP_DAYS, trailing_gap=None):
+    """
+    Bagi data jadi 3 blok kronologis: [train][gap][val][gap][test]
+
+    Val diambil dari EKOR blok train (bukan memotong test), supaya ukuran dan posisi
+    blok test tidak berubah — hasil tetap sebanding dengan run sebelumnya, bedanya
+    hanya bias leakage-nya hilang.
+
+    train_end   : indeks awal blok test (atau len(X) untuk model final tanpa test).
+    trailing_gap: purge antara val dan test. Default = gap. Pakai 0 untuk model final.
+
+    Return (train_stop, val_start, val_end), atau None kalau data tidak cukup.
+    """
+    tg = gap if trailing_gap is None else trailing_gap
+    val_end = train_end - tg
+    val_start = max(0, val_end - val_size)
+    train_stop = max(0, val_start - gap)
+    if train_stop < min_rows or (val_end - val_start) < MIN_VAL_ROWS:
+        return None
+    return train_stop, val_start, val_end
+
+
+def fit_final_model(predictor, X, Y, min_rows):
+    """
+    Latih model produksi dengan val terpisah yang TIDAK ikut dilatih, supaya
+    threshold & kalibrasi yang tersimpan tidak in-sample.
+    Konsekuensi: model produksi tidak memakai ~15% baris terakhir.
+    """
+    val_size = max(30, int(len(X) * 0.15))
+    split = make_purged_split(len(X), min_rows, val_size, trailing_gap=0)
+    if split is None:
+        # Data minim: latih apa adanya, train_incremental akan fallback ke threshold in-sample.
+        predictor.train_incremental(X, Y)
+        return
+    train_stop, val_start, val_end = split
+    predictor.train_incremental(
+        X.iloc[:train_stop], Y.iloc[:train_stop],
+        X_val=X.iloc[val_start:val_end], Y_targets_val=Y.iloc[val_start:val_end],
+    )
+
+
 def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, final_dir, validate_only=False):
     """Walk-forward validation dengan expanding train window."""
     from data.ml_features import prepare_training_data
@@ -108,28 +155,51 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
         return None, {"ticker": ticker, "error": f"Training rows terlalu sedikit ({len(X)} < {min_rows})"}
 
     fold_results = {"1d": [], "3d": [], "5d": [], "7d": []}
+    fold_row_counts = []
     total_rows = len(X)
     fold_size = total_rows // (n_folds + 1)
 
     for fold_idx in range(n_folds):
         train_end = fold_size * (fold_idx + 1)
         test_end = min(fold_size * (fold_idx + 2), total_rows)
-        if test_end <= train_end or train_end < min_rows:
+        if test_end <= train_end:
             continue
 
-        X_train = X.iloc[:train_end].copy()
-        Y_train = Y.iloc[:train_end].copy()
+        # Carve val dari ekor blok train — test tidak boleh dipakai saat training.
+        val_size = max(30, int(fold_size * 0.2))
+        split = make_purged_split(train_end, min_rows, val_size)
+        if split is None:
+            logger.debug(f"{ticker} fold {fold_idx} dilewati: data kurang untuk split train/val/test")
+            continue
+        train_stop, val_start, val_end = split
+
+        X_train = X.iloc[:train_stop].copy()
+        Y_train = Y.iloc[:train_stop].copy()
+        X_val = X.iloc[val_start:val_end].copy()
+        Y_val = Y.iloc[val_start:val_end].copy()
         X_test = X.iloc[train_end:test_end].copy()
         Y_test = Y.iloc[train_end:test_end].copy()
         if X_test.empty:
             continue
 
+        logger.debug(
+            f"{ticker} fold {fold_idx}: train 0..{train_stop} ({len(X_train)}) | "
+            f"val {val_start}..{val_end} ({len(X_val)}) | test {train_end}..{test_end} ({len(X_test)})"
+        )
+
         fold_predictor = MultiDayPredictor(ticker=f"{ticker}_wf_f{fold_idx}", checkpoints_dir=holdout_dir)
-        fold_predictor.train_incremental(X_train, Y_train, X_val=X_test, Y_targets_val=Y_test)
+        fold_predictor.train_incremental(X_train, Y_train, X_val=X_val, Y_targets_val=Y_val)
         fold_metrics = evaluate_multiday_model(fold_predictor, X_test, Y_test)
+        fold_row_counts.append({"train": len(X_train), "val": len(X_val), "test": len(X_test)})
         for h in ["1d", "3d", "5d", "7d"]:
             if h in fold_metrics:
                 fold_results[h].append(fold_metrics[h])
+
+    if not fold_row_counts:
+        return None, {
+            "ticker": ticker,
+            "error": f"Tidak ada fold yang bisa dievaluasi ({len(X)} baris kurang untuk split train/val/test)",
+        }
 
     horizons_avg = {}
     for h in ["1d", "3d", "5d", "7d"]:
@@ -145,18 +215,20 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
 
     if not validate_only:
         final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
-        val_rows = max(1, int(len(X) * 0.2))
-        final_predictor.train_incremental(X, Y, X_val=X.iloc[-val_rows:], Y_targets_val=Y.iloc[-val_rows:])
+        fit_final_model(final_predictor, X, Y, min_rows)
 
     summary = {
         "ticker": ticker,
         "ohlcv_rows": len(ohlcv),
         "training_rows": len(X),
-        "train_rows": len(X),
-        "test_rows": sum(sum(m["test_rows"] for m in fold_results[h]) for h in fold_results),
+        # Baris train/val/test sebenarnya (dijumlah lintas fold, bukan lintas horizon).
+        "train_rows": sum(f["train"] for f in fold_row_counts),
+        "val_rows": sum(f["val"] for f in fold_row_counts),
+        "test_rows": sum(f["test"] for f in fold_row_counts),
         "metrics": horizons_avg,
         "walk_forward": True,
         "n_folds": n_folds,
+        "folds_evaluated": len(fold_row_counts),
     }
     return summary, None
 
@@ -176,26 +248,41 @@ def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, f
     split_i = int(len(X) * (1 - test_size))
     split_i = max(1, min(split_i, len(X) - 1))
 
-    X_train = X.iloc[:split_i].copy()
-    Y_train = Y.iloc[:split_i].copy()
+    # Carve val dari ekor blok train — test hanya dipakai untuk melapor metrik.
+    val_size = max(30, int(split_i * 0.2))
+    split = make_purged_split(split_i, min_rows, val_size)
+    if split is None:
+        return None, {"ticker": ticker, "error": "Data tidak cukup untuk split train/val/test"}
+    train_stop, val_start, val_end = split
+
+    X_train = X.iloc[:train_stop].copy()
+    Y_train = Y.iloc[:train_stop].copy()
+    X_val = X.iloc[val_start:val_end].copy()
+    Y_val = Y.iloc[val_start:val_end].copy()
     X_test = X.iloc[split_i:].copy()
     Y_test = Y.iloc[split_i:].copy()
 
+    logger.debug(
+        f"{ticker}: train 0..{train_stop} ({len(X_train)}) | "
+        f"val {val_start}..{val_end} ({len(X_val)}) | test {split_i}..{len(X)} ({len(X_test)})"
+    )
+
     # Train Holdout (for evaluation)
     holdout_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=holdout_dir)
-    holdout_predictor.train_incremental(X_train, Y_train, X_val=X_test, Y_targets_val=Y_test)
+    holdout_predictor.train_incremental(X_train, Y_train, X_val=X_val, Y_targets_val=Y_val)
     holdout_metrics = evaluate_multiday_model(holdout_predictor, X_test, Y_test)
 
     if not validate_only:
         # Train Final
         final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
-        final_predictor.train_incremental(X, Y, X_val=X_test, Y_targets_val=Y_test)
-    
+        fit_final_model(final_predictor, X, Y, min_rows)
+
     summary = {
         "ticker": ticker,
         "ohlcv_rows": len(ohlcv),
         "training_rows": len(X),
         "train_rows": len(X_train),
+        "val_rows": len(X_val),
         "test_rows": len(X_test),
         "metrics": holdout_metrics
     }
