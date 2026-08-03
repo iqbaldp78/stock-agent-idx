@@ -1,0 +1,301 @@
+{
+  "run_date": "2026-08-03T12:21:48.444509",
+  "model_type": "pooled_smallcap",
+  "tickers": [
+    "PADI",
+    "BNBR",
+    "BIPI"
+  ],
+  "checkpoints_dir": "models/checkpoints_pooled",
+  "config": {
+    "period": "max",
+    "test_size": 0.2,
+    "validate_only": true,
+    "walk_forward": true,
+    "n_folds": 4,
+    "features": [
+      "ticker_id",
+      "dist_avg_7d",
+      "foreign_net_7d",
+      "foreign_net_1m",
+      "day_foreign_net",
+      "frequency_1d",
+      "close_vs_avg",
+      "rsi",
+      "is_bullish_trend",
+      "vol_ratio",
+      "ret_1d",
+      "ret_1d_lag1",
+      "ret_1d_lag2",
+      "ret_1d_lag3",
+      "ret_1d_lag4",
+      "ret_1d_lag5",
+      "ret_3d",
+      "ret_5d",
+      "volatility_10d",
+      "volatility_20d",
+      "gap_open",
+      "ma_dist_5",
+      "ma_dist_20",
+      "ma_dist_50",
+      "ma_dist_200",
+      "volume_spike",
+      "range_pct",
+      "macd",
+      "macd_hist",
+      "bb_upper_dist",
+      "bb_lower_dist",
+      "stoch_k",
+      "stoch_d",
+      "atr",
+      "vwap_deviation_20d",
+      "ob_imbalance_proxy_20d",
+      "range_concentration_20d",
+      "close_to_high",
+      "close_to_low",
+      "body_ratio",
+      "ret_1d_zscore",
+      "vol_trend_5d",
+      "day_of_week",
+      "gap_continuation",
+      "ret_2d",
+      "ret_10d",
+      "rsi_14_prev",
+      "volume_spike_prev",
+      "ihsg_ret_1d",
+      "ihsg_ret_5d",
+      "ihsg_rsi",
+      "ihsg_ma_dist_20",
+      "ihsg_volatility",
+      "ihsg_trend",
+      "stock_vs_ihsg_1d",
+      "foreign_flow_zscore",
+      "news_score",
+      "commodity_score",
+      "bandar_accum_ratio",
+      "candlestick_winrate",
+      "is_bullish_pattern",
+      "is_bearish_pattern",
+      "ihsg_trend_3d",
+      "report_sent_7d",
+      "report_sent_30d",
+      "report_count_7d",
+      "report_count_30d",
+      "news_sent_7d",
+      "news_sent_30d",
+      "news_count_7d",
+      "news_count_30d"
+    ]
+  },
+  "rows": {
+    "tickers_requested": 3,
+    "tickers_loaded": 3,
+    "total_training_rows": 12746,
+    "total_test_rows": 40768
+  },
+  "holdout_metrics_macro_avg": {
+    "1d": {
+      "test_rows": 10192,
+      "accuracy": 80.98,
+      "buy_precision": 27.77,
+      "buy_recall": 8.41,
+      "accuracy_weighted": 81.73,
+      "buy_precision_weighted": 25.52,
+      "buy_recall_weighted": 9.07,
+      "p10_buy_precision": 14.46,
+      "p50_buy_precision": 22.29,
+      "p90_buy_precision": 43.27
+    },
+    "3d": {
+      "test_rows": 10192,
+      "accuracy": 75.39,
+      "buy_precision": 32.18,
+      "buy_recall": 24.82,
+      "accuracy_weighted": 76.57,
+      "buy_precision_weighted": 30.85,
+      "buy_recall_weighted": 23.31,
+      "p10_buy_precision": 24.16,
+      "p50_buy_precision": 36.31,
+      "p90_buy_precision": 38.56
+    },
+    "5d": {
+      "test_rows": 10192,
+      "accuracy": 75.44,
+      "buy_precision": 22.0,
+      "buy_recall": 22.52,
+      "accuracy_weighted": 76.71,
+      "buy_precision_weighted": 21.05,
+      "buy_recall_weighted": 21.19,
+      "p10_buy_precision": 13.26,
+      "p50_buy_precision": 20.17,
+      "p90_buy_precision": 31.47
+    },
+    "7d": {
+      "test_rows": 10192,
+      "accuracy": 75.67,
+      "buy_precision": 21.57,
+      "buy_recall": 20.55,
+      "accuracy_weighted": 76.99,
+      "buy_precision_weighted": 20.67,
+      "buy_recall_weighted": 19.02,
+      "p10_buy_precision": 13.87,
+      "p50_buy_precision": 20.85,
+      "p90_buy_precision": 29.55
+    }
+  },
+  "holdout_metrics_weighted_avg": {
+    "1d": {
+      "test_rows": 10192,
+      "accuracy": 80.98,
+      "buy_precision": 27.77,
+      "buy_recall": 8.41,
+      "accuracy_weighted": 81.73,
+      "buy_precision_weighted": 25.52,
+      "buy_recall_weighted": 9.07,
+      "p10_buy_precision": 14.46,
+      "p50_buy_precision": 22.29,
+      "p90_buy_precision": 43.27
+    },
+    "3d": {
+      "test_rows": 10192,
+      "accuracy": 75.39,
+      "buy_precision": 32.18,
+      "buy_recall": 24.82,
+      "accuracy_weighted": 76.57,
+      "buy_precision_weighted": 30.85,
+      "buy_recall_weighted": 23.31,
+      "p10_buy_precision": 24.16,
+      "p50_buy_precision": 36.31,
+      "p90_buy_precision": 38.56
+    },
+    "5d": {
+      "test_rows": 10192,
+      "accuracy": 75.44,
+      "buy_precision": 22.0,
+      "buy_recall": 22.52,
+      "accuracy_weighted": 76.71,
+      "buy_precision_weighted": 21.05,
+      "buy_recall_weighted": 21.19,
+      "p10_buy_precision": 13.26,
+      "p50_buy_precision": 20.17,
+      "p90_buy_precision": 31.47
+    },
+    "7d": {
+      "test_rows": 10192,
+      "accuracy": 75.67,
+      "buy_precision": 21.57,
+      "buy_recall": 20.55,
+      "accuracy_weighted": 76.99,
+      "buy_precision_weighted": 20.67,
+      "buy_recall_weighted": 19.02,
+      "p10_buy_precision": 13.87,
+      "p50_buy_precision": 20.85,
+      "p90_buy_precision": 29.55
+    }
+  },
+  "ticker_metrics": [
+    {
+      "ticker": "PADI",
+      "test_rows": 11264,
+      "metrics": {
+        "1d": {
+          "test_rows": 2816,
+          "accuracy": 79.23,
+          "buy_precision": 48.51,
+          "buy_recall": 2.44,
+          "n_folds_evaluated": 4
+        },
+        "3d": {
+          "test_rows": 2816,
+          "accuracy": 71.8,
+          "buy_precision": 39.12,
+          "buy_recall": 32.94,
+          "n_folds_evaluated": 4
+        },
+        "5d": {
+          "test_rows": 2816,
+          "accuracy": 69.25,
+          "buy_precision": 20.17,
+          "buy_recall": 29.78,
+          "n_folds_evaluated": 4
+        },
+        "7d": {
+          "test_rows": 2816,
+          "accuracy": 69.18,
+          "buy_precision": 20.85,
+          "buy_recall": 30.38,
+          "n_folds_evaluated": 4
+        }
+      }
+    },
+    {
+      "ticker": "BNBR",
+      "test_rows": 16736,
+      "metrics": {
+        "1d": {
+          "test_rows": 4184,
+          "accuracy": 88.08,
+          "buy_precision": 12.5,
+          "buy_recall": 12.86,
+          "n_folds_evaluated": 4
+        },
+        "3d": {
+          "test_rows": 4184,
+          "accuracy": 86.14,
+          "buy_precision": 21.12,
+          "buy_recall": 12.37,
+          "n_folds_evaluated": 4
+        },
+        "5d": {
+          "test_rows": 4184,
+          "accuracy": 86.16,
+          "buy_precision": 11.53,
+          "buy_recall": 11.56,
+          "n_folds_evaluated": 4
+        },
+        "7d": {
+          "test_rows": 4184,
+          "accuracy": 86.76,
+          "buy_precision": 12.12,
+          "buy_recall": 8.51,
+          "n_folds_evaluated": 4
+        }
+      }
+    },
+    {
+      "ticker": "BIPI",
+      "test_rows": 12768,
+      "metrics": {
+        "1d": {
+          "test_rows": 3192,
+          "accuracy": 75.62,
+          "buy_precision": 22.29,
+          "buy_recall": 9.94,
+          "n_folds_evaluated": 4
+        },
+        "3d": {
+          "test_rows": 3192,
+          "accuracy": 68.23,
+          "buy_precision": 36.31,
+          "buy_recall": 29.15,
+          "n_folds_evaluated": 4
+        },
+        "5d": {
+          "test_rows": 3192,
+          "accuracy": 70.92,
+          "buy_precision": 34.29,
+          "buy_recall": 26.22,
+          "n_folds_evaluated": 4
+        },
+        "7d": {
+          "test_rows": 3192,
+          "accuracy": 71.08,
+          "buy_precision": 31.73,
+          "buy_recall": 22.76,
+          "n_folds_evaluated": 4
+        }
+      }
+    }
+  ],
+  "errors": []
+}
