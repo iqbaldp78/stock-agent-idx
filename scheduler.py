@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 def run_daily_analysis():
     """End-of-day analysis: full pipeline + save to DB."""
     logger.info("=== DAILY ANALYSIS START ===")
+    logger.info("=== STARTING KONGLO PLAY ANALYSIS ===")
     try:
         from graph.workflow import run_full_analysis
         from db.tracker import save_full_result
@@ -29,6 +30,11 @@ def run_daily_analysis():
         logger.info(f"Analysis complete: {len(top_picks)} top picks")
         for p in top_picks:
             logger.info(f"  #{p.get('rank')} {p.get('ticker')} — {p.get('conviction', 'N/A')}")
+
+        # Trigger Konglo Analysis sequentially
+        from graph.konglo_workflow import run_konglo_analysis
+        konglo_result = run_konglo_analysis()
+        logger.info("Konglo analysis completed.")
 
     except Exception as e:
         logger.exception(f"Daily analysis failed: {e}")
@@ -366,16 +372,8 @@ def main():
     scheduler.add_job(
         run_daily_analysis,
         CronTrigger(day_of_week="mon-fri", hour=7, minute=0, timezone="Asia/Jakarta"),
-        id="daily_analysis",
-        name="Daily AI Portfolio Analysis",
-    )
-
-    # Konglo Play Daily Analysis: Every day at 07:30 AM WIB
-    scheduler.add_job(
-        run_konglo_daily_analysis,
-        CronTrigger(hour=7, minute=30, timezone="Asia/Jakarta"),
-        id="konglo_daily_analysis",
-        name="Daily Konglo Play AI Analysis",
+        id="combined_daily_analysis",
+        name="Combined Daily AI + Konglo Analysis",
     )
 
     # Performance Check (TP/SL validation): Every day at 17:00 WIB

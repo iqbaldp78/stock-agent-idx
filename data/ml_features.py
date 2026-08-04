@@ -28,19 +28,7 @@ FEATURE_COLUMNS = [
     "dominance_score",
     "haka_score",
     "is_fomo_trap",
-    "technical_score",
-    "rsi",
-    "is_bullish_trend",
-    "is_rsi_divergence",
-    "is_macd_divergence",
-    "vol_ratio",
-    "macro_score",
-    "ihsg_vs_ma20",
-    "usdidr_val",
-    "ret_1d",
-    "ret_1d_lag1",
-    "ret_1d_lag2",
-    "ret_1d_lag3",
+   "ret_1d_lag3",
     "ret_1d_lag4",
     "ret_1d_lag5",
     "ret_3d",
@@ -761,56 +749,55 @@ def fetch_news_report_features(ticker: str) -> dict:
     }
     if not ticker:
         return defaults
+    from db.vector_db import get_news_sentiment_features
+    
+    defaults = {
+        "report_sent_7d": 5.0,
+        "report_sent_30d": 5.0,
+        "report_count_7d": 0.0,
+        "report_count_30d": 0.0,
+        "news_sent_7d": 5.0,
+        "news_sent_30d": 5.0,
+        "news_count_7d": 0.0,
+        "news_count_30d": 0.0,
+    }
+    if not ticker:
+        return defaults
     try:
-        from scripts.rag_retriever import _execute_query
-        query = """
-            SELECT doc_type, sentiment_score, created_at
-            FROM news_signals
-            WHERE tickers ? %s AND created_at >= NOW() - INTERVAL '30 days'
-        """
-        rows = _execute_query(query, (ticker.upper(),))
-        if not rows:
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+        
+        # Ambil data dari Vector DB
+        df = get_news_sentiment_features(ticker.upper(), start_date.isoformat(), end_date.isoformat())
+        
+        if df.empty:
             return defaults
             
+        # Hitung untuk 7d dan 30d
         now = datetime.now()
-        report_7d_scores, report_30d_scores = [], []
-        news_7d_scores, news_30d_scores = [], []
         
-        for r in rows:
-            doc_type = r.get("doc_type") or "news"
-            score = r.get("sentiment_score")
-            if score is None:
-                score = 5.0
-            else:
-                score = float(score)
-                
-            created_at = r.get("created_at")
-            if not created_at:
-                continue
-            
-            if hasattr(created_at, "replace"):
-                age_days = (now - created_at.replace(tzinfo=None)).days
-            else:
-                age_days = 0
-                
-            if doc_type == "report":
-                report_30d_scores.append(score)
-                if age_days <= 7:
-                    report_7d_scores.append(score)
-            else:
-                news_30d_scores.append(score)
-                if age_days <= 7:
-                    news_7d_scores.append(score)
-                    
+        def agg_stats(days):
+            mask = df.index >= (now - timedelta(days=days))
+            subset = df[mask]
+            if subset.empty:
+                return 5.0, 0.0
+            avg_sent = subset['avg_sentiment'].mean()
+            count = subset['news_count'].sum()
+            return avg_sent, count
+
+        news_sent_7d, news_count_7d = agg_stats(7)
+        news_sent_30d, news_count_30d = agg_stats(30)
+        
         return {
-            "report_sent_7d": float(np.mean(report_7d_scores)) if report_7d_scores else 5.0,
-            "report_sent_30d": float(np.mean(report_30d_scores)) if report_30d_scores else 5.0,
-            "report_count_7d": float(len(report_7d_scores)),
-            "report_count_30d": float(len(report_30d_scores)),
-            "news_sent_7d": float(np.mean(news_7d_scores)) if news_7d_scores else 5.0,
-            "news_sent_30d": float(np.mean(news_30d_scores)) if news_30d_scores else 5.0,
-            "news_count_7d": float(len(news_7d_scores)),
-            "news_count_30d": float(len(news_30d_scores)),
+            "report_sent_7d": 5.0,
+            "report_sent_30d": 5.0,
+            "report_count_7d": 0.0,
+            "report_count_30d": 0.0,
+            "news_sent_7d": news_sent_7d,
+            "news_sent_30d": news_sent_30d,
+            "news_count_7d": news_count_7d,
+            "news_count_30d": news_count_30d,
         }
     except Exception as e:
         logger.warning(f"Error fetching news/report features for {ticker}: {e}")
