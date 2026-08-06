@@ -585,6 +585,11 @@ export default function TradingPage() {
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="font-extrabold text-text">{pick.ticker}</h4>
+                              {pick.change_percent !== undefined && pick.change_percent !== null && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold border ${pick.change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
+                                  {pick.change_percent >= 0 ? '+' : ''}{pick.change_percent.toFixed(2)}%
+                                </span>
+                              )}
                               {quickBuyTab === 'konglo' && (
                                 <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-bold">
                                   Konglo
@@ -632,6 +637,11 @@ export default function TradingPage() {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <h4 className="font-bold text-text">{pos.ticker}</h4>
+                          {pos.day_change_pct !== undefined && pos.day_change_pct !== null && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold border ${pos.day_change_pct >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
+                              {pos.day_change_pct >= 0 ? '+' : ''}{pos.day_change_pct.toFixed(2)}%
+                            </span>
+                          )}
                           <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-border text-secondary font-mono">
                             {pos.status === 'PENDING_STOP' ? '📈 Buy Stop' : '📉 Buy Limit'}
                           </span>

@@ -43,7 +43,6 @@ const formatEntry = (stock: any) => {
   if (!stock) return "-";
   if (stock.entry_low === null || stock.entry_low === undefined) return "🔒 Upgrade Pro";
   
-  // Gunakan ekstraksi dari reasoning jika ada kecocokan
   const extracted = extractEntryFromReasoning(stock);
   if (extracted) {
     return `${extracted.low.toLocaleString('id-ID')} - ${extracted.high.toLocaleString('id-ID')}`;
@@ -54,12 +53,14 @@ const formatEntry = (stock: any) => {
   if (stock.entry_high) return `${stock.entry_high.toLocaleString('id-ID')}`;
   return "-";
 };
+
 const formatTP = (stock: any) => {
   if (!stock) return "-";
   if (stock.target_1 === null || stock.target_1 === undefined) return "🔒 Upgrade Pro";
   const tps = [stock.target_1, stock.target_2, stock.target_3].filter(tp => tp !== null && tp !== undefined);
   return tps.length > 0 ? tps.map(tp => `${tp.toLocaleString('id-ID')}`).join(" / ") : "-";
 };
+
 const formatSL = (stock: any) => {
   if (!stock) return "-";
   if (stock.stop_loss === null || stock.stop_loss === undefined) return "🔒 Upgrade Pro";
@@ -235,7 +236,14 @@ export default function TopPicksPage() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-4xl font-bold text-text font-mono">{selectedStock.current_price || selectedStock.entry_price}</div>
+                <div className="flex items-center justify-end gap-2">
+                  <span className="text-4xl font-bold text-text font-mono">{(selectedStock.current_price || selectedStock.entry_price)?.toLocaleString('id-ID')}</span>
+                  {selectedStock.change_percent !== undefined && selectedStock.change_percent !== null && (
+                    <span className={`px-2.5 py-1 rounded-lg text-sm font-bold font-mono border ${selectedStock.change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
+                      {selectedStock.change_percent >= 0 ? '+' : ''}{selectedStock.change_percent.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
                 <p className="text-[10px] text-secondary font-bold mt-1 uppercase tracking-wider">Current Price</p>
               </div>
             </div>
@@ -773,7 +781,14 @@ export default function TopPicksPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-text font-mono">{picks[0].current_price || picks[0].entry_price}</div>
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="text-3xl font-bold text-text font-mono">{(picks[0].current_price || picks[0].entry_price)?.toLocaleString('id-ID')}</span>
+                    {picks[0].change_percent !== undefined && picks[0].change_percent !== null && (
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold font-mono border ${picks[0].change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
+                        {picks[0].change_percent >= 0 ? '+' : ''}{picks[0].change_percent.toFixed(2)}%
+                      </span>
+                    )}
+                  </div>
                   <p className="text-secondary text-xs mt-1 uppercase font-bold tracking-widest">Current Price</p>
                 </div>
               </div>
@@ -826,7 +841,14 @@ export default function TopPicksPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xl font-bold text-text font-mono">{pick.current_price || pick.entry_price}</div>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span className="text-xl font-bold text-text font-mono">{(pick.current_price || pick.entry_price)?.toLocaleString('id-ID')}</span>
+                      {pick.change_percent !== undefined && pick.change_percent !== null && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${pick.change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
+                          {pick.change_percent >= 0 ? '+' : ''}{pick.change_percent.toFixed(2)}%
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[10px] text-secondary font-bold mt-1 uppercase tracking-wider">Current Price</div>
                   </div>
                 </div>

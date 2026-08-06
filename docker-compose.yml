@@ -108,6 +108,7 @@ services:
       - ./agents:/app/agents
       - ./data:/app/data
       - ./graph:/app/graph
+      - ./services:/app/services
     depends_on:
       postgres:
         condition: service_healthy

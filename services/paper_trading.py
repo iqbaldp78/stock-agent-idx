@@ -47,6 +47,33 @@ def _get_current_price(ticker: str) -> Optional[float]:
     return None
 
 
+def _get_day_change_pct(ticker: str, current_price: Optional[float] = None) -> Optional[float]:
+    """Fetch % perubahan harga harian real-time dari Stockbit API."""
+    try:
+        from data.fetcher_stockbit import get_realtime_stock_info_stockbit
+        info = get_realtime_stock_info_stockbit(ticker)
+        if info and "change_pct" in info and info["change_pct"] is not None:
+            return float(info["change_pct"])
+    except Exception as e:
+        logger.warning(f"[paper_trading] Stockbit realtime info failed for {ticker}: {e}")
+
+    try:
+        from db.cache import get_cached_ohlcv
+        from datetime import timedelta
+        end = date.today().isoformat()
+        start = (date.today() - timedelta(days=7)).isoformat()
+        df = get_cached_ohlcv(ticker, start, end)
+        if df is not None and len(df) >= 2 and "close" in df.columns:
+            prev_close = float(df["close"].iloc[-2])
+            curr = current_price or float(df["close"].iloc[-1])
+            if prev_close > 0:
+                return round(((curr - prev_close) / prev_close) * 100, 2)
+    except Exception:
+        pass
+
+    return None
+
+
 class PaperTradingService:
     """Service untuk manage paper trading operations."""
     
@@ -156,6 +183,8 @@ class PaperTradingService:
             if not current_price:
                 current_price = float(trade.price)  # fallback ke buy price
 
+            day_change_pct = _get_day_change_pct(trade.ticker, current_price)
+
             # Auto evaluate pending order
             if trade.status in ["PENDING_LIMIT", "PENDING_STOP"]:
                 matched = False
@@ -178,6 +207,7 @@ class PaperTradingService:
                         "shares": trade.shares,
                         "buy_price": float(trade.price),
                         "current_price": float(current_price),
+                        "day_change_pct": day_change_pct,
                         "current_value": float(trade.amount), # keep original amount
                         "unrealized_pnl": 0.0,
                         "unrealized_pnl_pct": 0.0,
@@ -212,6 +242,7 @@ class PaperTradingService:
                 "shares": trade.shares,
                 "buy_price": float(trade.price),
                 "current_price": float(current_price),
+                "day_change_pct": day_change_pct,
                 "current_value": float(current_value),
                 "unrealized_pnl": float(pnl),
                 "unrealized_pnl_pct": float(pnl_pct),

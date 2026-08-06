@@ -609,6 +609,33 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                     else:
                         entry_style = "Buy on Accumulation"
                 
+                # Fetch realtime Stockbit info (live price and change percentage)
+                change_pct_val = pred_json.get("change_percent") or pred_json.get("change_pct") or pred_json.get("change_percentage") or pred_json.get("day_change_pct")
+                try:
+                    from data.fetcher_stockbit import get_realtime_stock_info_stockbit
+                    sb_info = get_realtime_stock_info_stockbit(r[1])
+                    if sb_info and "change_pct" in sb_info and sb_info["change_pct"] is not None:
+                        change_pct_val = float(sb_info["change_pct"])
+                        if sb_info.get("price") and sb_info["price"] > 0:
+                            current_price_val = float(sb_info["price"])
+                except Exception as e:
+                    logger.warning("Stockbit realtime fetch failed for %s: %s", r[1], e)
+
+                if change_pct_val is None and isinstance(predictions, dict) and "day_1" in predictions:
+                    day_1_pred = predictions.get("day_1", {})
+                    if isinstance(day_1_pred, dict) and "pct_change" in day_1_pred:
+                        raw_pct = str(day_1_pred.get("pct_change", "")).replace("%", "").replace("+", "").strip()
+                        try:
+                            change_pct_val = float(raw_pct)
+                        except ValueError:
+                            change_pct_val = None
+
+                if change_pct_val is not None:
+                    try:
+                        change_pct_val = float(change_pct_val)
+                    except (ValueError, TypeError):
+                        change_pct_val = None
+
                 data.append({
                     "id": int(r[0]),
                     "ticker": r[1],
@@ -617,6 +644,7 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                     "company_name": "Perusahaan Tbk.", # Dummy for now, can join with universe later
                     "current_price": float(r[4]) if r[4] and not isinstance(r[4], (dict, list)) else None,
                     "entry_price": float(r[4]) if r[4] and not isinstance(r[4], (dict, list)) else None, # Keep entry_price for compatibility
+                    "change_percent": change_pct_val,
                     "reasoning": r[5] if r[5] else "Sinyal teknikal mendeteksi potensi pergerakan.",
                     "thesis": r[7] if len(r) > 7 and r[7] else "",
                     "fair_value": float(fair_value_val) if fair_value_val else None,

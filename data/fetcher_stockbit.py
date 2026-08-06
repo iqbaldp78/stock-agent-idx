@@ -500,6 +500,45 @@ def get_current_price_stockbit(ticker: str) -> float:
 
 
 @_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
+def get_realtime_stock_info_stockbit(ticker: str) -> dict:
+    """
+    Fetch realtime stock info (price, prev_close, change, change_pct) dari Stockbit API.
+    """
+    api_key = _get_api_key()
+    if not api_key:
+        return {}
+
+    url = f"https://exodus.stockbit.com/emitten/{ticker.upper()}/info"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
+    }
+
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            response = client.get(url, headers=headers)
+            response.raise_for_status()
+            payload = response.json()
+
+        data = payload.get("data", {})
+        price = _parse_number(data.get("price", 0))
+        previous = _parse_number(data.get("previous", 0))
+        change = _parse_number(data.get("change", 0))
+        percentage = _parse_number(data.get("percentage", 0))
+
+        return {
+            "ticker": ticker.upper(),
+            "price": price,
+            "previous": previous,
+            "change": change,
+            "change_pct": percentage
+        }
+    except Exception as e:
+        logger.warning("Failed to fetch realtime Stockbit info for %s: %s", ticker, e)
+        return {}
+
+
+@_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
 def get_ihsg_realtime_price_stockbit() -> dict:
     """
     Fetch IHSG realtime price dan market info dari Stockbit API.
