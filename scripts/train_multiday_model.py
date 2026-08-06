@@ -84,15 +84,104 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
         prec = true_positives / predicted_positives if predicted_positives > 0 else 0.0
         rec = true_positives / actual_positives if actual_positives > 0 else 0.0
 
+        # Konteks yang membuat accuracy & precision di atas bisa diinterpretasi.
+        # Tanpa base_rate, accuracy 58% terlihat bagus padahal bisa jadi di bawah
+        # baseline "selalu jawab tidak naik" — dan itulah yang terjadi selama ini.
+        n = len(y_true_int)
+        base_rate = float(actual_positives) / n if n else 0.0
+        majority_baseline = max(base_rate, 1.0 - base_rate)
+        # Lift = skill sebenarnya untuk sinyal BUY. 1.00 berarti tidak lebih baik
+        # daripada menebak sesuai proporsi kelas.
+        lift = (prec / base_rate) if base_rate > 0 else 0.0
+        # Model yang hampir tidak pernah (atau hampir selalu) memberi sinyal BUY tidak
+        # mengambil keputusan; accuracy-nya cuma memantulkan class prior.
+        degenerate = bool(rec < 0.05 or rec > 0.95)
+
         results[h] = {
-            "test_rows": int(len(y_true)),
+            "test_rows": int(n),
             "accuracy": round(acc * 100, 2),
             "buy_precision": round(prec * 100, 2),
             "buy_recall": round(rec * 100, 2),
             "optimal_threshold": round(thr, 3),
-            "n_features": len(selected_cols)
+            "n_features": len(selected_cols),
+            "base_rate": round(base_rate * 100, 2),
+            "majority_baseline": round(majority_baseline * 100, 2),
+            "lift": round(lift, 3),
+            "n_predicted_positive": int(predicted_positives),
+            "degenerate": degenerate,
         }
     return results
+
+
+# Key metrik yang ikut dirata-ratakan lintas fold/ticker. Dipakai bersama oleh
+# aggregate_metrics() dan penggabungan per-fold di walk_forward_evaluate_ticker(),
+# supaya menambah metrik baru cukup di satu tempat.
+AVG_METRIC_KEYS = [
+    "accuracy", "buy_precision", "buy_recall",
+    "base_rate", "majority_baseline", "lift",
+]
+
+
+def aggregate_metrics(items):
+    """
+    Rata-ratakan metrik lintas ticker per horizon.
+
+    Model degenerate (hampir tidak pernah / hampir selalu sinyal BUY) dikeluarkan dari
+    angka headline: accuracy-nya cuma memantulkan class prior, jadi memasukkannya
+    membuat rata-rata terlihat lebih baik justru karena modelnya tidak mengambil
+    keputusan. Jumlahnya tetap dilaporkan lewat n_degenerate agar tidak hilang.
+
+    Dipakai juga oleh scripts/update_streamlit_metadata.py — karena itu fungsi ini
+    di module level, bukan nested di main().
+    """
+    out = {}
+    for h in ['1d', '3d', '5d', '7d']:
+        h_all = [s["metrics"][h] for s in items if h in s.get("metrics", {})]
+        if not h_all:
+            continue
+        usable = [m for m in h_all if not m.get("degenerate")]
+        # Kalau SEMUA model degenerate, jangan sembunyikan dengan mengosongkan output —
+        # pakai apa adanya dan biarkan n_degenerate yang bercerita.
+        h_metrics = usable or h_all
+
+        total_rows = sum(m["test_rows"] for m in h_metrics)
+        weighted = lambda key: round(sum(m[key] * m["test_rows"] for m in h_metrics) / total_rows, 2) if total_rows else 0.0
+        mean = lambda key: round(sum(m.get(key, 0) for m in h_metrics) / len(h_metrics), 2)
+
+        acc_vals = [m["accuracy"] for m in h_metrics]
+        prec_vals = [m["buy_precision"] for m in h_metrics]
+        lift_vals = [m["lift"] for m in h_metrics if m.get("lift")]
+
+        out[h] = {
+            "test_rows": total_rows,
+            "accuracy": mean("accuracy"),
+            "buy_precision": mean("buy_precision"),
+            "buy_recall": mean("buy_recall"),
+            "accuracy_weighted": weighted("accuracy"),
+            "buy_precision_weighted": weighted("buy_precision"),
+            "buy_recall_weighted": weighted("buy_recall"),
+            "p10_accuracy": round(np.percentile(acc_vals, 10), 2),
+            "p50_accuracy": round(np.percentile(acc_vals, 50), 2),
+            "p90_accuracy": round(np.percentile(acc_vals, 90), 2),
+            "p10_buy_precision": round(np.percentile(prec_vals, 10), 2),
+            "p50_buy_precision": round(np.percentile(prec_vals, 50), 2),
+            "p90_buy_precision": round(np.percentile(prec_vals, 90), 2),
+            # ── Konteks: tanpa ini accuracy di atas tidak bisa dinilai ──
+            "base_rate": mean("base_rate"),
+            "majority_baseline": mean("majority_baseline"),
+            "lift": round(sum(lift_vals) / len(lift_vals), 3) if lift_vals else 0.0,
+            "p10_lift": round(np.percentile(lift_vals, 10), 3) if lift_vals else 0.0,
+            "p50_lift": round(np.percentile(lift_vals, 50), 3) if lift_vals else 0.0,
+            "p90_lift": round(np.percentile(lift_vals, 90), 3) if lift_vals else 0.0,
+            "n_usable": len(usable),
+            "n_degenerate": len(h_all) - len(usable),
+            # Nilai inklusif-semua-model, disimpan sebagai jembatan ke run historis
+            # yang belum memisahkan model degenerate.
+            "accuracy_all_models": round(sum(m["accuracy"] for m in h_all) / len(h_all), 2),
+            "buy_precision_all_models": round(sum(m["buy_precision"] for m in h_all) / len(h_all), 2),
+        }
+    return out
+
 
 # Purge gap = horizon terpanjang (7d). Mencegah label overlap antar blok,
 # konsisten dengan PurgedTimeSeriesSplit di models/multiday_predictor.py.
@@ -237,13 +326,18 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
     for h in ["1d", "3d", "5d", "7d"]:
         fold_data = fold_results[h]
         if fold_data:
-            horizons_avg[h] = {
+            merged = {
                 "test_rows": sum(m["test_rows"] for m in fold_data),
-                "accuracy": round(np.mean([m["accuracy"] for m in fold_data]), 2),
-                "buy_precision": round(np.mean([m["buy_precision"] for m in fold_data]), 2),
-                "buy_recall": round(np.mean([m["buy_recall"] for m in fold_data]), 2),
                 "n_folds_evaluated": len(fold_data),
+                "n_predicted_positive": sum(m.get("n_predicted_positive", 0) for m in fold_data),
             }
+            for key in AVG_METRIC_KEYS:
+                vals = [m[key] for m in fold_data if key in m]
+                merged[key] = round(float(np.mean(vals)), 3 if key == "lift" else 2) if vals else 0.0
+            # Degenerate ditentukan dari recall rata-rata lintas fold, bukan per fold,
+            # supaya satu fold aneh tidak mencoret ticker yang secara keseluruhan sehat.
+            merged["degenerate"] = bool(merged["buy_recall"] < 5.0 or merged["buy_recall"] > 95.0)
+            horizons_avg[h] = merged
 
     if not validate_only:
         final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
@@ -386,34 +480,6 @@ def main():
     if not summaries:
         raise SystemExit("Tidak ada data training yang berhasil diproses.")
 
-    def aggregate_metrics(items):
-        out = {}
-        for h in ['1d', '3d', '5d', '7d']:
-            h_metrics = [s["metrics"][h] for s in items if h in s.get("metrics", {})]
-            if not h_metrics:
-                continue
-            total_rows = sum(m["test_rows"] for m in h_metrics)
-            weighted = lambda key: round(sum(m[key] * m["test_rows"] for m in h_metrics) / total_rows, 2) if total_rows else 0.0
-            acc_vals = [m["accuracy"] for m in h_metrics]
-            prec_vals = [m["buy_precision"] for m in h_metrics]
-            rec_vals = [m["buy_recall"] for m in h_metrics]
-            out[h] = {
-                "test_rows": total_rows,
-                "accuracy": round(sum(acc_vals) / len(acc_vals), 2),
-                "buy_precision": round(sum(prec_vals) / len(prec_vals), 2),
-                "buy_recall": round(sum(rec_vals) / len(rec_vals), 2),
-                "accuracy_weighted": weighted("accuracy"),
-                "buy_precision_weighted": weighted("buy_precision"),
-                "buy_recall_weighted": weighted("buy_recall"),
-                "p10_accuracy": round(np.percentile(acc_vals, 10), 2),
-                "p50_accuracy": round(np.percentile(acc_vals, 50), 2),
-                "p90_accuracy": round(np.percentile(acc_vals, 90), 2),
-                "p10_buy_precision": round(np.percentile(prec_vals, 10), 2),
-                "p50_buy_precision": round(np.percentile(prec_vals, 50), 2),
-                "p90_buy_precision": round(np.percentile(prec_vals, 90), 2),
-            }
-        return out
-
     global_metrics = aggregate_metrics(summaries)
     total_train_rows = sum(s.get("train_rows", 0) for s in summaries)
     total_test_rows = sum(s.get("test_rows", 0) for s in summaries)
@@ -481,12 +547,24 @@ def main():
         for feat in constant_everywhere:
             print(f"      - {feat}")
     print("-" * 72)
-    print("MACRO AVERAGE ACCURACY (Across all tickers):")
+    print("MACRO AVERAGE (model degenerate dikeluarkan dari rata-rata):")
     for h, metrics in global_metrics.items():
+        acc = metrics["accuracy"]
+        base = metrics.get("majority_baseline", 0.0)
+        lift = metrics.get("lift", 0.0)
+        # Verdict eksplisit supaya angka tidak bisa dibaca terlalu optimis:
+        # accuracy hanya berarti kalau melewati baseline kelas mayoritas, dan
+        # sinyal BUY hanya berguna kalau lift > 1.
+        acc_verdict = "OK" if acc > base else "DI BAWAH BASELINE"
+        lift_verdict = "ada edge" if lift > 1.05 else ("marginal" if lift > 1.0 else "NOL SKILL")
         print(f"Horizon [{h.upper()}]:")
-        print(f"  Holdout rows  : {metrics['test_rows']}")
-        print(f"  Accuracy      : {metrics['accuracy']:.2f}%")
-        print(f"  Buy Precision : {metrics['buy_precision']:.2f}%")
+        print(f"  Holdout rows      : {metrics['test_rows']}")
+        print(f"  Base rate (naik)  : {metrics.get('base_rate', 0.0):.2f}%")
+        print(f"  Majority baseline : {base:.2f}%")
+        print(f"  Accuracy          : {acc:.2f}%  ({acc - base:+.2f} pp -> {acc_verdict})")
+        print(f"  Buy Precision     : {metrics['buy_precision']:.2f}%")
+        print(f"  Lift              : {lift:.3f}  ({lift_verdict})")
+        print(f"  Model usable      : {metrics.get('n_usable', 0)} (degenerate: {metrics.get('n_degenerate', 0)})")
     print("=" * 72)
 
 if __name__ == "__main__":

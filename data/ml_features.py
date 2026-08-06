@@ -176,15 +176,38 @@ ML_TRAIN_FEATURES = [
     # Foreign flow features
     "foreign_flow_zscore",
     # Brainstorm features
-    "news_score",
-    "commodity_score",
     "bandar_accum_ratio",
     # Candlestick pattern features
     "candlestick_winrate",
     "is_bullish_pattern",
     "is_bearish_pattern",
     "ihsg_trend_3d",
-    # Report vs News Sentiment & Count features
+]
+
+# ── DIKELUARKAN dari ML_TRAIN_FEATURES (jangan tambahkan kembali tanpa membaca ini) ──
+#
+# Semua fitur di bawah KONSTAN saat training tapi BERVARIASI saat live inference.
+# Kondisi itu strictly lebih buruk daripada tidak punya fiturnya sama sekali: model
+# belajar bahwa kolom tersebut tidak membawa informasi (importance 0, jadi dibuang
+# feature selection), lalu saat inference kolom itu tiba-tiba berisi nilai nyata yang
+# tidak pernah dilihatnya.
+#
+#   report_sent_7d/30d, report_count_7d/30d,
+#   news_sent_7d/30d, news_count_7d/30d
+#       -> tidak pernah dihitung di prepare_training_data(), hanya terisi 0.0 oleh
+#          loop fallback FEATURE_COLUMNS. Di live, fetch_news_report_features()
+#          mengembalikan 5.0 / count nyata dari tabel news_signals.
+#          Rekonstruksi point-in-time dari news_signals.created_at secara teknis
+#          mungkin; masukkan kembali kalau riwayat news sudah cukup dalam.
+#
+#   news_score, commodity_score
+#       -> hard-coded 5.0 di prepare_training_data().
+#
+# Aman untuk model yang sudah terlatih: fitur ini importance 0 sehingga tidak masuk
+# sidecar selected_features, dan predict() memakai sidecar itu — bukan feature_cols.
+ML_TRAIN_FEATURES_EXCLUDED = [
+    "news_score",
+    "commodity_score",
     "report_sent_7d",
     "report_sent_30d",
     "report_count_7d",
@@ -819,21 +842,17 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
     price_analysis = bandarm.get("price_analysis", {})
     bandar_ratios = get_historical_bandar_features(ticker, date.today())
 
+    # CATATAN: day_foreign_net, foreign_net_7d/1m, foreign_flow_zscore, frequency_1d,
+    # dan close_vs_avg SENGAJA tidak diambil dari JSON agent di sini.
+    # Training menghitungnya dari kolom NetForeign/Frequency/AveragePrice di OHLCV,
+    # dan data yang sama tersedia di live (graph/workflow.py memakai
+    # data.fetcher_stockbit.get_ohlcv yang mengembalikan kolom-kolom itu).
+    # Mengambilnya dari agent berarti dua sumber berbeda untuk fitur bernama sama.
+    # Sekarang semuanya dari compute_ohlcv_features().
     bandar_features = {
         "bandarm_score": bandarm.get("score", 5.0),
         "dist_avg_7d": _parse_pct(price_analysis.get("distance_from_7d")),
         "dist_avg_1m": _parse_pct(price_analysis.get("distance_from_1m")),
-        "day_foreign_net": _parse_number(
-            bandarm.get("day_foreign_net", bandarm.get("foreign_net", 0.0)), 0.0
-        ) / 1e9,
-        "frequency_1d": _parse_number(
-            bandarm.get("frequency_1d", bandarm.get("frequency", 0.0)), 0.0
-        ),
-        "close_vs_avg": _parse_pct(
-            bandarm.get("close_vs_avg", price_analysis.get("close_vs_avg", 0.0))
-        ),
-        "foreign_net_7d": _parse_number(bandarm.get("window_7d", {}).get("foreign_net_7d"), 0.0) / 1e9, # In Billions
-        "foreign_net_1m": _parse_number(bandarm.get("window_1m", {}).get("foreign_net_1m"), 0.0) / 1e9,
         "top3_buy_ratio_7d": bandar_ratios.get("top3_buy_ratio_7d", 0.0),
         "top3_sell_ratio_7d": bandar_ratios.get("top3_sell_ratio_7d", 0.0),
         "retail_buy_ratio_7d": bandar_ratios.get("retail_buy_ratio_7d", 0.0),
@@ -845,24 +864,22 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         "haka_score": 1.0 if bandarm.get("insight_aggressiveness", {}).get("type") == "driver" else (-1.0 if bandarm.get("insight_aggressiveness", {}).get("type") == "risk" else 0.0),
         "is_fomo_trap": 1.0 if bandarm.get("insight_fomo_trap", {}).get("type") == "risk" else 0.0,
     }
-    bandar_features["bandar_accum_ratio"] = 1.0 if (
-        bandar_features["foreign_net_1m"] > 0 and bandar_features["dist_avg_1m"] < 5.0
-    ) else 0.0
-    # Live hanya punya current rolling foreign net, jadi z-score historis fallback aman 0.0
-    # sampai history window tersedia dari DB path yang lebih lengkap.
-    bandar_features["foreign_flow_zscore"] = _parse_number(bandarm.get("foreign_flow_zscore"), 0.0)
+    # bandar_accum_ratio diisi setelah price_features tersedia (butuh foreign_net_1m
+    # dari OHLCV), memakai helper bersama _bandar_accum_ratio().
 
     # 2. Technical Features (from agent scores)
     divergence = tech.get("divergence", {})
-    data_used = tech.get("data_used", [])
 
+    # rsi, is_bullish_trend, dan vol_ratio SENGAJA tidak lagi diambil dari sini.
+    # Dulu ketiganya diparse dari teks bebas di tech["data_used"] (mis. "RSI: 62.1")
+    # dengan default 50.0 / 1.0 / 0.5 kalau formatnya tidak cocok — sementara
+    # training menghitungnya dari OHLCV. Beda definisi, dan kegagalan parse tidak
+    # pernah memunculkan error. Sekarang ketiganya datang dari
+    # compute_ohlcv_features() seperti di training.
     tech_features = {
         "technical_score": tech.get("score", 5.0),
-        "rsi": _extract_first_numeric(data_used, "RSI:", 50.0),
-        "is_bullish_trend": 1.0 if tech.get("trend") == "bullish" else 0.0 if tech.get("trend") == "bearish" else 0.5,
         "is_rsi_divergence": 1.0 if divergence.get("rsi") == "bullish" else -1.0 if divergence.get("rsi") == "bearish" else 0.0,
         "is_macd_divergence": 1.0 if divergence.get("macd") == "bullish" else -1.0 if divergence.get("macd") == "bearish" else 0.0,
-        "vol_ratio": _extract_first_numeric(data_used, "Vol ratio", 1.0),
     }
 
     # 3. Macro Features (from agent scores)
@@ -872,246 +889,340 @@ def extract_features(ticker: str, scores: dict, macro_data: dict, ohlcv: pd.Data
         "usdidr_val": _parse_number(macro_data.get("usdidr"), 16000.0) / 1000, # Scaled
     }
 
-    # 4. OHLCV Features (Recent Price Action) + Missing Training Features
+    # 4. Fitur turunan data pasar (OHLCV + konteks IHSG)
+    #
+    # Dihitung oleh fungsi yang SAMA dengan yang dipakai training, lalu diambil
+    # baris terakhirnya. Sebelumnya blok ini adalah implementasi kedua yang
+    # terpisah, dan 13 fitur diam-diam melenceng definisinya dari versi training.
+    #
+    # Efek sampingnya: rsi, vol_ratio, dan is_bullish_trend di atas TIDAK lagi
+    # dipakai — nilainya kini dihitung dari OHLCV, bukan diparse dari teks agent
+    # (yang diam-diam jatuh ke default 50.0 / 1.0 / 0.5 kalau formatnya berubah).
+    price_features = {}
     if ohlcv is not None and not ohlcv.empty:
-        closes = pd.to_numeric(ohlcv["Close"], errors="coerce")
-        highs = pd.to_numeric(ohlcv["High"], errors="coerce") if "High" in ohlcv else None
-        lows = pd.to_numeric(ohlcv["Low"], errors="coerce") if "Low" in ohlcv else None
-        volumes = pd.to_numeric(ohlcv["Volume"], errors="coerce") if "Volume" in ohlcv else None
-        opens = pd.to_numeric(ohlcv["Open"], errors="coerce") if "Open" in ohlcv else None
-
-        closes = closes.dropna()
-        returns = closes.pct_change()
-        
-        # FIXED: Add lag returns (ret_1d_lag1..5, ret_2d, ret_10d)
-        ret_1d_lag1 = returns.iloc[-2] if len(returns) > 1 else 0.0
-        ret_1d_lag2 = returns.iloc[-3] if len(returns) > 2 else 0.0
-        ret_1d_lag3 = returns.iloc[-4] if len(returns) > 3 else 0.0
-        ret_1d_lag4 = returns.iloc[-5] if len(returns) > 4 else 0.0
-        ret_1d_lag5 = returns.iloc[-6] if len(returns) > 5 else 0.0
-        ret_2d = (closes.iloc[-1] / closes.iloc[-3] - 1) if len(closes) > 2 else 0.0
-        ret_10d = (closes.iloc[-1] / closes.iloc[-11] - 1) if len(closes) > 10 else 0.0
-        
-        # FIXED: Add volatility_10d
-        volatility_10d = returns.tail(10).std() if len(returns) > 10 else 0.0
-        volatility_20d = returns.tail(20).std() if len(returns) > 20 else 0.0
-        
-        # FIXED: Add ret_1d_zscore (standardized return)
-        mean_ret = returns.tail(20).mean() if len(returns) > 20 else 0.0
-        std_ret = returns.tail(20).std() if len(returns) > 20 else 1.0
-        ret_1d_current = returns.iloc[-1] if len(returns) > 1 else 0.0
-        ret_1d_zscore = (ret_1d_current - mean_ret) / std_ret if std_ret > 0 else 0.0
-        
-        # FIXED: Add vol_trend_5d
-        vol_trend_5d = volatility_20d - volatility_10d if volatility_10d > 0 else 0.0
-        
-        ma5 = closes.rolling(5).mean()
-        ma20 = closes.rolling(20).mean()
-        ma50 = closes.rolling(50).mean()
-        ma200 = closes.rolling(200).mean()
-
-        current_price = float(closes.iloc[-1]) if len(closes) > 0 else 0.0
-        support_near = _parse_number(tech.get("support_near"))
-        resistance_near = _parse_number(tech.get("resistance_near"))
-
-        volume_spike = 0.0
-        if volumes is not None and len(volumes.dropna()) > 20:
-            vol = volumes.dropna()
-            volume_spike = float(vol.iloc[-1] / vol.tail(20).mean()) if vol.tail(20).mean() else 0.0
-
-        range_pct = 0.0
-        if highs is not None and lows is not None and len(highs.dropna()) > 0 and len(lows.dropna()) > 0 and current_price > 0:
-            latest_high = float(highs.dropna().iloc[-1])
-            latest_low = float(lows.dropna().iloc[-1])
-            range_pct = (latest_high - latest_low) / current_price
-
-        # FIXED: Add close_to_high / close_to_low
-        close_to_high = (current_price / float(highs.dropna().iloc[-1]) - 1) if highs is not None and len(highs.dropna()) > 0 and current_price > 0 else 0.0
-        close_to_low = (current_price / float(lows.dropna().iloc[-1]) - 1) if lows is not None and len(lows.dropna()) > 0 and current_price > 0 else 0.0
-
-        # Advanced Indicators
-        macd, macd_hist = _compute_macd(closes)
-        bb_upper, bb_lower = _compute_bb(closes)
-        stoch_k, stoch_d = _compute_stoch(highs, lows, closes) if highs is not None and lows is not None else (closes*0, closes*0)
-        atr = _compute_atr(highs, lows, closes) if highs is not None and lows is not None else closes*0
-
-        # FIXED: Add day_of_week
-        day_of_week = float(pd.Timestamp(date.today()).dayofweek)
-        
-        # FIXED: Add ma_dist_5 and ma_dist_200 (was missing)
-        ma_dist_5 = (current_price / ma5.iloc[-1] - 1) if len(ma5.dropna()) > 0 and ma5.iloc[-1] else 0.0
-        ma_dist_200 = (current_price / ma200.iloc[-1] - 1) if len(ma200.dropna()) > 0 and ma200.iloc[-1] else 0.0
-
-        # FIXED (Fase 0.2): live parity for features used in ML_TRAIN_FEATURES
-        candle_range = (float(highs.dropna().iloc[-1]) - float(lows.dropna().iloc[-1])) if highs is not None and lows is not None and len(highs.dropna()) > 0 and len(lows.dropna()) > 0 else 0.0
-        latest_open = float(opens.dropna().iloc[-1]) if opens is not None and len(opens.dropna()) > 0 else current_price
-        body_ratio = abs(current_price - latest_open) / candle_range if candle_range > 0 else 0.0
-        gap_continuation = ((opens.dropna().iloc[-1] / closes.iloc[-2] - 1) * returns.iloc[-2]) if opens is not None and len(opens.dropna()) > 0 and len(closes) > 2 and len(returns) > 1 else 0.0
-        rsi_series = _compute_rsi(closes, 14)
-        rsi_14_prev = float(rsi_series.iloc[-2]) if len(rsi_series.dropna()) > 1 else 50.0
-        vol_clean = volumes.dropna() if volumes is not None else pd.Series(dtype=float)
-        prev_vol_mean = vol_clean.tail(21).iloc[:-1].mean() if len(vol_clean) > 21 else 0.0
-        volume_spike_prev = float(vol_clean.iloc[-2] / prev_vol_mean) if len(vol_clean) > 21 and prev_vol_mean else 0.0
-
-        vwap_deviation_20d = 0.0
-        ob_imbalance_proxy_20d = 0.0
-        range_concentration_20d = 0.0
-        if highs is not None and lows is not None and volumes is not None and len(ohlcv) >= 20:
-            tmp = pd.DataFrame({
-                "High": highs,
-                "Low": lows,
-                "Close": closes,
-                "Volume": volumes,
-            }).dropna().tail(20)
-            if len(tmp) >= 10:
-                tp20 = (tmp["High"] + tmp["Low"] + tmp["Close"]) / 3.0
-                vol_sum = tmp["Volume"].sum()
-                if vol_sum:
-                    vwap20 = float((tp20 * tmp["Volume"]).sum() / vol_sum)
-                    vwap_deviation_20d = (current_price / vwap20 - 1) if vwap20 else 0.0
-                upper = (tmp["High"] - tp20).clip(lower=0)
-                lower = (tp20 - tmp["Low"]).clip(lower=0)
-                ob_imbalance_proxy_20d = float(((upper - lower) / tmp["Volume"].replace(0, np.nan)).mean()) if len(tmp) else 0.0
-                price_range20 = float(tmp["High"].max() - tmp["Low"].min())
-                if price_range20 > 0:
-                    recent5 = tmp.tail(5)
-                    range_concentration_20d = float((recent5["High"].max() - recent5["Low"].min()) / price_range20)
-
-        price_features = {
-            "ret_1d": ret_1d_current,
-            "ret_1d_lag1": ret_1d_lag1,
-            "ret_1d_lag2": ret_1d_lag2,
-            "ret_1d_lag3": ret_1d_lag3,
-            "ret_1d_lag4": ret_1d_lag4,
-            "ret_1d_lag5": ret_1d_lag5,
-            "ret_2d": ret_2d,
-            "ret_3d": (closes.iloc[-1] / closes.iloc[-4] - 1) if len(closes) > 4 else 0.0,
-            "ret_5d": (closes.iloc[-1] / closes.iloc[-6] - 1) if len(closes) > 6 else 0.0,
-            "ret_10d": ret_10d,
-            "volatility_10d": volatility_10d,
-            "volatility_20d": volatility_20d,
-            "ret_1d_zscore": ret_1d_zscore,
-            "vol_trend_5d": vol_trend_5d,
-            "gap_open": (opens.dropna().iloc[-1] / closes.iloc[-2] - 1) if opens is not None and len(opens.dropna()) > 0 and len(closes) > 2 else 0.0,
-            "ma_dist_5": ma_dist_5,
-            "ma_dist_20": (current_price / ma20.iloc[-1] - 1) if len(ma20.dropna()) > 0 and ma20.iloc[-1] else 0.0,
-            "ma_dist_50": (current_price / ma50.iloc[-1] - 1) if len(ma50.dropna()) > 0 and ma50.iloc[-1] else 0.0,
-            "ma_dist_200": ma_dist_200,
-            "close_to_high": close_to_high,
-            "close_to_low": close_to_low,
-            "body_ratio": body_ratio,
-            "volume_spike": volume_spike,
-            "volume_spike_prev": volume_spike_prev,
-            "support_proximity": _proximity(current_price, support_near),
-            "resistance_proximity": _proximity(current_price, resistance_near),
-            "range_pct": range_pct,
-            "vwap_deviation_20d": vwap_deviation_20d,
-            "ob_imbalance_proxy_20d": ob_imbalance_proxy_20d,
-            "range_concentration_20d": range_concentration_20d,
-            "macd": float(macd.iloc[-1] / current_price) if len(macd.dropna()) > 0 and current_price > 0 else 0.0,
-            "macd_hist": float(macd_hist.iloc[-1] / current_price) if len(macd_hist.dropna()) > 0 and current_price > 0 else 0.0,
-            "bb_upper_dist": float(current_price / bb_upper.iloc[-1] - 1) if len(bb_upper.dropna()) > 0 else 0.0,
-            "bb_lower_dist": float(current_price / bb_lower.iloc[-1] - 1) if len(bb_lower.dropna()) > 0 else 0.0,
-            "stoch_k": float(stoch_k.iloc[-1]) if len(stoch_k.dropna()) > 0 else 0.0,
-            "stoch_d": float(stoch_d.iloc[-1]) if len(stoch_d.dropna()) > 0 else 0.0,
-            "atr": float(atr.iloc[-1] / current_price) if len(atr.dropna()) > 0 and current_price > 0 else 0.0,
-            "day_of_week": day_of_week,
-            "gap_continuation": gap_continuation,
-            "rsi_14_prev": rsi_14_prev,
-        }
-
-        # Candlestick Pattern Features for Live ML Inference
-        candlestick_patterns = tech.get("candlestick_patterns", [])
-        if candlestick_patterns:
-            max_wr = max([p.get("win_rate_bei", 0.5) for p in candlestick_patterns], default=0.5)
-            has_bull = any(p.get("signal") in ["BULLISH", "STRONG BULLISH"] for p in candlestick_patterns)
-            has_bear = any(p.get("signal") == "BEARISH" for p in candlestick_patterns)
-            price_features["candlestick_winrate"] = float(max_wr)
-            price_features["is_bullish_pattern"] = 1.0 if has_bull else 0.0
-            price_features["is_bearish_pattern"] = 1.0 if has_bear else 0.0
-        else:
-            price_features["candlestick_winrate"] = 0.50
-            price_features["is_bullish_pattern"] = 0.0
-            price_features["is_bearish_pattern"] = 0.0
+        try:
+            market = compute_ohlcv_features(
+                ohlcv, ihsg=_fetch_ihsg_history(), ticker=ticker
+            )
+            if len(market):
+                price_features = market.iloc[-1].to_dict()
+        except Exception as e:
+            logger.warning(f"compute_ohlcv_features gagal untuk {ticker}: {e}")
     else:
-        # Fallback: all zeros if OHLCV missing
-        price_features = {f"ret_{i}d": 0.0 for i in [1, 2, 3, 5, 10]}
-        price_features.update({f"ret_1d_lag{i}": 0.0 for i in range(1, 6)})
-        price_features.update({
-            "volatility_10d": 0.0,
-            "volatility_20d": 0.0,
-            "ret_1d_zscore": 0.0,
-            "vol_trend_5d": 0.0,
-            "gap_open": 0.0,
-            "ma_dist_5": 0.0,
-            "ma_dist_20": 0.0,
-            "ma_dist_50": 0.0,
-            "ma_dist_200": 0.0,
-            "close_to_high": 0.0,
-            "close_to_low": 0.0,
-            "volume_spike": 0.0,
-            "volume_spike_prev": 0.0,
-            "support_proximity": 0.0,
-            "resistance_proximity": 0.0,
-            "range_pct": 0.0,
-            "vwap_deviation_20d": 0.0,
-            "ob_imbalance_proxy_20d": 0.0,
-            "range_concentration_20d": 0.0,
-            "macd": 0.0,
-            "macd_hist": 0.0,
-            "bb_upper_dist": 0.0,
-            "bb_lower_dist": 0.0,
-            "stoch_k": 0.0,
-            "stoch_d": 0.0,
-            "atr": 0.0,
-            "day_of_week": 0.0,
-            "gap_continuation": 0.0,
-            "rsi_14_prev": 50.0,
-            "body_ratio": 0.0,
-            "candlestick_winrate": 0.50,
-            "is_bullish_pattern": 0.0,
-            "is_bearish_pattern": 0.0,
-        })
+        logger.warning(f"{ticker}: OHLCV kosong — seluruh fitur pasar jatuh ke 0.0")
 
-    # 5. IHSG market context features for live inference parity with training
-    ihsg_features = {
-        "ihsg_ret_1d": 0.0,
-        "ihsg_ret_5d": 0.0,
-        "ihsg_rsi": 0.0,
-        "ihsg_ma_dist_20": 0.0,
-        "ihsg_volatility": 0.0,
-        "ihsg_trend": 0.0,
-        "stock_vs_ihsg_1d": 0.0,
-        "ihsg_trend_3d": 0.0,
-    }
+    # Support/resistance proximity tetap dari agent: levelnya berasal dari analisis
+    # agent teknikal, bukan turunan OHLCV. (Tidak ada di ML_TRAIN_FEATURES.)
+    current_price = 0.0
     try:
-        ihsg_df = _fetch_ihsg_history()
-        if ihsg_df is not None and not ihsg_df.empty and "close" in ihsg_df:
-            ihsg_close = pd.to_numeric(ihsg_df["close"], errors="coerce").dropna()
-            if len(ihsg_close) > 1:
-                ihsg_ret_1d_series = ihsg_close.pct_change()
-                ihsg_features["ihsg_ret_1d"] = float(ihsg_ret_1d_series.iloc[-1]) if pd.notna(ihsg_ret_1d_series.iloc[-1]) else 0.0
-                ihsg_features["stock_vs_ihsg_1d"] = float(price_features.get("ret_1d", 0.0) - ihsg_features["ihsg_ret_1d"])
-                ihsg_features["ihsg_volatility"] = float(ihsg_ret_1d_series.tail(20).std()) if len(ihsg_ret_1d_series.dropna()) >= 20 else 0.0
-            if len(ihsg_close) > 5:
-                ihsg_features["ihsg_ret_5d"] = float(ihsg_close.iloc[-1] / ihsg_close.iloc[-6] - 1)
-            if len(ihsg_close) > 3:
-                ihsg_features["ihsg_trend_3d"] = float(ihsg_close.iloc[-1] / ihsg_close.iloc[-4] - 1)
-            ihsg_rsi_series = _compute_rsi(ihsg_close, 14)
-            ihsg_features["ihsg_rsi"] = float(ihsg_rsi_series.iloc[-1]) if len(ihsg_rsi_series.dropna()) > 0 else 0.0
-            ihsg_ma20 = ihsg_close.rolling(20).mean()
-            ihsg_ma50 = ihsg_close.rolling(50).mean()
-            ihsg_features["ihsg_ma_dist_20"] = float(ihsg_close.iloc[-1] / ihsg_ma20.iloc[-1] - 1) if len(ihsg_ma20.dropna()) > 0 and ihsg_ma20.iloc[-1] else 0.0
-            ihsg_features["ihsg_trend"] = 1.0 if len(ihsg_ma50.dropna()) > 0 and ihsg_ma20.iloc[-1] > ihsg_ma50.iloc[-1] else 0.0
-    except Exception as e:
-        logger.warning(f"Failed to compute live IHSG features for {ticker}: {e}")
+        closes_live = pd.to_numeric(ohlcv["Close"], errors="coerce").dropna()
+        current_price = float(closes_live.iloc[-1]) if len(closes_live) else 0.0
+    except Exception:
+        pass
+    price_features["support_proximity"] = _proximity(current_price, _parse_number(tech.get("support_near")))
+    price_features["resistance_proximity"] = _proximity(current_price, _parse_number(tech.get("resistance_near")))
+
+    # Candlestick dari agent dipakai HANYA kalau compute_ohlcv_features tidak
+    # menghasilkannya (mis. OHLCV kosong), supaya definisinya tetap satu.
+    candlestick_patterns = tech.get("candlestick_patterns", [])
+    if candlestick_patterns and not price_features.get("candlestick_winrate"):
+        price_features["candlestick_winrate"] = float(
+            max([p.get("win_rate_bei", 0.5) for p in candlestick_patterns], default=0.5)
+        )
+        price_features["is_bullish_pattern"] = 1.0 if any(
+            p.get("signal") in ["BULLISH", "STRONG BULLISH"] for p in candlestick_patterns
+        ) else 0.0
+        price_features["is_bearish_pattern"] = 1.0 if any(
+            p.get("signal") == "BEARISH" for p in candlestick_patterns
+        ) else 0.0
+
+    # bandar_accum_ratio memakai helper bersama: foreign_net_1m dari OHLCV,
+    # dist_avg_1m dari agent/DB. Satu definisi untuk kedua jalur.
+    bandar_features["bandar_accum_ratio"] = _bandar_accum_ratio(
+        float(price_features.get("foreign_net_1m", 0.0) or 0.0),
+        float(bandar_features.get("dist_avg_1m", 0.0) or 0.0),
+    )
 
     # Combine all
-    all_features = {**bandar_features, **tech_features, **macro_features, **price_features, **ihsg_features, **news_report_feats}
+    # ihsg_features sudah tidak ada sebagai dict terpisah: fitur konteks IHSG kini
+    # bagian dari price_features karena dihitung di compute_ohlcv_features().
+    all_features = {**bandar_features, **tech_features, **macro_features, **price_features, **news_report_feats}
     for col in FEATURE_COLUMNS:
         all_features.setdefault(col, 0.0)
     row = pd.DataFrame([all_features])[FEATURE_COLUMNS]
     return row.fillna(0.0)
+
+# ─── Satu Sumber Kebenaran untuk Fitur Turunan Data Pasar ───────────────────
+#
+# Fitur di daftar ini HANYA didefinisikan di compute_ohlcv_features().
+# prepare_training_data() memakai seluruh frame; extract_features() memakai
+# baris terakhir. Jangan pernah menghitung ulang salah satunya di tempat lain.
+#
+# Alasannya konkret: sebelum ini training dan live inference punya dua
+# implementasi terpisah, dan 13 fitur diam-diam melenceng — vol_trend_5d beda
+# skala ~200x (rasio volume vs selisih volatilitas), close_to_high terbalik
+# tanda, rsi/vol_ratio/is_bullish_trend di live diparse dari teks agent, dan
+# fitur foreign di live diambil dari JSON agent padahal training memakai kolom
+# NetForeign. Bug kelas ini tidak pernah memunculkan error — hanya prediksi
+# yang salah dengan tenang. Dijaga oleh scripts/check_feature_parity.py.
+OHLCV_DERIVED_FEATURES = [
+    # Return & lag
+    "ret_1d", "ret_1d_lag1", "ret_1d_lag2", "ret_1d_lag3", "ret_1d_lag4", "ret_1d_lag5",
+    "ret_2d", "ret_3d", "ret_5d", "ret_10d",
+    # Volatilitas
+    "volatility_10d", "volatility_20d", "ret_1d_zscore", "atr",
+    # MA & tren
+    "ma_dist_5", "ma_dist_20", "ma_dist_50", "ma_dist_200", "is_bullish_trend",
+    # Indikator
+    "rsi", "rsi_14_prev", "macd", "macd_hist",
+    "bb_upper_dist", "bb_lower_dist", "stoch_k", "stoch_d",
+    # Volume
+    "vol_ratio", "volume_spike", "volume_spike_prev", "vol_trend_5d",
+    # Struktur candle
+    "close_to_high", "close_to_low", "body_ratio", "range_pct",
+    "gap_open", "gap_continuation", "day_of_week",
+    # Volume profile / orderbook proxy
+    "vol_profile_20d_upper", "vol_profile_20d_mid", "vol_profile_20d_lower",
+    "vwap_deviation_20d", "signed_volume_20d", "ob_imbalance_proxy_20d",
+    "range_concentration_20d",
+    # Candlestick
+    "candlestick_winrate", "is_bullish_pattern", "is_bearish_pattern",
+    # Metadata Stockbit (Frequency / NetForeign / AveragePrice)
+    "day_foreign_net", "foreign_net_7d", "foreign_net_1m", "foreign_flow_zscore",
+    "frequency_1d", "close_vs_avg",
+    # Konteks IHSG
+    "ihsg_ret_1d", "ihsg_ret_5d", "ihsg_rsi", "ihsg_ma_dist_20",
+    "ihsg_volatility", "ihsg_trend", "ihsg_trend_3d", "stock_vs_ihsg_1d",
+]
+
+
+# Baris OHLCV minimum agar SEMUA fitur di OHLCV_DERIVED_FEATURES bisa dihitung.
+# Ditentukan oleh window terpanjang: ma200. Pemanggil live inference WAJIB
+# mengambil setidaknya sebanyak ini, kalau tidak ma_dist_200 diam-diam jadi 0.0
+# sementara di training nilainya nyata.
+MIN_HISTORY_ROWS = 200
+
+
+def _bandar_accum_ratio(foreign_net_1m, dist_avg_1m):
+    """
+    Satu definisi bandar_accum_ratio, dipakai training (Series) maupun live (skalar).
+
+    Tidak masuk compute_ohlcv_features() karena mencampur dua sumber:
+    foreign_net_1m dari kolom NetForeign, dist_avg_1m dari tabel BrokerAccumulation.
+    """
+    if hasattr(foreign_net_1m, "astype"):
+        return ((foreign_net_1m > 0) & (dist_avg_1m < 5.0)).astype(float)
+    return float(foreign_net_1m > 0 and dist_avg_1m < 5.0)
+
+
+def compute_ohlcv_features(ohlcv: pd.DataFrame, ihsg: pd.DataFrame | None = None,
+                           ticker: str | None = None) -> pd.DataFrame:
+    """
+    Hitung semua fitur turunan data pasar — satu baris per tanggal.
+
+    SATU-SATUNYA definisi untuk fitur di OHLCV_DERIVED_FEATURES. Vectorized supaya
+    bisa dipakai dua jalur sekaligus:
+      - training  : prepare_training_data() memakai seluruh frame
+      - inference : extract_features() memakai .iloc[-1]
+
+    Args:
+        ohlcv : DataFrame ber-index tanggal dengan Open/High/Low/Close/Volume.
+                Kolom opsional Frequency/NetForeign/AveragePrice (ada di Stockbit,
+                tidak ada di fallback yfinance) dicocokkan case-insensitive.
+        ihsg  : OHLCV IHSG untuk fitur konteks pasar; None -> fitur IHSG jadi 0.
+        ticker: hanya untuk pesan log.
+
+    Returns:
+        DataFrame ber-index sama dengan `ohlcv`, berisi kolom OHLCV_DERIVED_FEATURES.
+    """
+    tag = ticker or "?"
+    df = ohlcv.copy()
+    df.index = pd.to_datetime(df.index)
+    df = df.sort_index()
+    out = pd.DataFrame(index=df.index)
+
+    # Window terpanjang yang dipakai fungsi ini adalah 200 hari (ma_dist_200).
+    # Kalau input lebih pendek, fitur itu jadi NaN lalu diisi 0.0 — nilai yang
+    # TAMPAK sah ("harga tepat di MA200") padahal artinya "tidak diketahui".
+    # Di training window-nya panjang sehingga nilainya nyata, jadi input pendek
+    # di live inference menghasilkan train/serve skew yang tidak terlihat.
+    if len(df) < MIN_HISTORY_ROWS:
+        logger.warning(
+            "%s: hanya %d baris OHLCV (< %d). Fitur berwindow panjang (ma_dist_200, "
+            "ma_dist_50) akan jatuh ke 0.0 dan TIDAK cocok dengan nilai saat training. "
+            "Perpanjang periode fetch pemanggil.",
+            tag, len(df), MIN_HISTORY_ROWS,
+        )
+
+    # ── Return & lag ────────────────────────────────────────────────────
+    out['ret_1d'] = df['Close'].pct_change()
+    for lag in range(1, 6):
+        out[f'ret_1d_lag{lag}'] = out['ret_1d'].shift(lag)
+    out['ret_2d'] = df['Close'].pct_change(2)
+    out['ret_3d'] = df['Close'].pct_change(3)
+    out['ret_5d'] = df['Close'].pct_change(5)
+    out['ret_10d'] = df['Close'].pct_change(10)
+
+    # ── Volatilitas ─────────────────────────────────────────────────────
+    out['volatility_10d'] = out['ret_1d'].rolling(10).std()
+    out['volatility_20d'] = out['ret_1d'].rolling(20).std()
+    ret_mean = out['ret_1d'].rolling(20).mean()
+    ret_std = out['ret_1d'].rolling(20).std().replace(0, np.nan)
+    out['ret_1d_zscore'] = (out['ret_1d'] - ret_mean) / ret_std
+
+    # ── Moving average ──────────────────────────────────────────────────
+    ma5 = df['Close'].rolling(5).mean()
+    ma20 = df['Close'].rolling(20).mean()
+    ma50 = df['Close'].rolling(50).mean()
+    ma200 = df['Close'].rolling(200).mean()
+    out['ma_dist_5'] = df['Close'] / ma5 - 1
+    out['ma_dist_20'] = df['Close'] / ma20 - 1
+    out['ma_dist_50'] = df['Close'] / ma50 - 1
+    out['ma_dist_200'] = df['Close'] / ma200 - 1
+    out['is_bullish_trend'] = (ma20 > ma50).astype(float)
+
+    # ── Indikator teknikal ──────────────────────────────────────────────
+    rsi_series = _compute_rsi(df['Close'], 14)
+    out['rsi'] = rsi_series
+    # Di-shift 1 hari untuk menghindari lookahead pada sinyal hari yang sama.
+    out['rsi_14_prev'] = rsi_series.shift(1)
+
+    macd, macd_hist = _compute_macd(df['Close'])
+    bb_upper, bb_lower = _compute_bb(df['Close'])
+    stoch_k, stoch_d = _compute_stoch(df['High'], df['Low'], df['Close'])
+    atr = _compute_atr(df['High'], df['Low'], df['Close'])
+    out['macd'] = macd / df['Close']
+    out['macd_hist'] = macd_hist / df['Close']
+    out['bb_upper_dist'] = df['Close'] / bb_upper - 1
+    out['bb_lower_dist'] = df['Close'] / bb_lower - 1
+    out['stoch_k'] = stoch_k
+    out['stoch_d'] = stoch_d
+    out['atr'] = atr / df['Close']
+
+    # ── Volume ──────────────────────────────────────────────────────────
+    vol_ma20 = df['Volume'].rolling(20).mean()
+    out['vol_ratio'] = df['Volume'] / vol_ma20
+    out['volume_spike'] = df['Volume'] / vol_ma20
+    out['volume_spike_prev'] = out['volume_spike'].shift(1)
+    out['vol_trend_5d'] = df['Volume'].rolling(5).mean() / vol_ma20
+
+    # ── Struktur candle ─────────────────────────────────────────────────
+    out['range_pct'] = (df['High'] - df['Low']) / df['Close']
+    out['gap_open'] = df['Open'] / df['Close'].shift(1) - 1
+    candle_range = (df['High'] - df['Low']).replace(0, np.nan)
+    out['close_to_high'] = (df['High'] - df['Close']) / df['Close']   # upper wick ratio
+    out['close_to_low'] = (df['Close'] - df['Low']) / df['Close']     # lower wick
+    out['body_ratio'] = (df['Close'] - df['Open']).abs() / candle_range.fillna(1e-8)
+    out['gap_continuation'] = out['gap_open'] * out['ret_1d'].shift(1)
+    out['day_of_week'] = pd.to_datetime(df.index).dayofweek.astype(float)
+
+    # ── Candlestick pattern ─────────────────────────────────────────────
+    body_size_h = (df['Close'] - df['Open']).abs()
+    lower_wick_h = df[['Open', 'Close']].min(axis=1) - df['Low']
+    upper_wick_h = df['High'] - df[['Open', 'Close']].max(axis=1)
+    is_hammer_h = (lower_wick_h > 2 * body_size_h) & (upper_wick_h < 0.3 * body_size_h) & (df['Volume'] > vol_ma20)
+    is_bull_eng_h = (df['Close'] > df['Open']) & (df['Close'].shift(1) < df['Open'].shift(1)) & (df['Close'] >= df['Open'].shift(1)) & (df['Open'] <= df['Close'].shift(1))
+    is_bear_eng_h = (df['Close'] < df['Open']) & (df['Close'].shift(1) > df['Open'].shift(1)) & (df['Open'] >= df['Close'].shift(1)) & (df['Close'] <= df['Open'].shift(1))
+    out['is_bullish_pattern'] = (is_hammer_h | is_bull_eng_h).astype(float)
+    out['is_bearish_pattern'] = is_bear_eng_h.astype(float)
+    out['candlestick_winrate'] = np.where(
+        is_bull_eng_h, 0.68, np.where(is_hammer_h, 0.64, np.where(is_bear_eng_h, 0.34, 0.50))
+    )
+
+    # ── Volume profile / orderbook proxy ────────────────────────────────
+    roll20 = df.rolling(20, min_periods=10)
+    price_min20 = roll20['Low'].min()
+    price_max20 = roll20['High'].max()
+    price_range20 = (price_max20 - price_min20).replace(0, np.nan)
+
+    tp = (df['High'] + df['Low'] + df['Close']) / 3.0
+    vwap20 = (tp * df['Volume']).rolling(20, min_periods=10).sum() / df['Volume'].rolling(20, min_periods=10).sum().replace(0, np.nan)
+    out['vwap_deviation_20d'] = (df['Close'] / vwap20 - 1).fillna(0.0)
+
+    upper = (df['High'] - tp).clip(lower=0)
+    lower = (tp - df['Low']).clip(lower=0)
+    out['ob_imbalance_proxy_20d'] = ((upper - lower) / df['Volume'].replace(0, np.nan)).rolling(20, min_periods=10).mean().fillna(0.0)
+    out['signed_volume_20d'] = (out['ret_1d'] * df['Volume']).rolling(20, min_periods=10).sum().fillna(0.0)
+
+    h5 = df['High'].rolling(5, min_periods=3).max()
+    l5 = df['Low'].rolling(5, min_periods=3).min()
+    out['range_concentration_20d'] = ((h5 - l5) / price_range20).fillna(0.0)
+
+    close_pos = (df['Close'] - price_min20) / price_range20
+    vol_sum20 = df['Volume'].rolling(20, min_periods=10).sum().replace(0, np.nan)
+    for name, mask in (
+        ('vol_profile_20d_upper', close_pos >= 0.66),
+        ('vol_profile_20d_mid', (close_pos >= 0.33) & (close_pos < 0.66)),
+        ('vol_profile_20d_lower', close_pos < 0.33),
+    ):
+        out[name] = ((df['Volume'] * mask.astype(int)).rolling(20, min_periods=10).sum() / vol_sum20).fillna(0.0)
+
+    # ── Metadata Stockbit ───────────────────────────────────────────────
+    # Dicocokkan case-insensitive lewat _pick_col(). Kalau kolomnya benar-benar
+    # tidak ada (fallback yfinance), log warning — JANGAN diam-diam jatuh ke 0.0,
+    # karena persis itu yang membuat bug NetForeign lolos berbulan-bulan.
+    nf_col = _pick_col(df, 'NetForeign')
+    if nf_col:
+        out['day_foreign_net'] = df[nf_col] / 1e9
+    else:
+        logger.warning(
+            f"{tag}: kolom NetForeign tidak ada — day_foreign_net, foreign_net_7d/1m, "
+            f"foreign_flow_zscore akan konstan 0 (sumber data kemungkinan yfinance)"
+        )
+        out['day_foreign_net'] = 0.0
+    out['foreign_net_7d'] = out['day_foreign_net'].rolling(7).sum().fillna(0.0)
+    out['foreign_net_1m'] = out['day_foreign_net'].rolling(30).sum().fillna(0.0)
+
+    fn7 = out['foreign_net_7d']
+    fn_std = fn7.rolling(20).std().replace(0, np.nan)
+    out['foreign_flow_zscore'] = ((fn7 - fn7.rolling(20).mean()) / fn_std).fillna(0.0)
+
+    freq_col = _pick_col(df, 'Frequency')
+    if freq_col:
+        out['frequency_1d'] = df[freq_col]
+    else:
+        logger.warning(f"{tag}: kolom Frequency tidak ada — frequency_1d konstan 0")
+        out['frequency_1d'] = 0.0
+
+    avg_col = _pick_col(df, 'AveragePrice')
+    if avg_col:
+        out['close_vs_avg'] = (df['Close'] / df[avg_col].replace(0, np.nan) - 1).fillna(0.0)
+    else:
+        logger.warning(f"{tag}: kolom AveragePrice tidak ada — close_vs_avg konstan 0")
+        out['close_vs_avg'] = 0.0
+
+    # ── Konteks IHSG ────────────────────────────────────────────────────
+    ihsg_cols = ['ihsg_ret_1d', 'ihsg_ret_5d', 'ihsg_rsi', 'ihsg_ma_dist_20',
+                 'ihsg_volatility', 'ihsg_trend', 'ihsg_trend_3d']
+    if ihsg is not None and not ihsg.empty and 'close' in ihsg:
+        ic = pd.to_numeric(ihsg['close'], errors='coerce')
+        ihsg_ma20 = ic.rolling(20).mean()
+        ihsg_ma50 = ic.rolling(50).mean()
+        ihsg_feats = pd.DataFrame({
+            'ihsg_ret_1d': ic.pct_change(),
+            'ihsg_ret_5d': ic.pct_change(5),
+            # Sebelumnya prepare_training_data membaca 'ihsg_ret_3d' yang tidak pernah
+            # dibuat, sehingga ihsg_trend_3d konstan 0 di training tapi bernilai nyata
+            # di live inference.
+            'ihsg_trend_3d': ic.pct_change(3),
+            'ihsg_rsi': _compute_rsi(ic, 14),
+            'ihsg_ma_dist_20': ic / ihsg_ma20 - 1,
+            'ihsg_volatility': ic.pct_change().rolling(20).std(),
+            'ihsg_trend': (ihsg_ma20 > ihsg_ma50).astype(float),
+        }, index=ihsg.index)
+        out = out.join(ihsg_feats, how='left')
+        out['stock_vs_ihsg_1d'] = out['ret_1d'] - out['ihsg_ret_1d'].fillna(0)
+    else:
+        logger.warning(f"{tag}: history IHSG tidak tersedia — fitur konteks pasar konstan 0")
+        for col in ihsg_cols:
+            out[col] = 0.0
+        out['stock_vs_ihsg_1d'] = 0.0
+
+    for col in OHLCV_DERIVED_FEATURES:
+        if col not in out.columns:
+            out[col] = 0.0
+    return out[OHLCV_DERIVED_FEATURES]
+
 
 def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlcv: dict[str, pd.DataFrame] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -1132,197 +1243,12 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df['target_5d'] = (df['Close'].shift(-5) > df['Close'] * 1.010).astype(int)
     df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.015).astype(int)
 
-    # Simple Technical Features for History
-    df['ret_1d'] = df['Close'].pct_change()
-    df['ret_1d_lag1'] = df['ret_1d'].shift(1)
-    df['ret_1d_lag2'] = df['ret_1d'].shift(2)
-    df['ret_1d_lag3'] = df['ret_1d'].shift(3)
-    df['ret_1d_lag4'] = df['ret_1d'].shift(4)
-    df['ret_1d_lag5'] = df['ret_1d'].shift(5)
-    df['ret_3d'] = df['Close'].pct_change(3)
-    df['ret_5d'] = df['Close'].pct_change(5)
-    df['volatility_10d'] = df['ret_1d'].rolling(10).std()
-    df['volatility_20d'] = df['ret_1d'].rolling(20).std()
-
-    # Moving Average distances
-    df['ma5'] = df['Close'].rolling(5).mean()
-    df['ma20'] = df['Close'].rolling(20).mean()
-    df['ma50'] = df['Close'].rolling(50).mean()
-    df['ma200'] = df['Close'].rolling(200).mean()
-    df['ma_dist_5'] = df['Close'] / df['ma5'] - 1
-    df['ma_dist_20'] = df['Close'] / df['ma20'] - 1
-    df['ma_dist_50'] = df['Close'] / df['ma50'] - 1
-    df['ma_dist_200'] = df['Close'] / df['ma200'] - 1
-    
-    # Calculate RSI and Trend historically
-    df['rsi'] = _compute_rsi(df['Close'], 14)
-    df['is_bullish_trend'] = (df['ma20'] > df['ma50']).astype(float)
-    
-    # Volume Ratio historical
-    vol_ma20 = df['Volume'].rolling(20).mean()
-    df['vol_ratio'] = df['Volume'] / vol_ma20
-    
-    # Additional OHLCV-derived features for Day-1 parity
-    df['volume_spike'] = df['Volume'] / vol_ma20
-    df['range_pct'] = (df['High'] - df['Low']) / df['Close']
-    df['gap_open'] = df['Open'] / df['Close'].shift(1) - 1
-
-    # New Stockbit Metadata Features
-    # Dicocokkan case-insensitive lewat _pick_col() supaya tidak bergantung
-    # pemanggil sudah menormalkan nama kolom atau belum. Kalau kolomnya benar-benar
-    # tidak ada, log warning — bug sebelumnya lolos berbulan-bulan justru karena
-    # diam-diam jatuh ke default 0.0 tanpa jejak.
-    nf_col = _pick_col(df, 'NetForeign')
-    if nf_col:
-        df['day_foreign_net'] = df[nf_col] / 1e9
-    else:
-        logger.warning(
-            f"{ticker or '?'}: kolom NetForeign tidak ada — day_foreign_net, "
-            f"foreign_net_7d/1m, foreign_flow_zscore, bandar_accum_ratio akan konstan 0"
-        )
-        df['day_foreign_net'] = 0.0
-    df['foreign_net_7d'] = df['day_foreign_net'].rolling(7).sum().fillna(0.0)
-    df['foreign_net_1m'] = df['day_foreign_net'].rolling(30).sum().fillna(0.0)
-
-    freq_col = _pick_col(df, 'Frequency')
-    if freq_col:
-        df['frequency_1d'] = df[freq_col]
-    else:
-        logger.warning(f"{ticker or '?'}: kolom Frequency tidak ada — frequency_1d konstan 0")
-        df['frequency_1d'] = 0.0
-
-    avg_col = _pick_col(df, 'AveragePrice')
-    if avg_col:
-        df['close_vs_avg'] = (df['Close'] / df[avg_col].replace(0, np.nan) - 1).fillna(0.0)
-    else:
-        logger.warning(f"{ticker or '?'}: kolom AveragePrice tidak ada — close_vs_avg konstan 0")
-        df['close_vs_avg'] = 0.0
-
-    # Advanced Indicators
-    macd, macd_hist = _compute_macd(df['Close'])
-    bb_upper, bb_lower = _compute_bb(df['Close'])
-    stoch_k, stoch_d = _compute_stoch(df['High'], df['Low'], df['Close'])
-    atr = _compute_atr(df['High'], df['Low'], df['Close'])
-
-    df['macd'] = macd / df['Close']
-    df['macd_hist'] = macd_hist / df['Close']
-    df['bb_upper_dist'] = df['Close'] / bb_upper - 1
-    df['bb_lower_dist'] = df['Close'] / bb_lower - 1
-    df['stoch_k'] = stoch_k
-    df['stoch_d'] = stoch_d
-    df['atr'] = atr / df['Close']
-
-    # Candlestick Pattern Features historically for ML Training
-    body_size_h = (df['Close'] - df['Open']).abs()
-    lower_wick_h = df[['Open', 'Close']].min(axis=1) - df['Low']
-    upper_wick_h = df['High'] - df[['Open', 'Close']].max(axis=1)
-    is_hammer_h = (lower_wick_h > 2 * body_size_h) & (upper_wick_h < 0.3 * body_size_h) & (df['Volume'] > vol_ma20)
-    is_bull_eng_h = (df['Close'] > df['Open']) & (df['Close'].shift(1) < df['Open'].shift(1)) & (df['Close'] >= df['Open'].shift(1)) & (df['Open'] <= df['Close'].shift(1))
-    is_bear_eng_h = (df['Close'] < df['Open']) & (df['Close'].shift(1) > df['Open'].shift(1)) & (df['Open'] >= df['Close'].shift(1)) & (df['Close'] <= df['Open'].shift(1))
-
-    df['is_bullish_pattern'] = (is_hammer_h | is_bull_eng_h).astype(float)
-    df['is_bearish_pattern'] = (is_bear_eng_h).astype(float)
-    df['candlestick_winrate'] = np.where(is_bull_eng_h, 0.68, np.where(is_hammer_h, 0.64, np.where(is_bear_eng_h, 0.34, 0.50)))
-
-    # ── Volume profile / orderbook-proxy from OHLCV ─────────────────────
-    roll20 = df.rolling(20, min_periods=10)
-    price_min20 = roll20['Low'].min()
-    price_max20 = roll20['High'].max()
-    price_range20 = (price_max20 - price_min20).replace(0, np.nan)
-
-    # VWAP approx from today-style cumulative TP * Volume / ΣVolume over 20d(window)
-    tp = (df['High'] + df['Low'] + df['Close']) / 3.0
-    vwap20 = (tp * df['Volume']).rolling(20, min_periods=10).sum() / df['Volume'].rolling(20, min_periods=10).sum().replace(0, np.nan)
-    df['vwap_deviation_20d'] = (df['Close'] / vwap20 - 1).fillna(0.0)
-
-    # Volume segmented by relative price bucket inside each day: upper/mid/lower 33%
-    upper = (df['High'] - (df['High'] + df['Low'] + df['Close']) / 3.0).clip(lower=0)
-    lower = ((df['High'] + df['Low'] + df['Close']) / 3.0 - df['Low']).clip(lower=0)
-    mid = df['Volume'] - upper - lower
-    df['ob_imbalance_proxy_20d'] = ((upper - lower) / df['Volume'].replace(0, np.nan)).rolling(20, min_periods=10).mean().fillna(0.0)
-    df['signed_volume_20d'] = (df['ret_1d'] * df['Volume']).rolling(20, min_periods=10).sum().fillna(0.0)
-
-    # Range concentration: how much of 20d range is consumed by recent 5d high-low
-    h5 = df['High'].rolling(5, min_periods=3).max()
-    l5 = df['Low'].rolling(5, min_periods=3).min()
-    df['range_concentration_20d'] = ((h5 - l5) / price_range20).fillna(0.0)
-
-    # Volume-at-band: share of 20d volume when price in upper/mid/lower 3rd of 20d range
-    close_pos = (df['Close'] - price_min20) / price_range20
-    up_mask = (close_pos >= 0.66)
-    mid_mask = (close_pos >= 0.33) & (close_pos < 0.66)
-    low_mask = (close_pos < 0.33)
-    vol_up = (df['Volume'] * up_mask.astype(int)).rolling(20, min_periods=10).sum()
-    vol_mid = (df['Volume'] * mid_mask.astype(int)).rolling(20, min_periods=10).sum()
-    vol_low = (df['Volume'] * low_mask.astype(int)).rolling(20, min_periods=10).sum()
-    vol_sum20 = df['Volume'].rolling(20, min_periods=10).sum().replace(0, np.nan)
-    df['vol_profile_20d_upper'] = (vol_up / vol_sum20).fillna(0.0)
-    df['vol_profile_20d_mid'] = (vol_mid / vol_sum20).fillna(0.0)
-    df['vol_profile_20d_lower'] = (vol_low / vol_sum20).fillna(0.0)
-
-    # ── Day-1 Specific Features ──────────────────────────────────────────────
-    # Intraday candle structure
-    candle_range = (df['High'] - df['Low']).replace(0, np.nan)
-    df['close_to_high'] = (df['High'] - df['Close']) / df['Close']   # upper wick ratio
-    df['close_to_low'] = (df['Close'] - df['Low']) / df['Close']     # lower wick (bullish if big)
-    df['body_ratio'] = (df['Close'] - df['Open']).abs() / candle_range.fillna(1e-8)  # body vs full range
-
-    # Mean-reversion z-score of daily return
-    ret_mean = df['ret_1d'].rolling(20).mean()
-    ret_std = df['ret_1d'].rolling(20).std().replace(0, np.nan)
-    df['ret_1d_zscore'] = (df['ret_1d'] - ret_mean) / ret_std  # negative = oversold bounce signal
-
-    # Short-term volume trend (accelerating vs decelerating)
-    df['vol_trend_5d'] = df['Volume'].rolling(5).mean() / vol_ma20
-
-    # Day-of-week (Senin=0, Jumat=4) — market anomaly effect
-    df['day_of_week'] = pd.to_datetime(df.index).dayofweek.astype(float)
-
-    # Gap continuation: gap size × previous day return direction
-    df['gap_continuation'] = df['gap_open'] * df['ret_1d'].shift(1)
-
-    # Longer return horizons
-    df['ret_2d'] = df['Close'].pct_change(2)
-    df['ret_10d'] = df['Close'].pct_change(10)
-
-    # Lagged RSI (1-day lag to avoid lookahead on same-day signal)
-    rsi_series = _compute_rsi(df['Close'], 14)
-    df['rsi_14_prev'] = rsi_series.shift(1)
-
-    # Lagged volume spike
-    df['volume_spike_prev'] = df['volume_spike'].shift(1)
-
-    # ── IHSG Market Context Features ──────────────────────────────────────
-    ihsg_df = _fetch_ihsg_history()
-    if ihsg_df is not None and not ihsg_df.empty:
-        # Compute IHSG indicators
-        ihsg_ret_1d = ihsg_df['close'].pct_change()
-        ihsg_ret_5d = ihsg_df['close'].pct_change(5)
-        ihsg_rsi = _compute_rsi(ihsg_df['close'], 14)
-        ihsg_ma20 = ihsg_df['close'].rolling(20).mean()
-        ihsg_ma50 = ihsg_df['close'].rolling(50).mean()
-        ihsg_ma_dist_20 = ihsg_df['close'] / ihsg_ma20 - 1
-        ihsg_volatility = ihsg_ret_1d.rolling(20).std()
-        ihsg_trend = (ihsg_ma20 > ihsg_ma50).astype(float)
-
-        ihsg_features = pd.DataFrame({
-            'ihsg_ret_1d': ihsg_ret_1d,
-            'ihsg_ret_5d': ihsg_ret_5d,
-            'ihsg_rsi': ihsg_rsi,
-            'ihsg_ma_dist_20': ihsg_ma_dist_20,
-            'ihsg_volatility': ihsg_volatility,
-            'ihsg_trend': ihsg_trend,
-        }, index=ihsg_df.index)
-
-        # Join on date index
-        df = df.join(ihsg_features, how='left')
-
-        # Relative strength: stock return vs IHSG return
-        df['stock_vs_ihsg_1d'] = df['ret_1d'] - df['ihsg_ret_1d'].fillna(0)
-    else:
-        for col in ['ihsg_ret_1d', 'ihsg_ret_5d', 'ihsg_rsi', 'ihsg_ma_dist_20',
-                     'ihsg_volatility', 'ihsg_trend', 'stock_vs_ihsg_1d']:
-            df[col] = 0.0
+    # Seluruh fitur turunan data pasar dihitung oleh SATU fungsi yang dipakai
+    # bersama dengan extract_features() — lihat compute_ohlcv_features().
+    # Sebelumnya blok ini diduplikasi di jalur live inference dan 13 fitur
+    # diam-diam melenceng definisinya.
+    market = compute_ohlcv_features(df, ihsg=_fetch_ihsg_history(), ticker=ticker)
+    df = df.join(market, how="left")
 
     # Fetch from database if ticker is provided
     db_scores = None
@@ -1383,71 +1309,27 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
         df["dist_avg_7d"] = ((df["Close"] - df["avg_7d"]) / df["avg_7d"] * 100).fillna(0.0)
         df["dist_avg_1m"] = ((df["Close"] - df["avg_1m"]) / df["avg_1m"] * 100).fillna(0.0)
 
-    # ── Sector context features from universe OHLCV ───────────────────────
-    sector_today_defaults = {
-        "ticker_sector_id": float(_get_sector_id(SECTOR_MAP.get(ticker.lower() if ticker else "", "unknown"))),
-        "dominant_sector_id": float(_get_sector_id("unknown")),
-        "dominant_sector_ret_1d": 0.0,
-        "dominant_sector_ret_5d": 0.0,
-        "stock_vs_sector_1d": 0.0,
-        "stock_vs_sector_5d": 0.0,
-        "sector_strength_vs_ihsg": 0.0,
-    }
+    # ── Fitur sektor DIHAPUS (look-ahead) ─────────────────────────────────
+    # Blok sebelumnya di sini menghitung dominant_sector_ret_1d/5d,
+    # stock_vs_sector_1d/5d, dan sector_strength_vs_ihsg sebagai SKALAR dari
+    # tanggal TERAKHIR, lalu menyiarkannya ke seluruh baris (`df[col] = val`).
+    # Artinya baris training tahun 2019 menerima nilai sektor tahun 2026 —
+    # look-ahead penuh. Selama ini tidak berdampak hanya karena fitur-fitur itu
+    # tidak ada di FEATURE_COLUMNS sehingga terbuang saat `return df[FEATURE_COLUMNS]`,
+    # jadi ia landmine yang menunggu seseorang menambahkannya ke daftar fitur.
+    #
+    # Bonus: implementasinya juga sudah mati tanpa disadari —
+    # `index.get_loc(td, method="nearest")` memakai argumen yang dihapus di
+    # pandas 2.x, sehingga selalu masuk `except` dan mengembalikan 0.0.
+    #
+    # Kalau fitur sektor mau dihidupkan lagi, hitung per-baris secara vectorized
+    # di compute_ohlcv_features() (butuh universe OHLCV sebagai input), JANGAN
+    # sebagai skalar yang disiarkan.
     if universe_ohlcv:
-        try:
-            def_sector = "unknown"
-            ticker_sector = SECTOR_MAP.get(ticker.lower() if ticker else "", "unknown")
-            sector_today_defaults["ticker_sector_id"] = float(_get_sector_id(ticker_sector))
-            td = pd.Timestamp(df.index[-1])
-            dom_sector = _dominant_sector_on_date(universe_ohlcv, td)
-            if dom_sector not in (None, "", "unknown"):
-                def_sector = dom_sector
-            dom_id = _get_sector_id(def_sector)
-            sector_today_defaults["dominant_sector_id"] = float(dom_id)
-
-            def _sector_ret(sector_name: str, window: int) -> float:
-                vals = []
-                for tk, udf in universe_ohlcv.items():
-                    if tk.upper() == "IHSG":
-                        continue
-                    if SECTOR_MAP.get(tk.lower(), "unknown") != sector_name:
-                        continue
-                    if udf is None or udf.empty:
-                        continue
-                    try:
-                        idx = udf.index.get_loc(td, method="nearest")
-                        idx = int(idx)
-                    except Exception:
-                        continue
-                    if idx - window < 0 or idx >= len(udf):
-                        continue
-                    try:
-                        prev = float(udf.iloc[idx - window].get("Close", 0) or 0)
-                        curr = float(udf.iloc[idx].get("Close", 0) or 0)
-                    except Exception:
-                        continue
-                    if prev > 0 and curr > 0:
-                        vals.append(curr / prev - 1)
-                return float(sum(vals) / len(vals)) if vals else 0.0
-
-            prev_idx = min(len(df) - 1, max(0, len(df) - 2))
-            prev_td = pd.Timestamp(df.index[prev_idx])
-            s1d = _sector_ret(def_sector, 1)
-            s5d = _sector_ret(def_sector, 5)
-            sector_today_defaults["dominant_sector_ret_1d"] = s1d
-            sector_today_defaults["dominant_sector_ret_5d"] = s5d
-            sector_today_defaults["stock_vs_sector_1d"] = float(df.iloc[prev_idx]["ret_1d"]) - s1d
-            sector_today_defaults["stock_vs_sector_5d"] = float((df.iloc[-1]["Close"] / df.iloc[max(0, len(df)-6)]["Close"] - 1)) - s5d
-
-            ihsg_ret5 = 0.0
-            if "ihsg_ret_5d" in df.columns:
-                ihsg_ret5 = float(df.iloc[prev_idx]["ihsg_ret_5d"]) if pd.notna(df.iloc[prev_idx].get("ihsg_ret_5d", 0)) else 0.0
-            sector_today_defaults["sector_strength_vs_ihsg"] = s5d - ihsg_ret5
-        except Exception as e:
-            logger.warning(f"Failed to compute sector features for {ticker}: {e}")
-
-    for col, val in sector_today_defaults.items():
-        df[col] = val
+        logger.debug(
+            "universe_ohlcv diberikan tapi fitur sektor sudah dihapus (look-ahead); "
+            "argumen ini kini tidak dipakai."
+        )
 
     # Fill default baseline values for missing DB features
     df["bandarm_score"] = df.get("bandarm_score", pd.Series(5.0, index=df.index)).fillna(5.0)
@@ -1455,30 +1337,24 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df["macro_score"] = df.get("macro_score", pd.Series(5.0, index=df.index)).fillna(5.0)
     
     # NEW PARAMETERS FOR BRAINSTORM
+    # Catatan: ketiganya konstan 5.0 di training. news_score & commodity_score sudah
+    # dikeluarkan dari ML_TRAIN_FEATURES karena konstan di training tapi bervariasi
+    # di live inference — kondisi yang strictly lebih buruk daripada tidak ada fitur.
     df["fundamental_score"] = df.get("fundamental_score", pd.Series(5.0, index=df.index)).fillna(5.0)
     df["news_score"] = df.get("news_score", pd.Series(5.0, index=df.index)).fillna(5.0)
     df["commodity_score"] = df.get("commodity_score", pd.Series(5.0, index=df.index)).fillna(5.0)
-    
-    # BANDARMOLOGI NEW RATIO (0 or 1.0)
-    # If 1-month foreign net buy is positive AND price is not >5% from 1-month true cost
-    cond_bandar = (df.get("foreign_net_1m", pd.Series(0.0, index=df.index)).fillna(0.0) > 0) & \
-                  (df.get("dist_avg_1m", pd.Series(0.0, index=df.index)).fillna(0.0) < 5.0)
-    df["bandar_accum_ratio"] = cond_bandar.astype(float)
-    
-    # IHSG TREND
-    df["ihsg_trend_3d"] = df.get("ihsg_ret_3d", pd.Series(0.0, index=df.index)).fillna(0.0)
 
     df["dist_avg_7d"] = df.get("dist_avg_7d", pd.Series(0.0, index=df.index)).fillna(0.0)
     df["dist_avg_1m"] = df.get("dist_avg_1m", pd.Series(0.0, index=df.index)).fillna(0.0)
-    df["foreign_net_7d"] = df.get("foreign_net_7d", pd.Series(0.0, index=df.index)).fillna(0.0)
-    df["foreign_net_1m"] = df.get("foreign_net_1m", pd.Series(0.0, index=df.index)).fillna(0.0)
     df["is_retail_accum"] = df.get("is_retail_accum", pd.Series(0.0, index=df.index)).fillna(0.0)
 
-    # Foreign flow z-score
-    fn7 = df["foreign_net_7d"]
-    fn_mean = fn7.rolling(20).mean()
-    fn_std = fn7.rolling(20).std().replace(0, np.nan)
-    df["foreign_flow_zscore"] = ((fn7 - fn_mean) / fn_std).fillna(0.0)
+    # foreign_net_7d/1m, foreign_flow_zscore, dan ihsg_trend_3d TIDAK dihitung di sini
+    # lagi — semuanya berasal dari compute_ohlcv_features(). Baris lama yang mengisi
+    # ihsg_trend_3d dari kolom 'ihsg_ret_3d' (yang tidak pernah dibuat) justru akan
+    # menimpa nilai yang benar dengan 0.
+    df["bandar_accum_ratio"] = _bandar_accum_ratio(
+        df["foreign_net_1m"].fillna(0.0), df["dist_avg_1m"].fillna(0.0)
+    )
 
     # Ticker categorical id so the model can share signal across stocks
     df["ticker_id"] = 0 if not ticker else (_ticker_id(ticker))

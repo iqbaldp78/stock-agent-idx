@@ -55,15 +55,40 @@ class PurgedTimeSeriesSplit:
                 yield train_indices, val_indices
 
 
+# Rentang pencarian threshold. Dijadikan konstanta karena angka ini muncul di beberapa
+# tempat dan dipakai juga untuk mendeteksi threshold yang mentok di batas.
+THR_MIN = 0.35
+THR_MAX = 0.65
+THR_STEPS = 31
+
+
+def _warn_if_pinned(thr: float, context: str = "") -> float:
+    """
+    Peringatkan kalau threshold optimal mendarat tepat di batas rentang pencarian.
+
+    Artinya optimizer masih ingin bergerak ke luar rentang tapi tidak bisa — gejala
+    distribusi probabilitas yang tidak terkalibrasi (mis. seluruh probabilitas ada di
+    bawah THR_MIN sehingga model praktis tidak pernah memberi sinyal BUY).
+    """
+    tol = (THR_MAX - THR_MIN) / (THR_STEPS - 1) / 2
+    if thr <= THR_MIN + tol or thr >= THR_MAX - tol:
+        logger.warning(
+            "Threshold optimal mentok di batas rentang [%.2f, %.2f] -> %.3f%s. "
+            "Distribusi probabilitas model kemungkinan tidak terkalibrasi.",
+            THR_MIN, THR_MAX, thr, f" ({context})" if context else "",
+        )
+    return thr
+
+
 def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision: float = 0.40, default: float = 0.50) -> float:
     """
-    Pick threshold in [0.35, 0.65] that maximizes combined Accuracy and F1 score.
+    Pick threshold in [THR_MIN, THR_MAX] that maximizes combined Accuracy and F1 score.
     """
     if len(y_true) == 0 or len(y_prob) == 0:
         return default
 
     candidates = []
-    for thr in np.linspace(0.35, 0.65, 31):
+    for thr in np.linspace(THR_MIN, THR_MAX, THR_STEPS):
         pred_buy = (y_prob >= thr).astype(int)
         acc = np.mean(pred_buy == y_true)
         tp = np.sum((pred_buy == 1) & (y_true == 1))
@@ -80,11 +105,17 @@ def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision
 
     if candidates:
         candidates.sort(reverse=True)
-        return float(candidates[0][4])
+        return _warn_if_pinned(float(candidates[0][4]))
 
+    # Tidak ada threshold yang memenuhi min_precision — longgarkan syaratnya.
+    # Ini sendiri sudah pertanda model lemah, jadi dicatat.
+    logger.warning(
+        "Tidak ada threshold dengan precision >= %.2f; jatuh ke pemilihan tanpa "
+        "batas precision. Model kemungkinan tidak punya daya separasi.", min_precision,
+    )
     best_score = -1.0
     best_thr = default
-    for thr in np.linspace(0.35, 0.65, 31):
+    for thr in np.linspace(THR_MIN, THR_MAX, THR_STEPS):
         pred_buy = (y_prob >= thr).astype(int)
         acc = np.mean(pred_buy == y_true)
         tp = np.sum((pred_buy == 1) & (y_true == 1))
@@ -98,7 +129,7 @@ def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision
             best_score = combined_score
             best_thr = float(thr)
 
-    return float(best_thr)
+    return _warn_if_pinned(float(best_thr), "fallback tanpa batas precision")
 
 
 class MultiDayPredictor:
@@ -124,13 +155,24 @@ class MultiDayPredictor:
         return os.path.join(self.checkpoints_dir, f"lgbm_{self.ticker}_{horizon}_features.json")
 
     def _load_models(self):
+        # Kegagalan load HARUS terlihat di log level produksi. Versi sebelumnya
+        # memakai logger.debug dan tidak melaporkan apa pun ketika file model
+        # sekadar tidak ada — sehingga seluruh inferensi jatuh ke
+        # _rule_based_prediction() tanpa jejak apa pun selama berbulan-bulan.
+        missing = []
         for h in self.horizons:
             path = self._get_model_path(h)
             if os.path.exists(path):
                 try:
                     self.models[h] = joblib.load(path)
                 except Exception as e:
-                    logger.debug(f"Failed to load {h} model for {self.ticker}: {e}")
+                    logger.warning(
+                        "Model %s [%s] ada di %s tapi gagal di-load: %s. "
+                        "Prediksi horizon ini akan memakai fallback rule-based.",
+                        self.ticker, h, path, e,
+                    )
+            else:
+                missing.append(h)
 
             thr_path = self._get_threshold_path(h)
             if os.path.exists(thr_path):
@@ -151,6 +193,26 @@ class MultiDayPredictor:
                             self.selected_features[h] = feats
                 except Exception as e:
                     logger.debug(f"Failed to load features for {h}: {e}")
+
+        if missing:
+            logger.warning(
+                "%s: model tidak ditemukan untuk horizon %s di %s. Prediksi horizon "
+                "tersebut memakai _rule_based_prediction() — BUKAN ML. Jalankan "
+                "`make train-ml-multiday` untuk membuatnya.",
+                self.ticker, "/".join(missing), self.checkpoints_dir,
+            )
+
+    def has_model(self, horizon: str = None) -> bool:
+        """
+        Apakah prediksi berasal dari model terlatih, bukan fallback rule-based?
+
+        Dipakai pemanggil yang perlu membedakan keduanya — hasil predict() sendiri
+        berupa angka probabilitas yang tampak wajar untuk kedua kasus, sehingga
+        tidak bisa dibedakan dari nilainya saja.
+        """
+        if horizon is not None:
+            return self.models.get(horizon) is not None
+        return any(self.models.get(h) is not None for h in self.horizons)
 
     def train_incremental(
         self,

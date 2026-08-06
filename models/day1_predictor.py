@@ -139,7 +139,7 @@ class Day1Predictor:
         ml_pred = 0.0
         if self.model is not None:
             try:
-                model_cols = self.model.feature_name() if hasattr(self.model, "feature_name") else self.feature_cols
+                model_cols = self._model_feature_names()
                 aligned = feature_row.copy()
                 for col in model_cols:
                     if col not in aligned.columns:
@@ -150,6 +150,31 @@ class Day1Predictor:
                 logger.warning("Model predict failed (%s), fallback to 0.0.", e)
         
         return self._ensemble_prediction(feature_row, ml_pred)
+
+    def _model_feature_names(self) -> list:
+        """
+        Kolom yang BENAR-BENAR dipakai model saat dilatih.
+
+        Penting: sklearn API LightGBM mengekspos `feature_name_` (atribut), bukan
+        `feature_name()` (method). Kode lama memakai
+        `hasattr(model, "feature_name")` yang SELALU False, sehingga selalu jatuh ke
+        ML_TRAIN_FEATURES. Akibatnya begitu ML_TRAIN_FEATURES berubah, model lama
+        di disk langsung error karena jumlah fitur tidak cocok.
+
+        Memakai kolom milik model membuat artefak lama tetap bisa dipakai, dan
+        ketidakcocokan versi terlihat sebagai warning, bukan crash.
+        """
+        names = getattr(self.model, "feature_name_", None)
+        if names is not None and len(names):
+            names = list(names)
+            if names != list(self.feature_cols):
+                logger.warning(
+                    "Model %s dilatih dengan %d fitur, sementara ML_TRAIN_FEATURES "
+                    "sekarang %d. Memakai kolom milik model; latih ulang agar selaras.",
+                    self.model_path, len(names), len(self.feature_cols),
+                )
+            return names
+        return list(self.feature_cols)
 
     def _align_feature_frame(self, frame: pd.DataFrame) -> pd.DataFrame:
         aligned = frame.copy()

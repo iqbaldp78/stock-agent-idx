@@ -211,7 +211,11 @@ def run_ml_prediction(state: AgentState) -> dict:
     for ticker in top_candidates:
         try:
             # 1. Fetch recent OHLCV for features
-            ohlcv = get_ohlcv(ticker, period="3mo")
+            # 2y, bukan 3mo: compute_ohlcv_features() memakai window sampai 200 hari
+            # (ma_dist_200). Dengan 3mo (~60 baris) fitur itu jatuh ke 0.0 sementara
+            # saat training nilainya nyata — train/serve skew yang tidak memunculkan
+            # error apa pun. Lihat MIN_HISTORY_ROWS di data/ml_features.py.
+            ohlcv = get_ohlcv(ticker, period="2y")
 
             # 2. Extract feature vector
             feature_row = extract_features(ticker, scores, macro_data, ohlcv)

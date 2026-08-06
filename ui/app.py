@@ -2984,11 +2984,21 @@ elif page == "🤖 ML Validation":
                     
                     for h in ["1d", "3d", "5d", "7d"]:
                         if h in metrics:
-                            row_data[f"T_{h.upper()} Acc"] = f"{metrics[h].get('accuracy', 0)}%"
-                            row_data[f"T_{h.upper()} Buy Prec"] = f"{metrics[h].get('buy_precision', 0)}%"
-                            row_data[f"T_{h.upper()} Buy Rec"] = f"{metrics[h].get('buy_recall', 0)}%"
+                            m = metrics[h]
+                            # Tandai model degenerate: hampir tidak pernah (atau hampir
+                            # selalu) memberi sinyal BUY, jadi akurasinya cuma
+                            # memantulkan base rate, bukan kemampuan.
+                            flag = " ⚠️" if m.get("degenerate") else ""
+                            lift = m.get("lift", 0) or 0
+                            row_data[f"T_{h.upper()} Acc"] = f"{m.get('accuracy', 0)}%"
+                            row_data[f"T_{h.upper()} Base"] = f"{m.get('base_rate', 0)}%"
+                            row_data[f"T_{h.upper()} Lift"] = f"{lift:.2f}{flag}"
+                            row_data[f"T_{h.upper()} Buy Prec"] = f"{m.get('buy_precision', 0)}%"
+                            row_data[f"T_{h.upper()} Buy Rec"] = f"{m.get('buy_recall', 0)}%"
                         else:
                             row_data[f"T_{h.upper()} Acc"] = "-"
+                            row_data[f"T_{h.upper()} Base"] = "-"
+                            row_data[f"T_{h.upper()} Lift"] = "-"
                             row_data[f"T_{h.upper()} Buy Prec"] = "-"
                             row_data[f"T_{h.upper()} Buy Rec"] = "-"
                             
@@ -3009,11 +3019,21 @@ elif page == "🤖 ML Validation":
                 df_metrics = []
                 for h in horizons:
                     m = macro_avg[h]
+                    acc = m.get("accuracy", 0)
+                    base_line = m.get("majority_baseline", 0)
                     df_metrics.append({
                         "Horizon": h.upper(),
-                        "Accuracy (%)": m.get("accuracy", 0),
+                        "Accuracy (%)": acc,
+                        "Majority Baseline (%)": base_line,
+                        # Kolom inilah penilaian sebenarnya: accuracy hanya berarti
+                        # kalau melewati baseline kelas mayoritas.
+                        "vs Baseline (pp)": round(acc - base_line, 2),
+                        "Base Rate (%)": m.get("base_rate", 0),
                         "Buy Precision (%)": m.get("buy_precision", 0),
+                        "Lift": m.get("lift", 0),
                         "Buy Recall (%)": m.get("buy_recall", 0),
+                        "Model Usable": m.get("n_usable", 0),
+                        "Degenerate": m.get("n_degenerate", 0),
                         "Holdout Rows": m.get("test_rows", 0)
                     })
                 
@@ -3025,7 +3045,20 @@ elif page == "🤖 ML Validation":
                 for idx, h in enumerate(horizons):
                     with h_cols[idx]:
                         m = macro_avg[h]
-                        st.metric(label=f"Horizon {h.upper()} Accuracy", value=f"{m.get('accuracy', 0)}%")
+                        acc = m.get("accuracy", 0)
+                        base_line = m.get("majority_baseline", 0)
+                        lift_val = m.get("lift", 0) or 0
+                        # delta dipakai supaya Streamlit mewarnai merah otomatis kalau
+                        # negatif — accuracy di bawah baseline harus langsung terlihat,
+                        # bukan tersembunyi di balik angka yang kelihatan besar.
+                        st.metric(
+                            label=f"Horizon {h.upper()} Accuracy", value=f"{acc}%",
+                            delta=f"{acc - base_line:+.2f} pp vs baseline",
+                        )
+                        st.metric(
+                            label=f"Horizon {h.upper()} Lift", value=f"{lift_val:.3f}",
+                            delta=f"{lift_val - 1:+.3f} vs nol-skill",
+                        )
                         st.metric(label=f"Horizon {h.upper()} Buy Precision", value=f"{m.get('buy_precision', 0)}%")
                         
                 st.write("---")
@@ -3033,10 +3066,17 @@ elif page == "🤖 ML Validation":
                 st.dataframe(df_metrics_pd, use_container_width=True)
                 
                 st.info("💡 **Penjelasan Singkat Metrik Model:**\n"
-                        "- **Accuracy**: Seberapa sering model menebak benar arah harga (Naik/Turun) secara keseluruhan.\n"
-                        "- **Buy Precision**: Tingkat ketepatan sinyal BUY. Jika 40%, berarti dari 10 kali AI merekomendasikan BUY, 4 kali terbukti profit.\n"
-                        "- **Buy Recall**: Sensitivitas AI menangkap peluang naik. Dari 100 saham yang sebenarnya terbang/naik di pasar, berapa % yang berhasil ditemukan & direkomendasikan BUY oleh AI.\n"
-                        "- **Holdout Rows**: Jumlah total sampel baris data uji/test (data historis murni yang **disimpan/diisolasi** dan TIDAK PERNAH dipakai saat training) untuk mengevaluasi keakuratan AI secara objektif.")
+                        "- **Base Rate**: Seberapa sering harga memang naik melewati ambang target, **tanpa model apa pun**. Ini titik nol pembandingnya.\n"
+                        "- **Majority Baseline**: Accuracy yang didapat kalau model selalu menjawab \"tidak naik\". "
+                        "Accuracy di bawah angka ini berarti model **kalah dari konstanta** — jadi jangan menilai Accuracy tanpa melihat kolom ini.\n"
+                        "- **Accuracy**: Seberapa sering model menebak benar arah harga. Hanya bermakna kalau melewati Majority Baseline.\n"
+                        "- **Buy Precision**: Tingkat ketepatan sinyal BUY. Jika 40%, dari 10 rekomendasi BUY, 4 terbukti naik.\n"
+                        "- **Lift**: Buy Precision dibagi Base Rate. **1.00 = nol skill** (sinyal BUY tidak lebih baik daripada menebak sesuai proporsi pasar). "
+                        "Inilah metrik yang sebenarnya menentukan apakah model berguna, bukan Accuracy.\n"
+                        "- **Buy Recall**: Sensitivitas menangkap peluang naik. Dari 100 saham yang benar-benar naik, berapa % yang tertangkap sebagai BUY.\n"
+                        "- **Model Usable / Degenerate**: Model degenerate hampir tidak pernah (atau hampir selalu) memberi sinyal BUY, "
+                        "sehingga Accuracy-nya cuma memantulkan Base Rate. Model seperti ini **dikeluarkan** dari rata-rata di atas dan ditandai ⚠️ di tabel per-ticker.\n"
+                        "- **Holdout Rows**: Jumlah baris data uji (data historis yang **diisolasi** dan TIDAK PERNAH dipakai saat training).")
                 
             else:
                 st.warning("Belum ada data evaluasi holdout di metadata saat ini.")

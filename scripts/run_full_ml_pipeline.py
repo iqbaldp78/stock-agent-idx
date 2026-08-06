@@ -66,7 +66,10 @@ def main():
             if predictor.model is None:
                 continue
             try:
-                model_cols = predictor.model.feature_name() if hasattr(predictor.model, "feature_name") else predictor.feature_cols
+                # Pakai kolom milik model, bukan ML_TRAIN_FEATURES: model lama di disk
+                # bisa dilatih dengan daftar fitur yang berbeda. (Versi sebelumnya
+                # memakai hasattr(..., "feature_name") yang selalu False.)
+                model_cols = predictor._model_feature_names()
                 X_aligned = X_test.reindex(columns=model_cols, fill_value=0.0).fillna(0.0)
                 preds = predictor.model.predict(X_aligned)
             except Exception as e:

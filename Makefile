@@ -357,6 +357,18 @@ validate-ml-multiday-ticker: ## Validate ML Multi-Day model accuracy for one tic
 	fi
 	docker compose exec app python scripts/train_multiday_model.py --tickers $(TICKER) --period $(PERIOD) --validate-only
 
+.PHONY: check-feature-parity
+check-feature-parity: ## Cek fitur training vs live inference cocok (usage: make check-feature-parity TICKER="BBCA BMRI")
+	docker compose exec app python scripts/check_feature_parity.py --tickers $(or $(TICKER),BBCA BMRI TLKM)
+
+.PHONY: check-feature-parity-shortwindow
+check-feature-parity-shortwindow: ## Cek paritas saat live hanya punya 60 baris (window pendek); HARUS gagal kalau period fetch dikembalikan ke 3mo
+	docker compose exec app python scripts/check_feature_parity.py --tickers $(or $(TICKER),BBCA) --live-rows 60
+
+.PHONY: update-ml-metadata
+update-ml-metadata: ## Hitung ulang metrik (base_rate/lift) dari model yang SUDAH ada, tanpa retraining
+	docker compose exec app python scripts/update_streamlit_metadata.py
+
 # .PHONY: validate-ml-ticker
 # validate-ml-ticker: ## [DEPRECATED] Validate ML Day-1 accuracy for one ticker (usage: make validate-ml-ticker TICKER=BBCA)
 # 	@if [ -z "$(TICKER)" ]; then \

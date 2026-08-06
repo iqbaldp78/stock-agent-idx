@@ -26,7 +26,12 @@ import pandas as pd
 from data.ml_features import ML_TRAIN_FEATURES, prepare_training_data
 from models.multiday_predictor import MultiDayPredictor
 from scripts.train_day1_model import fetch_ohlcv, normalize_ohlcv
-from scripts.train_multiday_model import evaluate_multiday_model, make_purged_split
+from scripts.train_multiday_model import (
+    AVG_METRIC_KEYS,
+    aggregate_metrics,
+    evaluate_multiday_model,
+    make_purged_split,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
@@ -50,33 +55,6 @@ def load_dataset(ticker: str, period: str):
         raise ValueError("No OHLCV data")
     X, Y = prepare_training_data(ohlcv, ticker=ticker)
     return ohlcv, X, Y
-
-
-def aggregate_metrics(ticker_summaries):
-    out = {}
-    for h in HORIZONS:
-        vals = [s["metrics"][h] for s in ticker_summaries if h in s.get("metrics", {})]
-        if not vals:
-            continue
-        total_rows = sum(v["test_rows"] for v in vals)
-        def weighted(key):
-            return round(sum(v[key] * v["test_rows"] for v in vals) / total_rows, 2) if total_rows else 0.0
-        acc = [v["accuracy"] for v in vals]
-        prec = [v["buy_precision"] for v in vals]
-        rec = [v["buy_recall"] for v in vals]
-        out[h] = {
-            "test_rows": total_rows,
-            "accuracy": round(float(np.mean(acc)), 2),
-            "buy_precision": round(float(np.mean(prec)), 2),
-            "buy_recall": round(float(np.mean(rec)), 2),
-            "accuracy_weighted": weighted("accuracy"),
-            "buy_precision_weighted": weighted("buy_precision"),
-            "buy_recall_weighted": weighted("buy_recall"),
-            "p10_buy_precision": round(float(np.percentile(prec, 10)), 2),
-            "p50_buy_precision": round(float(np.percentile(prec, 50)), 2),
-            "p90_buy_precision": round(float(np.percentile(prec, 90)), 2),
-        }
-    return out
 
 
 def evaluate_by_ticker(predictor, test_sets):
@@ -178,13 +156,16 @@ def walk_forward_validate(datasets, n_folds, checkpoints_dir, validate_only):
             if not rows:
                 continue
             total_test_rows += sum(r["test_rows"] for r in rows)
-            metrics_out[h] = {
+            merged = {
                 "test_rows": sum(r["test_rows"] for r in rows),
-                "accuracy": round(float(np.mean([r["accuracy"] for r in rows])), 2),
-                "buy_precision": round(float(np.mean([r["buy_precision"] for r in rows])), 2),
-                "buy_recall": round(float(np.mean([r["buy_recall"] for r in rows])), 2),
                 "n_folds_evaluated": len(rows),
+                "n_predicted_positive": sum(r.get("n_predicted_positive", 0) for r in rows),
             }
+            for key in AVG_METRIC_KEYS:
+                vals = [r[key] for r in rows if key in r]
+                merged[key] = round(float(np.mean(vals)), 3 if key == "lift" else 2) if vals else 0.0
+            merged["degenerate"] = bool(merged["buy_recall"] < 5.0 or merged["buy_recall"] > 95.0)
+            metrics_out[h] = merged
         ticker_summaries.append({"ticker": ticker, "test_rows": total_test_rows, "metrics": metrics_out})
     return ticker_summaries
 
@@ -264,7 +245,14 @@ def main():
     print(f"Metadata       : {out_path}")
     print("-" * 72)
     for h, m in metrics.items():
-        print(f"Horizon [{h.upper()}]: rows={m['test_rows']} acc={m['accuracy']:.2f}% prec={m['buy_precision']:.2f}% recall={m['buy_recall']:.2f}%")
+        base = m.get("majority_baseline", 0.0)
+        lift = m.get("lift", 0.0)
+        print(
+            f"Horizon [{h.upper()}]: rows={m['test_rows']} "
+            f"acc={m['accuracy']:.2f}% (baseline {base:.2f}%, {m['accuracy'] - base:+.2f} pp) "
+            f"prec={m['buy_precision']:.2f}% recall={m['buy_recall']:.2f}% "
+            f"lift={lift:.3f} usable={m.get('n_usable', 0)}/degen={m.get('n_degenerate', 0)}"
+        )
     print("=" * 72)
 
 

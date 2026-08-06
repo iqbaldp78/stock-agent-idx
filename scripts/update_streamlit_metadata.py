@@ -4,12 +4,11 @@ import sys
 import json
 import logging
 from datetime import datetime
-import numpy as np
-import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.train_day1_model import get_universe_tickers, fetch_ohlcv, normalize_ohlcv
+from scripts.train_multiday_model import aggregate_metrics, evaluate_multiday_model
 from data.ml_features import prepare_training_data
 from models.multiday_predictor import MultiDayPredictor
 
@@ -46,48 +45,24 @@ def main():
         Y_test = Y.iloc[split_i:]
 
         predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=checkpoints_dir)
-        
-        metrics = {}
-        for h in predictor.horizons:
-            model = predictor.models.get(h)
-            col_name = f"target_{h}"
-            if model is None or col_name not in Y_test.columns:
-                continue
-            
-            y_true_raw = Y_test[col_name]
-            valid_idx = ~y_true_raw.isna()
-            if not valid_idx.any():
-                continue
 
-            y_true = y_true_raw[valid_idx].values
-            X_valid = X_test[valid_idx]
-
-            try:
-                model_cols = model.feature_name() if hasattr(model, "feature_name") else predictor.feature_cols
-                X_aligned = X_valid.reindex(columns=model_cols, fill_value=0.0).fillna(0.0)
-                preds = model.predict(X_aligned)
-            except Exception as e:
-                continue
-
-            # FIXED (Fase 0.3): Baca threshold hasil training, bukan hardcode 0.55
-            buy_threshold = predictor.thresholds.get(h, 0.55)
-            binary_preds = (preds >= buy_threshold).astype(int)
-            y_true_int = y_true.astype(int)
-
-            acc = float(np.mean(binary_preds == y_true_int))
-            true_positives = int(np.sum((binary_preds == 1) & (y_true_int == 1)))
-            predicted_positives = int(np.sum(binary_preds == 1))
-            actual_positives = int(np.sum(y_true_int == 1))
-
-            prec = float(true_positives / predicted_positives) if predicted_positives > 0 else 0.0
-            rec = float(true_positives / actual_positives) if actual_positives > 0 else 0.0
-
-            metrics[h] = {
-                "test_rows": int(len(y_true)),
-                "accuracy": round(acc * 100, 2),
-                "buy_precision": round(prec * 100, 2),
-                "buy_recall": round(rec * 100, 2),
-            }
+        # Dulu blok evaluasi di sini diduplikasi dari train_multiday_model.py dan
+        # membawa tiga bug: model.predict() dipakai seolah hasilnya probabilitas
+        # (padahal label 0/1, sehingga threshold hasil tuning tidak pernah terpakai),
+        # model.feature_name() yang tidak ada di CalibratedClassifierCV sehingga
+        # kolom tidak cocok lalu error ditelan `except: continue`, dan default
+        # threshold 0.55 yang beda dari 0.50 di seluruh kode lain.
+        # Sekarang memakai satu implementasi yang sudah benar.
+        metrics = evaluate_multiday_model(predictor, X_test, Y_test)
+        if not metrics:
+            # Instrumentasi yang selama ini hilang: versi lama diam saja lalu
+            # menulis metadata kosong, sehingga model yang tidak ter-load
+            # tampak seperti model yang metriknya memang nol.
+            logging.warning(
+                "%s: tidak ada metrik — model tidak ter-load dari %s "
+                "(cek keberadaan lgbm_%s_<horizon>.pkl)",
+                ticker, checkpoints_dir, ticker.upper(),
+            )
 
         summaries.append({
             "ticker": ticker,
@@ -98,21 +73,16 @@ def main():
             "metrics": metrics,
         })
 
-    horizons = ["1d", "3d", "5d", "7d"]
-    global_metrics = {}
     total_train_rows = sum(s["train_rows"] for s in summaries)
     total_test_rows = sum(s["test_rows"] for s in summaries)
     total_final_rows = sum(s["training_rows"] for s in summaries)
 
-    for h in horizons:
-        h_metrics = [s["metrics"][h] for s in summaries if h in s["metrics"]]
-        if h_metrics:
-            global_metrics[h] = {
-                "test_rows": sum(m["test_rows"] for m in h_metrics),
-                "accuracy": round(sum(m["accuracy"] for m in h_metrics) / len(h_metrics), 2),
-                "buy_precision": round(sum(m["buy_precision"] for m in h_metrics) / len(h_metrics), 2),
-                "buy_recall": round(sum(m["buy_recall"] for m in h_metrics) / len(h_metrics), 2),
-            }
+    global_metrics = aggregate_metrics(summaries)
+
+    # "tickers_trained" dulu menghitung ticker yang diproses, bukan yang benar-benar
+    # punya model — jadi metadata bisa mengklaim 64 model terlatih walau tidak ada
+    # satu pun .pkl yang ter-load. Pisahkan keduanya secara eksplisit.
+    tickers_with_models = sum(1 for s in summaries if s.get("metrics"))
 
     metadata = {
         "run_date": datetime.now().isoformat(),
@@ -124,7 +94,11 @@ def main():
         },
         "rows": {
             "tickers_requested": len(tickers),
-            "tickers_trained": len(summaries),
+            "tickers_evaluated": len(summaries),
+            "tickers_with_models": tickers_with_models,
+            # Key lama dipertahankan supaya ui/app.py tidak pecah, tapi kini diisi
+            # jumlah yang benar-benar punya model.
+            "tickers_trained": tickers_with_models,
             "holdout_train_rows": total_train_rows,
             "holdout_test_rows": total_test_rows,
             "final_train_rows": total_final_rows,
@@ -137,7 +111,23 @@ def main():
     with open(metadata_output, "w") as f:
         json.dump(metadata, f, indent=2, ensure_ascii=False)
 
-    print(f"SUCCESS: Updated Streamlit metadata file at {metadata_output}")
+    print(f"Metadata ditulis ke {metadata_output}")
+    print(f"Ticker dievaluasi   : {len(summaries)} / {len(tickers)}")
+    print(f"Ticker punya model  : {tickers_with_models}")
+    if tickers_with_models == 0:
+        # Jangan pernah melaporkan SUCCESS untuk metadata tanpa satu pun model —
+        # itu justru kondisi yang selama ini lolos tanpa terdeteksi.
+        print(f"GAGAL: tidak ada model yang ter-load dari {checkpoints_dir}.")
+        print("       Metadata ditulis tapi metriknya kosong. Jalankan training dulu.")
+        sys.exit(1)
+    if tickers_with_models < len(summaries):
+        print(f"PERINGATAN: {len(summaries) - tickers_with_models} ticker tanpa model.")
+    for h, v in global_metrics.items():
+        print(
+            f"  [{h}] acc={v['accuracy']:.2f}% baseline={v.get('majority_baseline', 0):.2f}% "
+            f"lift={v.get('lift', 0):.3f} usable={v.get('n_usable', 0)} "
+            f"degenerate={v.get('n_degenerate', 0)}"
+        )
 
 if __name__ == "__main__":
     main()

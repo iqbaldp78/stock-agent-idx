@@ -207,7 +207,10 @@ def run_ml_prediction(state: AgentState) -> dict:
     for ticker in top_candidates:
         try:
             # 1. Fetch recent OHLCV for features
-            ohlcv = get_ohlcv(ticker, period="3mo")
+            # 2y, bukan 3mo: lihat catatan yang sama di graph/workflow.py —
+            # ma_dist_200 butuh 200 baris, kalau kurang nilainya jatuh ke 0.0 dan
+            # tidak cocok dengan nilai saat training.
+            ohlcv = get_ohlcv(ticker, period="2y")
 
             # 2. Extract feature vector
             feature_row = extract_features(ticker, scores, macro_data, ohlcv)
