@@ -55,40 +55,15 @@ class PurgedTimeSeriesSplit:
                 yield train_indices, val_indices
 
 
-# Rentang pencarian threshold. Dijadikan konstanta karena angka ini muncul di beberapa
-# tempat dan dipakai juga untuk mendeteksi threshold yang mentok di batas.
-THR_MIN = 0.35
-THR_MAX = 0.65
-THR_STEPS = 31
-
-
-def _warn_if_pinned(thr: float, context: str = "") -> float:
+def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision: float = 0.50, default: float = 0.50) -> float:
     """
-    Peringatkan kalau threshold optimal mendarat tepat di batas rentang pencarian.
-
-    Artinya optimizer masih ingin bergerak ke luar rentang tapi tidak bisa — gejala
-    distribusi probabilitas yang tidak terkalibrasi (mis. seluruh probabilitas ada di
-    bawah THR_MIN sehingga model praktis tidak pernah memberi sinyal BUY).
-    """
-    tol = (THR_MAX - THR_MIN) / (THR_STEPS - 1) / 2
-    if thr <= THR_MIN + tol or thr >= THR_MAX - tol:
-        logger.warning(
-            "Threshold optimal mentok di batas rentang [%.2f, %.2f] -> %.3f%s. "
-            "Distribusi probabilitas model kemungkinan tidak terkalibrasi.",
-            THR_MIN, THR_MAX, thr, f" ({context})" if context else "",
-        )
-    return thr
-
-
-def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision: float = 0.40, default: float = 0.50) -> float:
-    """
-    Pick threshold in [THR_MIN, THR_MAX] that maximizes combined Accuracy and F1 score.
+    Pick threshold in [0.35, 0.70] that maximizes combined Accuracy and F1 score with min_precision >= 50%.
     """
     if len(y_true) == 0 or len(y_prob) == 0:
         return default
 
     candidates = []
-    for thr in np.linspace(THR_MIN, THR_MAX, THR_STEPS):
+    for thr in np.linspace(0.35, 0.70, 36):
         pred_buy = (y_prob >= thr).astype(int)
         acc = np.mean(pred_buy == y_true)
         tp = np.sum((pred_buy == 1) & (y_true == 1))
@@ -99,7 +74,7 @@ def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision
         rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
 
-        combined_score = 0.5 * acc + 0.5 * f1
+        combined_score = 0.3 * acc + 0.7 * f1
         if prec >= min_precision:
             candidates.append((combined_score, acc, prec, rec, thr))
 
@@ -115,7 +90,7 @@ def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision
     )
     best_score = -1.0
     best_thr = default
-    for thr in np.linspace(THR_MIN, THR_MAX, THR_STEPS):
+    for thr in np.linspace(0.35, 0.70, 36):
         pred_buy = (y_prob >= thr).astype(int)
         acc = np.mean(pred_buy == y_true)
         tp = np.sum((pred_buy == 1) & (y_true == 1))
@@ -124,7 +99,7 @@ def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision
         prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
-        combined_score = 0.5 * acc + 0.5 * f1
+        combined_score = 0.3 * acc + 0.7 * f1
         if combined_score > best_score:
             best_score = combined_score
             best_thr = float(thr)
@@ -286,15 +261,16 @@ class MultiDayPredictor:
             purged_cv = PurgedTimeSeriesSplit(n_splits=n_splits, gap=gap)
 
             param_dist = {
-                'learning_rate': [0.01, 0.03, 0.05, 0.1],
-                'num_leaves': [7, 15, 31, 63],
-                'min_child_samples': [10, 20, 50],
+                'learning_rate': [0.01, 0.02, 0.03, 0.05],
+                'num_leaves': [7, 15, 31],
+                'min_child_samples': [20, 50, 100],
                 'subsample': [0.6, 0.7, 0.8],
-                'colsample_bytree': [0.6, 0.7, 0.8],
-                'reg_alpha': [0.0, 0.1, 0.5, 1.0],
-                'reg_lambda': [0.0, 0.1, 0.5, 1.0],
-                'scale_pos_weight': [1.0, 1.5, 2.0, 2.5],
-                'n_estimators': [50, 100, 150, 200]
+                'colsample_bytree': [0.5, 0.6, 0.7],
+                'reg_alpha': [0.1, 0.5, 1.0, 2.0],
+                'reg_lambda': [0.1, 0.5, 1.0, 2.0],
+                'scale_pos_weight': [1.0, 1.5, 2.0],
+                'n_estimators': [100, 150, 200, 300],
+                'max_depth': [3, 5, 7],
             }
 
             from sklearn.metrics import make_scorer, f1_score
@@ -304,12 +280,12 @@ class MultiDayPredictor:
             search = RandomizedSearchCV(
                 estimator=estimator,
                 param_distributions=param_dist,
-                n_iter=15,
+                n_iter=20,
                 cv=purged_cv,
                 scoring=f1_scorer,
                 error_score=0.0,
                 random_state=42,
-                n_jobs=1
+                n_jobs=-1
             )
 
             search.fit(X_tr_sel, y_tr, sample_weight=weights)

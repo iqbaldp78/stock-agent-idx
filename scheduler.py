@@ -376,6 +376,21 @@ def main():
         name="Combined Daily AI + Konglo Analysis",
     )
 
+    # ML Training: Every day at 03:00 AM WIB (Heavy training)
+    # Using shell=True for the system command to trigger the training script
+    import subprocess
+    def run_ml_training():
+        logger.info("=== STARTING ML TRAINING (5Y PERIOD) ===")
+        subprocess.run(["python3", "scripts/train_multiday_model.py", "--all", "--period", "5y"], check=True)
+        logger.info("=== ML TRAINING COMPLETED ===")
+
+    scheduler.add_job(
+        run_ml_training,
+        CronTrigger(hour=3, minute=0, timezone="Asia/Jakarta"),
+        id="ml_training",
+        name="ML Training 5Y",
+    )
+
     # Performance Check (TP/SL validation): Every day at 17:00 WIB
     scheduler.add_job(
         run_performance_check,

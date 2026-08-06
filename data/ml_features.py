@@ -28,7 +28,13 @@ FEATURE_COLUMNS = [
     "dominance_score",
     "haka_score",
     "is_fomo_trap",
-   "ret_1d_lag3",
+    "rsi",
+    "is_bullish_trend",
+    "vol_ratio",
+    "ret_1d",
+    "ret_1d_lag1",
+    "ret_1d_lag2",
+    "ret_1d_lag3",
     "ret_1d_lag4",
     "ret_1d_lag5",
     "ret_3d",
@@ -104,7 +110,6 @@ FEATURE_COLUMNS = [
 # Kolom yang benar-benar digunakan untuk melatih ML (hanya yang bisa dihitung secara historis)
 ML_TRAIN_FEATURES = [
     # ── Proven useful (importance > 0) ──────────────────────────────────
-    "dist_avg_7d",
     "foreign_net_7d",
     "foreign_net_1m",
     "day_foreign_net",
@@ -169,41 +174,6 @@ ML_TRAIN_FEATURES = [
     "candlestick_winrate",
     "is_bullish_pattern",
     "is_bearish_pattern",
-    "ihsg_trend_3d",
-]
-
-# ── DIKELUARKAN dari ML_TRAIN_FEATURES (jangan tambahkan kembali tanpa membaca ini) ──
-#
-# Semua fitur di bawah KONSTAN saat training tapi BERVARIASI saat live inference.
-# Kondisi itu strictly lebih buruk daripada tidak punya fiturnya sama sekali: model
-# belajar bahwa kolom tersebut tidak membawa informasi (importance 0, jadi dibuang
-# feature selection), lalu saat inference kolom itu tiba-tiba berisi nilai nyata yang
-# tidak pernah dilihatnya.
-#
-#   report_sent_7d/30d, report_count_7d/30d,
-#   news_sent_7d/30d, news_count_7d/30d
-#       -> tidak pernah dihitung di prepare_training_data(), hanya terisi 0.0 oleh
-#          loop fallback FEATURE_COLUMNS. Di live, fetch_news_report_features()
-#          mengembalikan 5.0 / count nyata dari tabel news_signals.
-#          Rekonstruksi point-in-time dari news_signals.created_at secara teknis
-#          mungkin; masukkan kembali kalau riwayat news sudah cukup dalam.
-#
-#   news_score, commodity_score
-#       -> hard-coded 5.0 di prepare_training_data().
-#
-# Aman untuk model yang sudah terlatih: fitur ini importance 0 sehingga tidak masuk
-# sidecar selected_features, dan predict() memakai sidecar itu — bukan feature_cols.
-ML_TRAIN_FEATURES_EXCLUDED = [
-    "news_score",
-    "commodity_score",
-    "report_sent_7d",
-    "report_sent_30d",
-    "report_count_7d",
-    "report_count_30d",
-    "news_sent_7d",
-    "news_sent_30d",
-    "news_count_7d",
-    "news_count_30d",
 ]
 
 def _pick_col(df: pd.DataFrame, name: str) -> str | None:
@@ -247,7 +217,7 @@ def _fetch_ihsg_history() -> pd.DataFrame | None:
         finally:
             db.close()
     except Exception as e:
-        logger.warning(f"Failed to fetch IHSG history: {e}")
+        logger.warning(f"Failed to fetch IHSG history from DB: {e}")
         return None
 
 def _compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
@@ -1224,11 +1194,11 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df = df.sort_index()
 
     # Targets: Binary classification — 1 for significant price increase, 0 otherwise
-    # Thresholds tuned for balanced class distribution: 1D=0.3%, 3D=0.8%, 5D=1.0%, 7D=1.5%
-    df['target_1d'] = (df['Close'].shift(-1) > df['Close'] * 1.003).astype(int)
-    df['target_3d'] = (df['Close'].shift(-3) > df['Close'] * 1.008).astype(int)
-    df['target_5d'] = (df['Close'].shift(-5) > df['Close'] * 1.010).astype(int)
-    df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.015).astype(int)
+    # Thresholds tuned for >=50% buy precision target: 1D=0.6%, 3D=1.8%, 5D=2.5%, 7D=3.0%
+    df['target_1d'] = (df['Close'].shift(-1) > df['Close'] * 1.006).astype(int)
+    df['target_3d'] = (df['Close'].shift(-3) > df['Close'] * 1.018).astype(int)
+    df['target_5d'] = (df['Close'].shift(-5) > df['Close'] * 1.025).astype(int)
+    df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.030).astype(int)
 
     # Seluruh fitur turunan data pasar dihitung oleh SATU fungsi yang dipakai
     # bersama dengan extract_features() — lihat compute_ohlcv_features().
