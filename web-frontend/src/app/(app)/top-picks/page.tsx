@@ -212,22 +212,22 @@ export default function TopPicksPage() {
           <span className="text-sm font-semibold">Kembali ke Daftar</span>
         </button>
 
-        <div className="bg-background border border-border rounded-3xl p-8 relative overflow-hidden">
+        <div className="bg-background border border-border rounded-3xl p-4 sm:p-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
           <div className="relative z-10">
-            <div className="flex justify-between items-start mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 sm:mb-8">
               <div>
-                <h2 className="text-4xl font-black text-text mb-1">{selectedStock.ticker}</h2>
-                <p className="text-secondary font-medium text-sm mb-3">Saham Tbk.</p>
-                <div className="flex items-center gap-2">
-                  <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${selectedStock.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : selectedStock.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
+                <h2 className="text-3xl sm:text-4xl font-black text-text mb-1">{selectedStock.ticker}</h2>
+                <p className="text-secondary font-medium text-xs sm:text-sm mb-3">Saham Tbk.</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${selectedStock.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : selectedStock.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
                     {selectedStock.action}
                   </span>
                   {(() => {
                     const eType = getEntryType(selectedStock);
                     if (!eType) return null;
                     return (
-                      <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1.5 ${eType.color}`}>
+                      <span className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1.5 ${eType.color}`}>
                         <span>{eType.icon}</span>
                         <span>{eType.label}</span>
                       </span>
@@ -235,11 +235,11 @@ export default function TopPicksPage() {
                   })()}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <span className="text-4xl font-bold text-text font-mono">{(selectedStock.current_price || selectedStock.entry_price)?.toLocaleString('id-ID')}</span>
+              <div className="text-left md:text-right shrink-0 flex flex-col items-start md:items-end">
+                <div className="flex items-center justify-start md:justify-end gap-2 flex-wrap">
+                  <span className="text-2xl sm:text-4xl font-bold text-text font-mono shrink-0">{(selectedStock.current_price || selectedStock.entry_price)?.toLocaleString('id-ID')}</span>
                   {selectedStock.change_percent !== undefined && selectedStock.change_percent !== null && (
-                    <span className={`px-2.5 py-1 rounded-lg text-sm font-bold font-mono border ${selectedStock.change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
+                    <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-bold font-mono border whitespace-nowrap shrink-0 ${selectedStock.change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
                       {selectedStock.change_percent >= 0 ? '+' : ''}{selectedStock.change_percent.toFixed(2)}%
                     </span>
                   )}
@@ -249,7 +249,7 @@ export default function TopPicksPage() {
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
               <div className="bg-white/5 rounded-xl p-4 border border-border">
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">AI Confidence</p>
                 <div className="flex items-end gap-2">
@@ -290,7 +290,7 @@ export default function TopPicksPage() {
             </div>
 
             {/* Entry, TP, SL targets */}
-            <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
               <div className="bg-white/5 rounded-xl p-4 border border-border flex flex-col justify-center">
                 <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">Entry Range</p>
                 <p className="text-base font-bold text-text font-mono">{formatEntry(selectedStock)}</p>
@@ -339,7 +339,7 @@ export default function TopPicksPage() {
                 </button>
                 {showFairValueDetails && (
                   <div className="mt-4 p-4 rounded-xl bg-background/60 border border-border space-y-4 animate-fade-in">
-                    <div className="text-sm font-bold text-secondary">
+                    <div className="text-xs sm:text-sm font-bold text-secondary">
                       Range: <span className="font-mono text-text">Rp {(selectedStock.fair_value_details.fair_value_low || 0).toLocaleString('id-ID')}</span> – <span className="font-mono text-text">Rp {(selectedStock.fair_value_details.fair_value_high || 0).toLocaleString('id-ID')}</span>
                     </div>
                     <ul className="space-y-2 text-sm text-secondary">
@@ -362,7 +362,7 @@ export default function TopPicksPage() {
             
             {/* ML Prediction Details */}
             <div className="bg-card border border-border rounded-2xl p-6 mb-8">
-              <h4 className="text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2">
+              <h4 className="text-xs sm:text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2">
                 <span>🤖</span> ML Prediction
               </h4>
               <div className="flex items-center gap-4 flex-wrap">
@@ -398,7 +398,7 @@ export default function TopPicksPage() {
             {/* Price Projections */}
             {selectedStock.predictions && Object.keys(selectedStock.predictions).length > 0 && (
               <div className="bg-card border border-border rounded-2xl p-6 mb-8">
-                <h4 className="text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2">
+                <h4 className="text-xs sm:text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2">
                   <span>🎯</span> Price Projections
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -420,12 +420,12 @@ export default function TopPicksPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-8">
                 <div className="bg-card border border-border rounded-2xl p-6">
-                  <h4 className="text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2"><span>🧠</span> AI Deep Reasoning</h4>
+                  <h4 className="text-xs sm:text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2"><span>🧠</span> AI Deep Reasoning</h4>
                   <p className="text-sm text-secondary leading-relaxed">{selectedStock.reasoning}</p>
                 </div>
                 {selectedStock.thesis && (
                   <div className="bg-accent/5 border border-accent/10 rounded-2xl p-6">
-                    <h4 className="text-sm font-bold text-accent uppercase tracking-widest mb-4 border-b border-accent/10 pb-2 flex items-center gap-2"><span>📜</span> Investment Thesis</h4>
+                    <h4 className="text-xs sm:text-sm font-bold text-accent uppercase tracking-widest mb-4 border-b border-accent/10 pb-2 flex items-center gap-2"><span>📜</span> Investment Thesis</h4>
                     <p className="text-sm text-secondary leading-relaxed">{selectedStock.thesis}</p>
                   </div>
                 )}
@@ -433,7 +433,7 @@ export default function TopPicksPage() {
               <div className="space-y-8">
                 {selectedStock.key_drivers && selectedStock.key_drivers.length > 0 && (
                   <div className="bg-card border border-border rounded-2xl p-6">
-                    <h4 className="text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2"><span>⚡</span> Key Drivers</h4>
+                    <h4 className="text-xs sm:text-sm font-bold text-secondary uppercase tracking-widest mb-4 border-b border-border pb-2 flex items-center gap-2"><span>⚡</span> Key Drivers</h4>
                     <ul className="space-y-3">
                       {selectedStock.key_drivers.map((driver: string, idx: number) => (
                         <li key={idx} className="text-sm text-secondary flex items-start gap-3">
@@ -446,7 +446,7 @@ export default function TopPicksPage() {
                 )}
                 {selectedStock.risks && selectedStock.risks.length > 0 && (
                   <div className="bg-loss/5 border border-loss/10 rounded-2xl p-6">
-                    <h4 className="text-sm font-bold text-red-300 uppercase tracking-widest mb-4 border-b border-loss/10 pb-2 flex items-center gap-2"><span>⚠️</span> Risk Factors</h4>
+                    <h4 className="text-xs sm:text-sm font-bold text-red-300 uppercase tracking-widest mb-4 border-b border-loss/10 pb-2 flex items-center gap-2"><span>⚠️</span> Risk Factors</h4>
                     <ul className="space-y-3">
                       {selectedStock.risks.map((risk: string, idx: number) => (
                         <li key={idx} className="text-sm text-secondary flex items-start gap-3">
@@ -470,7 +470,7 @@ export default function TopPicksPage() {
                       🕵️‍♂️
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-text uppercase tracking-widest">Broker to Watch</h4>
+                      <h4 className="text-xs sm:text-sm font-bold text-text uppercase tracking-widest">Broker to Watch</h4>
                       <p className="text-[10px] text-secondary">Aktivitas broker dominan & anomali transaksi</p>
                     </div>
                   </div>
@@ -694,16 +694,16 @@ export default function TopPicksPage() {
         <div className="grid grid-cols-2 gap-3 w-full bg-white/5 p-1.5 rounded-2xl border border-white/10">
           <button
             onClick={() => { setActiveTab('regular'); setSelectedStock(null); }}
-            className={`flex items-center justify-center gap-2.5 py-3 px-6 rounded-xl font-bold text-sm transition-all duration-200 ${
+            className={`flex items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 sm:py-3 px-2 sm:px-6 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 ${
               activeTab === 'regular'
                 ? 'bg-accent/20 text-white border border-accent/40 shadow-sm'
                 : 'text-secondary hover:text-text hover:bg-white/5'
             }`}
           >
-            <BarChartIcon className="w-4 h-4 text-accent" />
-            <span>Regular Top Picks</span>
+            <BarChartIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent shrink-0" />
+            <span className="truncate">Regular Top Picks</span>
             {activeTab === 'regular' && picks.length > 0 && (
-              <span className="bg-white/10 text-text text-xs px-2 font-mono">
+              <span className="bg-white/10 text-text text-[10px] sm:text-xs px-1.5 sm:px-2 font-mono rounded">
                 {picks.length}
               </span>
             )}
@@ -711,16 +711,16 @@ export default function TopPicksPage() {
 
           <button
             onClick={() => { setActiveTab('konglo'); setSelectedStock(null); }}
-            className={`flex items-center justify-center gap-2.5 py-3 px-6 rounded-xl font-bold text-sm transition-all duration-200 ${
+            className={`flex items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 sm:py-3 px-2 sm:px-6 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 ${
               activeTab === 'konglo'
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
                 : 'text-secondary hover:text-text hover:bg-white/5'
             }`}
           >
-            <LightningBoltIcon className="w-4 h-4 text-amber-400" />
-            <span>Konglo Play Picks</span>
+            <LightningBoltIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
+            <span className="truncate">Konglo Play Picks</span>
             {activeTab === 'konglo' && picks.length > 0 && (
-              <span className="bg-white/10 text-text text-xs px-2 font-mono">
+              <span className="bg-white/10 text-text text-[10px] sm:text-xs px-1.5 sm:px-2 font-mono rounded">
                 {picks.length}
               </span>
             )}
@@ -748,31 +748,31 @@ export default function TopPicksPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-8">
-          <div className="flex justify-between items-end mb-2">
-            <h3 className="text-2xl font-bold text-text">Today&apos;s AI Picks</h3>
-            <p className="text-sm text-secondary">Running Date: <span className="font-mono text-accent">{runDate}</span></p>
+        <div className="space-y-6 sm:space-y-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-1 mb-2">
+            <h3 className="text-xl sm:text-2xl font-bold text-text">Today&apos;s AI Picks</h3>
+            <p className="text-xs sm:text-sm text-secondary">Running Date: <span className="font-mono text-accent">{runDate}</span></p>
           </div>
 
           {/* 1st Top Pick (Featured) */}
           <div className="bg-gradient-to-b from-accent/10 to-transparent border border-accent/20 rounded-3xl p-1 shadow-[0_0_50px_rgba(124,58,237,0.05)] relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-            <div className="bg-background/80 backdrop-blur-xl rounded-[23px] p-8 h-full flex flex-col relative z-10">
-              <div className="flex justify-between items-start mb-6">
+            <div className="bg-background/80 backdrop-blur-xl rounded-[23px] p-4 sm:p-8 h-full flex flex-col relative z-10">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                  <h4 className="text-3xl font-black text-text hover:text-accent cursor-pointer transition-colors mb-1" onClick={() => setSelectedStock(picks[0])}>
+                  <h4 className="text-2xl sm:text-3xl font-black text-text hover:text-accent cursor-pointer transition-colors mb-1" onClick={() => setSelectedStock(picks[0])}>
                     {picks[0].ticker}
                   </h4>
-                  <p className="text-secondary font-medium text-sm mb-3">Saham Tbk.</p>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${picks[0].action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : picks[0].action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
+                  <p className="text-secondary font-medium text-xs sm:text-sm mb-3">Saham Tbk.</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-block ${picks[0].action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : picks[0].action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>
                       {picks[0].action}
                     </span>
                     {(() => {
                       const eType = getEntryType(picks[0]);
                       if (!eType) return null;
                       return (
-                        <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1.5 ${eType.color}`}>
+                        <span className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border inline-flex items-center gap-1.5 ${eType.color}`}>
                           <span>{eType.icon}</span>
                           <span>{eType.label}</span>
                         </span>
@@ -780,39 +780,39 @@ export default function TopPicksPage() {
                     })()}
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <span className="text-3xl font-bold text-text font-mono">{(picks[0].current_price || picks[0].entry_price)?.toLocaleString('id-ID')}</span>
+                <div className="text-left md:text-right shrink-0 flex flex-col items-start md:items-end">
+                  <div className="flex items-center justify-start md:justify-end gap-1.5 sm:gap-2 flex-wrap">
+                    <span className="text-2xl sm:text-3xl font-bold text-text font-mono shrink-0">{(picks[0].current_price || picks[0].entry_price)?.toLocaleString('id-ID')}</span>
                     {picks[0].change_percent !== undefined && picks[0].change_percent !== null && (
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold font-mono border ${picks[0].change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
+                      <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-bold font-mono border whitespace-nowrap shrink-0 ${picks[0].change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
                         {picks[0].change_percent >= 0 ? '+' : ''}{picks[0].change_percent.toFixed(2)}%
                       </span>
                     )}
                   </div>
-                  <p className="text-secondary text-xs mt-1 uppercase font-bold tracking-widest">Current Price</p>
+                  <p className="text-secondary text-[10px] sm:text-xs mt-1 uppercase font-bold tracking-widest">Current Price</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-white/5 rounded-xl p-4 border border-border">
-                  <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">AI Confidence</p>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-border">
+                  <p className="text-[10px] sm:text-xs text-secondary font-bold uppercase tracking-wider mb-1">AI Confidence</p>
                   <div className="flex items-end gap-2">
-                    <span className="text-2xl font-bold text-accent">{picks[0].confidence_score}</span>
-                    <span className="text-secondary mb-1">/ 10</span>
+                    <span className="text-xl sm:text-2xl font-bold text-accent">{picks[0].confidence_score}</span>
+                    <span className="text-secondary text-xs sm:text-sm mb-0.5">/ 10</span>
                   </div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 border border-border">
-                  <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">Risk Profile</p>
-                  <p className="text-xl font-bold text-text">Moderate</p>
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-border">
+                  <p className="text-[10px] sm:text-xs text-secondary font-bold uppercase tracking-wider mb-1">Risk Profile</p>
+                  <p className="text-lg sm:text-xl font-bold text-text">Moderate</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Entry Range</p><p className="text-sm font-bold text-text font-mono">{formatEntry(picks[0])}</p></div>
-                <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Take Profit</p><p className="text-sm font-bold text-profit font-mono">{formatTP(picks[0])}</p></div>
-                <div className="bg-white/5 rounded-xl p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Stop Loss</p><p className="text-sm font-bold text-loss font-mono">{formatSL(picks[0])}</p></div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Entry Range</p><p className="text-xs sm:text-sm font-bold text-text font-mono">{formatEntry(picks[0])}</p></div>
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Take Profit</p><p className="text-xs sm:text-sm font-bold text-profit font-mono">{formatTP(picks[0])}</p></div>
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-border"><p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-1">Stop Loss</p><p className="text-xs sm:text-sm font-bold text-loss font-mono">{formatSL(picks[0])}</p></div>
               </div>
               <div className="mt-auto">
-                <p className="text-sm text-secondary mb-6 line-clamp-2">{picks[0].reasoning}</p>
-                <button onClick={() => setSelectedStock(picks[0])} className="w-full py-4 rounded-xl font-bold text-text bg-accent hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20 text-lg">
+                <p className="text-xs sm:text-sm text-secondary mb-4 sm:mb-6 line-clamp-2">{picks[0].reasoning}</p>
+                <button onClick={() => setSelectedStock(picks[0])} className="w-full py-3.5 sm:py-4 rounded-xl font-bold text-text bg-accent hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20 text-base sm:text-lg">
                   Lihat Detail & Analisis
                 </button>
               </div>
@@ -822,17 +822,17 @@ export default function TopPicksPage() {
           {/* Grid remaining picks */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative">
             {picks.slice(1).map((pick, i) => (
-              <div key={i} className="bg-card backdrop-blur-md border border-border rounded-3xl p-6 flex flex-col hover:bg-white/5 transition duration-300">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h4 className="text-2xl font-black text-text mb-1 hover:text-accent cursor-pointer transition-colors" onClick={() => setSelectedStock(pick)}>{pick.ticker}</h4>
+              <div key={i} className="bg-card backdrop-blur-md border border-border rounded-3xl p-4 sm:p-6 flex flex-col hover:bg-white/5 transition duration-300">
+                <div className="flex justify-between items-start gap-2 mb-4">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xl sm:text-2xl font-black text-text mb-1 hover:text-accent cursor-pointer transition-colors truncate" onClick={() => setSelectedStock(pick)}>{pick.ticker}</h4>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${pick.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : pick.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>{pick.action}</span>
+                      <span className={`px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${pick.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : pick.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>{pick.action}</span>
                       {(() => {
                         const eType = getEntryType(pick);
                         if (!eType) return null;
                         return (
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1 ${eType.color}`}>
+                          <span className={`px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1 ${eType.color}`}>
                             <span>{eType.icon}</span>
                             <span>{eType.label}</span>
                           </span>
@@ -840,25 +840,25 @@ export default function TopPicksPage() {
                       })()}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <span className="text-xl font-bold text-text font-mono">{(pick.current_price || pick.entry_price)?.toLocaleString('id-ID')}</span>
+                  <div className="text-right shrink-0 flex flex-col items-end">
+                    <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-1.5">
+                      <span className="text-base sm:text-xl font-bold text-text font-mono shrink-0">{(pick.current_price || pick.entry_price)?.toLocaleString('id-ID')}</span>
                       {pick.change_percent !== undefined && pick.change_percent !== null && (
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${pick.change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono border whitespace-nowrap shrink-0 ${pick.change_percent >= 0 ? 'bg-profit/10 text-profit border-profit/20' : 'bg-loss/10 text-loss border-loss/20'}`}>
                           {pick.change_percent >= 0 ? '+' : ''}{pick.change_percent.toFixed(2)}%
                         </span>
                       )}
                     </div>
-                    <div className="text-[10px] text-secondary font-bold mt-1 uppercase tracking-wider">Current Price</div>
+                    <div className="text-[9px] sm:text-[10px] text-secondary font-bold mt-0.5 uppercase tracking-wider">Current Price</div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">Range</p><p className="text-[11px] font-bold text-text font-mono truncate">{formatEntry(pick)}</p></div>
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">TP</p><p className="text-[11px] font-bold text-profit font-mono truncate">{formatTP(pick)}</p></div>
                   <div className="bg-white/5 rounded-lg p-2 border border-border"><p className="text-[9px] text-secondary font-bold uppercase tracking-wider mb-0.5">SL</p><p className="text-[11px] font-bold text-loss font-mono truncate">{formatSL(pick)}</p></div>
                 </div>
                 <div className="mt-auto">
-                  <p className="text-sm text-secondary mb-6 line-clamp-2">{pick.reasoning}</p>
+                  <p className="text-xs sm:text-sm text-secondary mb-4 sm:mb-6 line-clamp-2">{pick.reasoning}</p>
                   <button onClick={() => setSelectedStock(pick)} className="w-full py-3 rounded-xl font-bold text-text bg-accent hover:bg-indigo-600 transition text-sm shadow-lg shadow-indigo-500/20">
                     Lihat Detail & Analisis
                   </button>

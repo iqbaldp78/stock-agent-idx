@@ -291,6 +291,22 @@ analysis-tickers: ## Run full analysis for specific tickers (usage: make analysi
 	docker compose exec app python scripts/run_analysis.py $(TICKERS)
 
 # ============================================================
+# IHSG PREDICTOR
+# ============================================================
+
+.PHONY: ihsg
+ihsg: ## Run standalone IHSG predictor in app container
+	docker compose exec app python scripts/run_ihsg_only.py
+
+.PHONY: ihsg-validate
+ihsg-validate: ## Validate IHSG prediction historical accuracy in app container
+	docker compose exec app python scripts/validate_ihsg_performance.py
+
+.PHONY: ihsg-sim
+ihsg-sim: ## Run advanced IHSG threshold/regime simulation in app container
+	docker compose exec app python scripts/simulate_ihsg_advanced.py
+
+# ============================================================
 # BACKTEST & VALIDATION
 # ============================================================
 

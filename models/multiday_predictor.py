@@ -59,6 +59,12 @@ def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision
     """
     Pick threshold in [0.35, 0.70] that maximizes combined Accuracy and F1 score with min_precision >= 50%.
     """
+    def _warn_if_pinned(thr: float, context: str = "") -> float:
+        if thr <= 0.3501 or thr >= 0.6999:
+            ctx = f" ({context})" if context else ""
+            logger.warning("Optimal threshold mentok di batas rentang: %.2f%s", thr, ctx)
+        return thr
+
     if len(y_true) == 0 or len(y_prob) == 0:
         return default
 
