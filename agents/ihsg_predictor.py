@@ -141,7 +141,7 @@ def _calculate_momentum_score(ohlcv: pd.DataFrame, macro_data: dict, tv_ta: dict
         if macd > signal:
             score += 0.10 if macd > 0 else 0.05
         elif macd < signal:
-            score -= 0.10 if macd < 0 else -0.05
+            score -= 0.10 if macd < 0 else 0.05
 
         score = max(0.0, min(1.0, score))
         source_str = "TradingView TA" if tv_used else "Pandas Fallback"
@@ -247,25 +247,43 @@ def _calculate_macro_score(macro_data: dict) -> float:
 
 def _calculate_sector_score(sectors: dict) -> float:
     """
-    Score sector rotation (divergence, leading sector strength).
+    Score sector rotation (divergence, leading sector strength, directional return).
     Returns: float [0, 1]
     """
     try:
         score = 0.5
         divergence = sectors.get("divergence", 0.0)
         leading_sector = sectors.get("leading_sector", "neutral")
+        sec_dict = sectors.get("sectors", {})
 
-        # Divergence indicates rotation
+        # Compute average 1D return of sampled sectors
+        if sec_dict:
+            all_rets = [v.get("1d_return", 0.0) for v in sec_dict.values()]
+            avg_ret = sum(all_rets) / len(all_rets) if all_rets else 0.0
+
+            # Adjust base score based on overall sector performance
+            if avg_ret > 0.5:
+                score += 0.10
+            elif avg_ret < -0.5:
+                score -= 0.10
+
+        # Divergence indicates active sector rotation
         if divergence > 3.0:
-            score += 0.15  # Strong rotation
+            score += 0.10
 
-        # Leading sector type
-        if leading_sector in ["perbankan", "consumer"]:
-            score += 0.1  # Defensive = moderate bullish
-        elif leading_sector in ["mining", "infrastructure"]:
-            score += 0.15  # Cyclical = strong bullish
-        elif leading_sector == "property":
-            score += 0.05  # Mixed signal
+        # Leading sector impact (bullish vs bearish)
+        leading_data = sec_dict.get(leading_sector, {})
+        leading_ret = leading_data.get("1d_return", 0.0)
+
+        if leading_ret < 0:
+            score -= 0.10  # Even the leading sector is declining
+        else:
+            if leading_sector in ["perbankan", "consumer"]:
+                score += 0.05  # Defensive leads = moderate bullish
+            elif leading_sector in ["mining", "infrastructure"]:
+                score += 0.10  # Cyclical leads = strong bullish
+            elif leading_sector == "property":
+                score += 0.05  # Mixed signal
 
         score = max(0.0, min(1.0, score))
         logger.info(f"[Sectors] Divergence={divergence:.2f}%, Leading={leading_sector}, Score={score:.2f}")
@@ -792,7 +810,7 @@ def _empty_prediction() -> dict:
     return {
         "current_price": 0,
         "confidence": "LOW",
-        "direction": "SIDEWAYS",
+        "direction": "BEARISH",
         "volatility_level": "MEDIUM",
         "component_scores": {
             "momentum": 0.5,

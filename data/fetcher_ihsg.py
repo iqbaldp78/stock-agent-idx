@@ -272,9 +272,15 @@ def get_market_breadth() -> dict:
 
         volume_trend = sum(recent_volumes) / len(recent_volumes) if recent_volumes else 0
 
-        # Breadth momentum: compare today's A/D vs 5d avg
-        adr_5d = ad_ratio  # Simplified (should track 5-day history ideally)
-        breadth_momentum = 0  # Placeholder
+        # Breadth momentum: average 5-day % return across universe
+        rets_5d = []
+        for ticker, df in tickers_data.items():
+            if len(df) >= 5:
+                c_now = float(df.iloc[-1]["Close"])
+                c_5d = float(df.iloc[-5]["Close"])
+                if c_5d > 0:
+                    rets_5d.append((c_now - c_5d) / c_5d * 100)
+        breadth_momentum = (sum(rets_5d) / len(rets_5d)) if rets_5d else 0.0
 
         return {
             "advance_decline_ratio": round(ad_ratio, 2),
@@ -321,13 +327,13 @@ def get_sector_rotation() -> dict:
     }
     """
     try:
-        # Indonesian sector tickers (approximation using main stocks)
+        # Indonesian sector tickers (main liquid stocks per sector)
         sector_map = {
-            "perbankan": ["BBCA", "BBRI", "BMRI"],
-            "mining": ["ANTM", "INCO"],
-            "consumer": ["UNVR", "ICBP", "INDF"],
-            "infrastructure": ["WIKA", "WSKT"],
-            "property": ["PPRO"],
+            "perbankan": ["BBCA", "BBRI", "BMRI", "BBNI"],
+            "mining": ["ANTM", "INCO", "ADRO", "PTBA"],
+            "consumer": ["UNVR", "ICBP", "INDF", "AMRT"],
+            "infrastructure": ["TLKM", "JSMR", "PGAS"],
+            "property": ["BSDE", "CTRA", "PWON"],
         }
 
         sector_returns = {}

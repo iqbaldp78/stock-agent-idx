@@ -12,6 +12,8 @@ import numpy as np
 import logging
 from datetime import datetime
 
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, "/app")
 
 from data.fetcher_ihsg import get_ihsg_ohlcv
@@ -122,12 +124,24 @@ def run_ihsg_backtest(years: float = 3.0):
         # 4. Sector proxy score component
         sector_score = max(0.0, min(1.0, 0.5 + (ret_5d * 0.02)))
 
-        # Combined score (weighted average)
+        # Dynamic regime weighting matching live predictor
+        if abs(ihsg_vs_ma20_pct) > 2.0:
+            regime = "TRENDING"
+            weights = {"momentum": 0.30, "breadth": 0.25, "sectors": 0.15, "macro": 0.15, "news": 0.15}
+        elif abs(ret_5d) > 3.0:
+            regime = "VOLATILE"
+            weights = {"macro": 0.35, "breadth": 0.25, "momentum": 0.15, "sectors": 0.10, "news": 0.15}
+        else:
+            regime = "CONSOLIDATION"
+            weights = {"breadth": 0.35, "sectors": 0.20, "momentum": 0.15, "macro": 0.15, "news": 0.15}
+
+        news_score = 0.50  # Historical neutral baseline for news sentiment
         combined_score = (
-            mom_score * 0.30 +
-            breadth_score * 0.30 +
-            macro_score * 0.20 +
-            sector_score * 0.20
+            mom_score * weights["momentum"] +
+            breadth_score * weights["breadth"] +
+            macro_score * weights["macro"] +
+            sector_score * weights["sectors"] +
+            news_score * weights["news"]
         )
 
         # Binary Direction Determination
@@ -174,9 +188,17 @@ def run_ihsg_backtest(years: float = 3.0):
     cum_strat_long = (1 + res_df["strat_long_only"] / 100).prod() - 1
     cum_strat_ls = (1 + res_df["strat_long_short"] / 100).prod() - 1
 
-    # Multi-day direction accuracy
-    res_df["is_correct_d3"] = res_df.apply(lambda r: (r["predicted_dir"] == "BULLISH" and r["actual_return_d3"] >= 0) if r["actual_return_d3"] is not None else None, axis=1)
-    res_df["is_correct_d5"] = res_df.apply(lambda r: (r["predicted_dir"] == "BULLISH" and r["actual_return_d5"] >= 0) if r["actual_return_d5"] is not None else None, axis=1)
+    # Multi-day direction accuracy (evaluating both BULLISH and BEARISH predictions)
+    res_df["is_correct_d3"] = res_df.apply(
+        lambda r: ((r["predicted_dir"] == "BULLISH" and r["actual_return_d3"] >= 0) or
+                   (r["predicted_dir"] == "BEARISH" and r["actual_return_d3"] < 0))
+        if r["actual_return_d3"] is not None else None, axis=1
+    )
+    res_df["is_correct_d5"] = res_df.apply(
+        lambda r: ((r["predicted_dir"] == "BULLISH" and r["actual_return_d5"] >= 0) or
+                   (r["predicted_dir"] == "BEARISH" and r["actual_return_d5"] < 0))
+        if r["actual_return_d5"] is not None else None, axis=1
+    )
     
     win_rate_d3 = res_df["is_correct_d3"].dropna().mean() * 100
     win_rate_d5 = res_df["is_correct_d5"].dropna().mean() * 100
