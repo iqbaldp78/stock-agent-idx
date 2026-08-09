@@ -148,6 +148,13 @@ def run_performance_check():
         db.commit()
         db.close()
 
+        # Run ML Validation at 17:00 WIB after market close
+        logger.info("Running ML Evening Validation (cron_ml_validate)...")
+        try:
+            subprocess.run(["python3", "scripts/cron_ml_validate.py"], check=False)
+        except Exception as ve:
+            logger.warning(f"ML evening validation error: {ve}")
+
     except Exception as e:
         logger.exception(f"Performance check failed: {e}")
 
@@ -251,6 +258,7 @@ def run_portfolio_analysis():
 
         # Get latest TOP PICKS from DB
         db = SessionLocal()
+        top_picks = []
         try:
             top_picks_rows = db.query(Signal).filter(
                 Signal.run_date == db.query(Signal.run_date).order_by(Signal.run_date.desc()).limit(1).scalar_subquery()
@@ -271,7 +279,7 @@ def run_portfolio_analysis():
         finally:
             db.close()
 
-        transactions = get_transactions(start_date=datetime.date.today() - datetime.timedelta(days=30))
+        transactions = get_transactions(start_date=datetime.now().date() - timedelta(days=30))
 
         # Run AI analysis
         result = analyze_portfolio(
@@ -376,13 +384,19 @@ def main():
         name="Combined Daily AI + Konglo Analysis",
     )
 
-    # ML Training: Every day at 03:00 AM WIB (Heavy training)
-    # Using shell=True for the system command to trigger the training script
+    # ML Training: Every day at 03:00 AM WIB (Heavy training followed by Today Prediction)
     import subprocess
     def run_ml_training():
         logger.info("=== STARTING ML TRAINING (5Y PERIOD) ===")
         subprocess.run(["python3", "scripts/train_multiday_model.py", "--all", "--period", "5y"], check=True)
         logger.info("=== ML TRAINING COMPLETED ===")
+
+        logger.info("=== STARTING ML PREDICTION FOR TODAY ===")
+        try:
+            subprocess.run(["python3", "scripts/cron_ml_predict.py"], check=False)
+            logger.info("=== ML PREDICTION COMPLETED ===")
+        except Exception as pe:
+            logger.error(f"Failed to run ML prediction after training: {pe}")
 
     scheduler.add_job(
         run_ml_training,

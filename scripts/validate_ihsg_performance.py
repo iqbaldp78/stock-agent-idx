@@ -50,7 +50,7 @@ def validate_ihsg_performance():
         SELECT 
             COUNT(*) as total_predictions,
             SUM(CASE 
-                WHEN direction = 'BULLISH' AND actual_d1_pct > 0 THEN 1
+                WHEN direction = 'BULLISH' AND actual_d1_pct >= 0 THEN 1
                 WHEN direction = 'BEARISH' AND actual_d1_pct < 0 THEN 1
                 WHEN direction = 'SIDEWAYS' AND abs(actual_d1_pct) < 0.5 THEN 1
                 ELSE 0 

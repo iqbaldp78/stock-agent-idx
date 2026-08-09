@@ -21,23 +21,50 @@ def get_db_session():
     return SessionLocal()
 
 
-def get_next_trading_day(ref_date: date = None) -> date:
+def get_target_trading_day(ref_dt: datetime = None) -> date:
     """
-    Hitung tanggal perdagangan berikutnya (Next Trading Day):
-    - Jika ref_date hari Jumat (4), Sabtu (5), atau Minggu (6) -> Senin depan.
-    - Jika ref_date hari Senin (0) s/d Kamis (3) -> Besok (ref_date + 1 hari).
+    Hitung tanggal perdagangan target berdasarkan waktu eksekusi:
+    - Jika dieksekusi SEBELUM jam 16:00 WIB (pagi / dini hari sebelum market close):
+      Target trade_date adalah HARI INI (jika Senin-Jumat) atau Senin depan (jika Sabtu/Minggu).
+    - Jika dieksekusi SETELAH jam 16:00 WIB (setelah market close sore/malam):
+      Target trade_date adalah HARI KERJA BERIKUTNYA (Besok jika Mon-Thu, atau Senin jika Fri-Sun).
     """
-    if ref_date is None:
-        ref_date = date.today()
+    if ref_dt is None:
+        ref_dt = datetime.now()
+
+    if isinstance(ref_dt, date) and not isinstance(ref_dt, datetime):
+        ref_dt = datetime.combine(ref_dt, datetime.min.time())
+
+    ref_date = ref_dt.date()
     weekday = ref_date.weekday()
-    if weekday == 4:      # Friday
-        return ref_date + timedelta(days=3)
-    elif weekday == 5:    # Saturday
-        return ref_date + timedelta(days=2)
-    elif weekday == 6:    # Sunday
-        return ref_date + timedelta(days=1)
-    else:                 # Mon-Thu
-        return ref_date + timedelta(days=1)
+
+    if ref_dt.hour < 16:
+        # Pagi / Dini Hari (sebelum bursa tutup hari ini)
+        if weekday in (0, 1, 2, 3, 4):  # Mon - Fri -> Hari Ini (Today)
+            return ref_date
+        elif weekday == 5:  # Saturday -> Senin (+2 hari)
+            return ref_date + timedelta(days=2)
+        else:  # Sunday (6) -> Senin (+1 hari)
+            return ref_date + timedelta(days=1)
+    else:
+        # Sore / Malam (setelah bursa tutup hari ini) -> Next Trading Day
+        if weekday in (0, 1, 2, 3):  # Mon-Thu -> Besok
+            return ref_date + timedelta(days=1)
+        elif weekday == 4:  # Friday -> Senin (+3 hari)
+            return ref_date + timedelta(days=3)
+        elif weekday == 5:  # Saturday -> Senin (+2 hari)
+            return ref_date + timedelta(days=2)
+        else:  # Sunday (6) -> Senin (+1 hari)
+            return ref_date + timedelta(days=1)
+
+
+def get_next_trading_day(ref_date: date = None) -> date:
+    """Wrapper kompatibilitas ke belakang yang mendukung waktu eksekusi."""
+    if ref_date is None:
+        return get_target_trading_day(datetime.now())
+    if isinstance(ref_date, date) and not isinstance(ref_date, datetime):
+        return get_target_trading_day(datetime.combine(ref_date, datetime.min.time()))
+    return get_target_trading_day(ref_date)
 
 
 def run_ml_prediction(target_date: date = None, tickers: list = None) -> int:
@@ -46,7 +73,7 @@ def run_ml_prediction(target_date: date = None, tickers: list = None) -> int:
     ke database ml_prediction_log dengan target_date.
     """
     if target_date is None:
-        target_date = get_next_trading_day()
+        target_date = get_target_trading_day()
 
     if isinstance(target_date, str):
         target_date = date.fromisoformat(target_date)

@@ -16,7 +16,7 @@ def run_sim():
     actual_df['trade_date'] = pd.to_datetime(actual_df['trade_date']).dt.date
     actual_dict = dict(zip(actual_df['trade_date'], actual_df['close']))
     
-    print(f"{'Date':<12} | {'Combined':<8} | {'Current (0.4-0.6)':<18} | {'Aggressive (0.48-0.52)':<22} | {'Actual D+1 %':<12}")
+    print(f"{'Date':<12} | {'Combined':<8} | {'Binary (>=0.50)':<18} | {'Legacy (0.4-0.6)':<18} | {'Actual D+1 %':<12}")
     print("-" * 80)
     
     for idx, row in preds_df.iterrows():
@@ -24,8 +24,8 @@ def run_sim():
         scores = row['component_scores']
         combined = scores.get('combined', 0.5) if isinstance(scores, dict) else 0.5
         
-        dir_current = "BULLISH" if combined > 0.6 else ("BEARISH" if combined < 0.4 else "SIDEWAYS")
-        dir_agg = "BULLISH" if combined > 0.51 else ("BEARISH" if combined < 0.49 else "SIDEWAYS")
+        dir_binary = "BULLISH" if combined >= 0.50 else "BEARISH"
+        dir_legacy = "BULLISH" if combined > 0.60 else ("BEARISH" if combined < 0.40 else "SIDEWAYS")
         
         actual_d1_pct = 0
         found = False
@@ -37,7 +37,7 @@ def run_sim():
                 break
                 
         if found:
-            print(f"{str(p_date):<12} | {combined:.4f}   | {dir_current:<18} | {dir_agg:<22} | {actual_d1_pct:+.2f}%")
+            print(f"{str(p_date):<12} | {combined:.4f}   | {dir_binary:<18} | {dir_legacy:<18} | {actual_d1_pct:+.2f}%")
 
 if __name__ == "__main__":
     run_sim()

@@ -68,11 +68,13 @@ def _synthesize_llm(state: dict, global_news: str = "") -> dict:
         if e.get("ticker") in finalist_tickers or e.get("ticker") == "MARKET"
     ][-80:]
 
+    ihsg_prediction = state.get("ihsg_prediction", {})
     context = {
         "finalists": finalists[:7],
         "scores": {t: scores.get(t) for t in finalist_tickers if t in scores},
         "composites": {t: composites.get(t) for t in finalist_tickers if t in composites},
         "macro_data": macro_data,
+        "ihsg_prediction": ihsg_prediction,
         "debate_log": debate_summary,
         "ml_predictions": {t: ml_predictions.get(t) for t in finalist_tickers if t in ml_predictions},
     }
@@ -224,9 +226,10 @@ def _merge_llm_decision(state: dict, llm_raw: dict) -> dict:
             pick["thesis"] = str(meta["thesis"])
         if meta.get("entry_reasoning"):
             pick["entry_reasoning"] = str(meta["entry_reasoning"])
+        ihsg_dir = state.get("ihsg_prediction", {}).get("direction", "SIDEWAYS")
         if meta.get("conviction") in ("HIGH", "MEDIUM", "LOW"):
             pick["conviction"] = meta["conviction"]
-            pick["position_size"] = _position_size(meta["conviction"])
+            pick["position_size"] = _position_size(meta["conviction"], ihsg_dir)
         if meta.get("time_horizon"):
             pick["time_horizon"] = str(meta["time_horizon"])
 
@@ -777,12 +780,19 @@ def _calc_target_2(target_1) -> float | None:
         return None
 
 
-def _position_size(conviction: str) -> str:
-    sizes = {
-        "HIGH": "30% portofolio",
-        "MEDIUM": "20% portofolio",
-        "LOW": "10% portofolio",
-    }
+def _position_size(conviction: str, ihsg_direction: str = "SIDEWAYS") -> str:
+    if ihsg_direction == "BEARISH":
+        sizes = {
+            "HIGH": "15% portofolio (IHSG Bearish cap)",
+            "MEDIUM": "10% portofolio (IHSG Bearish cap)",
+            "LOW": "5% portofolio (IHSG Bearish cap)",
+        }
+    else:
+        sizes = {
+            "HIGH": "30% portofolio",
+            "MEDIUM": "20% portofolio",
+            "LOW": "10% portofolio",
+        }
     return sizes.get(conviction, "15% portofolio")
 
 

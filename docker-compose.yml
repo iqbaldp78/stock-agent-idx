@@ -109,6 +109,7 @@ services:
       - ./data:/app/data
       - ./graph:/app/graph
       - ./services:/app/services
+      - ./scripts:/app/scripts
     depends_on:
       postgres:
         condition: service_healthy
@@ -130,6 +131,8 @@ services:
       - stock_net
     depends_on:
       - web_api
+    volumes:
+      - ./web-frontend/src:/app/src
 
 volumes:
   postgres_data:

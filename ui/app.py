@@ -2260,150 +2260,333 @@ elif page == "📊 Performance":
 elif page == "📈 IHSG Predictor":
     st.title("📈 IHSG PREDICTOR")
 
-    # Get latest IHSG prediction
-    ihsg_pred = query_db("""
-        SELECT * FROM ihsg_predictions
-        WHERE run_date = (SELECT MAX(run_date) FROM ihsg_predictions)
-        LIMIT 1
-    """)
+    tab_live, tab_backtest, tab_outlook = st.tabs(["🔮 Live Prediction & Track Record", "🧪 Backtest Strategi IHSG", "🌐 1-Year Outlook & Reversal Detector"])
 
-    if ihsg_pred:
-        pred = ihsg_pred[0]
-
-        # Header metrics
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Current Level", f"{pred.get('current_price', 0):,.0f}")
-        with col2:
-            conf_icon = "🟢" if pred.get('confidence') == "HIGH" else "🟡" if pred.get('confidence') == "MEDIUM" else "🔴"
-            st.metric("Confidence", f"{conf_icon} {pred.get('confidence', 'N/A')}")
-        with col3:
-            st.metric("Direction", pred.get('direction', 'N/A'))
-        with col4:
-            st.metric("Volatility", pred.get('volatility_level', 'N/A'))
-
-        st.divider()
-
-        # Predictions (D1, D3, D5, D7)
-        st.subheader("📊 Price Predictions")
-        col_d1, col_d3, col_d5, col_d7 = st.columns(4)
-
-        with col_d1:
-            pct = pred.get('day_1_pct', 0)
-            color = "normal" if pct >= 0 else "inverse"
-            st.metric("D+1", f"{pred.get('day_1_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
-
-        with col_d3:
-            pct = pred.get('day_3_pct', 0)
-            color = "normal" if pct >= 0 else "inverse"
-            st.metric("D+3", f"{pred.get('day_3_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
-
-        with col_d5:
-            pct = pred.get('day_5_pct', 0)
-            color = "normal" if pct >= 0 else "inverse"
-            st.metric("D+5", f"{pred.get('day_5_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
-
-        with col_d7:
-            pct = pred.get('day_7_pct', 0)
-            color = "normal" if pct >= 0 else "inverse"
-            st.metric("D+7", f"{pred.get('day_7_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
-
-        st.divider()
-
-        # Component scores
-        st.subheader("⚙️ Component Scores")
-        comp = pred.get('component_scores') or {}
-        if isinstance(comp, str):
-            comp = json.loads(comp)
-
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Momentum", f"{comp.get('momentum', 0):.2f}")
-        with col2:
-            st.metric("Breadth", f"{comp.get('breadth', 0):.2f}")
-        with col3:
-            st.metric("Macro", f"{comp.get('macro', 0):.2f}")
-        with col4:
-            st.metric("Sectors", f"{comp.get('sectors', 0):.2f}")
-
-        st.divider()
-
-        # Analysis details
-        
-        # --- PERFORMA IHSG ---
-        st.subheader("📊 Track Record Akurasi")
-        try:
-            acc_data = query_db('''
-                WITH p_data AS (
-                    SELECT DISTINCT ON (run_date::date) run_date::date as pd, direction, current_price FROM ihsg_predictions
-                ),
-                m_data AS (
-                    SELECT p.pd, p.direction, p.current_price, a.close as actual,
-                        ROUND(((a.close - p.current_price) / p.current_price * 100)::numeric, 2) as actual_pct
-                    FROM p_data p
-                    JOIN ihsg_ohlcv a ON a.trade_date = (
-                        SELECT min(trade_date) FROM ihsg_ohlcv WHERE trade_date > p.pd
-                    )
-                )
-                SELECT 
-                    COUNT(*) as total,
-                    SUM(CASE 
-                        WHEN direction = 'BULLISH' AND actual_pct > 0 THEN 1
-                        WHEN direction = 'BEARISH' AND actual_pct < 0 THEN 1
-                        WHEN direction = 'SIDEWAYS' AND abs(actual_pct) < 0.5 THEN 1
-                        ELSE 0 
-                    END) as correct
-                FROM m_data;
-            ''')
-            if acc_data and acc_data[0]['total'] > 0:
-                t = acc_data[0]['total']
-                c = acc_data[0]['correct']
-                pct = (c / t) * 100
-                st.info(f"**Akurasi Arah Historis:** {pct:.1f}% ({c}/{t} hari)")
-        except:
-            pass
-            
-        st.subheader("📝 Analysis (LLM Manager)")
-
-        with st.expander("Reasoning", expanded=True):
-            st.markdown(pred.get('reasoning', 'N/A'))
-
-        drivers = pred.get('key_drivers') or []
-        if isinstance(drivers, str):
-            drivers = json.loads(drivers)
-        with st.expander("Key Drivers"):
-            if drivers:
-                for i, driver in enumerate(drivers, 1):
-                    st.markdown(f"{i}. {driver}")
-            else:
-                st.info("No drivers identified")
-
-        risks = pred.get('risks') or []
-        if isinstance(risks, str):
-            risks = json.loads(risks)
-        with st.expander("Risk Factors"):
-            if risks:
-                for i, risk in enumerate(risks, 1):
-                    st.markdown(f"{i}. {risk}")
-            else:
-                st.info("No major risks identified")
-
-        st.divider()
-
-        # Historical predictions
-        st.subheader("📈 Historical Predictions")
-        hist = query_db("""
-            SELECT run_date, current_price, day_1_price, day_1_pct, direction, confidence
-            FROM ihsg_predictions
-            ORDER BY run_date DESC
-            LIMIT 20
+    with tab_live:
+        # Get latest IHSG prediction
+        ihsg_pred = query_db("""
+            SELECT * FROM ihsg_predictions
+            WHERE run_date = (SELECT MAX(run_date) FROM ihsg_predictions)
+            LIMIT 1
         """)
-        if hist:
-            import pandas as pd
-            df = pd.DataFrame(hist)
-            st.dataframe(df, use_container_width=True, hide_index=True)
-    else:
-        st.info("Belum ada IHSG prediction. Jalankan analysis terlebih dahulu.")
+
+        if ihsg_pred:
+            pred = ihsg_pred[0]
+
+            # Header metrics
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Current Level", f"{pred.get('current_price', 0):,.0f}")
+            with col2:
+                conf_icon = "🟢" if pred.get('confidence') == "HIGH" else "🟡" if pred.get('confidence') == "MEDIUM" else "🔴"
+                st.metric("Confidence", f"{conf_icon} {pred.get('confidence', 'N/A')}")
+            with col3:
+                st.metric("Direction", pred.get('direction', 'N/A'))
+            with col4:
+                st.metric("Volatility", pred.get('volatility_level', 'N/A'))
+
+            st.divider()
+
+            # Predictions (D1, D3, D5, D7)
+            st.subheader("📊 Price Predictions")
+            col_d1, col_d3, col_d5, col_d7 = st.columns(4)
+
+            with col_d1:
+                pct = pred.get('day_1_pct', 0)
+                color = "normal" if pct >= 0 else "inverse"
+                st.metric("D+1", f"{pred.get('day_1_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
+
+            with col_d3:
+                pct = pred.get('day_3_pct', 0)
+                color = "normal" if pct >= 0 else "inverse"
+                st.metric("D+3", f"{pred.get('day_3_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
+
+            with col_d5:
+                pct = pred.get('day_5_pct', 0)
+                color = "normal" if pct >= 0 else "inverse"
+                st.metric("D+5", f"{pred.get('day_5_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
+
+            with col_d7:
+                pct = pred.get('day_7_pct', 0)
+                color = "normal" if pct >= 0 else "inverse"
+                st.metric("D+7", f"{pred.get('day_7_price', 0):,.0f}", f"{pct:+.2f}%", delta_color=color)
+
+            st.divider()
+
+            # Component scores
+            st.subheader("⚙️ Component Scores")
+            comp = pred.get('component_scores') or {}
+            if isinstance(comp, str):
+                comp = json.loads(comp)
+
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("Momentum", f"{comp.get('momentum', 0):.2f}")
+            with col2:
+                st.metric("Breadth", f"{comp.get('breadth', 0):.2f}")
+            with col3:
+                st.metric("Macro", f"{comp.get('macro', 0):.2f}")
+            with col4:
+                st.metric("Sectors", f"{comp.get('sectors', 0):.2f}")
+            with col5:
+                st.metric("News", f"{comp.get('news', 0):.2f}")
+
+            st.divider()
+
+            # --- PERFORMA IHSG ---
+            st.subheader("📊 Track Record Akurasi Database")
+            try:
+                acc_data = query_db('''
+                    WITH p_data AS (
+                        SELECT DISTINCT ON (run_date::date) run_date::date as pd, direction, current_price FROM ihsg_predictions
+                    ),
+                    m_data AS (
+                        SELECT p.pd, p.direction, p.current_price, a.close as actual,
+                            ROUND(((a.close - p.current_price) / p.current_price * 100)::numeric, 2) as actual_pct
+                        FROM p_data p
+                        JOIN ihsg_ohlcv a ON a.trade_date = (
+                            SELECT min(trade_date) FROM ihsg_ohlcv WHERE trade_date > p.pd
+                        )
+                    )
+                    SELECT 
+                        COUNT(*) as total,
+                        SUM(CASE 
+                            WHEN direction = 'BULLISH' AND actual_pct >= 0 THEN 1
+                            WHEN direction = 'BEARISH' AND actual_pct < 0 THEN 1
+                            WHEN direction = 'SIDEWAYS' AND abs(actual_pct) < 0.5 THEN 1
+                            ELSE 0 
+                        END) as correct
+                    FROM m_data;
+                ''')
+                if acc_data and acc_data[0]['total'] > 0:
+                    t = acc_data[0]['total']
+                    c = acc_data[0]['correct']
+                    pct = (c / t) * 100
+                    st.info(f"**Akurasi Arah Historis (Database Log):** {pct:.1f}% ({c}/{t} hari)")
+            except:
+                pass
+                
+            st.subheader("📝 Analysis (LLM Manager)")
+
+            with st.expander("Reasoning", expanded=True):
+                st.markdown(pred.get('reasoning', 'N/A'))
+
+            drivers = pred.get('key_drivers') or []
+            if isinstance(drivers, str):
+                drivers = json.loads(drivers)
+            with st.expander("Key Drivers"):
+                if drivers:
+                    for i, driver in enumerate(drivers, 1):
+                        st.markdown(f"{i}. {driver}")
+                else:
+                    st.info("No drivers identified")
+
+            risks = pred.get('risks') or []
+            if isinstance(risks, str):
+                risks = json.loads(risks)
+            with st.expander("Risk Factors"):
+                if risks:
+                    for i, risk in enumerate(risks, 1):
+                        st.markdown(f"{i}. {risk}")
+                else:
+                    st.info("No major risks identified")
+
+            st.divider()
+
+            # Historical predictions
+            st.subheader("📈 Historical Predictions")
+            hist = query_db("""
+                SELECT run_date, current_price, day_1_price, day_1_pct, direction, confidence
+                FROM ihsg_predictions
+                ORDER BY run_date DESC
+                LIMIT 20
+            """)
+            if hist:
+                import pandas as pd
+                df = pd.DataFrame(hist)
+                st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.info("Belum ada IHSG prediction. Jalankan analysis terlebih dahulu.")
+
+    with tab_backtest:
+        st.subheader("🧪 Historical Backtest Strategi IHSG")
+        st.caption("Uji akurasi tebakan arah biner (BULLISH vs BEARISH) dan return akumulatif strategi IHSG Predictor terhadap data historis OHLCV.")
+
+        c1, c2 = st.columns([3, 1])
+        with c1:
+            years_opt = st.select_slider(
+                "Pilih Periode Backtest (Tahun):",
+                options=[1.0, 2.0, 3.0, 5.0],
+                value=3.0,
+                format_func=lambda x: f"{int(x)} Tahun" if x == int(x) else f"{x} Tahun"
+            )
+        with c2:
+            st.write("")
+            st.write("")
+            run_bt = st.button("🚀 Jalankan Backtest", type="primary", use_container_width=True)
+
+        if "ihsg_bt_summary" not in st.session_state or run_bt:
+            with st.spinner("Menjalankan simulasi backtest historis..."):
+                try:
+                    from scripts.backtest_ihsg_strategy import run_ihsg_backtest
+                    st.session_state["ihsg_bt_summary"] = run_ihsg_backtest(years=years_opt)
+                except Exception as e:
+                    st.error(f"Gagal menjalankan backtest: {e}")
+
+        bt = st.session_state.get("ihsg_bt_summary")
+        if bt:
+            st.success(f"**Periode Evaluasi:** {bt['start_date']} s/d {bt['end_date']} ({bt['total_days']} Hari Perdagangan)")
+
+            # Metric Cards
+            m1, m2, m3, m4 = st.columns(4)
+            with m1:
+                st.metric("D+1 Direction Win Rate", f"{bt['win_rate']:.2f}%", f"{bt['win_count']}/{bt['total_days']} Hari")
+            with m2:
+                st.metric("Mean Abs Error (MAE)", f"{bt['mae_avg']:.2f}%", "Rata-rata Meleset Target")
+            with m3:
+                delta_l = bt['cum_strat_long_pct'] - bt['cum_bench_pct']
+                st.metric("Return Long-Only", f"{bt['cum_strat_long_pct']:+.2f}%", f"{delta_l:+.2f}% vs Benchmark")
+            with m4:
+                delta_ls = bt['cum_strat_ls_pct'] - bt['cum_bench_pct']
+                st.metric("Return Long-Short", f"{bt['cum_strat_ls_pct']:+.2f}%", f"{delta_ls:+.2f}% vs Benchmark")
+
+            st.divider()
+
+            # Explanatory Guide: Cara Membaca Hasil Backtest
+            with st.expander("📖 CARA MEMBACA HASIL BACKTEST IHSG", expanded=True):
+                st.markdown("""
+### 💡 Panduan Membaca Hasil Evaluasi:
+1. **D+1 Direction Win Rate (Akurasi Arah Harian)**:
+   - Persentase hari di mana tebakan sinyal (`BULLISH` vs `BEARISH`) tepat sesuai pergerakan IHSG keesokan harinya.
+   - **Win Rate > 50%** menandakan sistem memiliki *statistical edge* (keunggulan matematis di atas tebakan acak 50%).
+2. **Mean Absolute Error (MAE)**:
+   - Jarak rata-rata persentase proyeksi harga target dibanding penutupan pasar aktual.
+   - Angka MAE yang kecil (misal $<1.0\%$) membuktikan kalibrasi volatilitas ATR 14-hari berjalan presisi.
+3. **Return Long-Only**:
+   - Imbal hasil akumulatif jika kamu **hanya membeli / memegang pasar** saat sinyal `BULLISH` dan **memegang CASH (keluar dari pasar)** saat sinyal `BEARISH`.
+   - Strategi ini secara efektif memproteksi portofolio dari *downtrend* dan pasar *bearish*.
+4. **Return Long-Short**:
+   - Imbal hasil jika kamu mengambil posisi *long* saat `BULLISH` dan posisi *short* / defensif saat `BEARISH`.
+5. **Benchmark IHSG (Buy & Hold)**:
+   - Imbal hasil jika hanya membeli indeks IHSG dan mendiamkannya tanpa strategi (*Buy & Hold*) selama periode tersebut.
+""")
+
+            # Equity Curve Simulation Chart
+            st.subheader("📈 Kurva Ekuitas Simulasi Strategi vs Benchmark IHSG")
+            res_df = bt.get("df")
+            if res_df is not None and not res_df.empty:
+                import pandas as pd
+                chart_df = pd.DataFrame()
+                chart_df["Date"] = pd.to_datetime(res_df["date"])
+                chart_df["IHSG Benchmark"] = (1 + res_df["actual_return_d1"] / 100).cumprod() * 100
+                chart_df["Strategy Long-Only"] = (1 + res_df["strat_long_only"] / 100).cumprod() * 100
+                chart_df["Strategy Long-Short"] = (1 + res_df["strat_long_short"] / 100).cumprod() * 100
+                chart_df = chart_df.set_index("Date")
+                st.line_chart(chart_df)
+
+            # Detailed Logs Table
+            with st.expander("🔍 Detail Transaksi & Log Prediksi Harian"):
+                if res_df is not None:
+                    disp_df = res_df[["date", "close", "combined_score", "predicted_dir", "actual_return_d1", "is_correct_d1", "pred_d1_pct", "mae_d1"]].copy()
+                    disp_df.columns = ["Tanggal", "Close IHSG", "Score", "Prediksi Arah", "Actual Return %", "Tebakan Benar?", "Pred Target %", "MAE %"]
+                    st.dataframe(disp_df, use_container_width=True, hide_index=True)
+
+    with tab_outlook:
+        st.subheader("🌐 1-Year Technical Outlook & Reversal Pivot Detector")
+        st.caption("Proyeksi tren 1-tahun, deteksi titik Reversal Bottom/Top (Fibonacci 5-Tahun & Monthly Pivots), serta estimasi jendela waktu (Bulan & Minggu).")
+
+        # Fetch latest 1-year outlook payload
+        ihsg_pred = query_db("""
+            SELECT * FROM ihsg_predictions
+            WHERE run_date = (SELECT MAX(run_date) FROM ihsg_predictions)
+            LIMIT 1
+        """)
+        
+        outlook = {}
+        if ihsg_pred:
+            scores = ihsg_pred[0]
+            try:
+                from agents.ihsg_predictor import predict_ihsg_1year_outlook
+                from data.fetcher_ihsg import get_ihsg_ohlcv, get_ihsg_technical_analysis
+                ohlcv_8y = get_ihsg_ohlcv("8y")
+                tv_w = get_ihsg_technical_analysis("1W")
+                tv_m = get_ihsg_technical_analysis("1M")
+                c_p = float(scores.get("current_price") or ohlcv_8y["Close"].iloc[-1])
+                outlook = predict_ihsg_1year_outlook(ohlcv_8y, c_p, tv_w, tv_m)
+            except Exception as e:
+                st.warning(f"Memuat 1-Year Outlook: {e}")
+
+        if outlook:
+            # Header metrics
+            o1, o2, o3, o4 = st.columns(4)
+            with o1:
+                dir_color = "🟢" if outlook.get("direction_1year") == "BULLISH" else "🔴"
+                st.metric("Arah Tren 1-Tahun", f"{dir_color} {outlook.get('direction_1year', 'N/A')}")
+            with o2:
+                st.metric("Zona Bottom Confluence", f"{outlook.get('bottom_confluence_level', 0):,.0f}", f"{outlook.get('downside_risk_pct', 0):+.2f}% Risk")
+            with o3:
+                st.metric("Zona Top Resistance", f"{outlook.get('top_confluence_level', 0):,.0f}", f"{outlook.get('upside_potential_pct', 0):+.2f}% Upside")
+            with o4:
+                st.metric("Estimasi Waktu Reversal", outlook.get("estimated_reversal_window", "N/A"))
+
+            st.divider()
+
+            # 2-WAY REVERSAL PIVOT TRIGGER BOX
+            st.subheader("🔄 Sinyal Konfirmasi Pembalikan Arah (Reversal Triggers)")
+            rc1, rc2 = st.columns(2)
+            with rc1:
+                st.markdown("### 🟢 SAAT BEARISH: Kapan Berbalik NAIK?")
+                is_bull_ok = outlook.get("bullish_reversal_confirmed", False)
+                status_icon = "✅ SELESAI BOTTOMLAND (BULLISH)" if is_bull_ok else "⏳ DALAM PROSES BOTTOMLAND"
+                st.info(f"""
+**Status**: {status_icon}
+- **Zona Bottom Target**: **{outlook.get('bottom_confluence_level', 0):,.0f}**
+- **Syarat Utama**: Harga Breakout & Close di atas **MA50 Weekly ({outlook.get('ma50_weekly', 0):,.0f})**
+- **Konfirmasi Sekunder**: Rebound Weekly RSI & Weekly MACD Golden Cross
+""")
+
+            with rc2:
+                st.markdown("### 🔴 SAAT BULLISH: Kapan Berbalik TURUN?")
+                is_bear_ok = outlook.get("bearish_reversal_confirmed", False)
+                status_icon_b = "⚠️ BERPOTENSI REVERSAL TURUN" if is_bear_ok else "🟢 TREN NAIK MASIH SOLID"
+                st.warning(f"""
+**Status**: {status_icon_b}
+- **Zona Top Resistance Target**: **{outlook.get('top_confluence_level', 0):,.0f}**
+- **Syarat Utama**: Harga Breakdown & Close di bawah **MA50 Weekly ({outlook.get('ma50_weekly', 0):,.0f})**
+- **Konfirmasi Sekunder**: Weekly RSI Overbought (>70) & Weekly MACD Death Cross
+""")
+
+            st.divider()
+
+            # SEASONALITY REVERSAL TIMING
+            st.subheader("📅 Musim Reversal Historis IHSG (Seasonality Window)")
+            s1, s2 = st.columns(2)
+            with s1:
+                st.metric("Bulan Reversal Naik Terkuat", f"🗓️ {outlook.get('best_seasonal_month')}", f"{outlook.get('best_seasonal_win_rate'):.1f}% Win Rate Historis")
+            with s2:
+                st.metric("Bulan Konsolidasi/Terlemah", f"⚠️ {outlook.get('worst_seasonal_month')}", f"{outlook.get('worst_seasonal_win_rate'):.1f}% Win Rate Historis")
+
+            st.divider()
+
+            # TECHNICAL LEVEL TABLES
+            st.subheader("📐 Level Confluence Support & Resistance (Fibonacci 5-Tahun)")
+            fibs = outlook.get("fib_levels", {})
+            pivs = outlook.get("monthly_pivots", {})
+            if fibs and pivs:
+                level_df = pd.DataFrame([
+                    {"Kategori": "Top Resistance 2", "Tipe Level": "Fibonacci Extension 161.8%", "Nilai IHSG": f"{fibs.get('fib_exp_1618', 0):,.0f}"},
+                    {"Kategori": "Top Resistance 1", "Tipe Level": "Fibonacci Extension 127.2%", "Nilai IHSG": f"{fibs.get('fib_exp_1272', 0):,.0f}"},
+                    {"Kategori": "Monthly Pivot R1", "Tipe Level": "TradingView Monthly R1", "Nilai IHSG": f"{pivs.get('R1', 0):,.0f}"},
+                    {"Kategori": "MA50 Weekly (Reversal Line)", "Tipe Level": "Weekly 50 Moving Average", "Nilai IHSG": f"{outlook.get('ma50_weekly', 0):,.0f}"},
+                    {"Kategori": "Monthly Pivot S1", "Tipe Level": "TradingView Monthly S1", "Nilai IHSG": f"{pivs.get('S1', 0):,.0f}"},
+                    {"Kategori": "Fibonacci 50.0%", "Tipe Level": "5-Year Retracement 50.0%", "Nilai IHSG": f"{fibs.get('fib_500', 0):,.0f}"},
+                    {"Kategori": "Fibonacci 61.8% (Golden Pocket)", "Tipe Level": "5-Year Retracement 61.8%", "Nilai IHSG": f"{fibs.get('fib_618', 0):,.0f}"},
+                    {"Kategori": "Bottom Support Confluence", "Tipe Level": "Zona Support Terkuat", "Nilai IHSG": f"{outlook.get('bottom_confluence_level', 0):,.0f}"},
+                    {"Kategori": "MA200 Weekly (Major Base)", "Tipe Level": "Weekly 200 Moving Average", "Nilai IHSG": f"{outlook.get('ma200_weekly', 0):,.0f}"},
+                ])
+                st.dataframe(level_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("Memuat data 1-Year Outlook IHSG...")
 
 
 # === PAGE: ML Validation ===

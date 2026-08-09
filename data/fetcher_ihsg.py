@@ -1,6 +1,6 @@
 """
 IHSG Data Fetcher
-Mengambil IHSG OHLCV (8 tahun), market breadth (LQ45), sector rotation.
+Mengambil IHSG OHLCV (8 tahun), market breadth (LQ45), sector rotation, dan TradingView TA.
 """
 import logging
 import yfinance as yf
@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 from config import get_universe, to_yahoo_ticker
 from data.fetcher_stockbit import get_ohlcv
+from data.fetcher_tradingview import get_technical_analysis
 from db.cache import (
     get_cached_ihsg_ohlcv,
     save_ihsg_ohlcv,
@@ -22,6 +23,20 @@ from db.cache import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def get_ihsg_technical_analysis(interval: str = "1d") -> dict:
+    """Fetch TradingView Technical Analysis data for IHSG (COMPOSITE on IDX) for specified interval (1d, 1W, 1M)."""
+    try:
+        ta = get_technical_analysis(symbol="COMPOSITE", interval=interval, screener="indonesia", exchange="IDX")
+        if ta and ta.get("status") == "success":
+            logger.info(f"[fetcher_ihsg] TradingView TA ({interval}) fetched successfully for COMPOSITE")
+            return ta
+        logger.warning(f"[fetcher_ihsg] Empty or error TradingView TA ({interval}) response for COMPOSITE")
+        return {}
+    except Exception as e:
+        logger.warning(f"[fetcher_ihsg] Error fetching TradingView TA ({interval}): {e}")
+        return {}
 
 # === OHLCV ===
 

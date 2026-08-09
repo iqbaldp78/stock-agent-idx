@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 import os
 import sys
+sys.path.insert(0, "/app")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 import jwt
 
@@ -887,14 +889,64 @@ def get_ihsg_predictions():
                     "is_correct": is_correct
                 })
 
+            # 3. Calculate 1-Year Technical Outlook
+            one_year_outlook = {}
+            try:
+                from agents.ihsg_predictor import predict_ihsg_1year_outlook
+                from data.fetcher_ihsg import get_ihsg_ohlcv, get_ihsg_technical_analysis
+                ohlcv_8y = get_ihsg_ohlcv("8y")
+                tv_w = get_ihsg_technical_analysis("1W")
+                tv_m = get_ihsg_technical_analysis("1M")
+                c_p = float(latest.get("current_price") or (ohlcv_8y["Close"].iloc[-1] if ohlcv_8y is not None else 6400.0))
+                one_year_outlook = predict_ihsg_1year_outlook(ohlcv_8y, c_p, tv_w, tv_m)
+            except Exception as e:
+                print(f"[API IHSG] Outlook error: {e}")
+
             return {
                 "latest": latest,
                 "history": history,
-                "realtime": realtime_data
+                "realtime": realtime_data,
+                "one_year_outlook": one_year_outlook
             }
     except Exception as e:
         import traceback
         print(f"Error fetching IHSG prediction: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ihsg/backtest")
+def get_ihsg_backtest(years: int = 3):
+    """Run historical backtest for IHSG strategy over specified years (1, 3, 5)."""
+    try:
+        import json
+        import numpy as np
+        from scripts.backtest_ihsg_strategy import run_ihsg_backtest
+        raw_res = run_ihsg_backtest(years=float(years))
+        
+        def _sanitize(obj):
+            if isinstance(obj, pd.DataFrame):
+                return _sanitize(obj.to_dict(orient="records"))
+            elif isinstance(obj, dict):
+                return {str(k): _sanitize(v) for k, v in obj.items()}
+            elif isinstance(obj, (list, tuple)):
+                return [_sanitize(x) for x in obj]
+            elif isinstance(obj, (np.bool_, bool)):
+                return bool(obj)
+            elif isinstance(obj, (np.floating, float)):
+                return float(obj) if not np.isnan(obj) else None
+            elif isinstance(obj, (np.integer, int)):
+                return int(obj)
+            elif obj is None:
+                return None
+            return str(obj)
+
+        import pandas as pd
+        clean_res = _sanitize(raw_res)
+        return clean_res
+    except Exception as e:
+        import traceback
+        print(f"Error running IHSG backtest: {e}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
