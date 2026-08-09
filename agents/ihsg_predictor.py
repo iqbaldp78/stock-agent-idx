@@ -417,6 +417,69 @@ def _calculate_ihsg_seasonality(ohlcv: pd.DataFrame) -> dict:
         return {}
 
 
+def _score_timeframe_direction(tv_ta: dict, current_price: float) -> tuple[str, str, float]:
+    """
+    Score weekly or monthly direction from TradingView TA data.
+    Weights: RECOMMENDATION (60%), MA positioning (20%), RSI zone (20%).
+    Returns: (direction, confidence, score)
+    """
+    try:
+        if not tv_ta or tv_ta.get("status") != "success":
+            return "BEARISH", "LOW", 0.50
+
+        indicators = tv_ta.get("indicators", {})
+        summary = tv_ta.get("summary", {})
+
+        # 1. TradingView RECOMMENDATION (60%)
+        rec = summary.get("RECOMMENDATION", "").upper()
+        if "STRONG_BUY" in rec:
+            rec_score = 1.0
+        elif "BUY" in rec:
+            rec_score = 0.75
+        elif "NEUTRAL" in rec:
+            rec_score = 0.50
+        elif "STRONG_SELL" in rec:
+            rec_score = 0.0
+        elif "SELL" in rec:
+            rec_score = 0.25
+        else:
+            rec_score = 0.50
+
+        # 2. Moving Average Positioning (20%)
+        ma_buy_count = 0
+        ma_total = 0
+        for ma_key in ["SMA20", "SMA50", "SMA200", "EMA20", "EMA50", "EMA200"]:
+            if ma_key in indicators and indicators[ma_key] is not None and current_price > 0:
+                if current_price > float(indicators[ma_key]):
+                    ma_buy_count += 1
+                ma_total += 1
+        ma_score = (ma_buy_count / ma_total) if ma_total > 0 else 0.50
+
+        # 3. RSI Zone (20%)
+        rsi_val = indicators.get("RSI")
+        if rsi_val is not None:
+            rsi_norm = (float(rsi_val) - 30) / 40
+            rsi_score = max(0.0, min(1.0, rsi_norm))
+        else:
+            rsi_score = 0.50
+
+        combined_score = float(rec_score * 0.60 + ma_score * 0.20 + rsi_score * 0.20)
+        direction = "BULLISH" if combined_score >= 0.50 else "BEARISH"
+
+        score_diff = abs(combined_score - 0.50)
+        if score_diff >= 0.15:
+            confidence = "HIGH"
+        elif score_diff >= 0.08:
+            confidence = "MEDIUM"
+        else:
+            confidence = "LOW"
+
+        return direction, confidence, combined_score
+    except Exception as e:
+        logger.warning(f"[Timeframe Scoring] Error: {e}")
+        return "BEARISH", "LOW", 0.50
+
+
 def predict_ihsg_1year_outlook(ohlcv: pd.DataFrame, current_price: float, tv_ta_weekly: dict = None, tv_ta_monthly: dict = None) -> dict:
     """
     Generate 1-Year IHSG Technical Outlook, Bottom/Top Confluence Zones, Reversal Triggers, and Timing Window.
@@ -430,6 +493,10 @@ def predict_ihsg_1year_outlook(ohlcv: pd.DataFrame, current_price: float, tv_ta_
         w_indicators = tv_ta_weekly.get("indicators", {}) if tv_ta_weekly else {}
         w_summary = tv_ta_weekly.get("summary", {}) if tv_ta_weekly else {}
         m_indicators = tv_ta_monthly.get("indicators", {}) if tv_ta_monthly else {}
+
+        # Weekly & Monthly Direction Scoring
+        w_dir, w_conf, w_score = _score_timeframe_direction(tv_ta_weekly, current_price)
+        m_dir, m_conf, m_score = _score_timeframe_direction(tv_ta_monthly, current_price)
 
         # MAs from weekly TA
         sma50_w = float(w_indicators.get("SMA50") or (ohlcv["Close"].astype(float).rolling(250).mean().iloc[-1] if ohlcv is not None else current_price))
@@ -504,6 +571,12 @@ def predict_ihsg_1year_outlook(ohlcv: pd.DataFrame, current_price: float, tv_ta_
 
         return {
             "direction_1year": direction_1y,
+            "weekly_direction": w_dir,
+            "weekly_confidence": w_conf,
+            "weekly_score": round(w_score, 2),
+            "monthly_direction": m_dir,
+            "monthly_confidence": m_conf,
+            "monthly_score": round(m_score, 2),
             "bottom_confluence_level": bottom_level,
             "top_confluence_level": top_level,
             "downside_risk_pct": downside_risk_pct,

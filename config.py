@@ -241,5 +241,14 @@ WEIGHTS = {
     "volatile": {"bandarm": 0.30, "technical": 0.18, "fundamental": 0.13, "macro": 0.26, "news": 0.13},
 }
 
+# Bobot agent saat ada laporan keuangan kuartalan terbaru (boost news weight)
+WEIGHTS_REPORT_BOOST = {
+    "default": {"bandarm": 0.32, "technical": 0.20, "fundamental": 0.17, "macro": 0.11, "news": 0.20},
+    "big_cap": {"bandarm": 0.27, "technical": 0.20, "fundamental": 0.20, "macro": 0.11, "news": 0.22},
+    "small_cap": {"bandarm": 0.40, "technical": 0.24, "fundamental": 0.07, "macro": 0.07, "news": 0.22},
+    "volatile": {"bandarm": 0.27, "technical": 0.15, "fundamental": 0.11, "macro": 0.22, "news": 0.25},
+}
+
 BIG_CAP_TICKERS = ["BBCA", "BBRI", "BMRI", "TLKM", "ASII", "UNVR"]
 SMALL_CAP_MAX_MC = 2_000_000_000_000  # < 2T = small cap
+

@@ -346,10 +346,15 @@ def run_report_ingester(limit: int = 25, max_pages: int = 1):
 
             analysis, embedding = analyze_and_embed(full_report_text, is_report=True)
 
-            if save_to_db(stream_id, full_report_text, analysis, embedding, doc_type="report"):
-                logger.info(f"[Report] Successfully saved report stream_id: {stream_id}")
+            # Classify doc_type into financial_report, corporate_action, or routine_report
+            from scripts.migrate_report_doc_types import classify_report
+            specific_doc_type = classify_report(f"{analysis.get('summary', '')} {full_report_text}")
+
+            if save_to_db(stream_id, full_report_text, analysis, embedding, doc_type=specific_doc_type):
+                logger.info(f"[Report] Successfully saved report stream_id: {stream_id} as {specific_doc_type}")
                 processed += 1
                 total_processed += 1
+
 
         logger.info(f"[Report] Page {page+1}/{max_pages} complete. Processed {processed} new report items.")
 

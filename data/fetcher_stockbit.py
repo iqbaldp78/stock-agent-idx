@@ -1218,9 +1218,10 @@ def _fetch_stock_info_api(ticker: str) -> dict:
     der = _find_fin_item_value(closure_fin_items_results, "Debt to Equity Ratio (Quarter)")
     rev_growth = _find_fin_item_value(closure_fin_items_results, "Revenue (Quarter YoY Growth)")
     earn_growth = _find_fin_item_value(closure_fin_items_results, "Net Income (Quarter YoY Growth)")
+    bvps = _find_fin_item_value(closure_fin_items_results, "Current Book Value Per Share")
     # === Dividend Data Extraction ===
     dividend_yield = _find_fin_item_value(closure_fin_items_results, "Dividend Yield")
-    dividend_payout_ratio = _find_fin_item_value(closure_fin_items_results, "Dividend Payout Ratio")
+    dividend_payout_ratio = _find_fin_item_value(closure_fin_items_results, "Payout Ratio")
     dividend_per_share = _find_fin_item_value(closure_fin_items_results, "Dividend per Share")
     # Extract 5-year historical data for all main metrics
     historical = {
@@ -1292,6 +1293,7 @@ def _fetch_stock_info_api(ticker: str) -> dict:
         "ticker": ticker,
         "per": round(per, 2),
         "pbv": round(pbv, 2),
+        "bvps": round(bvps, 2) if bvps is not None else None,
         "market_cap": mcap,
         "roe": round(roe, 4),
         "der": round(der, 2) if der is not None else None,

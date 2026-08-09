@@ -2517,6 +2517,25 @@ elif page == "📈 IHSG Predictor":
                 st.warning(f"Memuat 1-Year Outlook: {e}")
 
         if outlook:
+            # Weekly & Monthly Timeframe Direction Metrics
+            st.markdown("#### ⏱️ Prediksi Multi-Timeframe")
+            w_col, m_col = st.columns(2)
+            with w_col:
+                w_dir = outlook.get("weekly_direction", "BEARISH")
+                w_conf = outlook.get("weekly_confidence", "LOW")
+                w_score = outlook.get("weekly_score", 0.50)
+                w_icon = "🟢" if w_dir == "BULLISH" else "🔴"
+                st.metric("📅 Prediksi Minggu Ini (Weekly)", f"{w_icon} {w_dir}", f"{w_conf} Confidence (Score: {w_score:.2f})")
+
+            with m_col:
+                m_dir = outlook.get("monthly_direction", "BEARISH")
+                m_conf = outlook.get("monthly_confidence", "LOW")
+                m_score = outlook.get("monthly_score", 0.50)
+                m_icon = "🟢" if m_dir == "BULLISH" else "🔴"
+                st.metric("📆 Prediksi Bulan Ini (Monthly)", f"{m_icon} {m_dir}", f"{m_conf} Confidence (Score: {m_score:.2f})")
+
+            st.divider()
+
             # Header metrics
             o1, o2, o3, o4 = st.columns(4)
             with o1:

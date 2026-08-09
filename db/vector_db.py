@@ -1,6 +1,8 @@
 import os
+import json
 import logging
 import pandas as pd
+
 from sqlalchemy import create_engine, text
 
 # Konfigurasi berdasarkan docker-compose
@@ -20,31 +22,42 @@ def get_news_sentiment_features(ticker: str, start_date: str, end_date: str) -> 
         SELECT 
             DATE(created_at) as date,
             sentiment,
+            sentiment_score,
             impact_scope
         FROM news_signals
-        WHERE tickers @> :ticker_array
+        WHERE tickers @> CAST(:ticker_json AS jsonb)
           AND created_at BETWEEN :start AND :end
     """)
     
-    # tickers di PGVECTOR adalah array (text[]), jadi kita passing sebagai array PG
-    ticker_array = f'{{{ticker}}}'
+    ticker_json = json.dumps([ticker.upper()])
     
     try:
         with engine.connect() as conn:
-            df = pd.read_sql(query, conn, params={"ticker_array": ticker_array, "start": start_date, "end": end_date})
-            
+            df = pd.read_sql(query, conn, params={"ticker_json": ticker_json, "start": start_date, "end": end_date})
+
         if df.empty:
             return pd.DataFrame()
         
-        # Agregasi sentimen per hari: rata-rata sentimen dan jumlah berita
+        def calc_score(row):
+            if pd.notnull(row.get('sentiment_score')) and isinstance(row.get('sentiment_score'), (int, float)):
+                return float(row['sentiment_score'])
+            sent_str = str(row.get('sentiment') or '').upper()
+            if 'BULLISH' in sent_str or 'POSITIF' in sent_str:
+                return 7.5
+            elif 'BEARISH' in sent_str or 'NEGATIF' in sent_str:
+                return 2.5
+            return 5.0
+
+        df['numeric_sentiment'] = df.apply(calc_score, axis=1)
         df['date'] = pd.to_datetime(df['date'])
         
-        # Asumsi kolom 'sentiment' berisi angka, misal -1 sampai 1 atau 1 sampai 10
-        # Sesuaikan dengan format yang ada di news_signals (tadi kita lihat sentiment ada datanya)
         agg_df = df.groupby('date').agg(
-            news_count=('sentiment', 'count'),
-            avg_sentiment=('sentiment', 'mean')
+            news_count=('numeric_sentiment', 'count'),
+            avg_sentiment=('numeric_sentiment', 'mean')
         )
+        
+        return agg_df
+
         
         return agg_df
         

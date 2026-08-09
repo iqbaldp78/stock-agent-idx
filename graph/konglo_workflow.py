@@ -135,6 +135,7 @@ def run_parallel_scoring(state: AgentState) -> dict:
                 continue
 
             # Calculate composite
+            has_report = news.get("has_quarterly_report", False)
             agent_scores = {
                 "bandarm": bandarm.get("score", 5.0),
                 "technical": tech.get("score", 5.0),
@@ -143,10 +144,12 @@ def run_parallel_scoring(state: AgentState) -> dict:
                 "news": news.get("score", 5.0),
             }
             comp = calculate_konglo_composite(
-                agent_scores, ticker, market_cap, is_volatile, macro_data
+                agent_scores, ticker, market_cap, is_volatile, macro_data, has_recent_report=has_report
             )
+            comp["report_context"] = news.get("report_context", {})
             composites[ticker] = comp
-            logger.info(f"[SCORING] {ticker}: Composite={comp['composite_score']}")
+            logger.info(f"[SCORING] {ticker}: Composite={comp['composite_score']} has_report={has_report}")
+
 
             # === COMMODITY ANALYSIS (FROM CACHE - NO API CALL) ===
             try:

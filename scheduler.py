@@ -325,6 +325,23 @@ def run_portfolio_analysis():
 
 
 
+def run_ihsg_predictor_job():
+    """Automated IHSG Prediction & Multi-Timeframe Outlook (Weekly & Monthly)."""
+    logger.info("=== AUTOMATED IHSG PREDICTOR & OUTLOOK START ===")
+    try:
+        import subprocess
+        result = subprocess.run(["python3", "scripts/run_ihsg_only.py"], capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"IHSG Predictor job failed: {result.stderr}")
+        else:
+            for line in result.stdout.split("\n"):
+                if line.strip():
+                    logger.info(f"  {line}")
+    except Exception as e:
+        logger.error(f"IHSG Predictor job error: {e}")
+    logger.info("=== AUTOMATED IHSG PREDICTOR & OUTLOOK END ===")
+
+
 def run_ihsg_performance_check():
     logger.info("=== IHSG PERFORMANCE CHECK START ===")
     try:
@@ -365,6 +382,14 @@ def main():
         CronTrigger(minute="0,30"),
         id="news_ingester",
         name="News DB Ingester",
+    )
+
+    # IHSG Predictor & Multi-Timeframe Outlook: Every Mon-Fri at 06:30 AM WIB (before market open)
+    scheduler.add_job(
+        run_ihsg_predictor_job,
+        CronTrigger(day_of_week="mon-fri", hour=6, minute=30, timezone="Asia/Jakarta"),
+        id="ihsg_predictor_job",
+        name="IHSG Weekly & Monthly Automated Predictor",
     )
     
     # Train & Validate ML: Every Sunday at 04:00 AM
@@ -411,6 +436,14 @@ def main():
         CronTrigger(hour=17, minute=0, timezone="Asia/Jakarta"),
         id="performance_check",
         name="Check TP/SL for All Signals",
+    )
+
+    # IHSG Performance Validation Check: Every day at 17:15 WIB
+    scheduler.add_job(
+        run_ihsg_performance_check,
+        CronTrigger(hour=17, minute=15, timezone="Asia/Jakarta"),
+        id="ihsg_performance_check",
+        name="Validate IHSG Historical Accuracy",
     )
 
     try:

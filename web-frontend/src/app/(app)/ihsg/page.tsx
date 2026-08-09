@@ -498,6 +498,53 @@ export default function IhsgPage() {
                   <p className="text-secondary text-sm">Proyeksi tren 1-tahun, deteksi titik Reversal Bottom/Top (Fibonacci 5-Tahun & Monthly Pivots), serta estimasi jendela waktu (Bulan & Minggu).</p>
                 </div>
 
+                {/* TIMEFRAME DIRECTION CARDS (WEEKLY & MONTHLY) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-card border border-border rounded-3xl p-5 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">📅 Prediksi Minggu Ini (Weekly)</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-3 h-3 rounded-full ${outlook.weekly_direction === 'BULLISH' ? 'bg-profit shadow-[0_0_10px_rgba(52,211,153,0.5)]' : 'bg-loss shadow-[0_0_10px_rgba(248,113,113,0.5)]'}`}></span>
+                        <span className={`text-2xl font-black font-mono uppercase ${outlook.weekly_direction === 'BULLISH' ? 'text-profit' : 'text-loss'}`}>
+                          {outlook.weekly_direction || 'BEARISH'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-secondary mt-1 font-mono">Score: {outlook.weekly_score ?? '-'}</p>
+                    </div>
+                    <div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        outlook.weekly_confidence === 'HIGH' ? 'bg-profit/10 text-profit border border-profit/20' :
+                        outlook.weekly_confidence === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                        'bg-loss/10 text-loss border border-loss/20'
+                      }`}>
+                        {outlook.weekly_confidence || 'LOW'} CONFIDENCE
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-card border border-border rounded-3xl p-5 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">📆 Prediksi Bulan Ini (Monthly)</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-3 h-3 rounded-full ${outlook.monthly_direction === 'BULLISH' ? 'bg-profit shadow-[0_0_10px_rgba(52,211,153,0.5)]' : 'bg-loss shadow-[0_0_10px_rgba(248,113,113,0.5)]'}`}></span>
+                        <span className={`text-2xl font-black font-mono uppercase ${outlook.monthly_direction === 'BULLISH' ? 'text-profit' : 'text-loss'}`}>
+                          {outlook.monthly_direction || 'BEARISH'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-secondary mt-1 font-mono">Score: {outlook.monthly_score ?? '-'}</p>
+                    </div>
+                    <div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        outlook.monthly_confidence === 'HIGH' ? 'bg-profit/10 text-profit border border-profit/20' :
+                        outlook.monthly_confidence === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                        'bg-loss/10 text-loss border border-loss/20'
+                      }`}>
+                        {outlook.monthly_confidence || 'LOW'} CONFIDENCE
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 4 HEADER METRICS */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-card border border-border rounded-3xl p-5">

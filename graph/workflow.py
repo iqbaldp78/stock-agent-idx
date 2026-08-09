@@ -139,6 +139,7 @@ def run_parallel_scoring(state: AgentState) -> dict:
                 continue
 
             # Calculate composite
+            has_report = news.get("has_quarterly_report", False)
             agent_scores = {
                 "bandarm": bandarm["score"],
                 "technical": tech["score"],
@@ -146,7 +147,10 @@ def run_parallel_scoring(state: AgentState) -> dict:
                 "macro": macro_data.get("score", 5.0),
                 "news": news.get("score", 5.0),
             }
-            composite = calculate_composite(agent_scores, ticker, market_cap, is_volatile, macro_data, exclude_fundamental=True)
+            composite = calculate_composite(
+                agent_scores, ticker, market_cap, is_volatile, macro_data, exclude_fundamental=True, has_recent_report=has_report
+            )
+            composite["report_context"] = news.get("report_context", {})
 
             # === COMMODITY ANALYSIS (FROM CACHE - NO API CALL) ===
             try:
@@ -178,7 +182,8 @@ def run_parallel_scoring(state: AgentState) -> dict:
 
             composites[ticker] = composite
 
-            logger.info(f"  [{ticker}] composite={composite['composite_score']} mode={composite['weight_mode']}")
+            logger.info(f"  [{ticker}] composite={composite['composite_score']} mode={composite['weight_mode']} has_report={has_report}")
+
 
         except Exception as e:
             logger.warning(f"  [{ticker}] ERROR: {e}")

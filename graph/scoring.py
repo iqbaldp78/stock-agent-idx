@@ -2,18 +2,19 @@
 Graph — Scoring
 Composite score dengan bobot dinamis berdasarkan kategori saham.
 """
-from config import WEIGHTS, BIG_CAP_TICKERS, SMALL_CAP_MAX_MC
+from config import WEIGHTS, WEIGHTS_REPORT_BOOST, BIG_CAP_TICKERS, SMALL_CAP_MAX_MC
 
 
-def get_weights(ticker: str, market_cap: float, is_volatile: bool) -> dict:
-    """Tentukan bobot berdasarkan kondisi saham dan pasar."""
+def get_weights(ticker: str, market_cap: float, is_volatile: bool, has_recent_report: bool = False) -> dict:
+    """Tentukan bobot berdasarkan kondisi saham, pasar, dan ketersediaan laporan keuangan terbaru."""
+    weights_dict = WEIGHTS_REPORT_BOOST if has_recent_report else WEIGHTS
     if is_volatile:
-        return WEIGHTS["volatile"]
+        return weights_dict["volatile"]
     elif ticker in BIG_CAP_TICKERS:
-        return WEIGHTS["big_cap"]
+        return weights_dict["big_cap"]
     elif market_cap and market_cap < SMALL_CAP_MAX_MC:
-        return WEIGHTS["small_cap"]
-    return WEIGHTS["default"]
+        return weights_dict["small_cap"]
+    return weights_dict["default"]
 
 
 def detect_mode(ticker: str, market_cap: float, is_volatile: bool) -> str:
@@ -30,12 +31,13 @@ def detect_mode(ticker: str, market_cap: float, is_volatile: bool) -> str:
 def calculate_composite(scores: dict, ticker: str,
                          market_cap: float, is_volatile: bool,
                          macro_data: dict = None,
-                         exclude_fundamental: bool = False) -> dict:
+                         exclude_fundamental: bool = False,
+                         has_recent_report: bool = False) -> dict:
     """
     Hitung composite score dari 5 agent (bandarm, technical, fundamental, macro, news).
     scores = {"bandarm": 8.5, "technical": 7.0, "fundamental": 8.0, "macro": 7.0, "news": 6.5}
     """
-    w = get_weights(ticker, market_cap, is_volatile)
+    w = get_weights(ticker, market_cap, is_volatile, has_recent_report=has_recent_report)
     
     total_w = w["bandarm"] + w["technical"] + w["macro"] + w.get("news", 0.12)
     
@@ -179,18 +181,29 @@ def assess_entry_vs_bandar(current_price: float,
 
 def calculate_konglo_composite(scores: dict, ticker: str,
                                market_cap: float, is_volatile: bool,
-                               macro_data: dict = None) -> dict:
+                               macro_data: dict = None,
+                               has_recent_report: bool = False) -> dict:
     """
     Hitung composite score khusus Konglo Play:
-    Technical 45%, Bandarmologi 45%, News 5%, Fundamental 5%.
+    Normal: Technical 45%, Bandarmologi 45%, News 5%, Fundamental 5%.
+    With Recent Report: Technical 41%, Bandarmologi 42%, News 12%, Fundamental 5%.
     """
-    w = {
-        "technical": 0.45,
-        "bandarm": 0.45,
-        "fundamental": 0.05,
-        "news": 0.05,
-        "macro": 0.0
-    }
+    if has_recent_report:
+        w = {
+            "technical": 0.41,
+            "bandarm": 0.42,
+            "fundamental": 0.05,
+            "news": 0.12,
+            "macro": 0.0
+        }
+    else:
+        w = {
+            "technical": 0.45,
+            "bandarm": 0.45,
+            "fundamental": 0.05,
+            "news": 0.05,
+            "macro": 0.0
+        }
     
     composite = (
         scores["bandarm"] * w["bandarm"] +
@@ -230,3 +243,4 @@ def calculate_konglo_composite(scores: dict, ticker: str,
                      "contribution": round(scores.get("news", 5.0) * w["news"], 2)}
         }
     }
+

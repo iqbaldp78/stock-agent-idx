@@ -279,8 +279,12 @@ debate-tickers: ## Run debate for specific tickers (usage: make debate-tickers T
 	docker compose exec app python scripts/run_debate_only.py $(TICKERS)
 
 .PHONY: analysis-full
-analysis-full: ## Run full analysis (filter → scoring → debate → investment manager)
-	docker compose exec app python scripts/run_analysis.py
+analysis-full: ## Run full regular analysis and save to DB
+	docker compose exec app python scripts/run_analysis.py $(TICKERS)
+
+.PHONY: analysis-dry
+analysis-dry: ## Run full regular analysis (DRY RUN - does NOT save to DB)
+	docker compose exec app python scripts/run_analysis_dry.py $(TICKERS)
 
 .PHONY: analysis-tickers
 analysis-tickers: ## Run full analysis for specific tickers (usage: make analysis-tickers TICKERS="BBCA BMRI")
@@ -289,6 +293,15 @@ analysis-tickers: ## Run full analysis for specific tickers (usage: make analysi
 		exit 1; \
 	fi
 	docker compose exec app python scripts/run_analysis.py $(TICKERS)
+
+.PHONY: analysis-konglo
+analysis-konglo: ## Run full Konglo analysis and save to DB
+	docker compose exec app python scripts/run_konglo_analysis.py $(TICKERS)
+
+.PHONY: analysis-konglo-dry
+analysis-konglo-dry: ## Run full Konglo analysis (DRY RUN - does NOT save to DB)
+	docker compose exec app python scripts/run_konglo_analysis_dry.py $(TICKERS)
+
 
 # ============================================================
 # IHSG PREDICTOR

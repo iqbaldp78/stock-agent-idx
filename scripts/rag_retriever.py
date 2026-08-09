@@ -55,7 +55,16 @@ def _execute_query(query: str, params: tuple = ()) -> List[Dict]:
 
 def search_by_ticker(ticker: str, limit: int = 10, doc_type: Optional[str] = None) -> List[Dict]:
     """Find latest news & reports specifically tagged with a ticker symbol."""
-    if doc_type:
+    if doc_type == "report":
+        query = """
+            SELECT stream_id, content, summary, sentiment, sentiment_score, impact_scope, doc_type, created_at
+            FROM news_signals 
+            WHERE tickers ? %s AND doc_type IN ('report', 'financial_report', 'corporate_action', 'routine_report')
+            ORDER BY created_at DESC
+            LIMIT %s;
+        """
+        return _execute_query(query, (ticker.upper(), limit))
+    elif doc_type:
         query = """
             SELECT stream_id, content, summary, sentiment, sentiment_score, impact_scope, doc_type, created_at
             FROM news_signals 
@@ -82,7 +91,17 @@ def search_by_vector(query_text: str, limit: int = 5, doc_type: Optional[str] = 
     
     vec_str = f"[{','.join(map(str, emb))}]"
     
-    if doc_type:
+    if doc_type == "report":
+        query = """
+            SELECT stream_id, content, summary, sentiment, sentiment_score, impact_scope, doc_type, created_at,
+                   1 - (embedding <=> %s::halfvec) as similarity
+            FROM news_signals
+            WHERE doc_type IN ('report', 'financial_report', 'corporate_action', 'routine_report')
+            ORDER BY embedding <=> %s::halfvec
+            LIMIT %s;
+        """
+        return _execute_query(query, (vec_str, vec_str, limit))
+    elif doc_type:
         query = """
             SELECT stream_id, content, summary, sentiment, sentiment_score, impact_scope, doc_type, created_at,
                    1 - (embedding <=> %s::halfvec) as similarity
@@ -103,17 +122,18 @@ def search_by_vector(query_text: str, limit: int = 5, doc_type: Optional[str] = 
         return _execute_query(query, (vec_str, vec_str, limit))
 
 def format_for_prompt(records: List[Dict]) -> str:
-    """Formats retrieved DB rows into clean strings for LLM injection, highlighting research reports as key drivers."""
+    """Formats retrieved DB rows into clean strings for LLM injection, highlighting financial reports as key drivers."""
     if not records:
         return "No recent news or reports available."
         
-    reports = [r for r in records if r.get("doc_type") == "report"]
-    news = [r for r in records if r.get("doc_type") != "report"]
+    fin_reports = [r for r in records if r.get("doc_type") in ("financial_report", "report")]
+    corp_actions = [r for r in records if r.get("doc_type") == "corporate_action"]
+    news = [r for r in records if r.get("doc_type") not in ("financial_report", "report", "corporate_action")]
     
     sections = []
-    if reports:
-        lines = ["[KEY DRIVER — RESEARCH & COMPANY REPORTS]"]
-        for r in reports:
+    if fin_reports:
+        lines = ["[KEY DRIVER — FINANCIAL EARNINGS REPORTS (LK)]"]
+        for r in fin_reports:
             created_at = r.get("created_at")
             date_str = created_at.strftime("%Y-%m-%d %H:%M") if hasattr(created_at, "strftime") else str(created_at or "")
             sent = r.get("sentiment", "Neutral")
@@ -124,8 +144,20 @@ def format_for_prompt(records: List[Dict]) -> str:
             lines.append(f"• [{date_str}] ({sent} {score}/10 | {impact}) - {summary}")
         sections.append("\n".join(lines))
 
+    if corp_actions:
+        lines = ["[CORPORATE ACTIONS & DIVIDENDS]"]
+        for r in corp_actions:
+            created_at = r.get("created_at")
+            date_str = created_at.strftime("%Y-%m-%d %H:%M") if hasattr(created_at, "strftime") else str(created_at or "")
+            sent = r.get("sentiment", "Neutral")
+            score = r.get("sentiment_score", 5)
+            if score is None: score = 5
+            summary = r.get("summary", "")
+            lines.append(f"• [{date_str}] ({sent} {score}/10) - {summary}")
+        sections.append("\n".join(lines))
+
     if news:
-        lines = ["[NEWS HEADLINES]"]
+        lines = ["[NEWS & GENERAL ANNOUNCEMENTS]"]
         for r in news:
             created_at = r.get("created_at")
             date_str = created_at.strftime("%Y-%m-%d %H:%M") if hasattr(created_at, "strftime") else str(created_at or "")
@@ -138,6 +170,7 @@ def format_for_prompt(records: List[Dict]) -> str:
         sections.append("\n".join(lines))
 
     return "\n\n".join(sections)
+
 
 if __name__ == "__main__":
     print("Testing Ticker Search (MYOR):")

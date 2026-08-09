@@ -1,17 +1,26 @@
 """
 Valuation utilities for Fundamental Agent.
 
-Menghitung fair value saham dengan pendekatan sederhana dan robust:
-- PE based: EPS * target PE
-- PBV/ROE based: BVPS * fair PBV
-- EPS growth based: EPS * growth-adjusted PE
-
-Catatan: ini bukan rekomendasi investasi, melainkan estimasi kuantitatif untuk
-membantu scoring fundamental dan margin of safety.
+Menghitung fair value saham dengan pendekatan blended (PE, PBV/ROE Justified Model, Growth/PEG Model)
+yang dirancang secara realistis sesuai karakteristik saham di Bursa Efek Indonesia (IDX).
 """
 from __future__ import annotations
 
-from statistics import median
+FINANCIAL_TICKERS = {
+    "BBCA", "BBRI", "BMRI", "BBNI", "BRIS", "ARTO", "BBTN", "BDMN", "BNGA", "BNLI",
+    "PNBN", "MEGA", "BTPS", "BSDE", "NISP"
+}
+
+COMMODITY_TICKERS = {
+    "ADRO", "PTBA", "ITMG", "HRUM", "BUMI", "MEDC", "PGAS", "AKRA", "CUAN", "DEWA",
+    "ESSA", "AMMN", "MDKA", "BRMS", "ANTM", "INCO", "TPIA", "BRPT", "SMGR", "INTP",
+    "MBMA", "TINS", "AADI"
+}
+
+CONSUMER_TICKERS = {
+    "ICBP", "INDF", "MYOR", "UNVR", "CMRY", "AMRT", "MIDI", "CPIN", "JPFA", "KLBF",
+    "MIKA", "HEAL", "SIDO", "ACES", "MAPI", "ERAA"
+}
 
 
 def _to_float(value, default: float | None = None) -> float | None:
@@ -23,36 +32,30 @@ def _to_float(value, default: float | None = None) -> float | None:
         return default
 
 
-def _normalize_pct(value, default: float = 0.0) -> float:
-    """Return percentage units, e.g. 18.5 means 18.5%."""
-    val = _to_float(value, default)
-    if val is None:
-        return default
-    return val * 100 if abs(val) <= 1 else val
-
-
-def _history_values(history: dict, key: str) -> list[float]:
-    values = []
-    for item in history.get(key, []) or []:
-        val = _to_float(item.get("value"))
-        if val is not None:
-            values.append(val)
-    return values
-
-
 def _derive_eps(info: dict) -> tuple[float | None, str | None]:
+    eps = _to_float(info.get("eps"))
+    if eps and eps > 0:
+        return eps, "info_eps"
+
     current_price = _to_float(info.get("current_price"))
     per = _to_float(info.get("per"))
     if current_price and per and per > 0:
         return current_price / per, "derived_from_current_price_per"
 
-    eps_history = _history_values(info.get("history", {}), "eps")
+    eps_history = info.get("history", {}).get("eps", [])
     if eps_history:
-        return eps_history[-1], "latest_eps_history"
+        eps_sorted = sorted(eps_history, key=lambda x: str(x.get("year", "")), reverse=True)
+        latest_val = _to_float(eps_sorted[0].get("value"))
+        if latest_val and latest_val > 0:
+            return latest_val, "latest_eps_history"
     return None, None
 
 
 def _derive_bvps(info: dict) -> tuple[float | None, str | None]:
+    bvps = _to_float(info.get("bvps"))
+    if bvps and bvps > 0:
+        return bvps, "info_bvps"
+
     current_price = _to_float(info.get("current_price"))
     pbv = _to_float(info.get("pbv"))
     if current_price and pbv and pbv > 0:
@@ -60,39 +63,45 @@ def _derive_bvps(info: dict) -> tuple[float | None, str | None]:
     return None, None
 
 
-def _target_pe(info: dict, history: dict) -> tuple[float, list[str]]:
+def _target_pe(info: dict, ticker: str) -> tuple[float, list[str]]:
     notes = []
-    roe_pct = _normalize_pct(info.get("roe"), 0.0)
-    earnings_growth = _normalize_pct(info.get("earnings_growth"), 0.0)
+    roe_pct = _to_float(info.get("roe"), 0.0) or 0.0
+    earnings_growth = _to_float(info.get("earnings_growth"), 0.0) or 0.0
     der = _to_float(info.get("der"), 0.0) or 0.0
     der_ratio = der / 100 if der > 10 else der
 
-    hist_pe = [v for v in _history_values(history, "per") if 0 < v < 80]
-    if hist_pe:
-        target = median(hist_pe)
-        notes.append(f"Target PE dari median historis: {target:.1f}x")
-    else:
+    ticker_upper = ticker.upper()
+    if ticker_upper in FINANCIAL_TICKERS:
+        target = 12.5
+        notes.append("Target PE baseline sektor Keuangan/Bank: 12.5x")
+    elif ticker_upper in COMMODITY_TICKERS:
+        target = 8.5
+        notes.append("Target PE baseline sektor Komoditas/Energi: 8.5x")
+    elif ticker_upper in CONSUMER_TICKERS:
         target = 15.0
-        notes.append("Target PE fallback base: 15.0x")
+        notes.append("Target PE baseline sektor Consumer/Healthcare: 15.0x")
+    else:
+        target = 13.5
+        notes.append("Target PE baseline universal: 13.5x")
 
     if roe_pct > 20:
-        target += 4
+        target += 2.5
     elif roe_pct > 15:
-        target += 2
+        target += 1.0
     elif roe_pct < 8:
-        target -= 3
+        target -= 2.0
 
-    if earnings_growth > 20:
-        target += 4
-    elif earnings_growth > 10:
-        target += 2
+    if earnings_growth > 15:
+        target += 1.5
+    elif earnings_growth > 5:
+        target += 0.5
     elif earnings_growth < 0:
-        target -= 4
+        target -= 1.5
 
-    if der_ratio > 2:
-        target -= 2
+    if der_ratio > 2.0:
+        target -= 1.5
 
-    target = max(5.0, min(target, 35.0))
+    target = max(6.0, min(target, 22.0))
     return round(target, 2), notes
 
 
@@ -108,35 +117,79 @@ def _pe_based(info: dict, eps: float | None, target_pe: float) -> dict:
 
 
 def _pbv_roe_based(info: dict, bvps: float | None) -> dict:
-    roe_pct = _normalize_pct(info.get("roe"), 0.0)
+    """
+    Justified PBV / Gordon Growth Model:
+    Fair PBV = (ROE - g) / (r - g)
+    """
+    roe_pct = _to_float(info.get("roe"), 0.0) or 0.0
     if not bvps or bvps <= 0 or roe_pct <= 0:
         return {"available": False, "reason": "BVPS or ROE unavailable"}
 
-    required_return_pct = 12.0
-    fair_pbv = roe_pct / required_return_pct
-    fair_pbv = max(0.5, min(fair_pbv, 5.0))
+    ticker = str(info.get("ticker", "")).upper()
+
+    # Required Return / Cost of Equity (r)
+    if ticker in FINANCIAL_TICKERS or roe_pct > 18:
+        required_return_pct = 13.5
+    else:
+        required_return_pct = 14.5
+
+    der = _to_float(info.get("der"), 0.0) or 0.0
+    der_ratio = der / 100 if der > 10 else der
+    if der_ratio > 1.5:
+        required_return_pct += 1.5
+
+    payout_raw = _to_float(info.get("dividend_payout_ratio"), 50.0) or 50.0
+    payout_ratio = payout_raw / 100.0 if payout_raw > 1.0 else payout_raw
+    payout_ratio = max(0.20, min(payout_ratio, 0.80))
+    retention_rate = 1.0 - payout_ratio
+
+    # Sustainable growth g = ROE * retention
+    g_pct = min(roe_pct * retention_rate, required_return_pct - 3.0)
+    g_pct = max(0.0, g_pct)
+
+    denom = required_return_pct - g_pct
+    if denom <= 1.0:
+        denom = 1.0
+
+    fair_pbv = (roe_pct - g_pct) / denom
+    if fair_pbv <= 0:
+        fair_pbv = roe_pct / required_return_pct
+
+    fair_pbv = max(0.6, min(fair_pbv, 4.0))
+
     return {
         "available": True,
         "bvps": round(bvps, 2),
         "roe_pct": round(roe_pct, 2),
+        "sustainable_growth_pct": round(g_pct, 2),
         "required_return_pct": required_return_pct,
         "fair_pbv": round(fair_pbv, 2),
         "fair_value": round(bvps * fair_pbv, 0),
     }
 
 
-def _growth_based(info: dict, eps: float | None) -> dict:
+def _growth_based(info: dict, eps: float | None, target_pe_base: float) -> dict:
+    """
+    PEG-adjusted Valuation Method:
+    Target PE = Base PE + PEG_factor * Growth
+    """
     if not eps or eps <= 0:
         return {"available": False, "reason": "EPS unavailable or non-positive"}
 
-    growth_pct = _normalize_pct(info.get("earnings_growth"), 0.0)
-    roe_pct = _normalize_pct(info.get("roe"), 0.0)
-    target_pe = growth_pct
-    if roe_pct > 20:
-        target_pe += 5
-    elif roe_pct > 15:
-        target_pe += 3
-    target_pe = max(7.0, min(target_pe, 30.0))
+    growth_pct = _to_float(info.get("earnings_growth"), 0.0) or 0.0
+    roe_pct = _to_float(info.get("roe"), 0.0) or 0.0
+
+    g_clamped = max(-10.0, min(growth_pct, 15.0))
+
+    if g_clamped > 0:
+        target_pe = target_pe_base + (0.15 * g_clamped)
+    else:
+        target_pe = target_pe_base + (0.25 * g_clamped)
+
+    if roe_pct > 18:
+        target_pe += 1.0
+
+    target_pe = max(6.0, min(target_pe, 20.0))
 
     return {
         "available": True,
@@ -172,7 +225,7 @@ def _confidence(methods: dict, notes: list[str]) -> str:
 
 def calculate_fair_value(info: dict) -> dict:
     """Calculate fair value range and valuation label from stock info."""
-    history = info.get("history", {}) or {}
+    ticker = str(info.get("ticker", "")).upper()
     current_price = _to_float(info.get("current_price"), 0.0) or 0.0
     notes: list[str] = []
 
@@ -184,20 +237,28 @@ def calculate_fair_value(info: dict) -> dict:
     if bvps_source:
         notes.append(f"BVPS source: {bvps_source}")
 
-    target_pe, pe_notes = _target_pe(info, history)
+    target_pe, pe_notes = _target_pe(info, ticker)
     notes.extend(pe_notes)
 
     methods = {
         "pe_based": _pe_based(info, eps, target_pe),
         "pbv_roe_based": _pbv_roe_based(info, bvps),
-        "eps_growth_based": _growth_based(info, eps),
+        "eps_growth_based": _growth_based(info, eps, target_pe),
     }
 
-    weights = {
-        "pe_based": 0.45,
-        "pbv_roe_based": 0.35,
-        "eps_growth_based": 0.20,
-    }
+    if ticker in FINANCIAL_TICKERS:
+        weights = {
+            "pbv_roe_based": 0.45,
+            "pe_based": 0.40,
+            "eps_growth_based": 0.15,
+        }
+    else:
+        weights = {
+            "pe_based": 0.50,
+            "pbv_roe_based": 0.30,
+            "eps_growth_based": 0.20,
+        }
+
     weighted_sum = 0.0
     used_weight = 0.0
     values = []
@@ -217,8 +278,8 @@ def calculate_fair_value(info: dict) -> dict:
         mos_pct = None
     else:
         fair_base = weighted_sum / used_weight
-        fair_low = min(values) * 0.95
-        fair_high = max(values) * 1.05
+        fair_low = min(values) * 0.93
+        fair_high = max(values) * 1.07
         upside_pct = ((fair_base - current_price) / current_price * 100) if current_price else None
         mos_pct = ((fair_base - current_price) / fair_base * 100) if fair_base else None
 
