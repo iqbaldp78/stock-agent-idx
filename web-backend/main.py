@@ -683,36 +683,83 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                     item["target_3"] = None
                     item["stop_loss"] = None
             
-            # Fetch debate candidates with their detailed scores
+            # Fetch debate candidates with their detailed scores & ML predictions
             debate_candidates_info = []
             try:
+                def extract_ml_signal(ml_pred_raw, ticker: str = "") -> str:
+                    if ml_pred_raw:
+                        try:
+                            if isinstance(ml_pred_raw, str):
+                                ml_pred = json.loads(ml_pred_raw)
+                            elif isinstance(ml_pred_raw, dict):
+                                ml_pred = ml_pred_raw
+                            else:
+                                ml_pred = {}
+                            
+                            sig = str(ml_pred.get("signal", "")).upper()
+                            if sig in ["BUY", "STRONG BUY"]:
+                                return sig
+                            
+                            multiday = ml_pred.get("predictions_multiday", {})
+                            if multiday and isinstance(multiday, dict):
+                                max_val = max(multiday.values()) if multiday.values() else 0
+                                if max_val >= 60.0:
+                                    return "STRONG BUY"
+                                elif max_val > 50.0:
+                                    return "BUY"
+                        except Exception:
+                            pass
+
+                    # Fallback to ml_prediction_log if available
+                    if ticker:
+                        try:
+                            log_res = conn.execute(text("""
+                                SELECT predicted_direction, pred_return_pct 
+                                FROM ml_prediction_log 
+                                WHERE ticker = :ticker 
+                                ORDER BY trade_date DESC LIMIT 1
+                            """), {"ticker": ticker}).fetchone()
+                            if log_res:
+                                p_dir, p_ret = log_res[0], float(log_res[1] or 0)
+                                if p_dir == "NAIK" or p_ret > 0.50:
+                                    return "STRONG BUY" if (p_ret >= 0.60 or p_ret >= 60.0) else "BUY"
+                        except Exception:
+                            pass
+
+                    return "-"
+
                 if is_konglo_target:
                     candidates_scores_res = conn.execute(text("""
-                        SELECT ticker, composite_score, bandarm_score, technical_score, fundamental_score, weight_mode
-                        FROM agent_scores
-                        WHERE run_date = (SELECT MAX(run_date) FROM agent_scores WHERE LOWER(weight_mode) = 'konglo')
-                          AND LOWER(weight_mode) = 'konglo'
-                        ORDER BY composite_score DESC
+                        SELECT a.ticker, a.composite_score, a.bandarm_score, a.technical_score, a.fundamental_score, a.weight_mode,
+                               (SELECT ml_prediction FROM signals WHERE ticker = a.ticker ORDER BY run_date DESC LIMIT 1) AS ml_prediction
+                        FROM agent_scores a
+                        WHERE a.run_date = (SELECT MAX(run_date) FROM agent_scores WHERE LOWER(weight_mode) = 'konglo')
+                          AND LOWER(a.weight_mode) = 'konglo'
+                        ORDER BY a.composite_score DESC
                         LIMIT 10
                     """)).fetchall()
                 else:
                     candidates_scores_res = conn.execute(text("""
-                        SELECT ticker, composite_score, bandarm_score, technical_score, fundamental_score, weight_mode
-                        FROM agent_scores
-                        WHERE run_date = (SELECT MAX(run_date) FROM agent_scores WHERE LOWER(weight_mode) != 'konglo' OR weight_mode IS NULL)
-                          AND (LOWER(weight_mode) != 'konglo' OR weight_mode IS NULL)
-                        ORDER BY composite_score DESC
+                        SELECT a.ticker, a.composite_score, a.bandarm_score, a.technical_score, a.fundamental_score, a.weight_mode,
+                               (SELECT ml_prediction FROM signals WHERE ticker = a.ticker ORDER BY run_date DESC LIMIT 1) AS ml_prediction
+                        FROM agent_scores a
+                        WHERE a.run_date = (SELECT MAX(run_date) FROM agent_scores WHERE LOWER(weight_mode) != 'konglo' OR weight_mode IS NULL)
+                          AND (LOWER(a.weight_mode) != 'konglo' OR a.weight_mode IS NULL)
+                        ORDER BY a.composite_score DESC
                         LIMIT 10
                     """)).fetchall()
                 
                 for cs in candidates_scores_res:
+                    ticker_name = cs[0]
+                    ml_sig = extract_ml_signal(cs[6], ticker=ticker_name)
                     debate_candidates_info.append({
-                        "ticker": cs[0],
+                        "ticker": ticker_name,
                         "composite_score": float(cs[1]) if cs[1] is not None else 0.0,
                         "bandarm_score": float(cs[2]) if cs[2] is not None else 0.0,
                         "technical_score": float(cs[3]) if cs[3] is not None else 0.0,
                         "fundamental_score": float(cs[4]) if cs[4] is not None else 0.0,
-                        "weight_mode": cs[5] or "default"
+                        "weight_mode": cs[5] or "default",
+                        "ml_prediction": ml_sig
                     })
             except Exception as db_err:
                 print(f"Error fetching debate candidates: {db_err}")

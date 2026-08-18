@@ -79,7 +79,8 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
         for pick in top_picks:
             ticker = pick["ticker"]
             
-            # Cek apakah sudah ada record dengan ticker dan tanggal yang sama
+            # Debugging is_konglo
+            logger.info(f"DEBUG: Checking existing for {ticker} | run_date_only={run_date_only} | is_konglo={is_konglo}")
             existing_signal = db.query(Signal).filter(
                 Signal.ticker == ticker,
                 func.date(Signal.run_date) == run_date_only,
@@ -89,6 +90,8 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
             if existing_signal:
                 logger.info(f"Skipping insert for {ticker} on {run_date_only} (is_konglo={is_konglo}): already exists.")
                 continue
+            
+            logger.info(f"DEBUG: Inserting new signal for {ticker} | is_konglo={is_konglo}")
                 
             ticker_scores = scores.get(ticker, {})
             bandarm = ticker_scores.get("bandarm", {})

@@ -3,6 +3,7 @@ LLM client — 9Router OpenAI-compatible API.
 """
 from __future__ import annotations
 
+import os
 import json
 import logging
 import re
@@ -40,12 +41,15 @@ def get_chat_model(
     temperature: float = LLM_TEMPERATURE_DEBATE,
     max_tokens: int = 2048,
     json_mode: bool = True,
+    timeout: float | None = None,
 ) -> ChatOpenAI:
     validate_llm_model(model)
     kwargs: dict[str, Any] = {}
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
     
+    actual_timeout = timeout if timeout is not None else float(os.getenv("LLM_TIMEOUT", "30.0"))
+
     # Force max_retries to 0 so LangChain doesn't block indefinitely on 9router stalls
     return ChatOpenAI(
         model=model,
@@ -53,7 +57,7 @@ def get_chat_model(
         api_key=NINEROUTER_API_KEY or "9router",
         temperature=temperature,
         max_tokens=max_tokens,
-        timeout=180.0,
+        timeout=actual_timeout,
         max_retries=0,
         model_kwargs=kwargs,
     )

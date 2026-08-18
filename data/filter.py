@@ -31,20 +31,18 @@ def apply_filter(universe: list[str]) -> list[str]:
                 logger.info(f"[SKIP] {ticker} — no OHLCV data")
                 continue
 
-            # Cek average volume 20 hari terakhir
-            avg_vol = ohlcv["Volume"].tail(20).mean()
+            # Cek average volume 20 hari terakhir (log info tanpa skip agar ML dapat dievaluasi untuk semua ticker)
+            avg_vol = ohlcv["Volume"].tail(20).mean() if "Volume" in ohlcv.columns else 0
             if avg_vol < MIN_VOLUME:
-                logger.info(f"[SKIP] {ticker} — low volume ({avg_vol:,.0f} < {MIN_VOLUME:,})")
-                continue
+                logger.info(f"[FILTER INFO] {ticker} — low volume ({avg_vol:,.0f} < {MIN_VOLUME:,})")
 
-            # Cek market cap (skip jika data tidak tersedia — LQ45 sudah big cap)
+            # Cek market cap (log info tanpa skip)
             market_cap = info.get("market_cap")
             if market_cap is not None and market_cap < MIN_MARKET_CAP:
                 logger.info(
-                    f"[SKIP] {ticker} — low market cap "
+                    f"[FILTER INFO] {ticker} — low market cap "
                     f"({market_cap/1e12:.2f}T < {MIN_MARKET_CAP/1e12:.0f}T)"
                 )
-                continue
 
             # Calculate Candlestick Pattern Score
             filter_score = 5.0  # base liquidity pass score

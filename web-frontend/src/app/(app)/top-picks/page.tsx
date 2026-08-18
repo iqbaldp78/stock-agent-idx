@@ -750,7 +750,7 @@ export default function TopPicksPage() {
       ) : (
         <div className="space-y-6 sm:space-y-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-1 mb-2">
-            <h3 className="text-xl sm:text-2xl font-bold text-text">Today&apos;s AI Picks</h3>
+                        <h3 className="text-xl sm:text-2xl font-bold text-text">Today&apos;s AI Picks</h3>
             <p className="text-xs sm:text-sm text-secondary">Running Date: <span className="font-mono text-accent">{runDate}</span></p>
           </div>
 
@@ -891,6 +891,7 @@ export default function TopPicksPage() {
                       <th className="pb-3 px-4 text-center">Bandarmologi</th>
                       <th className="pb-3 px-4 text-center">Technical</th>
                       <th className="pb-3 px-4 text-center">Fundamental</th>
+                      <th className="pb-3 px-4 text-center">ML Prediction</th>
                       <th className="pb-3 px-4 text-center">Weight Mode</th>
                       <th className="pb-3 pl-4 text-right">Status</th>
                     </tr>
@@ -898,6 +899,9 @@ export default function TopPicksPage() {
                   <tbody>
                     {debateCandidates.map((cand: any, idx: number) => {
                       const isPicked = picks.some((p: any) => p.ticker === cand.ticker);
+                      const mlSig = (cand.ml_prediction || "-").toUpperCase();
+                      const isMlBuy = mlSig === "BUY" || mlSig === "STRONG BUY";
+
                       return (
                         <tr key={idx} className="border-b border-border/30 last:border-0 hover:bg-white/[0.02] transition duration-200">
                           <td className="py-4 pr-4 font-black text-text text-lg">{cand.ticker}</td>
@@ -905,6 +909,15 @@ export default function TopPicksPage() {
                           <td className="py-4 px-4 text-center font-mono text-text/80">{cand.bandarm_score.toFixed(1)}</td>
                           <td className="py-4 px-4 text-center font-mono text-text/80">{cand.technical_score.toFixed(1)}</td>
                           <td className="py-4 px-4 text-center font-mono text-text/80">{cand.fundamental_score.toFixed(1)}</td>
+                          <td className="py-4 px-4 text-center font-mono">
+                            {isMlBuy ? (
+                              <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                {mlSig}
+                              </span>
+                            ) : (
+                              <span className="text-secondary/50 font-semibold text-sm">-</span>
+                            )}
+                          </td>
                           <td className="py-4 px-4 text-center text-secondary text-xs capitalize">{cand.weight_mode.replace('_', ' ')}</td>
                           <td className="py-4 pl-4 text-right">
                             {isPicked ? (

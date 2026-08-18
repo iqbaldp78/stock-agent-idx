@@ -481,22 +481,38 @@ def get_current_price_stockbit(ticker: str) -> float:
         "User-Agent": "Stockbit/5.6.8 (Android; 10; Scale/2.00)"
     }
 
-    with httpx.Client(timeout=15.0) as client:
-        response = client.get(url, headers=headers)
-        response.raise_for_status()
-        payload = response.json()
+    price_val = 0.0
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            response = client.get(url, headers=headers)
+            response.raise_for_status()
+            payload = response.json()
 
-    if payload.get("message") and "Successfully" not in payload.get("message"):
-        logger.info("Stockbit info: %s", payload.get("message"))
+        price = payload.get("data", {}).get("price")
+        if price:
+            price_val = _parse_number(price)
+    except Exception as e:
+        logger.warning("Stockbit info price fetch error for %s: %s", ticker, e)
 
-    price = payload.get("data", {}).get("price")
-    if not price:
-        logger.warning("Stockbit info: empty price for %s", ticker)
-        return 0.0
+    if price_val and price_val > 0:
+        logger.info("Stockbit info: %s price=%s", ticker, price_val)
+        return price_val
 
-    price_val = _parse_number(price)
-    logger.info("Stockbit info: %s price=%s", ticker, price_val)
-    return price_val
+    # Fallback 1: Yahoo Finance
+    try:
+        from data.fetcher_yfinance import get_stock_info as get_yf_info
+        yf_info = get_yf_info(ticker)
+        if yf_info and yf_info.get("current_price"):
+            yf_price = float(yf_info["current_price"])
+            logger.info("Stockbit info: %s fallback price from YFinance=%s", ticker, yf_price)
+            return yf_price
+    except Exception:
+        pass
+
+    # Fallback 2: Base prices table
+    base = _BASE_PRICES.get(ticker.upper(), 0.0)
+    logger.warning("Stockbit info: empty price for %s, using base price fallback %s", ticker, base)
+    return float(base)
 
 
 @_retry_on_rate_limit(max_attempts=4, base_delay=1.0)
@@ -1182,15 +1198,58 @@ def _fetch_stock_info_api(ticker: str) -> dict:
         payload = response.json()
     data = payload.get("data", {})
     closure_fin_items_results = data.get("closure_fin_items_results", [])
-    # Ambil market cap dari data['stats']['market_cap']
-    stats = data.get("stats", {})
-    mcap_str = stats.get("market_cap")
-    if not mcap_str:
-        raise ValueError(f"Market cap tidak ditemukan untuk {ticker}")
-    try:
-        mcap = float(mcap_str.replace(",", "").replace("B", "")) * 1e9 if "B" in mcap_str else float(mcap_str.replace(",", ""))
-    except Exception:
-        raise ValueError(f"Market cap tidak valid untuk {ticker}: {mcap_str}")
+    # Ambil market cap dari data['stats']['market_cap'] dengan multi-tier fallback
+    stats = data.get("stats", {}) if isinstance(data, dict) else {}
+    mcap_str = stats.get("market_cap") or stats.get("marketCap") or stats.get("Market Cap")
+    mcap = None
+    if mcap_str:
+        try:
+            clean_str = str(mcap_str).replace(",", "").strip()
+            if "T" in clean_str.upper():
+                mcap = float(clean_str.upper().replace("T", "").strip()) * 1e12
+            elif "B" in clean_str.upper():
+                mcap = float(clean_str.upper().replace("B", "").strip()) * 1e9
+            elif "M" in clean_str.upper():
+                mcap = float(clean_str.upper().replace("M", "").strip()) * 1e6
+            else:
+                mcap = float(clean_str)
+        except Exception:
+            mcap = None
+
+    if not mcap:
+        # Fallback 1: Hitung dari current_share_outstanding * current_price
+        share_out_str = stats.get("current_share_outstanding")
+        cp = get_current_price_stockbit(ticker) or 0
+        if share_out_str and cp > 0:
+            try:
+                clean_share = str(share_out_str).replace(",", "").strip()
+                if "B" in clean_share.upper():
+                    shares = float(clean_share.upper().replace("B", "").strip()) * 1e9
+                elif "M" in clean_share.upper():
+                    shares = float(clean_share.upper().replace("M", "").strip()) * 1e6
+                else:
+                    shares = float(clean_share)
+                mcap = shares * cp
+            except Exception:
+                pass
+
+    if not mcap:
+        # Fallback 2: Yahoo Finance
+        try:
+            from data.fetcher_yfinance import get_stock_info as get_yf_info
+            yf_info = get_yf_info(ticker)
+            if yf_info and yf_info.get("market_cap"):
+                mcap = float(yf_info["market_cap"])
+        except Exception:
+            pass
+
+    if not mcap:
+        # Fallback 3: Pre-defined market caps table
+        mcap = _MARKET_CAPS.get(ticker.upper(), 0.0)
+
+    if not mcap:
+        logger.warning(f"Market cap tidak ditemukan dari API Stockbit/YFinance untuk {ticker}, menggunakan default 0.0")
+        mcap = 0.0
     # Ambil current price dari orderbook
     current_price = get_current_price_stockbit(ticker)
     # 52w high/low

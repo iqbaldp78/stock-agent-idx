@@ -34,11 +34,15 @@ def run_llm_debate(state: dict, mode: str = "REGULAR") -> dict:
     if not composites:
         return {"debate_log": [], "finalists": []}
 
-    # Extract STRONG BUY tickers from ml_predictions
-    strong_buy_tickers = set()
+    # Extract good ML tickers from ml_predictions (BUY / STRONG BUY or any horizon 1d/3d/5d/7d pred_prob > 50%)
+    good_ml_tickers = set()
     for ticker, ml_result in ml_predictions.items():
-        if ml_result and ml_result.get("signal") == "STRONG BUY":
-            strong_buy_tickers.add(ticker)
+        if ml_result:
+            sig = ml_result.get("signal", "")
+            multiday = ml_result.get("predictions_multiday", {})
+            max_prob = max(multiday.values()) if multiday else ml_result.get("pred_prob", 0)
+            if sig in ["BUY", "STRONG BUY"] or max_prob > 50.0:
+                good_ml_tickers.add(ticker)
 
     # Sort composites by score
     sorted_tickers = sorted(
@@ -47,22 +51,33 @@ def run_llm_debate(state: dict, mode: str = "REGULAR") -> dict:
         reverse=True,
     )
 
-    # Build debate candidates: STRONG BUY first, then fill with top composites
+    # Build debate candidates: Good ML predictions first, then fill with top composites
     debate_candidates = []
     seen_tickers = set()
 
-    # Priority 1: Add all STRONG BUY tickers
-    for ticker in strong_buy_tickers:
+    # Priority 1: Add all tickers with good ML predictions (any horizon > 50% / BUY / STRONG BUY), sorted by max pred_prob descending
+    def _get_max_ml_prob(t: str) -> float:
+        res = ml_predictions.get(t, {})
+        multiday = res.get("predictions_multiday", {})
+        return max(multiday.values()) if multiday else res.get("pred_prob", 0)
+
+    sorted_ml_tickers = sorted(
+        good_ml_tickers,
+        key=_get_max_ml_prob,
+        reverse=True,
+    )
+    for ticker in sorted_ml_tickers:
         if ticker in composites:
             debate_candidates.append((ticker, composites[ticker]))
             seen_tickers.add(ticker)
 
-    # Priority 2: Fill remaining slots with top composite scores
+    # Priority 2: Fill remaining slots with top composite scores up to target count
+    target_count = max(LLM_DEBATE_MAX_TICKERS, len(good_ml_tickers))
     for ticker, composite in sorted_tickers:
         if ticker not in seen_tickers:
             debate_candidates.append((ticker, composite))
             seen_tickers.add(ticker)
-        if len(debate_candidates) >= min(LLM_DEBATE_MAX_TICKERS, len(composites)):
+        if len(debate_candidates) >= min(target_count, len(composites)):
             break
 
     debate_log: list[dict] = []
@@ -75,10 +90,12 @@ def run_llm_debate(state: dict, mode: str = "REGULAR") -> dict:
             # 1. Fetch TradingView TA
             scores[ticker]["technical"] = tech_analyze(ticker, use_tradingview=True)
             # 2. Fetch Fundamental Data
-            if mode != "KONGLO":
+            try:
                 scores[ticker]["fundamental"] = fund_analyze(ticker)
-            else:
-                scores[ticker]["fundamental"] = {"score": 5.0, "status": "skipped", "analysis": "Fundamental diabaikan untuk Konglo Play."}
+            except Exception as e:
+                logger.warning(f"  [{ticker}] Debate fundamental enrichment failed: {e}")
+                if "fundamental" not in scores[ticker] or not scores[ticker]["fundamental"]:
+                    scores[ticker]["fundamental"] = {"score": 5.0, "status": "fallback"}
             
             # 3. Recalculate composite score (with fundamental included)
             agent_scores = {

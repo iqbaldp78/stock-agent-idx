@@ -1,0 +1,2251 @@
+{
+  "ticker": "ANTM",
+  "timestamp": "2026-08-13T11:22:59.798324",
+  "top_picks": [
+    {
+      "rank": 1,
+      "ticker": "ANTM",
+      "thesis": "PT Aneka Tambang Tbk (ANTM) menyajikan peluang investasi berkeyakinan tinggi (HIGH Conviction) melalui konvergensi sempurna antara fundamental super murah (DEEP_UNDERVALUED), akumulasi institusional masif, dan katalis makro komoditas yang sangat positif. Dari aspek fundamental, ANTM mentradingkan PER 5,5x dengan tingkat profitabilitas sangat tinggi (ROE 21,84%) dan akselerasi pertumbuhan laba bersih (Earnings Growth) mencapai 59,9% YoY. Nilai wajar (Fair Value Base) berada pada Rp5.649 per saham, memberikan Margin of Safety (MoS) melimpah sebesar 46,89% dan potensi upside hingga +88,30%. Sisi bandarmologi menunjukkan akumulasi kuat (Strong Accumulation) dalam 7 hari terakhir senilai Rp51,56 miliar (166.013 lot), dengan institusi global JP Morgan (BK) bertindak sebagai akumulator utama (462.248 lot pada rerata harga Rp3.098). Dominasi 3 broker utama yang mencapai 68,7% menegaskan terjadinya estafet kepemilikan dari investor ritel ke tangan smart money. Posisi harga saat ini (Rp3.000) berada 3,16% di bawah harga modal bandar 7 hari, menciptakan ruang entry diskon yang sangat ideal sebelum terjadinya breakout teknikal di atas resistance Rp3.118. Katalis makro didukung oleh rally harga emas spot global (+5% ke US$4.292/oz) yang mendongkrak ASP serta pertumbuhan volume penjualan operasional 1H26 feronikel (+32%) dan bauksit (+24%).",
+      "time_horizon": "Positional (4-8 minggu)",
+      "price_prediction": {
+        "current_price": 3000.0,
+        "predictions": {
+          "day_1": {
+            "price": 3030.0,
+            "pct_change": "+1.0%",
+            "price_range": [
+              2939.0,
+              3121.0
+            ]
+          },
+          "day_3": {
+            "price": 3066.0,
+            "pct_change": "+2.2%",
+            "price_range": [
+              2974.0,
+              3158.0
+            ]
+          },
+          "day_5": {
+            "price": 3105.0,
+            "pct_change": "+3.5%",
+            "price_range": [
+              3012.0,
+              3198.0
+            ]
+          },
+          "day_7": {
+            "price": 3144.0,
+            "pct_change": "+4.8%",
+            "price_range": [
+              3050.0,
+              3238.0
+            ]
+          }
+        },
+        "confidence": "HIGH",
+        "reasoning": "Saham ANTM menunjukkan potensi reversal teknikal yang kuat dari area support dekat 52-week low, didukung oleh momentum bullish pada indikator RSI dan MACD serta akumulasi volume yang meningkat. Dari perspektif bandarmologi, broker institusi seperti BK (JP Morgan) dan ZP (Maybank) tercatat melakukan akumulasi dengan rata-rata harga modal 7 hari terakhir di Rp3.098, menjadikan harga saat ini (Rp3.000) berada dalam area entry yang sangat ideal karena 3.16% di bawah modal bandar. Secara fundamental, ANTM sangat solid dengan predikat deep undervalued (PER 5.5x, ROE 21.84%, dan DER 0.14x) yang memberikan ruang dorongan harga ke atas lebih agresif dibanding estimasi rule-based awal. Oleh karena itu, target persentase kenaikan disesuaikan naik untuk merefleksikan pergerakan harga menuju harga rata-rata akumulasi bandar dalam kisaran 3 hingga 7 hari mendatang.",
+        "key_drivers": [
+          "Akumulasi Institusi (Bandarmologi): Broker utama BK dan ZP aktif melakukan akumulasi dengan harga rata-rata 7 hari di Rp3.098 (di atas harga pasar saat ini).",
+          "Valuasi Deep Undervalued: PER sebesar 5.5x dan ROE 21.84% menunjukkan \u0444\u0443\u043d\u0434\u0430\u043c\u0435\u043d\u0442\u0430\u043b yang sangat kuat dengan margin of safety yang lebar.",
+          "Momentum Teknis Positif: Sinyal bullish momentum dari RSI dan MACD yang diperkuat oleh peningkatan volume transaksi di area bottom.",
+          "Neraca Keuangan Sehat: Leverage sangat rendah dengan DER 0.14x dan pertumbuhan laba (Earnings Growth) yang akseleratif sebesar 59.9%."
+        ],
+        "risks": [
+          "Resistensi Teknis MA: Harga masih tertahan di bawah MA20, MA100, dan MA200 yang berpotensi menjadi titik penahanan pergerakan harga.",
+          "Volatilitas Komoditas Global: Pergerakan harga saham ANTM tetap peka terhadap fluktuasi harga nikel dan emas dunia."
+        ],
+        "entry_style": "Buy on Weakness / Accumulate in Zone"
+      },
+      "ml_prediction": {
+        "pred_prob": 42.3,
+        "max_pred_prob": 42.3,
+        "predictions_multiday": {
+          "1d": 42.3,
+          "3d": 31.4,
+          "5d": 32.94,
+          "7d": 19.94
+        },
+        "signal": "STRONG BUY",
+        "confidence": "MEDIUM"
+      },
+      "fair_value": {
+        "current_price": 3000.0,
+        "method": "blended",
+        "fair_value_low": 3758.0,
+        "fair_value_base": 5649.0,
+        "fair_value_high": 7539.0,
+        "upside_pct": 88.3,
+        "margin_of_safety_pct": 46.89,
+        "valuation_label": "DEEP_UNDERVALUED",
+        "methods": {
+          "pe_based": {
+            "available": true,
+            "eps": 550.46,
+            "target_pe": 11.0,
+            "fair_value": 6055.0
+          },
+          "pbv_roe_based": {
+            "available": true,
+            "bvps": 1616.55,
+            "roe_pct": 21.84,
+            "sustainable_growth_pct": 10.5,
+            "required_return_pct": 13.5,
+            "fair_pbv": 2.5,
+            "fair_value": 4041.0
+          },
+          "eps_growth_based": {
+            "available": true,
+            "eps": 550.46,
+            "growth_pct": 59.85,
+            "target_pe": 12.8,
+            "fair_value": 7046.0
+          }
+        },
+        "notes": [
+          "EPS source: derived_from_current_price_per",
+          "BVPS source: info_bvps",
+          "Target PE baseline sektor Komoditas/Tambang: 8.0x"
+        ],
+        "confidence": "HIGH"
+      },
+      "pred_return": 0.0,
+      "decision_label": "HOLD",
+      "bandar_context": {
+        "broker_utama": "BK (JP Morgan)",
+        "avg_cost_7d": 3098,
+        "avg_cost_1m": 3018,
+        "active_days_1m": "N/A",
+        "distance_current": "-0.6%"
+      },
+      "entry_zone": "2873\u20133009",
+      "max_entry": "3009",
+      "tp1": 3084.0,
+      "tp2": 3302.0,
+      "tp3": 3513.0,
+      "target_1": 3084.0,
+      "target_2": 3302.0,
+      "target_3": 3513.0,
+      "tp1_size": 0.3,
+      "tp2_size": 0.4,
+      "tp3_size": 0.3,
+      "risk_reward_tp1": "1:9.2",
+      "risk_reward_tp2": "1:18.7",
+      "risk_reward_tp3": "1:27.8",
+      "stop_loss": 2850.0,
+      "risk_reward": "1:0.6",
+      "position_strategy": "Exit 30% at TP1, 40% at TP2, 30% at TP3",
+      "position_size": "30% portofolio",
+      "conviction": "HIGH",
+      "entry_reasoning": "Rentang akumulasi ideal ditetapkan pada Rp2.873 \u2013 Rp3.009, memanfaatkan area teknikal antara Fib Support terdekat (Rp2.873) hingga indikator MA20 harian (Rp3.009). Pembelian pada level harga Rp3.000 sangat menguntungkan karena berada di bawah rata-rata modal akumulasi JP Morgan (Rp3.098) dan modal bandar 1 bulan (Rp3.018). Level Stop Loss dipasang disiplin di Rp2.850 (di bawah support kritis Rp2.873). Target Profit bertahap ditentukan pada TP1 Rp3.084 (menguji resistensi psikologis terdekat), TP2 Rp3.302 (target pemulihan menuju area MA100/MA200), dan TP3 Rp3.513 (Fibonacci Resistance Kuat). Skenario ini menawarkan Risk/Reward Ratio yang sangat atraktif (> 1:2.0 hingga TP2) dengan risiko penurunan terbatasi oleh Margin of Safety fundamental.",
+      "agent_scores": {
+        "bandarm": {
+          "score": 7.0,
+          "weight": "35%",
+          "contribution": 2.45
+        },
+        "technical": {
+          "score": 6.5,
+          "weight": "22%",
+          "contribution": 1.43
+        },
+        "fundamental": {
+          "score": 10.0,
+          "weight": "18%",
+          "contribution": 1.8
+        },
+        "macro": {
+          "score": 4.5,
+          "weight": "13%",
+          "contribution": 0.58
+        },
+        "composite": 6.97
+      },
+      "bandarm_signal": "ACCUMULATION",
+      "broker_to_watch": [
+        "BK (JP Morgan)",
+        "ZP (Maybank Sekuritas)"
+      ],
+      "broker_true_costs": {
+        "w7": [
+          {
+            "broker": "BK",
+            "broker_name": "JP Morgan",
+            "true_cost": 3098,
+            "total_buy_lot": 462248,
+            "total_buy_value": 143348846000,
+            "active_days": "6/7 hari",
+            "distance_pct": -3.16,
+            "status": "\u26a1 KONSISTEN \u2014 PANTAU KETAT"
+          },
+          {
+            "broker": "ZP",
+            "broker_name": "Maybank Sekuritas",
+            "true_cost": 3089,
+            "total_buy_lot": 291858,
+            "total_buy_value": 89106780000,
+            "active_days": "5/7 hari",
+            "distance_pct": -2.88,
+            "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+          },
+          {
+            "broker": "LG",
+            "broker_name": "Trimegah Sekuritas",
+            "true_cost": 3121,
+            "total_buy_lot": 156823,
+            "total_buy_value": 50845556000,
+            "active_days": "4/7 hari",
+            "distance_pct": -3.88,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "RF",
+            "broker_name": "Lotus Andalan Sekuritas",
+            "true_cost": 3160,
+            "total_buy_lot": 130019,
+            "total_buy_value": 41080836000,
+            "active_days": "2/7 hari",
+            "distance_pct": -5.06,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "KZ",
+            "broker_name": "Daewoo Securities",
+            "true_cost": 3102,
+            "total_buy_lot": 86944,
+            "total_buy_value": 27269229000,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.29,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "AK",
+            "broker_name": "UBS Securities",
+            "true_cost": 3088,
+            "total_buy_lot": 69584,
+            "total_buy_value": 19727628000,
+            "active_days": "3/7 hari",
+            "distance_pct": -2.85,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "RX",
+            "broker_name": "Macquarie Securities",
+            "true_cost": 3131,
+            "total_buy_lot": 52431,
+            "total_buy_value": 16416790000,
+            "active_days": "1/7 hari",
+            "distance_pct": -4.18,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "IF",
+            "broker_name": "Samuel Sekuritas",
+            "true_cost": 3057,
+            "total_buy_lot": 31390,
+            "total_buy_value": 9482401000,
+            "active_days": "2/7 hari",
+            "distance_pct": -1.86,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "SQ",
+            "broker_name": "BCA Sekuritas",
+            "true_cost": 3106,
+            "total_buy_lot": 24826,
+            "total_buy_value": 8219579000,
+            "active_days": "4/7 hari",
+            "distance_pct": -3.41,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "TP",
+            "broker_name": "OCBC Sekuritas",
+            "true_cost": 3117,
+            "total_buy_lot": 22642,
+            "total_buy_value": 7111591000,
+            "active_days": "1/7 hari",
+            "distance_pct": -3.75,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          }
+        ],
+        "w1m": [
+          {
+            "broker": "DX",
+            "broker_name": "BNI Sekuritas",
+            "true_cost": 3018,
+            "total_buy_lot": 1103285,
+            "total_buy_value": 333376297000,
+            "active_days": "13/30 hari",
+            "distance_pct": -0.6,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "CC",
+            "broker_name": "Mandiri Sekuritas",
+            "true_cost": 3016,
+            "total_buy_lot": 685850,
+            "total_buy_value": 202717631000,
+            "active_days": "16/30 hari",
+            "distance_pct": -0.53,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "BK",
+            "broker_name": "JP Morgan",
+            "true_cost": 2985,
+            "total_buy_lot": 227343,
+            "total_buy_value": 68979905000,
+            "active_days": "16/30 hari",
+            "distance_pct": 0.5,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "AK",
+            "broker_name": "UBS Securities",
+            "true_cost": 3020,
+            "total_buy_lot": 162082,
+            "total_buy_value": 48025920000,
+            "active_days": "14/30 hari",
+            "distance_pct": -0.66,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "RF",
+            "broker_name": "Lotus Andalan Sekuritas",
+            "true_cost": 3156,
+            "total_buy_lot": 101632,
+            "total_buy_value": 32715258000,
+            "active_days": "2/30 hari",
+            "distance_pct": -4.94,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "GR",
+            "broker_name": "Goldman Sachs",
+            "true_cost": 3021,
+            "total_buy_lot": 98556,
+            "total_buy_value": 29575476000,
+            "active_days": "8/30 hari",
+            "distance_pct": -0.7,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "SQ",
+            "broker_name": "BCA Sekuritas",
+            "true_cost": 3009,
+            "total_buy_lot": 87560,
+            "total_buy_value": 27015511000,
+            "active_days": "14/30 hari",
+            "distance_pct": -0.3,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "NI",
+            "broker_name": "BNI Sekuritas",
+            "true_cost": 3010,
+            "total_buy_lot": 65314,
+            "total_buy_value": 18807625000,
+            "active_days": "10/30 hari",
+            "distance_pct": -0.33,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "YP",
+            "broker_name": "Mirae Asset Sekuritas",
+            "true_cost": 2999,
+            "total_buy_lot": 52601,
+            "total_buy_value": 13793575000,
+            "active_days": "12/30 hari",
+            "distance_pct": 0.03,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "MG",
+            "broker_name": "Unknown",
+            "true_cost": 3011,
+            "total_buy_lot": 40320,
+            "total_buy_value": 11804518000,
+            "active_days": "11/30 hari",
+            "distance_pct": -0.37,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          }
+        ]
+      },
+      "broker_distributors": {
+        "w7": [
+          {
+            "broker": "XL",
+            "broker_name": "Stockbit Sekuritas",
+            "avg_sell": 3104,
+            "total_sell_lot": 329571,
+            "total_sell_value": 102294054000,
+            "active_days": "4/7 hari",
+            "distance_pct": -3.35,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "CC",
+            "broker_name": "Mandiri Sekuritas",
+            "avg_sell": 3108,
+            "total_sell_lot": 160561,
+            "total_sell_value": 51133035000,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.47,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "AG",
+            "broker_name": "Alindo Sekuritas",
+            "avg_sell": 3088,
+            "total_sell_lot": 120979,
+            "total_sell_value": 37310743000,
+            "active_days": "1/7 hari",
+            "distance_pct": -2.85,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "BB",
+            "broker_name": "Verdhana Sekuritas",
+            "avg_sell": 3108,
+            "total_sell_lot": 113456,
+            "total_sell_value": 35054840000,
+            "active_days": "2/7 hari",
+            "distance_pct": -3.47,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "XC",
+            "broker_name": "Ajaib Sekuritas",
+            "avg_sell": 3088,
+            "total_sell_lot": 111209,
+            "total_sell_value": 33805903000,
+            "active_days": "3/7 hari",
+            "distance_pct": -2.85,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "YU",
+            "broker_name": "CIMB Sekuritas",
+            "avg_sell": 3082,
+            "total_sell_lot": 100595,
+            "total_sell_value": 30785660000,
+            "active_days": "5/7 hari",
+            "distance_pct": -2.66,
+            "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+          },
+          {
+            "broker": "AF",
+            "broker_name": "Unknown",
+            "avg_sell": 3118,
+            "total_sell_lot": 80020,
+            "total_sell_value": 24946820000,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.78,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "AI",
+            "broker_name": "UOB Kay Hian Sekuritas",
+            "avg_sell": 3139,
+            "total_sell_lot": 52649,
+            "total_sell_value": 16649423000,
+            "active_days": "4/7 hari",
+            "distance_pct": -4.43,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "YP",
+            "broker_name": "Mirae Asset Sekuritas",
+            "avg_sell": 3099,
+            "total_sell_lot": 49186,
+            "total_sell_value": 15169666000,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.19,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "AZ",
+            "broker_name": "Sucor Sekuritas",
+            "avg_sell": 3117,
+            "total_sell_lot": 44526,
+            "total_sell_value": 13899985000,
+            "active_days": "4/7 hari",
+            "distance_pct": -3.75,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          }
+        ],
+        "w1m": [
+          {
+            "broker": "RX",
+            "broker_name": "Macquarie Securities",
+            "avg_sell": 2905,
+            "total_sell_lot": 551264,
+            "total_sell_value": 158249587000,
+            "active_days": "6/30 hari",
+            "distance_pct": 3.27,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "AZ",
+            "broker_name": "Sucor Sekuritas",
+            "avg_sell": 3021,
+            "total_sell_lot": 255947,
+            "total_sell_value": 79106544000,
+            "active_days": "13/30 hari",
+            "distance_pct": -0.7,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "PD",
+            "broker_name": "Indo Premier Sekuritas",
+            "avg_sell": 2982,
+            "total_sell_lot": 254609,
+            "total_sell_value": 74361358000,
+            "active_days": "13/30 hari",
+            "distance_pct": 0.6,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "BB",
+            "broker_name": "Verdhana Sekuritas",
+            "avg_sell": 3042,
+            "total_sell_lot": 228118,
+            "total_sell_value": 70778142000,
+            "active_days": "8/30 hari",
+            "distance_pct": -1.38,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "AF",
+            "broker_name": "Unknown",
+            "avg_sell": 3024,
+            "total_sell_lot": 214264,
+            "total_sell_value": 64789858000,
+            "active_days": "6/30 hari",
+            "distance_pct": -0.79,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "AI",
+            "broker_name": "UOB Kay Hian Sekuritas",
+            "avg_sell": 3022,
+            "total_sell_lot": 205106,
+            "total_sell_value": 61238629000,
+            "active_days": "12/30 hari",
+            "distance_pct": -0.73,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "XL",
+            "broker_name": "Stockbit Sekuritas",
+            "avg_sell": 3034,
+            "total_sell_lot": 152403,
+            "total_sell_value": 54621710000,
+            "active_days": "12/30 hari",
+            "distance_pct": -1.12,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "YU",
+            "broker_name": "CIMB Sekuritas",
+            "avg_sell": 2984,
+            "total_sell_lot": 163812,
+            "total_sell_value": 49962492000,
+            "active_days": "17/30 hari",
+            "distance_pct": 0.54,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "AG",
+            "broker_name": "Alindo Sekuritas",
+            "avg_sell": 3003,
+            "total_sell_lot": 133355,
+            "total_sell_value": 40869174000,
+            "active_days": "4/30 hari",
+            "distance_pct": -0.1,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "ZP",
+            "broker_name": "Maybank Sekuritas",
+            "avg_sell": 2985,
+            "total_sell_lot": 110014,
+            "total_sell_value": 26646711000,
+            "active_days": "17/30 hari",
+            "distance_pct": 0.5,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          }
+        ]
+      },
+      "weight_mode": "default",
+      "composite_score": 6.97,
+      "final_score": 10.23
+    }
+  ],
+  "debate_log": [
+    {
+      "round": 1,
+      "ticker": "MARKET",
+      "agent": "macro",
+      "argument": "IHSG tercatat pada level 6301.77 dengan tren SLIGHTLY_BULLISH (+1.79% di atas MA20). Meskipun demikian, pasar menghadapi risiko tinggi (Market Risk HIGH) akibat tekanan pelemahan nilai tukar Rupiah (USD/IDR 17872.58, WEAK_IDR). Mayoritas sektor makro seperti perbankan, tambang, dan konsumer berada pada outlook NETRAL, sementara sektor properti NEGATIF dan komoditas minyak dunia mengalami pelemahan -2.2%. Sinyal makro yang campur serta tingginya risiko pasar menjustifikasi keputusan taktis HOLD.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "ANTM",
+      "agent": "fundamental",
+      "argument": "ANTM menampilkan kinerja fundamental yang sangat unggul dengan tingkat profitabilitas tinggi dan harga yang terdiskon secara signifikan. Berdasarkan metode blended valuation, Fair Value ANTM berada di level Rp5.649 per saham (status DEEP_UNDERVALUED) dibandingkan harga pasar saat ini di Rp3.000, memberikan margin of safety yang sangat memadai sebesar 46,89% dan potensi upside hingga +88,30%. Kinerja operasional didorong oleh ROE yang kuat sebesar 21,84% serta akselerasi pertumbuan laba bersih (Earnings Growth) mencapai 59,9%. Rekam jejak jangka panjang juga sangat positif dengan CAGR Net Income sebesar 66,71% (2017-2026). Risiko keuangan sangat terukur berkat leverage yang sangat rendah (DER 0,14x). Dengan PER 5,5x yang sangat murah untuk emiten ber-ROE >20%, ANTM menjadi pilihan investasi fundamental berkeyakinan tinggi.",
+      "vote": "BUY"
+    },
+    {
+      "round": 1,
+      "ticker": "ANTM",
+      "agent": "bandarmologi",
+      "argument": "Terjadi akumulasi kuat (Strong Accumulation) pada saham ANTM dalam 7 hari terakhir dengan net buy sebesar 166.013 lot (Rp51,56 miliar). Broker BK (JP Morgan) tampil sebagai akumulator utama secara konsisten (aktif 6/7 hari) memborong 462.248 lot dengan rata-rata harga modal (avg cost) 3.098. Transaksi pasar dikuasai secara dominan sebesar 68,7% oleh top 3 broker, menandakan estafet kepemilikan saham bergerak dari ritel ke institusi besar. Posisi harga pasar saat ini (3.000) berada dalam area ideal entry, yaitu -3,16% di bawah avg cost bandar 7 hari (3.098) serta di bawah modal bandar 1 bulan (3.018). Didukung status fundamental DEEP_UNDERVALUED dengan Fair Value Base 5.649 (upside 88,3%), saham ANTM sangat layak dikoleksi.",
+      "vote": "BUY"
+    },
+    {
+      "round": 1,
+      "ticker": "ANTM",
+      "agent": "technical",
+      "argument": "ANTM saat ini bergerak sideways dalam area konsolidasi antara support MA50 (2919) dan resistance Fib terdekat di 3118. Meskipun terdapat momentum bullish dari MACD dan indikasi Golden Cross MA20/MA50, ringkasan indikator TradingView TA memberikan rekomendasi mayoritas SELL (12 Sell, 4 Buy, 10 Neutral) akibat posisi harga yang masih tertahan di bawah MA20 (3009), MA100 (3274), dan MA200 (3391). RSI berada di level netral 50.05 tanpa adanya konfirmasi breakout volume tinggi. Dari perspektif fundamental, ANTM tergolong DEEP_UNDERVALUED dengan Fair Value Base di 5649 (upside 88.3%), menahan risiko penurunan tajam. Tanpa adanya trigger breakout resistance 3118, opsi terbaik adalah HOLD dengan memantau area entry zone 2873-3009, Stop Loss di 2850, serta target teknikal bertahap pada TP1 3084, TP2 3302, dan TP3 3513.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 2,
+      "ticker": "ANTM",
+      "agent": "bandarmologi",
+      "argument": "Saya meng-override pandangan HOLD dari analisis teknikal. Indikator teknikal ragu-ragu karena bersifat mengekor (lagging), sedangkan data bandarmologi mengonfirmasi akumulasi masif institusi. Dalam 7 hari terakhir, JP Morgan (BK) melakukan akumulasi konsisten sebanyak 462.248 lot dengan rerata modal Rp3.098, didukung dominasi mutlak 3 broker sebesar 68,7%. Terjadi estafet kepemilikan dari ritel (PD) ke institusi besar. Harga saat ini Rp3.000 berada 3,16% di bawah modal bandar seminggu terakhir (Rp3.098) dan di bawah modal 1 bulan (Rp3.018), merupakan zona entry ideal. Menyetujui analis fundamental, Fair Value Rp5.649 (DEEP_UNDERVALUED, MOS 46,89%) menjadi fondasi kuat bahwa akumulasi bandar ini adalah early buy signal sebelum konfirmasi breakout teknikal.",
+      "vote": "BUY"
+    },
+    {
+      "round": 2,
+      "ticker": "ANTM",
+      "agent": "technical",
+      "argument": "Meskipun agen bandarmologi mencatat akumulasi broker BK pada avg cost 3.098 dan agen fundamental menyoroti Fair Value 5.649, secara teknikal ANTM masih terjebak dalam fase konsolidasi sideways. Harga 3.000 saat ini tertahan di bawah MA20 (3.009) dan belum mengonfirmasi breakout di atas resistance terdekat 3.118. Akumulasi bandar belum terkonfirmasi oleh chart karena tren jangka menengah-panjang masih dibayangi struktur bearish akibat Death Cross MA100/MA200 dengan posisi harga jauh di bawah MA100 (3.274) dan MA200 (3.391). Konsensus indikator TradingView TA juga memberikan rincian rekomendasi mayoritas SELL (12 Sell vs 4 Buy). Pembelian prematur sebelum adanya konfirmasi breakout ber-volume tinggi berisiko membuat modal tertahan dalam konsolidasi, sehingga sinyal teknikal merekomendasikan HOLD.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 2,
+      "ticker": "ANTM",
+      "agent": "fundamental",
+      "argument": "Saya membantah tegas sikap ragu-ragu analis teknikal yang merekomendasikan HOLD hanya karena tertahan oleh resistensi moving average jangka pendek. Saham ANTM berada dalam status DEEP_UNDERVALUED dengan Fair Value Base 5.649 (potensi upside +88,3%) dan Margin of Safety yang melimpah sebesar 46,89%. Secara fundamental, ANTM sangat unggul dengan ROE 21,84%, PER super murah 5,5x, DER sangat sehat 0,14x, dan Earnings Growth melesat 59,9%. Temuan bandarmologi yang menunjukkan akumulasi masif oleh institusi (BK / JP Morgan dengan avg cost 3.098) pada harga pasar saat ini (3.000) semakin memvalidasi bahwa smart money sedang memanfaatkan diskon nilai intrinsik ini. Menunda pembelian demi menunggu konfirmasi breakout teknikal justru mengorbankan ruang Margin of Safety yang sangat ideal ini. Saya mendukung penuh sinyal BUY.",
+      "vote": "BUY"
+    }
+  ],
+  "composites": {
+    "ANTM": {
+      "ticker": "ANTM",
+      "composite_score": 6.97,
+      "weights_used": {
+        "bandarm": 0.35,
+        "technical": 0.22,
+        "fundamental": 0.18,
+        "macro": 0.13,
+        "news": 0.12
+      },
+      "weight_mode": "default",
+      "sector": "Basic Materials",
+      "usdidr_adj": 0.0,
+      "usdidr_narrative": "",
+      "breakdown": {
+        "bandarm": {
+          "score": 7.0,
+          "weight": 0.35,
+          "contribution": 2.45
+        },
+        "technical": {
+          "score": 6.5,
+          "weight": 0.22,
+          "contribution": 1.43
+        },
+        "fundamental": {
+          "score": 10.0,
+          "weight": 0.18,
+          "contribution": 1.8
+        },
+        "macro": {
+          "score": 4.5,
+          "weight": 0.13,
+          "contribution": 0.58
+        },
+        "news": {
+          "score": 5.9,
+          "weight": 0.12,
+          "contribution": 0.71
+        }
+      }
+    }
+  },
+  "scores": {
+    "ANTM": {
+      "bandarm": {
+        "ticker": "ANTM",
+        "score": 7.0,
+        "signal": "ACCUMULATION",
+        "weight": "40%",
+        "window_7d": {
+          "period": "2026-08-05 s/d 2026-08-13",
+          "bandar_signal": "Strong Accumulation",
+          "assessment": "Strong Accumulation",
+          "net_lot": 166013,
+          "net_value": 51559107000,
+          "total_buyer": 10,
+          "total_seller": 10,
+          "top_accumulators": [
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_buy_lot": 462248,
+              "total_buy_value": 143348846000,
+              "avg_price": 3098,
+              "active_days": "6/7 hari",
+              "status": "\u26a1 KONSISTEN \u2014 PANTAU KETAT",
+              "distance_pct": -3.1633311814073597
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "total_buy_lot": 291858,
+              "total_buy_value": 89106780000,
+              "avg_price": 3089,
+              "active_days": "5/7 hari",
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI",
+              "distance_pct": -2.8811913240530918
+            },
+            {
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "total_buy_lot": 156823,
+              "total_buy_value": 50845556000,
+              "avg_price": 3121,
+              "active_days": "4/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -3.8769625120153797
+            },
+            {
+              "broker": "RF",
+              "broker_name": "Lotus Andalan Sekuritas",
+              "total_buy_lot": 130019,
+              "total_buy_value": 41080836000,
+              "avg_price": 3160,
+              "active_days": "2/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -5.063291139240507
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_buy_lot": 86944,
+              "total_buy_value": 27269229000,
+              "avg_price": 3102,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -3.2882011605415857
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_buy_lot": 69584,
+              "total_buy_value": 19727628000,
+              "avg_price": 3088,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -2.849740932642487
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_buy_lot": 52431,
+              "total_buy_value": 16416790000,
+              "avg_price": 3131,
+              "active_days": "1/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -4.183966783775152
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Samuel Sekuritas",
+              "total_buy_lot": 31390,
+              "total_buy_value": 9482401000,
+              "avg_price": 3057,
+              "active_days": "2/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -1.8645731108930326
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "total_buy_lot": 24826,
+              "total_buy_value": 8219579000,
+              "avg_price": 3106,
+              "active_days": "4/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -3.4127495170637476
+            },
+            {
+              "broker": "TP",
+              "broker_name": "OCBC Sekuritas",
+              "total_buy_lot": 22642,
+              "total_buy_value": 7111591000,
+              "avg_price": 3117,
+              "active_days": "1/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -3.753609239653513
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "total_sell_lot": 329571,
+              "total_sell_value": 102294054000,
+              "avg_price": 3104,
+              "active_days": "4/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_sell_lot": 160561,
+              "total_sell_value": 51133035000,
+              "avg_price": 3108,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AG",
+              "broker_name": "Alindo Sekuritas",
+              "total_sell_lot": 120979,
+              "total_sell_value": 37310743000,
+              "avg_price": 3088,
+              "active_days": "1/7 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "total_sell_lot": 113456,
+              "total_sell_value": 35054840000,
+              "avg_price": 3108,
+              "active_days": "2/7 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "XC",
+              "broker_name": "Ajaib Sekuritas",
+              "total_sell_lot": 111209,
+              "total_sell_value": 33805903000,
+              "avg_price": 3088,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_sell_lot": 100595,
+              "total_sell_value": 30785660000,
+              "avg_price": 3082,
+              "active_days": "5/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "AF",
+              "broker_name": "Unknown",
+              "total_sell_lot": 80020,
+              "total_sell_value": 24946820000,
+              "avg_price": 3118,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "total_sell_lot": 52649,
+              "total_sell_value": 16649423000,
+              "avg_price": 3139,
+              "active_days": "4/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "total_sell_lot": 49186,
+              "total_sell_value": 15169666000,
+              "avg_price": 3099,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "total_sell_lot": 44526,
+              "total_sell_value": 13899985000,
+              "avg_price": 3117,
+              "active_days": "4/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_7d": 0
+        },
+        "window_1m": {
+          "period": "2026-07-03 s/d 2026-08-13",
+          "bandar_signal": "Light Accumulation",
+          "assessment": "Light Accumulation",
+          "net_lot": 355651,
+          "net_value": 106187511000,
+          "total_buyer": 10,
+          "total_seller": 10,
+          "top_accumulators": [
+            {
+              "broker": "DX",
+              "broker_name": "BNI Sekuritas",
+              "total_buy_lot": 1103285,
+              "total_buy_value": 333376297000,
+              "avg_price": 3018,
+              "active_days": "13/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -0.5964214711729622
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_buy_lot": 685850,
+              "total_buy_value": 202717631000,
+              "avg_price": 3016,
+              "active_days": "16/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -0.5305039787798408
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_buy_lot": 227343,
+              "total_buy_value": 68979905000,
+              "avg_price": 2985,
+              "active_days": "16/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.5025125628140703
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_buy_lot": 162082,
+              "total_buy_value": 48025920000,
+              "avg_price": 3020,
+              "active_days": "14/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -0.6622516556291391
+            },
+            {
+              "broker": "RF",
+              "broker_name": "Lotus Andalan Sekuritas",
+              "total_buy_lot": 101632,
+              "total_buy_value": 32715258000,
+              "avg_price": 3156,
+              "active_days": "2/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -4.942965779467681
+            },
+            {
+              "broker": "GR",
+              "broker_name": "Goldman Sachs",
+              "total_buy_lot": 98556,
+              "total_buy_value": 29575476000,
+              "avg_price": 3021,
+              "active_days": "8/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -0.6951340615690168
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "total_buy_lot": 87560,
+              "total_buy_value": 27015511000,
+              "avg_price": 3009,
+              "active_days": "14/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -0.29910269192422734
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "total_buy_lot": 65314,
+              "total_buy_value": 18807625000,
+              "avg_price": 3010,
+              "active_days": "10/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -0.33222591362126247
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "total_buy_lot": 52601,
+              "total_buy_value": 13793575000,
+              "avg_price": 2999,
+              "active_days": "12/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.03334444814938312
+            },
+            {
+              "broker": "MG",
+              "broker_name": "Unknown",
+              "total_buy_lot": 40320,
+              "total_buy_value": 11804518000,
+              "avg_price": 3011,
+              "active_days": "11/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -0.3653271338425772
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_sell_lot": 551264,
+              "total_sell_value": 158249587000,
+              "avg_price": 2905,
+              "active_days": "6/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "total_sell_lot": 255947,
+              "total_sell_value": 79106544000,
+              "avg_price": 3021,
+              "active_days": "13/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Indo Premier Sekuritas",
+              "total_sell_lot": 254609,
+              "total_sell_value": 74361358000,
+              "avg_price": 2982,
+              "active_days": "13/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "total_sell_lot": 228118,
+              "total_sell_value": 70778142000,
+              "avg_price": 3042,
+              "active_days": "8/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AF",
+              "broker_name": "Unknown",
+              "total_sell_lot": 214264,
+              "total_sell_value": 64789858000,
+              "avg_price": 3024,
+              "active_days": "6/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "total_sell_lot": 205106,
+              "total_sell_value": 61238629000,
+              "avg_price": 3022,
+              "active_days": "12/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "total_sell_lot": 152403,
+              "total_sell_value": 54621710000,
+              "avg_price": 3034,
+              "active_days": "12/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_sell_lot": 163812,
+              "total_sell_value": 49962492000,
+              "avg_price": 2984,
+              "active_days": "17/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AG",
+              "broker_name": "Alindo Sekuritas",
+              "total_sell_lot": 133355,
+              "total_sell_value": 40869174000,
+              "avg_price": 3003,
+              "active_days": "4/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "total_sell_lot": 110014,
+              "total_sell_value": 26646711000,
+              "avg_price": 2985,
+              "active_days": "17/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_1m": 0
+        },
+        "price_analysis": {
+          "current_price": 3000.0,
+          "bandar_avg_7d": 3098,
+          "bandar_avg_1m": 3018,
+          "distance_from_7d": "-3.16%",
+          "distance_from_1m": "-0.60%",
+          "ideal_entry_zone": "3003\u20133033",
+          "max_entry": "3160",
+          "entry_status": "\ud83d\udfe2 IDEAL",
+          "entry_label": "Harga 3.2% DI BAWAH avg cost bandar seminggu terakhir \u2014 ideal entry",
+          "net_foreign_7d": "netral",
+          "net_foreign_1m": "netral",
+          "anomali_akumulasi_7d": null,
+          "anomali_akumulasi_1m": null,
+          "anomali_distribusi_7d": null,
+          "anomali_distribusi_1m": null
+        },
+        "broker_to_watch": [
+          "BK (JP Morgan)",
+          "ZP (Maybank Sekuritas)"
+        ],
+        "data_used": [
+          "Stockbit broker summary 7H & 1M",
+          "Fase Re-Akumulasi (Estafet): Bandar lama mungkin taking profit, tapi ada bandar baru yang nampung agresif minggu ini",
+          "Distribution 7H: Top3 sell >= 30% value",
+          "Distribution 1M: Dist, Top3 sell >= 30% value",
+          "Estafet dari ritel (PD) ke institusi kuat (BK)",
+          "Konsentrasi Beli (69%) vs Jual (53%) -> Imbang (Netral)",
+          "Dominance 68.7% (>40) + Accum -> Bonus +1.0"
+        ],
+        "confidence": "MEDIUM",
+        "insight_concentration": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_aggressiveness": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_fomo_trap": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_dominance": {
+          "type": "driver",
+          "narrative": "\ud83d\udc51 Dominasi Mutlak: 68.7% transaksi pasar dikendalikan oleh 3 broker utama. Sinyal Akumulasi ber-validitas SANGAT TINGGI."
+        }
+      },
+      "technical": {
+        "ticker": "ANTM",
+        "score": 6.5,
+        "current_price": 3000.0,
+        "signal": "HOLD",
+        "trend": "sideways",
+        "setup": "RSI bullish momentum; Harga di bawah MA20 (short-term bearish); Harga di atas MA50 (mid-term bullish); Harga di bawah MA100 (intermediate-term bearish); Harga di bawah MA200 (long-term bearish); Golden cross MA20/MA50; Death cross MA50/MA100 (mid-intermediate bearish); Death cross MA100/MA200 (intermediate-long bearish); MACD bullish momentum; Volume meningkat; Dekat 52W low \u2014 potential reversal; Trend utama: sideways (harga di antara MA major)",
+        "entry_zone": "2873-3009",
+        "entry_low": 2873.0,
+        "entry_high": 3009.0,
+        "target": "3300",
+        "stop_loss": "2850",
+        "support_near": "2873",
+        "resistance_near": "3118",
+        "support_strong": "2233",
+        "resistance_strong": "3513",
+        "divergence": {
+          "rsi": "none",
+          "macd": "none"
+        },
+        "candlestick_patterns": [],
+        "data_used": [
+          "TV Fib Support Terdekat: 2873",
+          "TV Fib Support Kuat: 2233",
+          "TV Fib Resistance Terdekat: 3118",
+          "TV Fib Resistance Kuat: 3513",
+          "RSI: 50.7",
+          "MA20: 3009",
+          "MA50: 2919",
+          "MA100: 3274",
+          "MA200: 3391",
+          "MACD: bullish",
+          "Vol ratio 5/20: 1.28",
+          "52W pos: 22%",
+          "Trend: sideways (0)"
+        ],
+        "confidence": "HIGH",
+        "tradingview_ta": {
+          "summary": {
+            "RECOMMENDATION": "SELL",
+            "BUY": 4,
+            "SELL": 12,
+            "NEUTRAL": 10
+          },
+          "indicators": {
+            "Recommend.Other": 0,
+            "Recommend.All": -0.26666666666666666,
+            "Recommend.MA": -0.5333333333333333,
+            "RSI": 50.054755589215844,
+            "RSI[1]": 56.581999035012586,
+            "Stoch.K": 61.90476190476192,
+            "Stoch.D": 71.89662189662191,
+            "Stoch.K[1]": 69.25925925925925,
+            "Stoch.D[1]": 77.20272904483433,
+            "CCI20": 14.61080941298445,
+            "CCI20[1]": 58.73379099923952,
+            "ADX": 13.624341834350517,
+            "ADX+DI": 25.218397590846234,
+            "ADX-DI": 25.741737040432223,
+            "ADX+DI[1]": 27.727098022183974,
+            "ADX-DI[1]": 21.90742155736562,
+            "AO": 165.5588235294117,
+            "AO[1]": 190.26470588235225,
+            "Mom": 140,
+            "Mom[1]": 250,
+            "MACD.macd": 31.875989476473478,
+            "MACD.signal": 20.760944272123925,
+            "Rec.Stoch.RSI": 0,
+            "Stoch.RSI.K": 60.47433894185273,
+            "Rec.WR": 0,
+            "W.R": -52.38095238095239,
+            "Rec.BBPower": 0,
+            "BBPower": 44.24266156605063,
+            "Rec.UO": 0,
+            "UO": 42.15735074517602,
+            "close": 3000,
+            "EMA5": 3056.756233890102,
+            "SMA5": 3096,
+            "EMA10": 3039.3301160536407,
+            "SMA10": 3026.9999999999995,
+            "EMA20": 3007.7321596721827,
+            "SMA20": 3007.499999999996,
+            "EMA30": 2999.329676992571,
+            "SMA30": 2981.6666666666674,
+            "EMA50": 3040.310803672846,
+            "SMA50": 2918.800000000003,
+            "EMA100": 3181.9707410961555,
+            "SMA100": 3274.0000000000036,
+            "EMA200": 3208.14783233544,
+            "SMA200": 3391.0000000000005,
+            "Rec.Ichimoku": 0,
+            "Ichimoku.BLine": 2980,
+            "Rec.VWMA": -1,
+            "VWMA": 3028.2089248954653,
+            "Rec.HullMA9": -1,
+            "HullMA9": 3099.0740740740744,
+            "Pivot.M.Classic.S3": 1593.3333333333335,
+            "Pivot.M.Classic.S2": 2233.3333333333335,
+            "Pivot.M.Classic.S1": 2556.666666666667,
+            "Pivot.M.Classic.Middle": 2873.3333333333335,
+            "Pivot.M.Classic.R1": 3196.666666666667,
+            "Pivot.M.Classic.R2": 3513.3333333333335,
+            "Pivot.M.Classic.R3": 4153.333333333334,
+            "Pivot.M.Fibonacci.S3": 2233.3333333333335,
+            "Pivot.M.Fibonacci.S2": 2477.8133333333335,
+            "Pivot.M.Fibonacci.S1": 2628.8533333333335,
+            "Pivot.M.Fibonacci.Middle": 2873.3333333333335,
+            "Pivot.M.Fibonacci.R1": 3117.8133333333335,
+            "Pivot.M.Fibonacci.R2": 3268.8533333333335,
+            "Pivot.M.Fibonacci.R3": 3513.3333333333335,
+            "Pivot.M.Camarilla.S3": 2704,
+            "Pivot.M.Camarilla.S2": 2762.6666666666665,
+            "Pivot.M.Camarilla.S1": 2821.3333333333335,
+            "Pivot.M.Camarilla.Middle": 2873.3333333333335,
+            "Pivot.M.Camarilla.R1": 2938.6666666666665,
+            "Pivot.M.Camarilla.R2": 2997.3333333333335,
+            "Pivot.M.Camarilla.R3": 3056,
+            "Pivot.M.Woodie.S3": 1960,
+            "Pivot.M.Woodie.S2": 2255,
+            "Pivot.M.Woodie.S1": 2600,
+            "Pivot.M.Woodie.Middle": 2895,
+            "Pivot.M.Woodie.R1": 3240,
+            "Pivot.M.Woodie.R2": 3535,
+            "Pivot.M.Woodie.R3": 3880,
+            "Pivot.M.Demark.S1": 2715,
+            "Pivot.M.Demark.Middle": 2952.5,
+            "Pivot.M.Demark.R1": 3355,
+            "open": 3120,
+            "P.SAR": 2861.724387328,
+            "BB.lower": 2806.216617675251,
+            "BB.upper": 3208.7833823247406,
+            "AO[2]": 182.88235294117612,
+            "volume": 86077700,
+            "change": -2.912621359223301,
+            "low": 2980,
+            "high": 3120
+          }
+        },
+        "tp1": 3084.0,
+        "tp2": 3302.0,
+        "tp3": 3513.0,
+        "tp1_size": 0.3,
+        "tp2_size": 0.4,
+        "tp3_size": 0.3,
+        "risk_reward_tp1": "1:9.2",
+        "risk_reward_tp2": "1:18.7",
+        "risk_reward_tp3": "1:27.8",
+        "tp_constraints_met": true
+      },
+      "fundamental": {
+        "ticker": "ANTM",
+        "score": 10.0,
+        "signal": "BUY",
+        "key_points": [
+          "PER 5.5x \u2014 undervalued",
+          "PBV 1.91x \u2014 wajar",
+          "ROE 21.84% \u2014 sangat baik",
+          "DER 0.14x \u2014 leverage rendah",
+          "Earnings growth 59.9% \u2014 akseleratif",
+          "Net income konsisten naik 3 tahun terakhir",
+          "EPS konsisten naik 3 tahun terakhir",
+          "Revenue konsisten naik 3 tahun terakhir",
+          "Valuasi menarik: DEEP_UNDERVALUED (upside +88.3%)"
+        ],
+        "risks": [
+          "Payout ratio sangat tinggi: 3703.0%"
+        ],
+        "data_used": [
+          "PER: 5.5x",
+          "PBV: 1.91x",
+          "ROE: 21.84%",
+          "DER: 0.14x",
+          "Revenue Growth: 12.1%",
+          "Earnings Growth: 59.9%",
+          "Rata-rata Net Income 3 tahun: 8,161",
+          "Rata-rata EPS 3 tahun: 339.61",
+          "Rata-rata Revenue 3 tahun: 90,376",
+          "Rata-rata Dividend Yield 5 tahun: 6.81%",
+          "Dividend Payout Ratio: 3703.0%",
+          "Fair Value: 5,649 (DEEP_UNDERVALUED)",
+          "Upside to fair value: +88.30%",
+          "CAGR Revenue: 28.07% (2017\u20132026)",
+          "CAGR Net Income: 66.71% (2017\u20132026)",
+          "CAGR Eps: 66.78% (2017\u20132026)"
+        ],
+        "fair_value": {
+          "current_price": 3000.0,
+          "method": "blended",
+          "fair_value_low": 3758.0,
+          "fair_value_base": 5649.0,
+          "fair_value_high": 7539.0,
+          "upside_pct": 88.3,
+          "margin_of_safety_pct": 46.89,
+          "valuation_label": "DEEP_UNDERVALUED",
+          "methods": {
+            "pe_based": {
+              "available": true,
+              "eps": 550.46,
+              "target_pe": 11.0,
+              "fair_value": 6055.0
+            },
+            "pbv_roe_based": {
+              "available": true,
+              "bvps": 1616.55,
+              "roe_pct": 21.84,
+              "sustainable_growth_pct": 10.5,
+              "required_return_pct": 13.5,
+              "fair_pbv": 2.5,
+              "fair_value": 4041.0
+            },
+            "eps_growth_based": {
+              "available": true,
+              "eps": 550.46,
+              "growth_pct": 59.85,
+              "target_pe": 12.8,
+              "fair_value": 7046.0
+            }
+          },
+          "notes": [
+            "EPS source: derived_from_current_price_per",
+            "BVPS source: info_bvps",
+            "Target PE baseline sektor Komoditas/Tambang: 8.0x"
+          ],
+          "confidence": "HIGH"
+        },
+        "confidence": "HIGH"
+      },
+      "news": {
+        "ticker": "ANTM",
+        "score": 5.9,
+        "summary": "Sentimen pasar (7 berita, 3 report) untuk ANTM cenderung netral (score: 5.9). [Report Keuangan Q2 2026 rilis: sentimen Neutral]",
+        "articles": [
+          {
+            "title": "[FINANCIAL_REPORT] ANTM meluncurkan produk emas edisi terbatas 'Edisi Kemerdekaan 2026' dengan teknologi relief tiga dimensi. Evaluasi: Sentimen Netral (Inovasi produk rutin, tidak memiliki dampak material terhadap fundamental keuangan perusahaan).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"ANTAM Hadirkan Emas Kemerdekaan Pertama di Indonesia dengan Relief Tiga Dimensi [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) meluncurkan produk tematik Edisi Kemerdekaan 2026, terdiri dari emas batangan 17 gram dan koin perak 1 troy ounce dengan relief tiga dimensi.\nPoin Kunci:\n- Meluncurkan emas 17 gram dan perak 1 troy ounce (31,103 gram).\n- Merupakan produk pertama dengan teknologi relief tiga dimensi.\n- Desain terinspirasi dari Karapan Sapi dan Gunung Bromo.\n- Produk mulai tersedia untuk penjualan pada 7 Agustus 2026.\nKesimpulan: Peluncuran produk baru ini merupakan bagian dari inovasi produk dan tidak mengubah struktur permodalan perusahaan.",
+            "published_at": "2026-08-10 12:30:27.014179+00:00",
+            "source": "Stockbit RAG Financial_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "financial_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] Laporan bulanan registrasi pemegang efek untuk ANTM per Juli 2026 menunjukkan struktur kepemilikan yang stabil, dengan porsi publik 34,84% dan MIND ID tetap memegang 65% saham. Evaluasi: Laporan Rutin (Administratif, tidak ada perubahan material).",
+            "description": "[NOTIF_TYPE_COMPANY_SHAREHOLDING] Report: \"Laporan Bulanan Registrasi Pemegang Efek [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) melaporkan struktur kepemilikan saham Juli 2026 yang stabil, dengan free float 34,84% dan jumlah investor turun menjadi 264.817.\nPoin Kunci:\n- PT Mineral Industri Indonesia (MIND ID) tetap menguasai 65% saham.\n- Porsi saham publik (free float) tidak berubah sebesar 34,84%.\n- Jumlah investor pemegang SID turun 277 menjadi 264.817.\n- Total saham tercatat tetap sebanyak 24,03 miliar lembar.\nKesimpulan: Pengumuman ini bersifat administratif dan tidak mengindikasikan perubahan material pada perusahaan.",
+            "published_at": "2026-08-10 07:30:44.085809+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] Harga emas spot mengalami kenaikan 5% dalam dua hari menjadi US$4.292/oz, dipicu oleh berkurangnya ekspektasi kenaikan suku bunga The Fed dan meredanya ketegangan di Selat Hormuz. Kondisi ini memberikan sentimen positif bagi emiten di sektor emas karena potensi peningkatan harga jual rata-rata (ASP).",
+            "description": "\ud83e\udd47 Emas Naik +5% dalam 2 Hari, Dekati US$4.300/Oz\n\n\u2022 Harga emas di pasar spot naik sekitar +5% dalam 2 hari perdagangan terakhir dari level US$4.077/oz pada penutupan Selasa (4/8) ke US$4.292/oz pada Kamis (6/8) pagi. \n\n\u2022 Bloomberg melaporkan bahwa kenaikan harga emas didorong oleh menurunnya ekspektasi kenaikan suku bunga The Fed seiring melandainya harga energi akibat tanda\u2013tanda kemajuan pembukaan kembali Selat Hormuz. \n\n\u2022 Iran menyatakan telah mencapai kesepakatan dengan Oman terkait usulan jalur pelayaran melalui Selat Hormuz, meski hanya bersifat sementara untuk 2\u20134 bulan dan bukan pembukaan penuh. \n\n\u2022 Pelaku pasar kini juga mengekspektasikan bahwa The Fed hanya akan menaikkan suku bunga sebanyak 1x hingga akhir tahun, turun dari ekspektasi pada pekan lalu yang memperkirakan 2x kenaikan suku bunga.\n\n[Sumber: Bloomberg]\n\n\ud83d\uddd2\ufe0f Stockbit Commentary\n\nKenaikan harga emas berpotensi memberikan sentimen positif jangka pendek bagi emiten di sektor emas \u2014 seperti [%HGXT%], [%DuXa%], [%yEsM%], ARCI, ANTM, PSAB, HRTA, dan MDKA \u2014 karena berpotensi meningkatkan harga jual rata\u2013rata (ASP) dan volume transaksi perseroan.\n\n_____\nTheodorus Melvin ([%GYPN%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-06 01:30:16.873322+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[CORPORATE_ACTION] ANTM melakukan perubahan Anggaran Dasar untuk menyesuaikan kegiatan usaha dengan KBLI 2025. Langkah ini merupakan penyesuaian administratif standar yang telah disetujui dalam RUPST dan oleh Menkumham, tanpa dampak material terhadap operasional perusahaan. Evaluasi: Rutin (Penyesuaian Administratif).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"Penyampaian Ringkasan Perubahan Anggaran Dasar [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) mengubah Anggaran Dasar untuk menyelaraskan kegiatan usaha dengan Klasifikasi Baku Lapangan Usaha Indonesia (KBLI) 2025.\nPoin Kunci:\n- Penyesuaian terkait Pasal 3 Anggaran Dasar (Maksud, Tujuan dan Kegiatan Usaha).\n- Perubahan disetujui dalam RUPST pada 10 Juni 2026.\n- Dilegalisir melalui akta notaris pada 8 Juli 2026.\n- Mendapat persetujuan Menkumham pada 4 Agustus 2026.\nKesimpulan: Perubahan anggaran dasar ini merupakan penyesuaian administratif terhadap regulasi baru dan tidak berdampak material pada operasional perusahaan.",
+            "published_at": "2026-08-05 15:00:20.565156+00:00",
+            "source": "Stockbit RAG Corporate_action",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "corporate_action",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] ANTM melaporkan koreksi perubahan Anggaran Dasar untuk menyesuaikan kegiatan usaha dengan ketentuan KBLI 2025. Perubahan ini bersifat administratif demi kepatuhan regulasi dan tidak berdampak pada operasional inti. Evaluasi: Sentimen Netral (Pembaruan Administratif).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"Penyampaian Ringkasan Perubahan Anggaran Dasar (KOREKSI) [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) melaporkan perubahan Anggaran Dasar untuk menyesuaikan kegiatan usaha dengan Klasifikasi Baku Lapangan Usaha Indonesia (KBLI) 2025.\nPoin Kunci:\n- Perubahan menyangkut Pasal 3 tentang Maksud, Tujuan, dan Kegiatan Usaha.\n- Penyesuaian dilakukan agar selaras dengan KBLI tahun 2025.\n- Disetujui dalam Rapat Umum Pemegang Saham Tahunan pada 10 Juni 2026.\n- Mendapat pengesahan dari Kemenkumham pada 4 Agustus 2026.\nKesimpulan: Perubahan ini bersifat administratif untuk mematuhi regulasi KBLI dan tidak mengubah kegiatan operasional inti perusahaan.",
+            "published_at": "2026-08-05 15:00:11.278288+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] ANTM mengumumkan rencana penyampaian Laporan Keuangan Kuartal II 2026 yang akan melalui proses penelaahan terbatas. Pengumuman ini merupakan pemenuhan kewajiban regulasi rutin BEI dan ASX. Evaluasi: Rutin (Tidak ada dampak material terhadap kinerja perusahaan).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"Rencana Penyampaian Laporan Keuangan Kuartal II 2026 Ditelaah secara terbatas [ANTM]\"\nRingkasan Kinerja: ANTM (ANTAM) mengumumkan rencana penyampaian Laporan Keuangan Kuartal II 2026 yang akan melalui proses penelaahan terbatas oleh auditor.\nPoin Kunci:\n- Laporan keuangan untuk periode enam bulan berakhir 30 Juni 2026.\n- Akan melalui proses penelaahan terbatas (limited review) oleh auditor.\n- Penyampaian laporan merupakan kewajiban regulasi BEI dan ASX.\nKesimpulan: Pengumuman ini bersifat administratif dan tidak mengindikasikan perubahan material pada perusahaan.",
+            "published_at": "2026-08-04 02:00:47.520967+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] ANTM berpartisipasi dalam gerakan lingkungan 'Gerak Hijau 2026' melalui pemberian 5.000 bibit mangrove sebagai bagian dari inisiatif CSR perusahaan. Evaluasi: Sentimen Netral (Aksi tanggung jawab sosial, tidak berdampak langsung pada kinerja keuangan).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"Gerak Hijau 2026 Satukan Pemerintah, Dunia Usaha, dan Masyarakat untuk Aksi Nyata Peduli Lingkungan [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) mendukung gerakan lingkungan \"Gerak Hijau 2026\" dengan menyerahkan 5.000 bibit mangrove untuk rehabilitasi ekosistem pesisir.\nPoin Kunci:\n- Menjadi sponsor utama acara \"Gerak Hijau 2026\" pada 3 Agustus 2026.\n- Bekerja sama dengan Kementerian Lingkungan Hidup (KLH/BPLH).\n- Menyerahkan 5.000 bibit mangrove untuk rehabilitasi ekosistem pesisir.\n- Memperkenalkan inisiatif keberlanjutan seperti program Bank Sampah Pintar.\nKesimpulan: Laporan ini terkait partisipasi dalam kegiatan tanggung jawab sosial perusahaan (CSR) dan tidak berdampak langsung pada kondisi keuangan.",
+            "published_at": "2026-08-03 04:00:20.101237+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] BRMS mencatatkan kinerja keuangan 1H26 yang mengecewakan dengan laba bersih turun 44% YoY, jauh di bawah ekspektasi konsensus. Penurunan ini dipicu oleh lemahnya volume penjualan akibat kendala operasional (pushback tambang) dan kelebihan pasokan domestik, serta kenaikan biaya operasional. Analis memproyeksikan target tahunan 2026 sulit tercapai, yang berpotensi memicu pemangkasan estimasi laba lebih lanjut oleh pasar.",
+            "description": "BRMS 1H26: Laba Bersih -44% YoY, di Bawah Ekspektasi\n\nStockbit's take:\n\n\u25aa\ufe0f Bumi Resources Minerals ([%yDTc%]) mencatat rugi bersih US$5 juta pada 2Q26 (vs. 1Q26: laba bersih US$18 juta, 2Q25: laba bersih US$9 juta), utamanya disebabkan oleh volume penjualan yang lemah, sehingga laba bersih selama 1H26 turun menjadi US$12,9 juta (-44% YoY) dan di bawah ekspektasi karena hanya setara 13% estimasi 2026F konsensus. \n\n\u25aa\ufe0f Volume penjualan emas pada 2Q26 turun ke level 6.301 oz (-57% QoQ, -63% YoY), di saat harga jual rata\u2013rata hanya turun -8% QoQ ke level US$4.138/oz sejalan dengan penurunan harga emas global.\n\n\u25aa\ufe0f Penurunan volume penjualan berasal dari 2 persoalan yang terpisah. Pada sisi produksi, operasi pushback di tambang PT Citra Palu Minerals menekan kadar emas yang diproses ke level 0,9 g/t (vs. 1Q26: 1,42 g/t), sehingga menurunkan output volume produksi emas. Sementara itu, sisi penjualan mengalami kondisi kelebihan pasokan emas di pasar domestik, sehingga membuat hanya sekitar 70% dari output tersebut yang terjual seiring permintaan harga diskon dari pembeli, tercermin dari kenaikan inventory movement BRMS menjadi US$13 juta pada 2Q26 (vs. 1Q26: US$4 juta).\n\n\u25aa\ufe0f Dari sisi biaya, cash cost naik menjadi US$20 juta (+15% QoQ), yang kami perkirakan juga berasal dari penyelesaian pembayaran operasi pushback. Kenaikan biaya di saat pendapatan turun -62% QoQ memperparah penurunan laba usaha menjadi hanya US$3 juta (vs. 1Q26: US$29 juta, 2Q25: US$23 juta).\n\n\u25aa\ufe0f Ke depan, manajemen BRMS memperkirakan perbaikan pada kedua persoalan penjualan tersebut mulai 2H26 seiring pulihnya kadar bijih setelah pushback rampung, sementara kontrak bulanan dengan Aneka Tambang ([%xJBo%]) hingga Juni 2028 disebut memberi kepastian serapan volume dan struktur pembentukan harga yang lebih baik.\n\nStockbit\u2019s View: Pemulihan 2H26 Sulit untuk Mengejar Guidance\n\n\u25aa\ufe0f Meski manajemen telah mengomunikasikan seluruh faktor penekan kinerja 2Q26 sejak jauh hari, kami menilai pasar tetap akan bereaksi negatif terhadap rilis ini. Harga emas yang bertahan tinggi dan produksi yang terus berjalan membuat kami menduga mayoritas pelaku pasar belum memperhitungkan kemungkinan rugi bersih pada kuartal ini.\n\n\u25aa\ufe0f Berdasarkan perhitungan internal kami, target penjualan BRMS sebesar 80.000 oz selama 2026 akan sulit dicapai. Pada skenario terbaik, di mana peningkatan kapasitas pabrik CIL pertama dari 500 menjadi 2.000 ton bijih per hari selesai tepat waktu dan kadar emas pulih ke ~1,6 g/t, produksi 2H26 hanya mencapai ~48.000 oz. Ditambah penjualan seluruh persediaan (estimasi internal Stockbit: ~2.500 oz), volume penjualan BRMS selama 2026F kami perkirakan hanya mencapai ~71.500 oz atau hanya ~89% target manajemen. \n\n\u25aa\ufe0f Kami memperkirakan konsensus akan memangkas estimasi laba bersih 2026F lebih lanjut, mengingat konsensus baru merevisi turun laba BRMS 2026 sebanyak -3,4% dari titik tertingginya.\n\n\u25aa\ufe0f Key upside: 1) kenaikan volume penjualan pada harga yang lebih baik seiring kontrak penjualan bulanan dengan ANTM hingga Juni 2028; 2) kenaikan volume produksi seiring pemulihan kadar bijih ke rata\u2013rata historis (2Q26: 0,9 g/t vs. rata\u2013rata historis: ~1,4 g/t) setelah operasi pushback rampung; dan 3) peningkatan kapasitas pabrik CIL pertama milik PT Citra Palu Minerals dari 500 menjadi 2.000 ton bijih per hari sesuai jadwal pada 4Q26.\n\n\u25aa\ufe0f Faktor risiko: 1) revisi turun estimasi 2026F konsensus yang berpotensi berlanjut, mengingat volume 1H26 baru setara 26% target 2026, sementara harga emas global kini berada di sekitar ~US$4.000/oz atau di bawah harga jual rata\u2013rata 1H26 di US$4.400/oz; 2) pemulihan kadar tambang terbuka yang belum tentu secepat perkiraan, mengingat rata\u2013rata kadar cadangan tambang terbuka Blok 1 Poboya berada di 1,1 g/t, sementara 85% cadangan emas PT Citra Palu Minerals (3 juta oz pada kadar 4,9 g/t) berada di tambang bawah tanah yang baru dijadwalkan berproduksi pada 2H27; dan 3) valuasi yang masih tergolong premium meski harga saham telah turun sekitar -30% dalam 3 bulan terakhir.\n\n[Sumber: Laporan Keuangan, Press Release, Materi Presentasi]\n\n-----\nTheodorus Melvin ([%BCeE%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-03 01:30:22.229538+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bearish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[FINANCIAL_REPORT] ANTM melaporkan kinerja operasional semester I 2026 yang solid dengan pertumbuhan volume penjualan yang signifikan pada segmen feronikel (+32%) dan bauksit (+24%), serta peningkatan produksi emas. Evaluasi: Kinerja Bullish (Pertumbuhan volume penjualan yang kuat).",
+            "description": "[NOTIF_TYPE_NEW_REPORT] Penyampaian Laporan Kuartalan Periode Triwulan II Tahun 2026 [ANTM]\nRingkasan Kinerja: ANTM (Antam) melaporkan kenaikan volume penjualan feronikel 32% dan bauksit 24% pada semester I 2026, didukung pertumbuhan komoditas lainnya.\nPoin Kunci:\n- Penjualan feronikel semester I 2026 naik 32% menjadi 7,605 ton nikel.\n- Volume penjualan bauksit tumbuh 24% menjadi 1,26 juta wmt.\n- Produksi emas kuartal II 2026 meningkat 12% menjadi 232 kg.\n- Penjualan alumina semester I 2026 naik 10% menjadi 100,437 ton.\nKesimpulan: Laporan kinerja operasional rutin yang menunjukkan pertumbuhan penjualan di segmen feronikel dan bauksit.",
+            "published_at": "2026-08-01 03:04:31.540332+00:00",
+            "source": "Stockbit RAG Financial_report",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "financial_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] BFI Finance merevisi turun panduan Cost of Credit (CoC) menjadi di bawah 4% berkat strategi underwriting yang lebih prudent, namun juga menurunkan target pertumbuhan pembiayaan tahun 2026 menjadi +5% YoY. Di tengah NPF yang membaik dan kondisi Cost of Fund yang resilien, kinerja perusahaan dinilai netral karena pertumbuhan yang lebih moderat mengimbangi potensi efisiensi biaya.",
+            "description": "\ud83c\udfe6 BFIN Revisi Turun Guidance CoC & Pertumbuhan Pembiayaan\n\nBFI Finance Indonesia ([%DFEl%]) pada hari ini, Senin (27/7), mengadakan earnings call untuk membahas kinerja 1H26 yang melampaui ekspektasi [[%jIbG%]]. Berikut beberapa catatan penting kami:\n\nGuidance CoC 2026F Direvisi Turun ke <4%\n\n\u2022 BFIN menargetkan cost of credit (CoC) turun menjadi <4% pada 2026F (vs. 1H26: 4,4%, 2025: 4,3%), lebih baik dibandingkan guidance sebelumnya di level 4,1% [[%LEdj%]].\n\n\u2022 Ekspektasi ini didasarkan pada: 1) strategi underwriting yang lebih prudent; 2) fokus manajemen terhadap kualitas aset dibandingkan pertumbuhan; 3) perbaikan loss on repossession \u2014 kerugian saat nilai jaminan tidak menutup sisa utang nasabah macet \u2014 di segmen 2W dan 4W pada 2Q26; serta 4) jumlah hari kerja lebih banyak selama 2H26, sehingga aktivitas penagihan lebih optimal. \n\n\u2022 Selain itu, manajemen membuka peluang pembalikan provisi terkait discounted operation anak usaha, PT Finansial Integrasi Teknologi, senilai ~Rp38 M atau setara 3% beban provisi neto 2025.\n\n\u2022 Manajemen juga menyampaikan bahwa provisi telah dibentuk untuk segmen\u2013segmen berisiko \u2014 seperti segmen leasing yang terdampak ketidakpastian regulasi \u2014 sehingga potensi kejutan terhadap kinerja CoC pada 2H26 diperkirakan terbatas meski kondisi memburuk.\n\nDowngrade Guidance Pertumbuhan Pembiayaan 2026F\n\n\u2022 New bookings turun -2% YoY selama 1H26, dengan pelemahan terjadi di seluruh lini usaha.\n\n\u2022 Perlambatan tersebut sejalan dengan strategi manajemen dalam mempertahankan proses underwriting yang ketat untuk menjaga kualitas aset dan CoC, di tengah kondisi industri yang masih menantang. \n\n\u2022 Sejalan dengan itu, NPF membaik menjadi 1,55% per Juni 2026 (vs. Maret 2026: 1,57%, Juni 2025: 1,63%), berbanding terbalik dengan NPF seindustri yang memburuk menjadi 3,1% (vs. Maret 2026: ~2,5%, Juni 2025: ~2,5%).\n\n\u2022 Manajemen BFIN kini memperkirakan pertumbuhan managed receivables sekitar +5% YoY pada 2026, lebih rendah dari guidance sebelumnya di kisaran low\u2013teens (vs. 2025: +9% YoY).\n\n\u2022 Terkait rencana ekspansi ke bisnis emas, manajemen BFIN masih menunggu persetujuan regulator, dengan langkah terkini mencakup penandatanganan nota kesepahaman dengan Antam ([%zQRd%]) sebagai pemasok.\n\nCoF Diperkirakan Resilien di Tengah Suku Bunga Tinggi\n\n\u2022 Meski BI Rate telah naik +100 bps sejak awal 2026, manajemen BFIN memperkirakan cost of fund (CoF) pada 2026F tidak akan meningkat signifikan karena mayoritas pendanaan menggunakan suku bunga tetap (fixed rate). Dampak kenaikan suku bunga diperkirakan baru terasa dalam 8\u201312 bulan.\n\n\u2022 Terkait jatuh tempo 3 obligasi senilai total Rp1,9 T pada 2Q26 (vs. 1Q26: Rp256 M), manajemen menyatakan telah mengamankan biaya refinancing dengan biaya yang tetap kompetitif.\n\n\u2022 Sementara itu, CIR tetap stabil di 43% selama 1H26 (vs. 1H25: 43%) dan diperkirakan bertahan hingga akhir tahun.\n\n\ud83d\uddd2\ufe0f Stockbit's View: Neutral\n\n\u2022 Kami menilai revisi guidance yang disampaikan manajemen sebagai hal yang netral, karena prospek penurunan CoC diimbangi oleh penurunan target pertumbuhan pembiayaan. Potensi upside akan bergantung pada sejauh mana CoC dapat turun di bawah level 4%.\n\n\u2022 Ke depan, kami menilai CoC dan pertumbuhan pembiayaan akan menjadi indikator utama yang perlu dicermati, mengingat CIR diperkirakan tetap stabil seiring CoF yang resilien.\n\n____\nEverson Sugianto ([%PJFH%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-07-28 01:30:31.068290+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          }
+        ],
+        "reports": [],
+        "news_articles": [
+          {
+            "title": "[FINANCIAL_REPORT] ANTM meluncurkan produk emas edisi terbatas 'Edisi Kemerdekaan 2026' dengan teknologi relief tiga dimensi. Evaluasi: Sentimen Netral (Inovasi produk rutin, tidak memiliki dampak material terhadap fundamental keuangan perusahaan).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"ANTAM Hadirkan Emas Kemerdekaan Pertama di Indonesia dengan Relief Tiga Dimensi [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) meluncurkan produk tematik Edisi Kemerdekaan 2026, terdiri dari emas batangan 17 gram dan koin perak 1 troy ounce dengan relief tiga dimensi.\nPoin Kunci:\n- Meluncurkan emas 17 gram dan perak 1 troy ounce (31,103 gram).\n- Merupakan produk pertama dengan teknologi relief tiga dimensi.\n- Desain terinspirasi dari Karapan Sapi dan Gunung Bromo.\n- Produk mulai tersedia untuk penjualan pada 7 Agustus 2026.\nKesimpulan: Peluncuran produk baru ini merupakan bagian dari inovasi produk dan tidak mengubah struktur permodalan perusahaan.",
+            "published_at": "2026-08-10 12:30:27.014179+00:00",
+            "source": "Stockbit RAG Financial_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "financial_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] Laporan bulanan registrasi pemegang efek untuk ANTM per Juli 2026 menunjukkan struktur kepemilikan yang stabil, dengan porsi publik 34,84% dan MIND ID tetap memegang 65% saham. Evaluasi: Laporan Rutin (Administratif, tidak ada perubahan material).",
+            "description": "[NOTIF_TYPE_COMPANY_SHAREHOLDING] Report: \"Laporan Bulanan Registrasi Pemegang Efek [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) melaporkan struktur kepemilikan saham Juli 2026 yang stabil, dengan free float 34,84% dan jumlah investor turun menjadi 264.817.\nPoin Kunci:\n- PT Mineral Industri Indonesia (MIND ID) tetap menguasai 65% saham.\n- Porsi saham publik (free float) tidak berubah sebesar 34,84%.\n- Jumlah investor pemegang SID turun 277 menjadi 264.817.\n- Total saham tercatat tetap sebanyak 24,03 miliar lembar.\nKesimpulan: Pengumuman ini bersifat administratif dan tidak mengindikasikan perubahan material pada perusahaan.",
+            "published_at": "2026-08-10 07:30:44.085809+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] Harga emas spot mengalami kenaikan 5% dalam dua hari menjadi US$4.292/oz, dipicu oleh berkurangnya ekspektasi kenaikan suku bunga The Fed dan meredanya ketegangan di Selat Hormuz. Kondisi ini memberikan sentimen positif bagi emiten di sektor emas karena potensi peningkatan harga jual rata-rata (ASP).",
+            "description": "\ud83e\udd47 Emas Naik +5% dalam 2 Hari, Dekati US$4.300/Oz\n\n\u2022 Harga emas di pasar spot naik sekitar +5% dalam 2 hari perdagangan terakhir dari level US$4.077/oz pada penutupan Selasa (4/8) ke US$4.292/oz pada Kamis (6/8) pagi. \n\n\u2022 Bloomberg melaporkan bahwa kenaikan harga emas didorong oleh menurunnya ekspektasi kenaikan suku bunga The Fed seiring melandainya harga energi akibat tanda\u2013tanda kemajuan pembukaan kembali Selat Hormuz. \n\n\u2022 Iran menyatakan telah mencapai kesepakatan dengan Oman terkait usulan jalur pelayaran melalui Selat Hormuz, meski hanya bersifat sementara untuk 2\u20134 bulan dan bukan pembukaan penuh. \n\n\u2022 Pelaku pasar kini juga mengekspektasikan bahwa The Fed hanya akan menaikkan suku bunga sebanyak 1x hingga akhir tahun, turun dari ekspektasi pada pekan lalu yang memperkirakan 2x kenaikan suku bunga.\n\n[Sumber: Bloomberg]\n\n\ud83d\uddd2\ufe0f Stockbit Commentary\n\nKenaikan harga emas berpotensi memberikan sentimen positif jangka pendek bagi emiten di sektor emas \u2014 seperti [%HGXT%], [%DuXa%], [%yEsM%], ARCI, ANTM, PSAB, HRTA, dan MDKA \u2014 karena berpotensi meningkatkan harga jual rata\u2013rata (ASP) dan volume transaksi perseroan.\n\n_____\nTheodorus Melvin ([%GYPN%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-06 01:30:16.873322+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[CORPORATE_ACTION] ANTM melakukan perubahan Anggaran Dasar untuk menyesuaikan kegiatan usaha dengan KBLI 2025. Langkah ini merupakan penyesuaian administratif standar yang telah disetujui dalam RUPST dan oleh Menkumham, tanpa dampak material terhadap operasional perusahaan. Evaluasi: Rutin (Penyesuaian Administratif).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"Penyampaian Ringkasan Perubahan Anggaran Dasar [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) mengubah Anggaran Dasar untuk menyelaraskan kegiatan usaha dengan Klasifikasi Baku Lapangan Usaha Indonesia (KBLI) 2025.\nPoin Kunci:\n- Penyesuaian terkait Pasal 3 Anggaran Dasar (Maksud, Tujuan dan Kegiatan Usaha).\n- Perubahan disetujui dalam RUPST pada 10 Juni 2026.\n- Dilegalisir melalui akta notaris pada 8 Juli 2026.\n- Mendapat persetujuan Menkumham pada 4 Agustus 2026.\nKesimpulan: Perubahan anggaran dasar ini merupakan penyesuaian administratif terhadap regulasi baru dan tidak berdampak material pada operasional perusahaan.",
+            "published_at": "2026-08-05 15:00:20.565156+00:00",
+            "source": "Stockbit RAG Corporate_action",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "corporate_action",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] ANTM melaporkan koreksi perubahan Anggaran Dasar untuk menyesuaikan kegiatan usaha dengan ketentuan KBLI 2025. Perubahan ini bersifat administratif demi kepatuhan regulasi dan tidak berdampak pada operasional inti. Evaluasi: Sentimen Netral (Pembaruan Administratif).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"Penyampaian Ringkasan Perubahan Anggaran Dasar (KOREKSI) [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) melaporkan perubahan Anggaran Dasar untuk menyesuaikan kegiatan usaha dengan Klasifikasi Baku Lapangan Usaha Indonesia (KBLI) 2025.\nPoin Kunci:\n- Perubahan menyangkut Pasal 3 tentang Maksud, Tujuan, dan Kegiatan Usaha.\n- Penyesuaian dilakukan agar selaras dengan KBLI tahun 2025.\n- Disetujui dalam Rapat Umum Pemegang Saham Tahunan pada 10 Juni 2026.\n- Mendapat pengesahan dari Kemenkumham pada 4 Agustus 2026.\nKesimpulan: Perubahan ini bersifat administratif untuk mematuhi regulasi KBLI dan tidak mengubah kegiatan operasional inti perusahaan.",
+            "published_at": "2026-08-05 15:00:11.278288+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] ANTM mengumumkan rencana penyampaian Laporan Keuangan Kuartal II 2026 yang akan melalui proses penelaahan terbatas. Pengumuman ini merupakan pemenuhan kewajiban regulasi rutin BEI dan ASX. Evaluasi: Rutin (Tidak ada dampak material terhadap kinerja perusahaan).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"Rencana Penyampaian Laporan Keuangan Kuartal II 2026 Ditelaah secara terbatas [ANTM]\"\nRingkasan Kinerja: ANTM (ANTAM) mengumumkan rencana penyampaian Laporan Keuangan Kuartal II 2026 yang akan melalui proses penelaahan terbatas oleh auditor.\nPoin Kunci:\n- Laporan keuangan untuk periode enam bulan berakhir 30 Juni 2026.\n- Akan melalui proses penelaahan terbatas (limited review) oleh auditor.\n- Penyampaian laporan merupakan kewajiban regulasi BEI dan ASX.\nKesimpulan: Pengumuman ini bersifat administratif dan tidak mengindikasikan perubahan material pada perusahaan.",
+            "published_at": "2026-08-04 02:00:47.520967+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] ANTM berpartisipasi dalam gerakan lingkungan 'Gerak Hijau 2026' melalui pemberian 5.000 bibit mangrove sebagai bagian dari inisiatif CSR perusahaan. Evaluasi: Sentimen Netral (Aksi tanggung jawab sosial, tidak berdampak langsung pada kinerja keuangan).",
+            "description": "[NOTIF_TYPE_COMPANY_OTHERS] Report: \"Gerak Hijau 2026 Satukan Pemerintah, Dunia Usaha, dan Masyarakat untuk Aksi Nyata Peduli Lingkungan [ANTM]\"\nRingkasan Kinerja: ANTM (Antam) mendukung gerakan lingkungan \"Gerak Hijau 2026\" dengan menyerahkan 5.000 bibit mangrove untuk rehabilitasi ekosistem pesisir.\nPoin Kunci:\n- Menjadi sponsor utama acara \"Gerak Hijau 2026\" pada 3 Agustus 2026.\n- Bekerja sama dengan Kementerian Lingkungan Hidup (KLH/BPLH).\n- Menyerahkan 5.000 bibit mangrove untuk rehabilitasi ekosistem pesisir.\n- Memperkenalkan inisiatif keberlanjutan seperti program Bank Sampah Pintar.\nKesimpulan: Laporan ini terkait partisipasi dalam kegiatan tanggung jawab sosial perusahaan (CSR) dan tidak berdampak langsung pada kondisi keuangan.",
+            "published_at": "2026-08-03 04:00:20.101237+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] BRMS mencatatkan kinerja keuangan 1H26 yang mengecewakan dengan laba bersih turun 44% YoY, jauh di bawah ekspektasi konsensus. Penurunan ini dipicu oleh lemahnya volume penjualan akibat kendala operasional (pushback tambang) dan kelebihan pasokan domestik, serta kenaikan biaya operasional. Analis memproyeksikan target tahunan 2026 sulit tercapai, yang berpotensi memicu pemangkasan estimasi laba lebih lanjut oleh pasar.",
+            "description": "BRMS 1H26: Laba Bersih -44% YoY, di Bawah Ekspektasi\n\nStockbit's take:\n\n\u25aa\ufe0f Bumi Resources Minerals ([%yDTc%]) mencatat rugi bersih US$5 juta pada 2Q26 (vs. 1Q26: laba bersih US$18 juta, 2Q25: laba bersih US$9 juta), utamanya disebabkan oleh volume penjualan yang lemah, sehingga laba bersih selama 1H26 turun menjadi US$12,9 juta (-44% YoY) dan di bawah ekspektasi karena hanya setara 13% estimasi 2026F konsensus. \n\n\u25aa\ufe0f Volume penjualan emas pada 2Q26 turun ke level 6.301 oz (-57% QoQ, -63% YoY), di saat harga jual rata\u2013rata hanya turun -8% QoQ ke level US$4.138/oz sejalan dengan penurunan harga emas global.\n\n\u25aa\ufe0f Penurunan volume penjualan berasal dari 2 persoalan yang terpisah. Pada sisi produksi, operasi pushback di tambang PT Citra Palu Minerals menekan kadar emas yang diproses ke level 0,9 g/t (vs. 1Q26: 1,42 g/t), sehingga menurunkan output volume produksi emas. Sementara itu, sisi penjualan mengalami kondisi kelebihan pasokan emas di pasar domestik, sehingga membuat hanya sekitar 70% dari output tersebut yang terjual seiring permintaan harga diskon dari pembeli, tercermin dari kenaikan inventory movement BRMS menjadi US$13 juta pada 2Q26 (vs. 1Q26: US$4 juta).\n\n\u25aa\ufe0f Dari sisi biaya, cash cost naik menjadi US$20 juta (+15% QoQ), yang kami perkirakan juga berasal dari penyelesaian pembayaran operasi pushback. Kenaikan biaya di saat pendapatan turun -62% QoQ memperparah penurunan laba usaha menjadi hanya US$3 juta (vs. 1Q26: US$29 juta, 2Q25: US$23 juta).\n\n\u25aa\ufe0f Ke depan, manajemen BRMS memperkirakan perbaikan pada kedua persoalan penjualan tersebut mulai 2H26 seiring pulihnya kadar bijih setelah pushback rampung, sementara kontrak bulanan dengan Aneka Tambang ([%xJBo%]) hingga Juni 2028 disebut memberi kepastian serapan volume dan struktur pembentukan harga yang lebih baik.\n\nStockbit\u2019s View: Pemulihan 2H26 Sulit untuk Mengejar Guidance\n\n\u25aa\ufe0f Meski manajemen telah mengomunikasikan seluruh faktor penekan kinerja 2Q26 sejak jauh hari, kami menilai pasar tetap akan bereaksi negatif terhadap rilis ini. Harga emas yang bertahan tinggi dan produksi yang terus berjalan membuat kami menduga mayoritas pelaku pasar belum memperhitungkan kemungkinan rugi bersih pada kuartal ini.\n\n\u25aa\ufe0f Berdasarkan perhitungan internal kami, target penjualan BRMS sebesar 80.000 oz selama 2026 akan sulit dicapai. Pada skenario terbaik, di mana peningkatan kapasitas pabrik CIL pertama dari 500 menjadi 2.000 ton bijih per hari selesai tepat waktu dan kadar emas pulih ke ~1,6 g/t, produksi 2H26 hanya mencapai ~48.000 oz. Ditambah penjualan seluruh persediaan (estimasi internal Stockbit: ~2.500 oz), volume penjualan BRMS selama 2026F kami perkirakan hanya mencapai ~71.500 oz atau hanya ~89% target manajemen. \n\n\u25aa\ufe0f Kami memperkirakan konsensus akan memangkas estimasi laba bersih 2026F lebih lanjut, mengingat konsensus baru merevisi turun laba BRMS 2026 sebanyak -3,4% dari titik tertingginya.\n\n\u25aa\ufe0f Key upside: 1) kenaikan volume penjualan pada harga yang lebih baik seiring kontrak penjualan bulanan dengan ANTM hingga Juni 2028; 2) kenaikan volume produksi seiring pemulihan kadar bijih ke rata\u2013rata historis (2Q26: 0,9 g/t vs. rata\u2013rata historis: ~1,4 g/t) setelah operasi pushback rampung; dan 3) peningkatan kapasitas pabrik CIL pertama milik PT Citra Palu Minerals dari 500 menjadi 2.000 ton bijih per hari sesuai jadwal pada 4Q26.\n\n\u25aa\ufe0f Faktor risiko: 1) revisi turun estimasi 2026F konsensus yang berpotensi berlanjut, mengingat volume 1H26 baru setara 26% target 2026, sementara harga emas global kini berada di sekitar ~US$4.000/oz atau di bawah harga jual rata\u2013rata 1H26 di US$4.400/oz; 2) pemulihan kadar tambang terbuka yang belum tentu secepat perkiraan, mengingat rata\u2013rata kadar cadangan tambang terbuka Blok 1 Poboya berada di 1,1 g/t, sementara 85% cadangan emas PT Citra Palu Minerals (3 juta oz pada kadar 4,9 g/t) berada di tambang bawah tanah yang baru dijadwalkan berproduksi pada 2H27; dan 3) valuasi yang masih tergolong premium meski harga saham telah turun sekitar -30% dalam 3 bulan terakhir.\n\n[Sumber: Laporan Keuangan, Press Release, Materi Presentasi]\n\n-----\nTheodorus Melvin ([%BCeE%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-03 01:30:22.229538+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bearish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[FINANCIAL_REPORT] ANTM melaporkan kinerja operasional semester I 2026 yang solid dengan pertumbuhan volume penjualan yang signifikan pada segmen feronikel (+32%) dan bauksit (+24%), serta peningkatan produksi emas. Evaluasi: Kinerja Bullish (Pertumbuhan volume penjualan yang kuat).",
+            "description": "[NOTIF_TYPE_NEW_REPORT] Penyampaian Laporan Kuartalan Periode Triwulan II Tahun 2026 [ANTM]\nRingkasan Kinerja: ANTM (Antam) melaporkan kenaikan volume penjualan feronikel 32% dan bauksit 24% pada semester I 2026, didukung pertumbuhan komoditas lainnya.\nPoin Kunci:\n- Penjualan feronikel semester I 2026 naik 32% menjadi 7,605 ton nikel.\n- Volume penjualan bauksit tumbuh 24% menjadi 1,26 juta wmt.\n- Produksi emas kuartal II 2026 meningkat 12% menjadi 232 kg.\n- Penjualan alumina semester I 2026 naik 10% menjadi 100,437 ton.\nKesimpulan: Laporan kinerja operasional rutin yang menunjukkan pertumbuhan penjualan di segmen feronikel dan bauksit.",
+            "published_at": "2026-08-01 03:04:31.540332+00:00",
+            "source": "Stockbit RAG Financial_report",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "financial_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] BFI Finance merevisi turun panduan Cost of Credit (CoC) menjadi di bawah 4% berkat strategi underwriting yang lebih prudent, namun juga menurunkan target pertumbuhan pembiayaan tahun 2026 menjadi +5% YoY. Di tengah NPF yang membaik dan kondisi Cost of Fund yang resilien, kinerja perusahaan dinilai netral karena pertumbuhan yang lebih moderat mengimbangi potensi efisiensi biaya.",
+            "description": "\ud83c\udfe6 BFIN Revisi Turun Guidance CoC & Pertumbuhan Pembiayaan\n\nBFI Finance Indonesia ([%DFEl%]) pada hari ini, Senin (27/7), mengadakan earnings call untuk membahas kinerja 1H26 yang melampaui ekspektasi [[%jIbG%]]. Berikut beberapa catatan penting kami:\n\nGuidance CoC 2026F Direvisi Turun ke <4%\n\n\u2022 BFIN menargetkan cost of credit (CoC) turun menjadi <4% pada 2026F (vs. 1H26: 4,4%, 2025: 4,3%), lebih baik dibandingkan guidance sebelumnya di level 4,1% [[%LEdj%]].\n\n\u2022 Ekspektasi ini didasarkan pada: 1) strategi underwriting yang lebih prudent; 2) fokus manajemen terhadap kualitas aset dibandingkan pertumbuhan; 3) perbaikan loss on repossession \u2014 kerugian saat nilai jaminan tidak menutup sisa utang nasabah macet \u2014 di segmen 2W dan 4W pada 2Q26; serta 4) jumlah hari kerja lebih banyak selama 2H26, sehingga aktivitas penagihan lebih optimal. \n\n\u2022 Selain itu, manajemen membuka peluang pembalikan provisi terkait discounted operation anak usaha, PT Finansial Integrasi Teknologi, senilai ~Rp38 M atau setara 3% beban provisi neto 2025.\n\n\u2022 Manajemen juga menyampaikan bahwa provisi telah dibentuk untuk segmen\u2013segmen berisiko \u2014 seperti segmen leasing yang terdampak ketidakpastian regulasi \u2014 sehingga potensi kejutan terhadap kinerja CoC pada 2H26 diperkirakan terbatas meski kondisi memburuk.\n\nDowngrade Guidance Pertumbuhan Pembiayaan 2026F\n\n\u2022 New bookings turun -2% YoY selama 1H26, dengan pelemahan terjadi di seluruh lini usaha.\n\n\u2022 Perlambatan tersebut sejalan dengan strategi manajemen dalam mempertahankan proses underwriting yang ketat untuk menjaga kualitas aset dan CoC, di tengah kondisi industri yang masih menantang. \n\n\u2022 Sejalan dengan itu, NPF membaik menjadi 1,55% per Juni 2026 (vs. Maret 2026: 1,57%, Juni 2025: 1,63%), berbanding terbalik dengan NPF seindustri yang memburuk menjadi 3,1% (vs. Maret 2026: ~2,5%, Juni 2025: ~2,5%).\n\n\u2022 Manajemen BFIN kini memperkirakan pertumbuhan managed receivables sekitar +5% YoY pada 2026, lebih rendah dari guidance sebelumnya di kisaran low\u2013teens (vs. 2025: +9% YoY).\n\n\u2022 Terkait rencana ekspansi ke bisnis emas, manajemen BFIN masih menunggu persetujuan regulator, dengan langkah terkini mencakup penandatanganan nota kesepahaman dengan Antam ([%zQRd%]) sebagai pemasok.\n\nCoF Diperkirakan Resilien di Tengah Suku Bunga Tinggi\n\n\u2022 Meski BI Rate telah naik +100 bps sejak awal 2026, manajemen BFIN memperkirakan cost of fund (CoF) pada 2026F tidak akan meningkat signifikan karena mayoritas pendanaan menggunakan suku bunga tetap (fixed rate). Dampak kenaikan suku bunga diperkirakan baru terasa dalam 8\u201312 bulan.\n\n\u2022 Terkait jatuh tempo 3 obligasi senilai total Rp1,9 T pada 2Q26 (vs. 1Q26: Rp256 M), manajemen menyatakan telah mengamankan biaya refinancing dengan biaya yang tetap kompetitif.\n\n\u2022 Sementara itu, CIR tetap stabil di 43% selama 1H26 (vs. 1H25: 43%) dan diperkirakan bertahan hingga akhir tahun.\n\n\ud83d\uddd2\ufe0f Stockbit's View: Neutral\n\n\u2022 Kami menilai revisi guidance yang disampaikan manajemen sebagai hal yang netral, karena prospek penurunan CoC diimbangi oleh penurunan target pertumbuhan pembiayaan. Potensi upside akan bergantung pada sejauh mana CoC dapat turun di bawah level 4%.\n\n\u2022 Ke depan, kami menilai CoC dan pertumbuhan pembiayaan akan menjadi indikator utama yang perlu dicermati, mengingat CIR diperkirakan tetap stabil seiring CoF yang resilien.\n\n____\nEverson Sugianto ([%PJFH%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-07-28 01:30:31.068290+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          }
+        ],
+        "has_quarterly_report": true,
+        "report_context": {
+          "has_recent_report": true,
+          "is_financial_report": true,
+          "report_category": "FINANCIAL_REPORT",
+          "quarter": "Q2 2026",
+          "sentiment": "Neutral",
+          "sentiment_score": 5,
+          "published_at": "2026-08-10 12:30:27.014179+00:00",
+          "days_since_publish": 2,
+          "decay_weight": 1.0,
+          "summary": "ANTM meluncurkan produk emas edisi terbatas 'Edisi Kemerdekaan 2026' dengan teknologi relief tiga dimensi. Evaluasi: Sentimen Netral (Inovasi produk rutin, tidak memiliki dampak material terhadap fundamental keuangan perusahaan).",
+          "news_weight_boosted": true
+        }
+      }
+    }
+  },
+  "candidates": [
+    "ANTM"
+  ],
+  "finalists": [
+    {
+      "ticker": "ANTM",
+      "final_score": 10.23,
+      "composite_score": 8.78,
+      "weight_mode": "default",
+      "debate_bonus": 1.25,
+      "ml_bonus": 0.2
+    }
+  ],
+  "ml_predictions": {
+    "ANTM": {
+      "pred_prob": 42.3,
+      "max_pred_prob": 42.3,
+      "predictions_multiday": {
+        "1d": 42.3,
+        "3d": 31.4,
+        "5d": 32.94,
+        "7d": 19.94
+      },
+      "signal": "STRONG BUY",
+      "confidence": "MEDIUM"
+    }
+  },
+  "final_report": {
+    "generated_at": "2026-08-13T11:22:59.797110",
+    "market_condition": "IHSG saat ini berada dalam kondisi SLIGHTLY_BULLISH di level 6.301,77 (+1,79% di atas MA20) dengan rezim pasar konsolidasi dan partisipasi Market Breadth yang sangat solid (skor 0,90). Meskipun terdapat tantangan makro berupa volatilitas nilai tukar Rupiah (USD/IDR Rp17.872) serta tingginya Market Risk, sektor komoditas logam mulia (Basic Materials) mendapatkan angin segar berkat lonjakan harga emas spot dunia sebesar +5% hingga mendekati US$4.292/oz. Melandainya inflasi AS turut menahan ekspektasi kenaikan suku bunga The Fed. Dalam kondisi pasar konsolidasi ini, alokasi modal difokuskan pada emiten berfundamental super kuat dengan diskon valuasi ekstrem yang terkonfirmasi mengalami akumulasi masif oleh institusi asing.",
+    "top_picks": [
+      {
+        "rank": 1,
+        "ticker": "ANTM",
+        "thesis": "PT Aneka Tambang Tbk (ANTM) menyajikan peluang investasi berkeyakinan tinggi (HIGH Conviction) melalui konvergensi sempurna antara fundamental super murah (DEEP_UNDERVALUED), akumulasi institusional masif, dan katalis makro komoditas yang sangat positif. Dari aspek fundamental, ANTM mentradingkan PER 5,5x dengan tingkat profitabilitas sangat tinggi (ROE 21,84%) dan akselerasi pertumbuhan laba bersih (Earnings Growth) mencapai 59,9% YoY. Nilai wajar (Fair Value Base) berada pada Rp5.649 per saham, memberikan Margin of Safety (MoS) melimpah sebesar 46,89% dan potensi upside hingga +88,30%. Sisi bandarmologi menunjukkan akumulasi kuat (Strong Accumulation) dalam 7 hari terakhir senilai Rp51,56 miliar (166.013 lot), dengan institusi global JP Morgan (BK) bertindak sebagai akumulator utama (462.248 lot pada rerata harga Rp3.098). Dominasi 3 broker utama yang mencapai 68,7% menegaskan terjadinya estafet kepemilikan dari investor ritel ke tangan smart money. Posisi harga saat ini (Rp3.000) berada 3,16% di bawah harga modal bandar 7 hari, menciptakan ruang entry diskon yang sangat ideal sebelum terjadinya breakout teknikal di atas resistance Rp3.118. Katalis makro didukung oleh rally harga emas spot global (+5% ke US$4.292/oz) yang mendongkrak ASP serta pertumbuhan volume penjualan operasional 1H26 feronikel (+32%) dan bauksit (+24%).",
+        "time_horizon": "Positional (4-8 minggu)",
+        "price_prediction": {
+          "current_price": 3000.0,
+          "predictions": {
+            "day_1": {
+              "price": 3030.0,
+              "pct_change": "+1.0%",
+              "price_range": [
+                2939.0,
+                3121.0
+              ]
+            },
+            "day_3": {
+              "price": 3066.0,
+              "pct_change": "+2.2%",
+              "price_range": [
+                2974.0,
+                3158.0
+              ]
+            },
+            "day_5": {
+              "price": 3105.0,
+              "pct_change": "+3.5%",
+              "price_range": [
+                3012.0,
+                3198.0
+              ]
+            },
+            "day_7": {
+              "price": 3144.0,
+              "pct_change": "+4.8%",
+              "price_range": [
+                3050.0,
+                3238.0
+              ]
+            }
+          },
+          "confidence": "HIGH",
+          "reasoning": "Saham ANTM menunjukkan potensi reversal teknikal yang kuat dari area support dekat 52-week low, didukung oleh momentum bullish pada indikator RSI dan MACD serta akumulasi volume yang meningkat. Dari perspektif bandarmologi, broker institusi seperti BK (JP Morgan) dan ZP (Maybank) tercatat melakukan akumulasi dengan rata-rata harga modal 7 hari terakhir di Rp3.098, menjadikan harga saat ini (Rp3.000) berada dalam area entry yang sangat ideal karena 3.16% di bawah modal bandar. Secara fundamental, ANTM sangat solid dengan predikat deep undervalued (PER 5.5x, ROE 21.84%, dan DER 0.14x) yang memberikan ruang dorongan harga ke atas lebih agresif dibanding estimasi rule-based awal. Oleh karena itu, target persentase kenaikan disesuaikan naik untuk merefleksikan pergerakan harga menuju harga rata-rata akumulasi bandar dalam kisaran 3 hingga 7 hari mendatang.",
+          "key_drivers": [
+            "Akumulasi Institusi (Bandarmologi): Broker utama BK dan ZP aktif melakukan akumulasi dengan harga rata-rata 7 hari di Rp3.098 (di atas harga pasar saat ini).",
+            "Valuasi Deep Undervalued: PER sebesar 5.5x dan ROE 21.84% menunjukkan \u0444\u0443\u043d\u0434\u0430\u043c\u0435\u043d\u0442\u0430\u043b yang sangat kuat dengan margin of safety yang lebar.",
+            "Momentum Teknis Positif: Sinyal bullish momentum dari RSI dan MACD yang diperkuat oleh peningkatan volume transaksi di area bottom.",
+            "Neraca Keuangan Sehat: Leverage sangat rendah dengan DER 0.14x dan pertumbuhan laba (Earnings Growth) yang akseleratif sebesar 59.9%."
+          ],
+          "risks": [
+            "Resistensi Teknis MA: Harga masih tertahan di bawah MA20, MA100, dan MA200 yang berpotensi menjadi titik penahanan pergerakan harga.",
+            "Volatilitas Komoditas Global: Pergerakan harga saham ANTM tetap peka terhadap fluktuasi harga nikel dan emas dunia."
+          ],
+          "entry_style": "Buy on Weakness / Accumulate in Zone"
+        },
+        "ml_prediction": {
+          "pred_prob": 42.3,
+          "max_pred_prob": 42.3,
+          "predictions_multiday": {
+            "1d": 42.3,
+            "3d": 31.4,
+            "5d": 32.94,
+            "7d": 19.94
+          },
+          "signal": "STRONG BUY",
+          "confidence": "MEDIUM"
+        },
+        "fair_value": {
+          "current_price": 3000.0,
+          "method": "blended",
+          "fair_value_low": 3758.0,
+          "fair_value_base": 5649.0,
+          "fair_value_high": 7539.0,
+          "upside_pct": 88.3,
+          "margin_of_safety_pct": 46.89,
+          "valuation_label": "DEEP_UNDERVALUED",
+          "methods": {
+            "pe_based": {
+              "available": true,
+              "eps": 550.46,
+              "target_pe": 11.0,
+              "fair_value": 6055.0
+            },
+            "pbv_roe_based": {
+              "available": true,
+              "bvps": 1616.55,
+              "roe_pct": 21.84,
+              "sustainable_growth_pct": 10.5,
+              "required_return_pct": 13.5,
+              "fair_pbv": 2.5,
+              "fair_value": 4041.0
+            },
+            "eps_growth_based": {
+              "available": true,
+              "eps": 550.46,
+              "growth_pct": 59.85,
+              "target_pe": 12.8,
+              "fair_value": 7046.0
+            }
+          },
+          "notes": [
+            "EPS source: derived_from_current_price_per",
+            "BVPS source: info_bvps",
+            "Target PE baseline sektor Komoditas/Tambang: 8.0x"
+          ],
+          "confidence": "HIGH"
+        },
+        "pred_return": 0.0,
+        "decision_label": "HOLD",
+        "bandar_context": {
+          "broker_utama": "BK (JP Morgan)",
+          "avg_cost_7d": 3098,
+          "avg_cost_1m": 3018,
+          "active_days_1m": "N/A",
+          "distance_current": "-0.6%"
+        },
+        "entry_zone": "2873\u20133009",
+        "max_entry": "3009",
+        "tp1": 3084.0,
+        "tp2": 3302.0,
+        "tp3": 3513.0,
+        "target_1": 3084.0,
+        "target_2": 3302.0,
+        "target_3": 3513.0,
+        "tp1_size": 0.3,
+        "tp2_size": 0.4,
+        "tp3_size": 0.3,
+        "risk_reward_tp1": "1:9.2",
+        "risk_reward_tp2": "1:18.7",
+        "risk_reward_tp3": "1:27.8",
+        "stop_loss": 2850.0,
+        "risk_reward": "1:0.6",
+        "position_strategy": "Exit 30% at TP1, 40% at TP2, 30% at TP3",
+        "position_size": "30% portofolio",
+        "conviction": "HIGH",
+        "entry_reasoning": "Rentang akumulasi ideal ditetapkan pada Rp2.873 \u2013 Rp3.009, memanfaatkan area teknikal antara Fib Support terdekat (Rp2.873) hingga indikator MA20 harian (Rp3.009). Pembelian pada level harga Rp3.000 sangat menguntungkan karena berada di bawah rata-rata modal akumulasi JP Morgan (Rp3.098) dan modal bandar 1 bulan (Rp3.018). Level Stop Loss dipasang disiplin di Rp2.850 (di bawah support kritis Rp2.873). Target Profit bertahap ditentukan pada TP1 Rp3.084 (menguji resistensi psikologis terdekat), TP2 Rp3.302 (target pemulihan menuju area MA100/MA200), dan TP3 Rp3.513 (Fibonacci Resistance Kuat). Skenario ini menawarkan Risk/Reward Ratio yang sangat atraktif (> 1:2.0 hingga TP2) dengan risiko penurunan terbatasi oleh Margin of Safety fundamental.",
+        "agent_scores": {
+          "bandarm": {
+            "score": 7.0,
+            "weight": "35%",
+            "contribution": 2.45
+          },
+          "technical": {
+            "score": 6.5,
+            "weight": "22%",
+            "contribution": 1.43
+          },
+          "fundamental": {
+            "score": 10.0,
+            "weight": "18%",
+            "contribution": 1.8
+          },
+          "macro": {
+            "score": 4.5,
+            "weight": "13%",
+            "contribution": 0.58
+          },
+          "composite": 6.97
+        },
+        "bandarm_signal": "ACCUMULATION",
+        "broker_to_watch": [
+          "BK (JP Morgan)",
+          "ZP (Maybank Sekuritas)"
+        ],
+        "broker_true_costs": {
+          "w7": [
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "true_cost": 3098,
+              "total_buy_lot": 462248,
+              "total_buy_value": 143348846000,
+              "active_days": "6/7 hari",
+              "distance_pct": -3.16,
+              "status": "\u26a1 KONSISTEN \u2014 PANTAU KETAT"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "true_cost": 3089,
+              "total_buy_lot": 291858,
+              "total_buy_value": 89106780000,
+              "active_days": "5/7 hari",
+              "distance_pct": -2.88,
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "true_cost": 3121,
+              "total_buy_lot": 156823,
+              "total_buy_value": 50845556000,
+              "active_days": "4/7 hari",
+              "distance_pct": -3.88,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "RF",
+              "broker_name": "Lotus Andalan Sekuritas",
+              "true_cost": 3160,
+              "total_buy_lot": 130019,
+              "total_buy_value": 41080836000,
+              "active_days": "2/7 hari",
+              "distance_pct": -5.06,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "true_cost": 3102,
+              "total_buy_lot": 86944,
+              "total_buy_value": 27269229000,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.29,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "true_cost": 3088,
+              "total_buy_lot": 69584,
+              "total_buy_value": 19727628000,
+              "active_days": "3/7 hari",
+              "distance_pct": -2.85,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "true_cost": 3131,
+              "total_buy_lot": 52431,
+              "total_buy_value": 16416790000,
+              "active_days": "1/7 hari",
+              "distance_pct": -4.18,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Samuel Sekuritas",
+              "true_cost": 3057,
+              "total_buy_lot": 31390,
+              "total_buy_value": 9482401000,
+              "active_days": "2/7 hari",
+              "distance_pct": -1.86,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "true_cost": 3106,
+              "total_buy_lot": 24826,
+              "total_buy_value": 8219579000,
+              "active_days": "4/7 hari",
+              "distance_pct": -3.41,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "TP",
+              "broker_name": "OCBC Sekuritas",
+              "true_cost": 3117,
+              "total_buy_lot": 22642,
+              "total_buy_value": 7111591000,
+              "active_days": "1/7 hari",
+              "distance_pct": -3.75,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            }
+          ],
+          "w1m": [
+            {
+              "broker": "DX",
+              "broker_name": "BNI Sekuritas",
+              "true_cost": 3018,
+              "total_buy_lot": 1103285,
+              "total_buy_value": 333376297000,
+              "active_days": "13/30 hari",
+              "distance_pct": -0.6,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "true_cost": 3016,
+              "total_buy_lot": 685850,
+              "total_buy_value": 202717631000,
+              "active_days": "16/30 hari",
+              "distance_pct": -0.53,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "true_cost": 2985,
+              "total_buy_lot": 227343,
+              "total_buy_value": 68979905000,
+              "active_days": "16/30 hari",
+              "distance_pct": 0.5,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "true_cost": 3020,
+              "total_buy_lot": 162082,
+              "total_buy_value": 48025920000,
+              "active_days": "14/30 hari",
+              "distance_pct": -0.66,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "RF",
+              "broker_name": "Lotus Andalan Sekuritas",
+              "true_cost": 3156,
+              "total_buy_lot": 101632,
+              "total_buy_value": 32715258000,
+              "active_days": "2/30 hari",
+              "distance_pct": -4.94,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "GR",
+              "broker_name": "Goldman Sachs",
+              "true_cost": 3021,
+              "total_buy_lot": 98556,
+              "total_buy_value": 29575476000,
+              "active_days": "8/30 hari",
+              "distance_pct": -0.7,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "true_cost": 3009,
+              "total_buy_lot": 87560,
+              "total_buy_value": 27015511000,
+              "active_days": "14/30 hari",
+              "distance_pct": -0.3,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "true_cost": 3010,
+              "total_buy_lot": 65314,
+              "total_buy_value": 18807625000,
+              "active_days": "10/30 hari",
+              "distance_pct": -0.33,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "true_cost": 2999,
+              "total_buy_lot": 52601,
+              "total_buy_value": 13793575000,
+              "active_days": "12/30 hari",
+              "distance_pct": 0.03,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "MG",
+              "broker_name": "Unknown",
+              "true_cost": 3011,
+              "total_buy_lot": 40320,
+              "total_buy_value": 11804518000,
+              "active_days": "11/30 hari",
+              "distance_pct": -0.37,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            }
+          ]
+        },
+        "broker_distributors": {
+          "w7": [
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "avg_sell": 3104,
+              "total_sell_lot": 329571,
+              "total_sell_value": 102294054000,
+              "active_days": "4/7 hari",
+              "distance_pct": -3.35,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "avg_sell": 3108,
+              "total_sell_lot": 160561,
+              "total_sell_value": 51133035000,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.47,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AG",
+              "broker_name": "Alindo Sekuritas",
+              "avg_sell": 3088,
+              "total_sell_lot": 120979,
+              "total_sell_value": 37310743000,
+              "active_days": "1/7 hari",
+              "distance_pct": -2.85,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "avg_sell": 3108,
+              "total_sell_lot": 113456,
+              "total_sell_value": 35054840000,
+              "active_days": "2/7 hari",
+              "distance_pct": -3.47,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "XC",
+              "broker_name": "Ajaib Sekuritas",
+              "avg_sell": 3088,
+              "total_sell_lot": 111209,
+              "total_sell_value": 33805903000,
+              "active_days": "3/7 hari",
+              "distance_pct": -2.85,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "avg_sell": 3082,
+              "total_sell_lot": 100595,
+              "total_sell_value": 30785660000,
+              "active_days": "5/7 hari",
+              "distance_pct": -2.66,
+              "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "AF",
+              "broker_name": "Unknown",
+              "avg_sell": 3118,
+              "total_sell_lot": 80020,
+              "total_sell_value": 24946820000,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.78,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "avg_sell": 3139,
+              "total_sell_lot": 52649,
+              "total_sell_value": 16649423000,
+              "active_days": "4/7 hari",
+              "distance_pct": -4.43,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "avg_sell": 3099,
+              "total_sell_lot": 49186,
+              "total_sell_value": 15169666000,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.19,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "avg_sell": 3117,
+              "total_sell_lot": 44526,
+              "total_sell_value": 13899985000,
+              "active_days": "4/7 hari",
+              "distance_pct": -3.75,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            }
+          ],
+          "w1m": [
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "avg_sell": 2905,
+              "total_sell_lot": 551264,
+              "total_sell_value": 158249587000,
+              "active_days": "6/30 hari",
+              "distance_pct": 3.27,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "avg_sell": 3021,
+              "total_sell_lot": 255947,
+              "total_sell_value": 79106544000,
+              "active_days": "13/30 hari",
+              "distance_pct": -0.7,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Indo Premier Sekuritas",
+              "avg_sell": 2982,
+              "total_sell_lot": 254609,
+              "total_sell_value": 74361358000,
+              "active_days": "13/30 hari",
+              "distance_pct": 0.6,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "avg_sell": 3042,
+              "total_sell_lot": 228118,
+              "total_sell_value": 70778142000,
+              "active_days": "8/30 hari",
+              "distance_pct": -1.38,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AF",
+              "broker_name": "Unknown",
+              "avg_sell": 3024,
+              "total_sell_lot": 214264,
+              "total_sell_value": 64789858000,
+              "active_days": "6/30 hari",
+              "distance_pct": -0.79,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "avg_sell": 3022,
+              "total_sell_lot": 205106,
+              "total_sell_value": 61238629000,
+              "active_days": "12/30 hari",
+              "distance_pct": -0.73,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "avg_sell": 3034,
+              "total_sell_lot": 152403,
+              "total_sell_value": 54621710000,
+              "active_days": "12/30 hari",
+              "distance_pct": -1.12,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "avg_sell": 2984,
+              "total_sell_lot": 163812,
+              "total_sell_value": 49962492000,
+              "active_days": "17/30 hari",
+              "distance_pct": 0.54,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AG",
+              "broker_name": "Alindo Sekuritas",
+              "avg_sell": 3003,
+              "total_sell_lot": 133355,
+              "total_sell_value": 40869174000,
+              "active_days": "4/30 hari",
+              "distance_pct": -0.1,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "avg_sell": 2985,
+              "total_sell_lot": 110014,
+              "total_sell_value": 26646711000,
+              "active_days": "17/30 hari",
+              "distance_pct": 0.5,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            }
+          ]
+        },
+        "weight_mode": "default",
+        "composite_score": 6.97,
+        "final_score": 10.23
+      }
+    ],
+    "watchlist": [
+      "MDKA",
+      "HRTA",
+      "PSAB"
+    ],
+    "avoid": [
+      "BRMS \u2014 Kinerja keuangan 1H26 mengecewakan dengan laba bersih anjlok -44% YoY akibat kendala operasional pushback tambang dan kelebihan pasokan domestik, yang berpotensi memicu pemangkasan estimasi laba konsensus lebih lanjut."
+    ],
+    "llm_synthesis": {
+      "market_condition_summary": "IHSG saat ini berada dalam kondisi SLIGHTLY_BULLISH di level 6.301,77 (+1,79% di atas MA20) dengan rezim pasar konsolidasi dan partisipasi Market Breadth yang sangat solid (skor 0,90). Meskipun terdapat tantangan makro berupa volatilitas nilai tukar Rupiah (USD/IDR Rp17.872) serta tingginya Market Risk, sektor komoditas logam mulia (Basic Materials) mendapatkan angin segar berkat lonjakan harga emas spot dunia sebesar +5% hingga mendekati US$4.292/oz. Melandainya inflasi AS turut menahan ekspektasi kenaikan suku bunga The Fed. Dalam kondisi pasar konsolidasi ini, alokasi modal difokuskan pada emiten berfundamental super kuat dengan diskon valuasi ekstrem yang terkonfirmasi mengalami akumulasi masif oleh institusi asing.",
+      "ranked_tickers": [
+        {
+          "rank": 1,
+          "ticker": "ANTM",
+          "conviction": "HIGH",
+          "thesis": "PT Aneka Tambang Tbk (ANTM) menyajikan peluang investasi berkeyakinan tinggi (HIGH Conviction) melalui konvergensi sempurna antara fundamental super murah (DEEP_UNDERVALUED), akumulasi institusional masif, dan katalis makro komoditas yang sangat positif. Dari aspek fundamental, ANTM mentradingkan PER 5,5x dengan tingkat profitabilitas sangat tinggi (ROE 21,84%) dan akselerasi pertumbuhan laba bersih (Earnings Growth) mencapai 59,9% YoY. Nilai wajar (Fair Value Base) berada pada Rp5.649 per saham, memberikan Margin of Safety (MoS) melimpah sebesar 46,89% dan potensi upside hingga +88,30%. Sisi bandarmologi menunjukkan akumulasi kuat (Strong Accumulation) dalam 7 hari terakhir senilai Rp51,56 miliar (166.013 lot), dengan institusi global JP Morgan (BK) bertindak sebagai akumulator utama (462.248 lot pada rerata harga Rp3.098). Dominasi 3 broker utama yang mencapai 68,7% menegaskan terjadinya estafet kepemilikan dari investor ritel ke tangan smart money. Posisi harga saat ini (Rp3.000) berada 3,16% di bawah harga modal bandar 7 hari, menciptakan ruang entry diskon yang sangat ideal sebelum terjadinya breakout teknikal di atas resistance Rp3.118. Katalis makro didukung oleh rally harga emas spot global (+5% ke US$4.292/oz) yang mendongkrak ASP serta pertumbuhan volume penjualan operasional 1H26 feronikel (+32%) dan bauksit (+24%).",
+          "entry_low": 2873,
+          "entry_high": 3009,
+          "entry_style": "Buy on Weakness / Accumulate in Zone",
+          "tp1": 3084,
+          "tp2": 3302,
+          "tp3": 3513,
+          "stop_loss": 2850,
+          "entry_reasoning": "Rentang akumulasi ideal ditetapkan pada Rp2.873 \u2013 Rp3.009, memanfaatkan area teknikal antara Fib Support terdekat (Rp2.873) hingga indikator MA20 harian (Rp3.009). Pembelian pada level harga Rp3.000 sangat menguntungkan karena berada di bawah rata-rata modal akumulasi JP Morgan (Rp3.098) dan modal bandar 1 bulan (Rp3.018). Level Stop Loss dipasang disiplin di Rp2.850 (di bawah support kritis Rp2.873). Target Profit bertahap ditentukan pada TP1 Rp3.084 (menguji resistensi psikologis terdekat), TP2 Rp3.302 (target pemulihan menuju area MA100/MA200), dan TP3 Rp3.513 (Fibonacci Resistance Kuat). Skenario ini menawarkan Risk/Reward Ratio yang sangat atraktif (> 1:2.0 hingga TP2) dengan risiko penurunan terbatasi oleh Margin of Safety fundamental.",
+          "time_horizon": "Positional (4-8 minggu)"
+        }
+      ],
+      "watchlist": [
+        "MDKA",
+        "HRTA",
+        "PSAB"
+      ],
+      "avoid": [
+        "BRMS \u2014 Kinerja keuangan 1H26 mengecewakan dengan laba bersih anjlok -44% YoY akibat kendala operasional pushback tambang dan kelebihan pasokan domestik, yang berpotensi memicu pemangkasan estimasi laba konsensus lebih lanjut."
+      ]
+    },
+    "total_analyzed": 1,
+    "total_finalists": 1,
+    "synthesis_mode": "llm"
+  }
+}

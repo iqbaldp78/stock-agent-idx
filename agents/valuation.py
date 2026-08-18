@@ -71,12 +71,14 @@ def _target_pe(info: dict, ticker: str) -> tuple[float, list[str]]:
     der_ratio = der / 100 if der > 10 else der
 
     ticker_upper = ticker.upper()
+    is_commodity = ticker_upper in COMMODITY_TICKERS
+
     if ticker_upper in FINANCIAL_TICKERS:
         target = 12.5
         notes.append("Target PE baseline sektor Keuangan/Bank: 12.5x")
-    elif ticker_upper in COMMODITY_TICKERS:
-        target = 8.5
-        notes.append("Target PE baseline sektor Komoditas/Energi: 8.5x")
+    elif is_commodity:
+        target = 8.0
+        notes.append("Target PE baseline sektor Komoditas/Tambang: 8.0x")
     elif ticker_upper in CONSUMER_TICKERS:
         target = 15.0
         notes.append("Target PE baseline sektor Consumer/Healthcare: 15.0x")
@@ -85,14 +87,15 @@ def _target_pe(info: dict, ticker: str) -> tuple[float, list[str]]:
         notes.append("Target PE baseline universal: 13.5x")
 
     if roe_pct > 20:
-        target += 2.5
+        target += 2.0 if is_commodity else 2.5
     elif roe_pct > 15:
         target += 1.0
     elif roe_pct < 8:
         target -= 2.0
 
+    # Commodity growth is highly cyclical, cap growth bonus
     if earnings_growth > 15:
-        target += 1.5
+        target += 1.0 if is_commodity else 1.5
     elif earnings_growth > 5:
         target += 0.5
     elif earnings_growth < 0:
@@ -101,7 +104,8 @@ def _target_pe(info: dict, ticker: str) -> tuple[float, list[str]]:
     if der_ratio > 2.0:
         target -= 1.5
 
-    target = max(6.0, min(target, 22.0))
+    max_pe_cap = 14.0 if is_commodity else 22.0
+    target = max(5.5, min(target, max_pe_cap))
     return round(target, 2), notes
 
 
@@ -126,10 +130,13 @@ def _pbv_roe_based(info: dict, bvps: float | None) -> dict:
         return {"available": False, "reason": "BVPS or ROE unavailable"}
 
     ticker = str(info.get("ticker", "")).upper()
+    is_commodity = ticker in COMMODITY_TICKERS
 
     # Required Return / Cost of Equity (r)
     if ticker in FINANCIAL_TICKERS or roe_pct > 18:
         required_return_pct = 13.5
+    elif is_commodity:
+        required_return_pct = 15.0  # Higher risk premium for cyclical commodities
     else:
         required_return_pct = 14.5
 
@@ -155,7 +162,8 @@ def _pbv_roe_based(info: dict, bvps: float | None) -> dict:
     if fair_pbv <= 0:
         fair_pbv = roe_pct / required_return_pct
 
-    fair_pbv = max(0.6, min(fair_pbv, 4.0))
+    max_pbv_cap = 2.5 if is_commodity else 4.0
+    fair_pbv = max(0.6, min(fair_pbv, max_pbv_cap))
 
     return {
         "available": True,
@@ -176,20 +184,25 @@ def _growth_based(info: dict, eps: float | None, target_pe_base: float) -> dict:
     if not eps or eps <= 0:
         return {"available": False, "reason": "EPS unavailable or non-positive"}
 
+    ticker = str(info.get("ticker", "")).upper()
+    is_commodity = ticker in COMMODITY_TICKERS
+
     growth_pct = _to_float(info.get("earnings_growth"), 0.0) or 0.0
     roe_pct = _to_float(info.get("roe"), 0.0) or 0.0
 
-    g_clamped = max(-10.0, min(growth_pct, 15.0))
+    max_growth = 8.0 if is_commodity else 15.0
+    g_clamped = max(-10.0, min(growth_pct, max_growth))
 
     if g_clamped > 0:
-        target_pe = target_pe_base + (0.15 * g_clamped)
+        target_pe = target_pe_base + (0.10 if is_commodity else 0.15) * g_clamped
     else:
-        target_pe = target_pe_base + (0.25 * g_clamped)
+        target_pe = target_pe_base + (0.20 * g_clamped)
 
     if roe_pct > 18:
         target_pe += 1.0
 
-    target_pe = max(6.0, min(target_pe, 20.0))
+    max_pe = 13.5 if is_commodity else 20.0
+    target_pe = max(5.5, min(target_pe, max_pe))
 
     return {
         "available": True,

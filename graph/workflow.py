@@ -209,11 +209,11 @@ def run_ml_prediction(state: AgentState) -> dict:
 
     ml_results = {}
 
-    # Sort by composite score to only run ML on top candidates (performance optimization)
+    # Run ML prediction on ALL candidate tickers
     sorted_tickers = sorted(composites.keys(), key=lambda t: composites[t]["composite_score"], reverse=True)
-    top_candidates = sorted_tickers[:15] # Limit to top 15 candidates as requested by user
+    all_candidates = sorted_tickers
 
-    for ticker in top_candidates:
+    for ticker in all_candidates:
         try:
             # 1. Fetch recent OHLCV for features
             # 2y, bukan 3mo: compute_ohlcv_features() memakai window sampai 200 hari
@@ -255,6 +255,7 @@ def run_ml_prediction(state: AgentState) -> dict:
 
             ml_results[ticker] = {
                 "pred_prob": pred_pcts.get('1d', 0),
+                "max_pred_prob": max(pred_pcts.values()) if pred_pcts else 0,
                 "predictions_multiday": pred_pcts,       # 1d, 3d, 5d, 7d
                 "signal": signal,
                 "confidence": "MEDIUM" # Default for now
@@ -294,13 +295,50 @@ def run_debate_rule_based(state: AgentState) -> dict:
     if not composites:
         return {"debate_log": [], "finalists": []}
 
+    # Extract good ML tickers from ml_predictions (BUY / STRONG BUY or any horizon 1d/3d/5d/7d pred_prob > 50%)
+    good_ml_tickers = set()
+    for ticker, ml_result in ml_predictions.items():
+        if ml_result:
+            sig = ml_result.get("signal", "")
+            multiday = ml_result.get("predictions_multiday", {})
+            max_prob = max(multiday.values()) if multiday else ml_result.get("pred_prob", 0)
+            if sig in ["BUY", "STRONG BUY"] or max_prob > 50.0:
+                good_ml_tickers.add(ticker)
+
     sorted_tickers = sorted(
         composites.items(),
         key=lambda x: x[1]["composite_score"],
         reverse=True,
     )
 
-    debate_candidates = sorted_tickers[:min(15, len(sorted_tickers))]
+    # Priority 1: Add all tickers with good ML prediction (any horizon > 50% / BUY / STRONG BUY), sorted by max pred_prob descending
+    debate_candidates = []
+    seen_tickers = set()
+
+    def _get_max_ml_prob(t: str) -> float:
+        res = ml_predictions.get(t, {})
+        multiday = res.get("predictions_multiday", {})
+        return max(multiday.values()) if multiday else res.get("pred_prob", 0)
+
+    sorted_ml_tickers = sorted(
+        good_ml_tickers,
+        key=_get_max_ml_prob,
+        reverse=True,
+    )
+    for ticker in sorted_ml_tickers:
+        if ticker in composites:
+            debate_candidates.append((ticker, composites[ticker]))
+            seen_tickers.add(ticker)
+
+    # Priority 2: Fill remaining slots with top composite scores up to target count
+    target_count = max(15, len(good_ml_tickers))
+    for ticker, composite in sorted_tickers:
+        if ticker not in seen_tickers:
+            debate_candidates.append((ticker, composite))
+            seen_tickers.add(ticker)
+        if len(debate_candidates) >= min(target_count, len(composites)):
+            break
+
     debate_log = []
 
     # Enrich candidates with TradingView TA and Fundamental Data for rule-based debate
@@ -652,17 +690,20 @@ def maybe_train_ml_before_analysis(universe: list[str] | None = None) -> None:
         logger.warning("[ML TRAIN] Auto training failed: %s", e)
 
 
-def run_full_analysis(universe: list[str] | None = None, auto_train_ml: bool = True) -> dict:
+def run_full_analysis(universe: list[str] | None = None, auto_train_ml: bool = True, include_portfolio: bool = True) -> dict:
     """Run the complete analysis pipeline."""
     if auto_train_ml:
         maybe_train_ml_before_analysis(universe=universe)
 
-    from portfolio.manager import get_all_holdings
-    try:
-        holdings = get_all_holdings()
-        portfolio_tickers = [h["ticker"] for h in holdings]
-    except Exception as e:
-        logger.warning(f"Failed to fetch portfolio holdings: {e}")
+    if include_portfolio:
+        from portfolio.manager import get_all_holdings
+        try:
+            holdings = get_all_holdings()
+            portfolio_tickers = [h["ticker"] for h in holdings]
+        except Exception as e:
+            logger.warning(f"Failed to fetch portfolio holdings: {e}")
+            portfolio_tickers = []
+    else:
         portfolio_tickers = []
 
     final_universe = universe or get_universe()

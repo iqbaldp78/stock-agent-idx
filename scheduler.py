@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 def run_daily_analysis():
     """End-of-day analysis: full pipeline + save to DB."""
     logger.info("=== DAILY ANALYSIS START ===")
-    logger.info("=== STARTING KONGLO PLAY ANALYSIS ===")
     try:
         from graph.workflow import run_full_analysis
         from db.tracker import save_full_result
@@ -32,8 +31,15 @@ def run_daily_analysis():
             logger.info(f"  #{p.get('rank')} {p.get('ticker')} — {p.get('conviction', 'N/A')}")
 
         # Trigger Konglo Analysis sequentially
+        logger.info("=== STARTING KONGLO PLAY ANALYSIS ===")
         from graph.konglo_workflow import run_konglo_analysis
         konglo_result = run_konglo_analysis()
+        save_full_result(konglo_result, is_konglo=True)
+
+        konglo_top_picks = konglo_result.get("top_picks", [])
+        logger.info(f"Konglo Analysis complete: {len(konglo_top_picks)} top picks")
+        for p in konglo_top_picks:
+            logger.info(f"  #{p.get('rank')} {p.get('ticker')} — {p.get('conviction', 'N/A')}")
         logger.info("Konglo analysis completed.")
 
     except Exception as e:

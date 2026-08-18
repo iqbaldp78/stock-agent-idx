@@ -109,8 +109,12 @@ def run_parallel_scoring(state: AgentState) -> dict:
 
     for ticker in candidates:
         try:
-            # Konglo Play: Skip fundamental analysis
-            fund = {"score": 5.0, "status": "skipped", "analysis": "Fundamental diabaikan untuk Konglo Play."}
+            # Konglo Play: Run fundamental analysis for Fair Value calculation
+            try:
+                fund = fund_analyze(ticker)
+            except Exception as e:
+                logger.warning(f"  [{ticker}] Fundamental analysis failed in Konglo workflow: {e}")
+                fund = {"score": 5.0, "status": "fallback", "analysis": "Fundamental fallback"}
             
             # Run all agents
             bandarm = bandarm_analyze(ticker)
@@ -203,11 +207,11 @@ def run_ml_prediction(state: AgentState) -> dict:
 
     ml_results = {}
 
-    # Sort by composite score to only run ML on top candidates (performance optimization)
+    # Run ML prediction on ALL candidate tickers
     sorted_tickers = sorted(composites.keys(), key=lambda t: composites[t]["composite_score"], reverse=True)
-    top_candidates = sorted_tickers[:12] # Limit to top 12
+    all_candidates = sorted_tickers
 
-    for ticker in top_candidates:
+    for ticker in all_candidates:
         try:
             # 1. Fetch recent OHLCV for features
             # 2y, bukan 3mo: lihat catatan yang sama di graph/workflow.py —
@@ -246,7 +250,8 @@ def run_ml_prediction(state: AgentState) -> dict:
                         logger.info(f"[ML BONUS] {ticker} diprediksi {signal}, composite score di-boost: {old_score} -> {comp['composite_score']}")
 
             ml_results[ticker] = {
-                "pred_prob": pred_pcts.get('1d', 50.0), # Main 1d probability
+                "pred_prob": pred_pcts.get('1d', 0), # Main 1d probability
+                "max_pred_prob": max(pred_pcts.values()) if pred_pcts else 0,
                 "predictions_multiday": pred_pcts,       # 1d, 3d, 5d, 7d
                 "signal": signal,
                 "confidence": "MEDIUM" # Default for now
@@ -286,13 +291,50 @@ def run_debate_rule_based(state: AgentState) -> dict:
     if not composites:
         return {"debate_log": [], "finalists": []}
 
+    # Extract good ML tickers from ml_predictions (BUY / STRONG BUY or any horizon 1d/3d/5d/7d pred_prob > 50%)
+    good_ml_tickers = set()
+    for ticker, ml_result in ml_predictions.items():
+        if ml_result:
+            sig = ml_result.get("signal", "")
+            multiday = ml_result.get("predictions_multiday", {})
+            max_prob = max(multiday.values()) if multiday else ml_result.get("pred_prob", 0)
+            if sig in ["BUY", "STRONG BUY"] or max_prob > 50.0:
+                good_ml_tickers.add(ticker)
+
     sorted_tickers = sorted(
         composites.items(),
         key=lambda x: x[1]["composite_score"],
         reverse=True,
     )
 
-    debate_candidates = sorted_tickers[:min(15, len(sorted_tickers))]
+    # Priority 1: Add all tickers with good ML prediction (any horizon > 50% / BUY / STRONG BUY), sorted by max pred_prob descending
+    debate_candidates = []
+    seen_tickers = set()
+
+    def _get_max_ml_prob(t: str) -> float:
+        res = ml_predictions.get(t, {})
+        multiday = res.get("predictions_multiday", {})
+        return max(multiday.values()) if multiday else res.get("pred_prob", 0)
+
+    sorted_ml_tickers = sorted(
+        good_ml_tickers,
+        key=_get_max_ml_prob,
+        reverse=True,
+    )
+    for ticker in sorted_ml_tickers:
+        if ticker in composites:
+            debate_candidates.append((ticker, composites[ticker]))
+            seen_tickers.add(ticker)
+
+    # Priority 2: Fill remaining slots with top composite scores up to target count
+    target_count = max(15, len(good_ml_tickers))
+    for ticker, composite in sorted_tickers:
+        if ticker not in seen_tickers:
+            debate_candidates.append((ticker, composite))
+            seen_tickers.add(ticker)
+        if len(debate_candidates) >= min(target_count, len(composites)):
+            break
+
     debate_log = []
 
     # Enrich candidates with TradingView TA and Fundamental Data for rule-based debate

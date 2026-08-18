@@ -302,6 +302,11 @@ analysis-konglo: ## Run full Konglo analysis and save to DB
 analysis-konglo-dry: ## Run full Konglo analysis (DRY RUN - does NOT save to DB)
 	docker compose exec app python scripts/run_konglo_analysis_dry.py $(TICKERS)
 
+.PHONY: clean-signals
+clean-signals: ## Clean analysis data & UI cache for a date (default: today). Usage: make clean-signals [DATE=YYYY-MM-DD]
+	docker compose exec -T app python scripts/clean_analysis_data.py $(if $(or $(DATE),$(date)),--date $(or $(DATE),$(date)),)
+
+
 
 # ============================================================
 # IHSG PREDICTOR

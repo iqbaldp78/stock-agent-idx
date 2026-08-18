@@ -199,7 +199,7 @@ st.sidebar.divider()
 
 page = st.sidebar.radio(
     "Navigation",
-    ["📈 Top Picks", "🔍 Screener", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "🤖 ML Validation", "📊 Performance", "💼 Portfolio", "🌍 Universe", "🐋 Konglo Play", "⚙️ Settings"]
+    ["📈 Top Picks", "🎯 Single Analysis", "🔍 Screener", "💹 Trading Engine", "📊 Analytics", "🔍 Bandarmologi", "📈 IHSG Predictor", "🧪 Backtest", "🤖 ML Validation", "📊 Performance", "💼 Portfolio", "🌍 Universe", "🐋 Konglo Play", "⚙️ Settings"]
 )
 
 st.sidebar.divider()
@@ -668,6 +668,287 @@ if page == "📈 Top Picks":
             render_signals_list(signals_konglo)
         else:
             st.info("👋 Belum ada data Konglo Picks. Silahkan jalankan 'Konglo Analysis' dari menu Konglo Play terlebih dahulu.")
+
+# === PAGE: Single Analysis ===
+elif page == "🎯 Single Analysis":
+    st.title("🎯 SINGLE STOCK AI ANALYSIS")
+    st.caption("Jalankan analisis AI mendalam (Technical, Bandarmologi, ML, Sentiment, Bull vs Bear Debate) khusus untuk 1 saham pilihan secara on-demand. Hasil disimpan murni sebagai file JSON.")
+
+    # 1. Background status fragment if single analysis process is running
+    @st.fragment(run_every="1s")
+    def render_single_analysis_status():
+        if not st.session_state.get("single_analysis_running"):
+            return
+
+        pid = st.session_state.get("single_analysis_pid")
+        ticker = st.session_state.get("single_analysis_ticker", "")
+        is_alive = False
+        if pid:
+            try:
+                os.kill(pid, 0)
+                is_alive = True
+                try:
+                    with open(f"/proc/{pid}/stat", "r") as f:
+                        stat_line = f.read()
+                        if len(stat_line.split()) >= 3 and stat_line.split()[2] == 'Z':
+                            is_alive = False
+                except Exception:
+                    pass
+            except OSError:
+                pass
+
+        if is_alive:
+            st.info(f"🔄 Sedang meng-analisis **{ticker}**... (PID: {pid}). Mohon tunggu sebentar.")
+            if st.button("🛑 Batalkan Analisis Single Ticker", type="primary", key="cancel_single_btn"):
+                try:
+                    os.killpg(os.getpgid(pid), signal.SIGTERM)
+                except Exception as e:
+                    logger.error(f"Failed to kill single analysis process {pid}: {e}")
+                st.session_state["single_analysis_running"] = False
+                st.warning("Analisis dibatalkan.")
+                st.rerun()
+        else:
+            st.session_state["single_analysis_running"] = False
+            results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "single_analysis_results")
+            target_file = os.path.join(results_dir, f"latest_{ticker}.json") if ticker else None
+            fallback_file = os.path.join(results_dir, "latest_single_result.json")
+            
+            if target_file and os.path.exists(target_file):
+                st.success(f"✅ Analisis untuk **{ticker}** selesai! Hasil tersimpan di file JSON.")
+            elif os.path.exists(fallback_file):
+                st.success("✅ Analisis single ticker selesai! Hasil tersimpan di file JSON.")
+            else:
+                st.error("❌ Analisis selesai tetapi file hasil JSON tidak ditemukan.")
+            st.rerun()
+
+    if st.session_state.get("single_analysis_running"):
+        render_single_analysis_status()
+
+    # 2. Form & Controls
+    st.divider()
+    st.subheader("🔎 Pilih Ticker Saham")
+    
+    col_input, col_run = st.columns([3, 1])
+    with col_input:
+        default_ticker = st.session_state.get("single_ticker_input", "BBCA")
+        input_ticker = st.text_input("Kode Saham (Ticker BEI)", value=default_ticker, max_chars=6, key="input_single_ticker_field").upper().strip()
+        st.session_state["single_ticker_input"] = input_ticker
+        
+    with col_run:
+        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+        run_clicked = st.button("▶️ Analisis Sekarang", type="primary", use_container_width=True, disabled=st.session_state.get("single_analysis_running", False))
+
+    # Quick Select Pills
+    st.markdown("**Quick Select Ticker Populer:**")
+    quick_cols = st.columns(6)
+    quick_tickers = ["BBCA", "BBRI", "TLKM", "ASII", "AMMN", "BREN"]
+    for idx, qt in enumerate(quick_tickers):
+        with quick_cols[idx]:
+            if st.button(qt, key=f"quick_t_{qt}", use_container_width=True):
+                st.session_state["single_ticker_input"] = qt
+                st.rerun()
+
+    if run_clicked and input_ticker:
+        st.session_state["single_analysis_running"] = True
+        st.session_state["single_analysis_ticker"] = input_ticker
+        p = subprocess.Popen([sys.executable, "scripts/run_analysis_job.py", input_ticker], preexec_fn=os.setsid)
+        st.session_state["single_analysis_pid"] = p.pid
+        st.rerun()
+
+    st.divider()
+
+    # 3. Render Results from JSON File
+    results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "single_analysis_results")
+    
+    # Check for available result JSON files
+    latest_file = None
+    if input_ticker:
+        specific_file = os.path.join(results_dir, f"latest_{input_ticker}.json")
+        if os.path.exists(specific_file):
+            latest_file = specific_file
+            
+    if not latest_file:
+        fallback = os.path.join(results_dir, "latest_single_result.json")
+        if os.path.exists(fallback):
+            latest_file = fallback
+
+    if latest_file and os.path.exists(latest_file):
+        try:
+            with open(latest_file, "r") as f:
+                res_data = json.load(f)
+                
+            res_ticker = res_data.get("ticker", input_ticker)
+            res_ts = res_data.get("timestamp", "")
+            
+            st.subheader(f"📊 Hasil Analisis AI: {res_ticker}")
+            if res_ts:
+                try:
+                    dt_parsed = datetime.fromisoformat(res_ts)
+                    display_time = dt_parsed.strftime("%d %b %Y, %H:%M WIB")
+                except:
+                    display_time = res_ts
+                st.caption(f"🕒 Waktu Analisis: {display_time} | 📁 Saved to: `{os.path.basename(latest_file)}` (Stored as JSON file)")
+
+            top_picks = res_data.get("top_picks", [])
+            composites = res_data.get("composites", {})
+            scores = res_data.get("scores", {})
+            debate_log = res_data.get("debate_log", [])
+            ml_preds = res_data.get("ml_predictions", {})
+
+            # Helper for safe float extraction
+            def _extract_score(val, default=0.0):
+                if val is None:
+                    return default
+                if isinstance(val, (int, float)):
+                    return float(val)
+                if isinstance(val, dict):
+                    s = val.get("score")
+                    if s is None:
+                        s = val.get("composite_score")
+                    if s is None:
+                        s = val.get("final_score")
+                    return _extract_score(s, default)
+                try:
+                    return float(str(val).replace(",", "").replace("%", ""))
+                except Exception:
+                    return default
+
+            # Match pick for this ticker
+            pick = None
+            if top_picks:
+                for p in top_picks:
+                    if isinstance(p, dict) and p.get("ticker") == res_ticker:
+                        pick = p
+                        break
+
+            ticker_scores = scores.get(res_ticker, {}) if isinstance(scores, dict) else {}
+            tech_data = ticker_scores.get("technical", {}) if isinstance(ticker_scores, dict) else {}
+            fund_data = ticker_scores.get("fundamental", {}) if isinstance(ticker_scores, dict) else {}
+            bandarm_data = ticker_scores.get("bandarm", {}) if isinstance(ticker_scores, dict) else {}
+            news_data = ticker_scores.get("news", {}) if isinstance(ticker_scores, dict) else {}
+
+            comp_obj = composites.get(res_ticker, {}) if isinstance(composites, dict) else {}
+            comp_score_val = _extract_score(comp_obj)
+
+            if not pick:
+                # Construct fallback pick dictionary
+                entry_l = tech_data.get("entry_low") if isinstance(tech_data, dict) else None
+                entry_h = tech_data.get("entry_high") if isinstance(tech_data, dict) else None
+                sl = tech_data.get("stop_loss") if isinstance(tech_data, dict) else None
+                t1 = tech_data.get("tp1") or tech_data.get("target") if isinstance(tech_data, dict) else None
+                t2 = tech_data.get("tp2") if isinstance(tech_data, dict) else None
+                t3 = tech_data.get("tp3") if isinstance(tech_data, dict) else None
+                sig_val = tech_data.get("signal") or fund_data.get("signal", "NEUTRAL") if isinstance(tech_data, dict) else "NEUTRAL"
+                setup_val = tech_data.get("setup") or fund_data.get("summary", "") if isinstance(tech_data, dict) else ""
+                
+                pick = {
+                    "ticker": res_ticker,
+                    "conviction": sig_val,
+                    "composite_score": comp_score_val,
+                    "entry_low": entry_l,
+                    "entry_high": entry_h,
+                    "stop_loss": sl,
+                    "target_1": t1,
+                    "target_2": t2,
+                    "target_3": t3,
+                    "position_sizing": "100%",
+                    "thesis": setup_val
+                }
+
+            if pick:
+                # Key Metrics Cards
+                c1, c2, c3, c4 = st.columns(4)
+                conviction = pick.get("conviction", "NEUTRAL")
+                comp_score = pick.get("composite_score", comp_score_val)
+                comp_num = _extract_score(comp_score)
+                
+                with c1:
+                    st.metric("Signal / Conviction", value=str(conviction))
+                with c2:
+                    st.metric("Composite Score", value=f"{comp_num:.2f} / 10" if comp_num else "N/A")
+                with c3:
+                    entry_l = pick.get("entry_low")
+                    entry_h = pick.get("entry_high")
+                    el_num = _extract_score(entry_l)
+                    eh_num = _extract_score(entry_h)
+                    entry_str = f"{el_num:,.0f} - {eh_num:,.0f}" if (entry_l and entry_h) else "N/A"
+                    st.metric("Entry Zone", value=entry_str)
+                with c4:
+                    sl = pick.get("stop_loss")
+                    sl_num = _extract_score(sl)
+                    sl_str = f"{sl_num:,.0f}" if sl else "N/A"
+                    st.metric("Stop Loss", value=sl_str)
+
+                # Target Prices & Sizing
+                st.markdown("### 🎯 Target Prices & Position Sizing")
+                t1_col, t2_col, t3_col, tp_size = st.columns(4)
+                with t1_col:
+                    val_t1 = pick.get("target_1")
+                    t1_num = _extract_score(val_t1)
+                    st.metric("Target 1 (TP1)", value=f"{t1_num:,.0f}" if val_t1 else "N/A")
+                with t2_col:
+                    val_t2 = pick.get("target_2")
+                    t2_num = _extract_score(val_t2)
+                    st.metric("Target 2 (TP2)", value=f"{t2_num:,.0f}" if val_t2 else "N/A")
+                with t3_col:
+                    val_t3 = pick.get("target_3")
+                    t3_num = _extract_score(val_t3)
+                    st.metric("Target 3 (TP3)", value=f"{t3_num:,.0f}" if val_t3 else "N/A")
+                with tp_size:
+                    sizing_val = pick.get("tp_position_sizing") or pick.get("position_sizing", "100%")
+                    st.metric("Position Sizing", value=str(sizing_val))
+
+                # Thesis Summary
+                thesis = pick.get("thesis") or pick.get("entry_reasoning", "")
+                if thesis:
+                    with st.expander("💡 Investment Thesis & Entry Reasoning", expanded=True):
+                        st.markdown(f"> {thesis}")
+
+            # Agent Breakdown Scores
+            st.markdown("### 🤖 Multi-Agent Breakdown Scores")
+            sc1, sc2, sc3, sc4, sc5 = st.columns(5)
+            
+            tech_num = _extract_score(tech_data)
+            bandar_num = _extract_score(bandarm_data) or _extract_score(fund_data)
+            news_num = _extract_score(news_data)
+            macro_num = _extract_score(ticker_scores.get("macro", 0))
+            
+            ml_prob_raw = ml_preds.get(res_ticker, {}).get("probability", 0) if (isinstance(ml_preds, dict) and res_ticker in ml_preds and isinstance(ml_preds[res_ticker], dict)) else 0
+            ml_num = _extract_score(ml_prob_raw)
+            
+            with sc1:
+                st.metric("Technical Score", f"{tech_num:.2f}")
+            with sc2:
+                st.metric("Bandarmologi / Fund", f"{bandar_num:.2f}")
+            with sc3:
+                st.metric("Sentiment Score", f"{news_num:.2f}")
+            with sc4:
+                st.metric("Macro Score", f"{macro_num:.2f}")
+            with sc5:
+                st.metric("ML Swing Prob", f"{ml_num*100:.1f}%")
+
+            # Debate Log Section
+            if debate_log:
+                st.markdown("### ⚔️ Debate Bull vs Bear Agent Log")
+                with st.expander("📜 Lihat Log Perdebatan Bull vs Bear Agent", expanded=False):
+                    for item in debate_log:
+                        agent_name = item.get("agent") or item.get("speaker", "Agent")
+                        content = item.get("content") or item.get("message") or item.get("argument", "")
+                        role = item.get("role", "")
+                        
+                        if "bull" in str(agent_name).lower() or "bull" in str(role).lower():
+                            st.success(f"🟢 **{agent_name}**: {content}")
+                        elif "bear" in str(agent_name).lower() or "bear" in str(role).lower():
+                            st.error(f"🔴 **{agent_name}**: {content}")
+                        else:
+                            st.info(f"⚖️ **{agent_name}**: {content}")
+            
+            st.caption("ℹ️ *Catatan: Data di halaman ini disimpan secara terpisah dalam file JSON di folder `data/single_analysis_results/` dan tidak dimasukkan ke dalam tabel database utama Top Picks harian.*")
+
+        except Exception as err:
+            st.error(f"Gagal membaca file hasil analisis `{latest_file}`: {err}")
+    else:
+        st.info(f"💡 Belum ada hasil analisis tersimpan untuk ticker **{input_ticker}**. Ketik ticker dan klik **▶️ Analisis Sekarang** di atas untuk memulai.")
 
 # === PAGE: Screener ===
 elif page == "🔍 Screener":

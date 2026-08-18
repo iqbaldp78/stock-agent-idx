@@ -1,0 +1,2057 @@
+{
+  "ticker": "BBCA",
+  "timestamp": "2026-08-13T18:08:16.142875",
+  "top_picks": [
+    {
+      "rank": 1,
+      "ticker": "BBCA",
+      "thesis": "Bank Central Asia (BBCA) merupakan pilihan defensif terbaik di tengah kondisi pasar yang volatil berkat kombinasi fundamental yang sangat kokoh dan posisi teknikal yang masih terjaga di atas support krusial. Dari sisi fundamental, BBCA menunjukkan profitabilitas luar biasa tinggi dengan ROE 21,47%, struktur modal yang sangat aman dengan DER hanya 0,01x, serta rekam jejak pertumbuhan jangka panjang yang konsisten dengan CAGR Net Income dan EPS sebesar 10,88% dalam periode 2017-2026. Pendapatan, laba bersih, dan EPS konsisten naik dalam 3 tahun terakhir, didukung oleh kualitas aset yang relatif stabil dengan NPL terkendali dan Cost of Credit (CoC) gross pada 2Q26 di level 0,4%. Manajemen BBCA optimis bahwa Net Interest Margin (NIM) yang sempat tertekan ke 5,3% pada 2Q26 akan pulih di 2H26 seiring peningkatan loan yield akibat kenaikan BI Rate yang telah dimulai sejak Mei 2026, dengan proyeksi NIM tetap bisa mencapai guidance di kisaran 5,4-5,6%. Katalis positif tambahan datang dari dukungan pendanaan konsorsium BBCA dan BMRI untuk ekspansi operasional DEWA (Darma Henwa) senilai ~Rp1 triliun, yang mengonfirmasi posisi BBCA sebagai lender pilihan untuk proyek-proyek ekspansi korporasi besar. Dari sisi teknikal, harga 6.375 saat ini bertahan di atas MA20 (6.372) dan support dinamis MA100 (6.220) dalam pola tren utama yang konsisten sideways. Terbentuknya Golden Cross MA20/MA50 dengan RSI di level 56,0 (area netral) menunjukkan momentum bullish jangka pendek masih terjaga, meskipun MACD masih bearish dan volume transaksi relatif rendah (Vol ratio 5/20 di 0,71). Namun, dari kacamata bandarmologi, terdeteksi tekanan distribusi masif oleh broker institusi asing dalam 7 hari terakhir, dengan AK (UBS Securities) melepas 728.214 lot (avg 6.360) dan BK (JP Morgan) melepas 218.303 lot (avg 6.363), di mana 3 broker penjual teratas menguasai 63,9% dominasi transaksi. Posisi harga saat ini (6.375) berada di atas modal bandar 1 bulan (6.291) sebesar +1,34% dan sudah sedikit melampaui Fair Value base di 6.056 (upside -5,0%, status FAIRLY_VALUED), sehingga margin of safety saat ini belum cukup tebal untuk penambahan posisi agresif. Meskipun demikian, akumulasi 1 bulan masih positif (+749.004 lot) dipimpin DX (BNI Sekuritas) dengan avg 6.291 dan ZP (Maybank Sekuritas) dengan avg 6.321, mengonfirmasi bahwa smart money domestik masih melakukan akumulasi bertahap di level yang lebih rendah. Kombinasi fundamental sangat kuat, posisi teknikal yang masih bertahan di atas support krusial, serta valuasi yang FAIRLY_VALUED membuat BBCA layak dijadikan pilihan utama dengan strategi HOLD untuk investor yang sudah memiliki posisi, dan Buy on Pullback untuk investor baru yang menunggu koreksi ke zona entry ideal di area 6.196-6.322 (mendekati MA20 dan modal bandar 1 bulan). Risiko utama yang perlu dipantau adalah lanjutan aksi distribusi institusi asing, potensi breakdown support MA100 (6.220) jika tekanan makro semakin intensif, serta risiko revisi kuota produksi RKAB 2026 yang dapat mempengaruhi volume pertumbuhan kredit ke sektor pertambangan. Namun, dengan resiliensi fundamental yang sangat tinggi, BBCA tetap menjadi pilihan paling aman di tengah volatilitas pasar saat ini.",
+      "time_horizon": "Positional (4-6 minggu)",
+      "price_prediction": {
+        "current_price": 6375.0,
+        "predictions": {
+          "day_1": {
+            "price": 6407.0,
+            "pct_change": "+0.5%",
+            "price_range": [
+              6215.0,
+              6599.0
+            ]
+          },
+          "day_3": {
+            "price": 6452.0,
+            "pct_change": "+1.2%",
+            "price_range": [
+              6258.0,
+              6645.0
+            ]
+          },
+          "day_5": {
+            "price": 6490.0,
+            "pct_change": "+1.8%",
+            "price_range": [
+              6295.0,
+              6684.0
+            ]
+          },
+          "day_7": {
+            "price": 6522.0,
+            "pct_change": "+2.3%",
+            "price_range": [
+              6326.0,
+              6717.0
+            ]
+          }
+        },
+        "confidence": "MEDIUM",
+        "reasoning": "Prediksi rule-based yang bearish perlu disesuaikan mengingat BBCA memiliki fundamental sangat kuat (ROE 21.47%, DER rendah 0.01x) dan valuasi masih wajar di PER 13.2x. Meskipun skor momentum dan volume menunjukkan sinyal netral-lemah, posisi harga saat ini berada 0.25% di atas cost bandar mingguan dan 1.34% di atas cost bandar bulanan, mengindikasikan masih ada ruang untuk kenaikan terbatas. RSI menunjukkan momentum bullish dan harga bertahan di atas MA20, MA50, dan MA100 yang mengkonfirmasi support kuat di zona 6220-6260. Dengan IHSG yang slightly bullish dan tidak volatil, serta track record pertumbuhan revenue, EPS, dan net income yang konsisten 3 tahun terakhir, BBCA berpotensi sideways-to-slightly-bullish dalam jangka pendek 1-7 hari dengan target konservatif +2-3%.",
+        "key_drivers": [
+          "Fundamental sangat solid: ROE 21.47%, DER rendah 0.01x, pertumbuhan revenue/EPS/net income konsisten 3 tahun",
+          "RSI bullish momentum dan harga bertahan di atas MA20/MA50/MA100 memberikan support teknikal kuat di zona 6220-6260",
+          "Posisi harga masih dekat dengan cost bandar (6359-6291) menunjukkan potensi akumulasi lanjutan oleh institusi",
+          "IHSG slightly bullish dengan volatilitas rendah mendukung pergerakan positif saham big cap perbankan",
+          "Valuasi PER 13.2x masih wajar untuk bank dengan ROE >20%, memberikan margin of safety"
+        ],
+        "risks": [
+          "MACD bearish momentum dan death cross MA50/MA100 serta MA100/MA200 menunjukkan tekanan jangka menengah-panjang yang dapat membatasi upside",
+          "Volume normal (skor 0.4) dan bandarmologi netral (skor 3.5) menandakan kurangnya katalis kuat untuk breakout signifikan",
+          "Harga masih di bawah MA200 (long-term bearish) dan setup teknikal sideways dapat berlanjut tanpa trigger eksternal positif"
+        ],
+        "entry_style": "Buy on Pullback"
+      },
+      "ml_prediction": {
+        "pred_prob": 19.04,
+        "max_pred_prob": 19.04,
+        "predictions_multiday": {
+          "1d": 19.04,
+          "3d": 10.02,
+          "5d": 10.52,
+          "7d": 2.16
+        },
+        "signal": "AVOID",
+        "confidence": "MEDIUM"
+      },
+      "fair_value": {
+        "current_price": 6375.0,
+        "method": "blended",
+        "fair_value_low": 4988.0,
+        "fair_value_base": 6056.0,
+        "fair_value_high": 7451.0,
+        "upside_pct": -5.0,
+        "margin_of_safety_pct": -5.27,
+        "valuation_label": "FAIRLY_VALUED",
+        "methods": {
+          "pe_based": {
+            "available": true,
+            "eps": 481.13,
+            "target_pe": 13.5,
+            "fair_value": 6495.0
+          },
+          "pbv_roe_based": {
+            "available": true,
+            "bvps": 2193.77,
+            "roe_pct": 21.47,
+            "sustainable_growth_pct": 7.98,
+            "required_return_pct": 13.5,
+            "fair_pbv": 2.44,
+            "fair_value": 5363.0
+          },
+          "eps_growth_based": {
+            "available": true,
+            "eps": 481.13,
+            "growth_pct": -0.13,
+            "target_pe": 14.47,
+            "fair_value": 6964.0
+          }
+        },
+        "notes": [
+          "EPS source: derived_from_current_price_per",
+          "BVPS source: info_bvps",
+          "Target PE baseline sektor Keuangan/Bank: 12.5x"
+        ],
+        "confidence": "HIGH"
+      },
+      "pred_return": 0.0,
+      "decision_label": "HOLD",
+      "bandar_context": {
+        "broker_utama": "ZP (Maybank Sekuritas)",
+        "avg_cost_7d": 6359,
+        "avg_cost_1m": 6291,
+        "active_days_1m": "N/A",
+        "distance_current": "+1.3%"
+      },
+      "entry_zone": "6196\u20136372",
+      "max_entry": "6372",
+      "tp1": 6466.0,
+      "tp2": 6743.0,
+      "tp3": 7013.0,
+      "target_1": 6466.0,
+      "target_2": 6743.0,
+      "target_3": 7013.0,
+      "tp1_size": 0.22,
+      "tp2_size": 0.44,
+      "tp3_size": 0.34,
+      "risk_reward_tp1": "1:1.9",
+      "risk_reward_tp2": "1:3.9",
+      "risk_reward_tp3": "1:5.8",
+      "stop_loss": 6056.0,
+      "risk_reward": "1:0.3",
+      "position_strategy": "Exit 22% at TP1, 44% at TP2, 34% at TP3",
+      "position_size": "20% portofolio",
+      "conviction": "MEDIUM",
+      "entry_reasoning": "Zona entry ideal BBCA berada di rentang 6.196-6.372 yang merupakan area konsolidasi teknikal antara support dinamis MA100 (6.220) dan MA20 (6.372), sekaligus mendekati modal rata-rata bandar domestik 1 bulan di 6.291 (ZP Maybank Sekuritas dan DX BNI Sekuritas). Meskipun harga saat ini (6.375) sudah sedikit melampaui batas atas zona entry dan berada di atas Fair Value base (6.056) dengan status FAIRLY_VALUED, posisi harga masih bertahan di atas support krusial MA20 (6.372) yang menandakan struktur bullish jangka pendek masih terjaga. Golden Cross MA20/MA50 dengan RSI di 56,0 (area netral) memberikan konfirmasi bahwa momentum bullish jangka pendek masih berpeluang berlanjut. Namun, terdeteksi tekanan distribusi masif oleh broker institusi asing dalam 7 hari terakhir dengan dominasi transaksi jual mencapai 63,9%, sehingga strategi Buy on Pullback menjadi pilihan paling rasional untuk menunggu koreksi ke area 6.196-6.322 (mendekati MA20 dan modal bandar 1 bulan) yang memberikan margin of safety lebih baik. Target profit TP1 di 6.466 (+1,9x reward) merupakan level resistance Fibonacci pertama, TP2 di 6.743 (+3,9x reward) merupakan level resistance Fibonacci kedua, dan TP3 di 7.013 (+5,8x reward) merupakan area resistance kuat mendekati MA200 (7.072) yang menjadi garis resistansi long-term. Stop Loss ketat di 6.056 (Fair Value base) memberikan risk/reward ratio minimum 1:1,9 yang memadai untuk strategi positional trading. Dengan risk/reward ratio yang solid dan fundamental sangat kuat, BBCA layak diakumulasi secara bertahap di zona entry 6.196-6.372 dengan prioritas Buy on Pullback untuk memaksimalkan margin of safety.",
+      "agent_scores": {
+        "bandarm": {
+          "score": 3.5,
+          "weight": "30%",
+          "contribution": 1.05
+        },
+        "technical": {
+          "score": 7.2,
+          "weight": "22%",
+          "contribution": 1.58
+        },
+        "fundamental": {
+          "score": 8.0,
+          "weight": "22%",
+          "contribution": 1.76
+        },
+        "macro": {
+          "score": 4.5,
+          "weight": "13%",
+          "contribution": 0.58
+        },
+        "composite": 6.06
+      },
+      "bandarm_signal": "NEUTRAL",
+      "broker_to_watch": [
+        "ZP (Maybank Sekuritas)",
+        "RX (Macquarie Securities)"
+      ],
+      "broker_true_costs": {
+        "w7": [
+          {
+            "broker": "ZP",
+            "broker_name": "Maybank Sekuritas",
+            "true_cost": 6359,
+            "total_buy_lot": 817915,
+            "total_buy_value": 520477030000,
+            "active_days": "6/7 hari",
+            "distance_pct": 0.25,
+            "status": "\u26a1 KONSISTEN \u2014 PANTAU KETAT"
+          },
+          {
+            "broker": "RX",
+            "broker_name": "Macquarie Securities",
+            "true_cost": 6358,
+            "total_buy_lot": 271182,
+            "total_buy_value": 173042567500,
+            "active_days": "4/7 hari",
+            "distance_pct": 0.27,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "AZ",
+            "broker_name": "Sucor Sekuritas",
+            "true_cost": 6398,
+            "total_buy_lot": 221555,
+            "total_buy_value": 141807255000,
+            "active_days": "5/7 hari",
+            "distance_pct": -0.36,
+            "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+          },
+          {
+            "broker": "XL",
+            "broker_name": "Stockbit Sekuritas",
+            "true_cost": 6339,
+            "total_buy_lot": 135541,
+            "total_buy_value": 85419195000,
+            "active_days": "3/7 hari",
+            "distance_pct": 0.57,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "SQ",
+            "broker_name": "BCA Sekuritas",
+            "true_cost": 6325,
+            "total_buy_lot": 90902,
+            "total_buy_value": 56737592500,
+            "active_days": "3/7 hari",
+            "distance_pct": 0.79,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "OD",
+            "broker_name": "BRI Danareksa Sekuritas",
+            "true_cost": 6339,
+            "total_buy_lot": 68919,
+            "total_buy_value": 43535165000,
+            "active_days": "4/7 hari",
+            "distance_pct": 0.57,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "YP",
+            "broker_name": "Mirae Asset Sekuritas",
+            "true_cost": 6348,
+            "total_buy_lot": 57809,
+            "total_buy_value": 36674792500,
+            "active_days": "3/7 hari",
+            "distance_pct": 0.43,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "GR",
+            "broker_name": "Goldman Sachs",
+            "true_cost": 6338,
+            "total_buy_lot": 49345,
+            "total_buy_value": 31203705000,
+            "active_days": "3/7 hari",
+            "distance_pct": 0.58,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "XC",
+            "broker_name": "Ajaib Sekuritas",
+            "true_cost": 6344,
+            "total_buy_lot": 28395,
+            "total_buy_value": 17885517500,
+            "active_days": "3/7 hari",
+            "distance_pct": 0.49,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "DP",
+            "broker_name": "Dinar Sekuritas",
+            "true_cost": 6314,
+            "total_buy_lot": 22796,
+            "total_buy_value": 14368625000,
+            "active_days": "1/7 hari",
+            "distance_pct": 0.97,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          }
+        ],
+        "w1m": [
+          {
+            "broker": "DX",
+            "broker_name": "BNI Sekuritas",
+            "true_cost": 6291,
+            "total_buy_lot": 4552165,
+            "total_buy_value": 2864077797500,
+            "active_days": "20/30 hari",
+            "distance_pct": 1.34,
+            "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+          },
+          {
+            "broker": "ZP",
+            "broker_name": "Maybank Sekuritas",
+            "true_cost": 6321,
+            "total_buy_lot": 2782731,
+            "total_buy_value": 1771688675000,
+            "active_days": "19/30 hari",
+            "distance_pct": 0.85,
+            "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+          },
+          {
+            "broker": "KZ",
+            "broker_name": "Daewoo Securities",
+            "true_cost": 6173,
+            "total_buy_lot": 1084531,
+            "total_buy_value": 665424035000,
+            "active_days": "14/30 hari",
+            "distance_pct": 3.27,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "RX",
+            "broker_name": "Macquarie Securities",
+            "true_cost": 6309,
+            "total_buy_lot": 511684,
+            "total_buy_value": 322173272500,
+            "active_days": "15/30 hari",
+            "distance_pct": 1.05,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "AZ",
+            "broker_name": "Sucor Sekuritas",
+            "true_cost": 6294,
+            "total_buy_lot": 197646,
+            "total_buy_value": 123172190000,
+            "active_days": "14/30 hari",
+            "distance_pct": 1.29,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "IF",
+            "broker_name": "Samuel Sekuritas",
+            "true_cost": 6228,
+            "total_buy_lot": 165016,
+            "total_buy_value": 102738865000,
+            "active_days": "10/30 hari",
+            "distance_pct": 2.36,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "PD",
+            "broker_name": "Indo Premier Sekuritas",
+            "true_cost": 6274,
+            "total_buy_lot": 71139,
+            "total_buy_value": 41883790000,
+            "active_days": "10/30 hari",
+            "distance_pct": 1.61,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "TP",
+            "broker_name": "OCBC Sekuritas",
+            "true_cost": 6338,
+            "total_buy_lot": 47636,
+            "total_buy_value": 30039287500,
+            "active_days": "7/30 hari",
+            "distance_pct": 0.58,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "DP",
+            "broker_name": "Dinar Sekuritas",
+            "true_cost": 6337,
+            "total_buy_lot": 23988,
+            "total_buy_value": 15068492500,
+            "active_days": "3/30 hari",
+            "distance_pct": 0.6,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "OD",
+            "broker_name": "BRI Danareksa Sekuritas",
+            "true_cost": 6297,
+            "total_buy_lot": 18430,
+            "total_buy_value": 11361917500,
+            "active_days": "12/30 hari",
+            "distance_pct": 1.24,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          }
+        ]
+      },
+      "broker_distributors": {
+        "w7": [
+          {
+            "broker": "AK",
+            "broker_name": "UBS Securities",
+            "avg_sell": 6360,
+            "total_sell_lot": 728214,
+            "total_sell_value": 462568562500,
+            "active_days": "6/7 hari",
+            "distance_pct": 0.24,
+            "status": "\u26a0\ufe0f DISTRIBUSI KONSISTEN"
+          },
+          {
+            "broker": "BK",
+            "broker_name": "JP Morgan",
+            "avg_sell": 6363,
+            "total_sell_lot": 218303,
+            "total_sell_value": 138567907500,
+            "active_days": "4/7 hari",
+            "distance_pct": 0.19,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "NI",
+            "broker_name": "BNI Sekuritas",
+            "avg_sell": 6377,
+            "total_sell_lot": 199720,
+            "total_sell_value": 127568560000,
+            "active_days": "3/7 hari",
+            "distance_pct": -0.03,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "BB",
+            "broker_name": "Verdhana Sekuritas",
+            "avg_sell": 6377,
+            "total_sell_lot": 167396,
+            "total_sell_value": 106749780000,
+            "active_days": "6/7 hari",
+            "distance_pct": -0.03,
+            "status": "\u26a0\ufe0f DISTRIBUSI KONSISTEN"
+          },
+          {
+            "broker": "LG",
+            "broker_name": "Trimegah Sekuritas",
+            "avg_sell": 6366,
+            "total_sell_lot": 113586,
+            "total_sell_value": 72443997500,
+            "active_days": "4/7 hari",
+            "distance_pct": 0.14,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "KZ",
+            "broker_name": "Daewoo Securities",
+            "avg_sell": 6357,
+            "total_sell_lot": 104290,
+            "total_sell_value": 66275295000,
+            "active_days": "4/7 hari",
+            "distance_pct": 0.28,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "CC",
+            "broker_name": "Mandiri Sekuritas",
+            "avg_sell": 6360,
+            "total_sell_lot": 103165,
+            "total_sell_value": 63942692500,
+            "active_days": "4/7 hari",
+            "distance_pct": 0.24,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "DX",
+            "broker_name": "BNI Sekuritas",
+            "avg_sell": 6265,
+            "total_sell_lot": 70372,
+            "total_sell_value": 44030202500,
+            "active_days": "3/7 hari",
+            "distance_pct": 1.76,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "DR",
+            "broker_name": "RHB Sekuritas",
+            "avg_sell": 6397,
+            "total_sell_lot": 54909,
+            "total_sell_value": 35249760000,
+            "active_days": "3/7 hari",
+            "distance_pct": -0.34,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "AG",
+            "broker_name": "Alindo Sekuritas",
+            "avg_sell": 6396,
+            "total_sell_lot": 36616,
+            "total_sell_value": 23578355000,
+            "active_days": "1/7 hari",
+            "distance_pct": -0.33,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          }
+        ],
+        "w1m": [
+          {
+            "broker": "BK",
+            "broker_name": "JP Morgan",
+            "avg_sell": 6292,
+            "total_sell_lot": 3452107,
+            "total_sell_value": 2151305850000,
+            "active_days": "18/30 hari",
+            "distance_pct": 1.32,
+            "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+          },
+          {
+            "broker": "AK",
+            "broker_name": "UBS Securities",
+            "avg_sell": 6289,
+            "total_sell_lot": 1566536,
+            "total_sell_value": 985346307500,
+            "active_days": "20/30 hari",
+            "distance_pct": 1.37,
+            "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+          },
+          {
+            "broker": "CC",
+            "broker_name": "Mandiri Sekuritas",
+            "avg_sell": 6287,
+            "total_sell_lot": 1259605,
+            "total_sell_value": 788181635000,
+            "active_days": "19/30 hari",
+            "distance_pct": 1.4,
+            "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+          },
+          {
+            "broker": "BB",
+            "broker_name": "Verdhana Sekuritas",
+            "avg_sell": 6239,
+            "total_sell_lot": 679716,
+            "total_sell_value": 421437697500,
+            "active_days": "13/30 hari",
+            "distance_pct": 2.18,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "YP",
+            "broker_name": "Mirae Asset Sekuritas",
+            "avg_sell": 6303,
+            "total_sell_lot": 337289,
+            "total_sell_value": 214738027500,
+            "active_days": "16/30 hari",
+            "distance_pct": 1.14,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "XL",
+            "broker_name": "Stockbit Sekuritas",
+            "avg_sell": 6307,
+            "total_sell_lot": 334794,
+            "total_sell_value": 213359965000,
+            "active_days": "13/30 hari",
+            "distance_pct": 1.08,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "NI",
+            "broker_name": "BNI Sekuritas",
+            "avg_sell": 6327,
+            "total_sell_lot": 325327,
+            "total_sell_value": 207660772500,
+            "active_days": "13/30 hari",
+            "distance_pct": 0.76,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "YU",
+            "broker_name": "CIMB Sekuritas",
+            "avg_sell": 6304,
+            "total_sell_lot": 285100,
+            "total_sell_value": 194775942500,
+            "active_days": "17/30 hari",
+            "distance_pct": 1.13,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "SQ",
+            "broker_name": "BCA Sekuritas",
+            "avg_sell": 6324,
+            "total_sell_lot": 295879,
+            "total_sell_value": 191309067500,
+            "active_days": "16/30 hari",
+            "distance_pct": 0.81,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "AI",
+            "broker_name": "UOB Kay Hian Sekuritas",
+            "avg_sell": 6321,
+            "total_sell_lot": 169609,
+            "total_sell_value": 107334955000,
+            "active_days": "5/30 hari",
+            "distance_pct": 0.85,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          }
+        ]
+      },
+      "weight_mode": "big_cap",
+      "composite_score": 6.06,
+      "final_score": 4.76
+    }
+  ],
+  "debate_log": [
+    {
+      "round": 1,
+      "ticker": "MARKET",
+      "agent": "macro",
+      "argument": "Kondisi makroekonomi domestik berada dalam tekanan signifikan dengan tingkat risiko pasar tinggi (Market Risk HIGH) serta pelemahan Rupiah yang tajam ke level 17.872,58 per USD (WEAK_IDR). Meskipun IHSG masih berada 0,51% di atas MA20, IHSG terkoreksi -1,13% ke level 6301.765. Prospek sektoral mayoritas netral dan sektor properti berprospek negatif, diperberat oleh tren penurunan harga minyak dunia (-2,07%). Kombinasi pelemahan IDR dan tingginya risiko pasar memicu kondisi risk-off yang berpotensi menekan kinerja emiten serta arus modal.",
+      "vote": "SELL"
+    },
+    {
+      "round": 1,
+      "ticker": "BBCA",
+      "agent": "technical",
+      "argument": "Struktur pergerakan harga BBCA saat ini berada dalam tren konsolidasi (sideways) pada level 6375.0, tertahan di antara area MA20 (6372) dan garis resistance long-term MA200 (7072). Meskipun terbentuk Golden Cross MA20/MA50 dengan RSI di level 56.0, indikator MACD masih mencatatkan momentum bearish didukung oleh volume transaksi yang relatif rendah (Vol ratio 5/20 di 0.71). Dari sisi valuasi, harga saat ini sudah tergolong FAIRLY_VALUED karena berada di atas Fair Value Base (6056.0). Tanpa adanya konfirmasi breakout ber-volume tinggi melampaui resistansi terdekat menuju TP1 6466.0 maupun TP3 7013.0, opsi teknikal yang paling prudent adalah HOLD di dalam area entry zone 6196-6372 dengan Stop Loss ketat di 6056.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "BBCA",
+      "agent": "bandarmologi",
+      "argument": "Terdeteksi tekanan distribusi masif oleh broker institusi pada saham BBCA. Dalam kurun 7 hari terakhir, AK (UBS Securities) melakukan penjualan terbesar mencapai 728.214 lot (avg 6.360) dan BK (JP Morgan) melepas 218.303 lot (avg 6.363), di mana 3 broker penjual teratas menguasai 63,9% dominasi transaksi. Dalam jendela 1 bulan, BK tercatat melakukan akumulasi distribusi hingga 3.452.107 lot (avg 6.292). Posisi harga saat ini (6.375) berada di atas modal bandar 1 bulan (6.291) dan sudah melampaui batas Fair Value fundamental base di 6.056 (upside -5,0%), sehingga berisiko tinggi terhadap aksi profit taking lanjutan.",
+      "vote": "SELL"
+    },
+    {
+      "round": 1,
+      "ticker": "BBCA",
+      "agent": "fundamental",
+      "argument": "BBCA menunjukkan kinerja fundamental yang sangat solid dengan profitabilitas tinggi (ROE 21.47%), struktur modal yang sangat aman (DER 0.01x), serta rekam jejak pertumbuhan jangka panjang yang konsisten (CAGR Net Income dan EPS sebesar 10.88%). Pendapatan, laba bersih, dan EPS konsisten naik dalam 3 tahun terakhir. Namun, dari segi valuasi dengan metode blended valuation, Fair Value BBCA berada di level 6,056 per saham dengan status FAIRLY_VALUED. Dengan harga pasar saat ini di 6,375.0 (potensi upside -5.00% dan margin of safety -5.27%), harga saham saat ini sudah mencerminkan nilai wajarnya secara penuh. Meskipun kinerjanya sangat prima, tidak adanya margin of safety yang memadai membuat posisi HOLD menjadi pilihan paling bijak.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 2,
+      "ticker": "BBCA",
+      "agent": "bandarmologi",
+      "argument": "Saya menyetujui rekomendasi HOLD dari analis teknikal dan fundamental, namun memberikan peringatan keras dari kacamata bandarmologi. Meskipun akumulasi 1 bulan masih positif (+749.004 lot) dipimpin DX (avg 6.291), data 7 hari terakhir menunjukkan distribusi masif dari broker asing seperti AK UBS (728.214 lot) dan BK JP Morgan (218.303 lot) dengan dominasi transaksi jual mencapai 63,9%. Mengingat harga saat ini (6.375) berada di atas Fair Value base (6.056) dan di atas avg cost bandar 1M (6.291), aksi distribusi 7 hari terakhir ini menjadi konfirmasi bahwa smart money mulai melakukan profit taking. Keputusan HOLD sangat tepat untuk menghindari jebakan beli di harga tinggi.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 2,
+      "ticker": "BBCA",
+      "agent": "technical",
+      "argument": "Saya menyetujui rekomendasi HOLD dari Fundamental dan sanggahan terhadap sinyal SELL dari Bandarmologi karena struktur teknikal BBCA belum mengonfirmasi terjadinya breakdown support. Meskipun terdeteksi aksi distribusi institusi, harga 6.375 saat ini masih bertahan di atas MA20 (6372) dan support dinamis MA100 (6220) dalam pola tren utama yang konsisten sideways. RSI di 56.0 berada di area netral, namun MACD bearish dan rasio volume yang masih rendah (0.71) mengonfirmasi belum adanya konfirmasi breakout dengan volume memadai. Posisi harga yang sudah sedikit melampaui Fair Value base di 6.056 (upside -5.0%) juga membatasi potensi kenaikan agresif. Oleh karena itu, tindakan paling rasional adalah HOLD hingga ada konfirmasi arah dari area konsolidasi 6.196-6.372.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 2,
+      "ticker": "BBCA",
+      "agent": "fundamental",
+      "argument": "Saya membantah keras rekomendasi SELL dari Bandarmologi. Mengusulkan SELL pada saham berfundamental kuat seperti BBCA hanya karena tekanan akumulasi distribusi jangka pendek institusi adalah tindakan prematur. BBCA memiliki profitabilitas sangat tinggi dengan ROE 21.47%, leverage hampir nol (DER 0.01x), serta rekam jejak CAGR Net Income 10.88%. Di sisi lain, saya sepakat dengan keputusan HOLD dari Technical. Dengan harga saat ini di 6.375,0 yang berada sedikit di atas Fair Value Base 6.056,0 (upside -5.00%, FAIRLY_VALUED), margin of safety saat ini belum cukup tebal untuk penambahan posisi BUY baru, meskipun Fair Value High mencapai 7.451,0. Oleh karena itu, posisi fundamental yang paling rasional adalah HOLD.",
+      "vote": "HOLD"
+    }
+  ],
+  "composites": {
+    "BBCA": {
+      "ticker": "BBCA",
+      "composite_score": 6.06,
+      "weights_used": {
+        "bandarm": 0.3,
+        "technical": 0.22,
+        "fundamental": 0.22,
+        "macro": 0.13,
+        "news": 0.13
+      },
+      "weight_mode": "big_cap",
+      "sector": "Financial Services",
+      "usdidr_adj": 0.0,
+      "usdidr_narrative": "",
+      "breakdown": {
+        "bandarm": {
+          "score": 3.5,
+          "weight": 0.3,
+          "contribution": 1.05
+        },
+        "technical": {
+          "score": 7.2,
+          "weight": 0.22,
+          "contribution": 1.58
+        },
+        "fundamental": {
+          "score": 8.0,
+          "weight": 0.22,
+          "contribution": 1.76
+        },
+        "macro": {
+          "score": 4.5,
+          "weight": 0.13,
+          "contribution": 0.58
+        },
+        "news": {
+          "score": 8.3,
+          "weight": 0.13,
+          "contribution": 1.08
+        }
+      }
+    }
+  },
+  "scores": {
+    "BBCA": {
+      "bandarm": {
+        "ticker": "BBCA",
+        "score": 3.5,
+        "signal": "NEUTRAL",
+        "weight": "40%",
+        "window_7d": {
+          "period": "2026-08-05 s/d 2026-08-13",
+          "bandar_signal": "Strong Accumulation",
+          "assessment": "Strong Accumulation",
+          "net_lot": -32212,
+          "net_value": -19823667500,
+          "total_buyer": 10,
+          "total_seller": 10,
+          "top_accumulators": [
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "total_buy_lot": 817915,
+              "total_buy_value": 520477030000,
+              "avg_price": 6359,
+              "active_days": "6/7 hari",
+              "status": "\u26a1 KONSISTEN \u2014 PANTAU KETAT",
+              "distance_pct": 0.2516118886617393
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_buy_lot": 271182,
+              "total_buy_value": 173042567500,
+              "avg_price": 6358,
+              "active_days": "4/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.267379679144385
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "total_buy_lot": 221555,
+              "total_buy_value": 141807255000,
+              "avg_price": 6398,
+              "active_days": "5/7 hari",
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI",
+              "distance_pct": -0.3594873397936855
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "total_buy_lot": 135541,
+              "total_buy_value": 85419195000,
+              "avg_price": 6339,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.5679129200189305
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "total_buy_lot": 90902,
+              "total_buy_value": 56737592500,
+              "avg_price": 6325,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.7905138339920948
+            },
+            {
+              "broker": "OD",
+              "broker_name": "BRI Danareksa Sekuritas",
+              "total_buy_lot": 68919,
+              "total_buy_value": 43535165000,
+              "avg_price": 6339,
+              "active_days": "4/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.5679129200189305
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "total_buy_lot": 57809,
+              "total_buy_value": 36674792500,
+              "avg_price": 6348,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.42533081285444235
+            },
+            {
+              "broker": "GR",
+              "broker_name": "Goldman Sachs",
+              "total_buy_lot": 49345,
+              "total_buy_value": 31203705000,
+              "avg_price": 6338,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.5837803723572105
+            },
+            {
+              "broker": "XC",
+              "broker_name": "Ajaib Sekuritas",
+              "total_buy_lot": 28395,
+              "total_buy_value": 17885517500,
+              "avg_price": 6344,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 0.48865069356872637
+            },
+            {
+              "broker": "DP",
+              "broker_name": "Dinar Sekuritas",
+              "total_buy_lot": 22796,
+              "total_buy_value": 14368625000,
+              "avg_price": 6314,
+              "active_days": "1/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 0.9661070636680393
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_sell_lot": 728214,
+              "total_sell_value": 462568562500,
+              "avg_price": 6360,
+              "active_days": "6/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI KONSISTEN"
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_sell_lot": 218303,
+              "total_sell_value": 138567907500,
+              "avg_price": 6363,
+              "active_days": "4/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "total_sell_lot": 199720,
+              "total_sell_value": 127568560000,
+              "avg_price": 6377,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "total_sell_lot": 167396,
+              "total_sell_value": 106749780000,
+              "avg_price": 6377,
+              "active_days": "6/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI KONSISTEN"
+            },
+            {
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "total_sell_lot": 113586,
+              "total_sell_value": 72443997500,
+              "avg_price": 6366,
+              "active_days": "4/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_sell_lot": 104290,
+              "total_sell_value": 66275295000,
+              "avg_price": 6357,
+              "active_days": "4/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_sell_lot": 103165,
+              "total_sell_value": 63942692500,
+              "avg_price": 6360,
+              "active_days": "4/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "DX",
+              "broker_name": "BNI Sekuritas",
+              "total_sell_lot": 70372,
+              "total_sell_value": 44030202500,
+              "avg_price": 6265,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "DR",
+              "broker_name": "RHB Sekuritas",
+              "total_sell_lot": 54909,
+              "total_sell_value": 35249760000,
+              "avg_price": 6397,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AG",
+              "broker_name": "Alindo Sekuritas",
+              "total_sell_lot": 36616,
+              "total_sell_value": 23578355000,
+              "avg_price": 6396,
+              "active_days": "1/7 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_7d": 0
+        },
+        "window_1m": {
+          "period": "2026-07-03 s/d 2026-08-13",
+          "bandar_signal": "Moderate Accumulation",
+          "assessment": "Moderate Accumulation",
+          "net_lot": 749004,
+          "net_value": 472178102500,
+          "total_buyer": 10,
+          "total_seller": 10,
+          "top_accumulators": [
+            {
+              "broker": "DX",
+              "broker_name": "BNI Sekuritas",
+              "total_buy_lot": 4552165,
+              "total_buy_value": 2864077797500,
+              "avg_price": 6291,
+              "active_days": "20/30 hari",
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI",
+              "distance_pct": 1.335240820219361
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "total_buy_lot": 2782731,
+              "total_buy_value": 1771688675000,
+              "avg_price": 6321,
+              "active_days": "19/30 hari",
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI",
+              "distance_pct": 0.8542952064546749
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_buy_lot": 1084531,
+              "total_buy_value": 665424035000,
+              "avg_price": 6173,
+              "active_days": "14/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 3.2723149198120844
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_buy_lot": 511684,
+              "total_buy_value": 322173272500,
+              "avg_price": 6309,
+              "active_days": "15/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 1.0461245839277222
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "total_buy_lot": 197646,
+              "total_buy_value": 123172190000,
+              "avg_price": 6294,
+              "active_days": "14/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 1.2869399428026693
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Samuel Sekuritas",
+              "total_buy_lot": 165016,
+              "total_buy_value": 102738865000,
+              "avg_price": 6228,
+              "active_days": "10/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 2.3603082851637764
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Indo Premier Sekuritas",
+              "total_buy_lot": 71139,
+              "total_buy_value": 41883790000,
+              "avg_price": 6274,
+              "active_days": "10/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 1.6098182977366913
+            },
+            {
+              "broker": "TP",
+              "broker_name": "OCBC Sekuritas",
+              "total_buy_lot": 47636,
+              "total_buy_value": 30039287500,
+              "avg_price": 6338,
+              "active_days": "7/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 0.5837803723572105
+            },
+            {
+              "broker": "DP",
+              "broker_name": "Dinar Sekuritas",
+              "total_buy_lot": 23988,
+              "total_buy_value": 15068492500,
+              "avg_price": 6337,
+              "active_days": "3/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 0.5996528325706171
+            },
+            {
+              "broker": "OD",
+              "broker_name": "BRI Danareksa Sekuritas",
+              "total_buy_lot": 18430,
+              "total_buy_value": 11361917500,
+              "avg_price": 6297,
+              "active_days": "12/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 1.2386850881372082
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_sell_lot": 3452107,
+              "total_sell_value": 2151305850000,
+              "avg_price": 6292,
+              "active_days": "18/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_sell_lot": 1566536,
+              "total_sell_value": 985346307500,
+              "avg_price": 6289,
+              "active_days": "20/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_sell_lot": 1259605,
+              "total_sell_value": 788181635000,
+              "avg_price": 6287,
+              "active_days": "19/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "total_sell_lot": 679716,
+              "total_sell_value": 421437697500,
+              "avg_price": 6239,
+              "active_days": "13/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "total_sell_lot": 337289,
+              "total_sell_value": 214738027500,
+              "avg_price": 6303,
+              "active_days": "16/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "total_sell_lot": 334794,
+              "total_sell_value": 213359965000,
+              "avg_price": 6307,
+              "active_days": "13/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "total_sell_lot": 325327,
+              "total_sell_value": 207660772500,
+              "avg_price": 6327,
+              "active_days": "13/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_sell_lot": 285100,
+              "total_sell_value": 194775942500,
+              "avg_price": 6304,
+              "active_days": "17/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "total_sell_lot": 295879,
+              "total_sell_value": 191309067500,
+              "avg_price": 6324,
+              "active_days": "16/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "total_sell_lot": 169609,
+              "total_sell_value": 107334955000,
+              "avg_price": 6321,
+              "active_days": "5/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_1m": 0
+        },
+        "price_analysis": {
+          "current_price": 6375.0,
+          "bandar_avg_7d": 6359,
+          "bandar_avg_1m": 6291,
+          "distance_from_7d": "+0.25%",
+          "distance_from_1m": "+1.34%",
+          "ideal_entry_zone": "6260\u20136322",
+          "max_entry": "6486",
+          "entry_status": "\ud83d\udfe1 ACCEPTABLE",
+          "entry_label": "Harga 0.3% di atas cost bandar mingguan \u2014 layak entry",
+          "net_foreign_7d": "netral",
+          "net_foreign_1m": "netral",
+          "anomali_akumulasi_7d": null,
+          "anomali_akumulasi_1m": null,
+          "anomali_distribusi_7d": null,
+          "anomali_distribusi_1m": null
+        },
+        "broker_to_watch": [
+          "ZP (Maybank Sekuritas)",
+          "RX (Macquarie Securities)"
+        ],
+        "data_used": [
+          "Stockbit broker summary 7H & 1M",
+          "Akumulasi konsisten 1M tapi mulai ada distribusi kecil minggu ini",
+          "Distribution 7H: Dist, Top3 sell >= 30% value",
+          "Distribution 1M: Top3 sell >= 30% value",
+          "Konsentrasi Beli (75%) vs Jual (64%) -> Imbang (Netral)",
+          "Dominance 63.9% (>40) + Dist -> Penalti -1.0"
+        ],
+        "confidence": "MEDIUM",
+        "insight_concentration": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_aggressiveness": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_fomo_trap": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_dominance": {
+          "type": "risk",
+          "narrative": "\u26a0\ufe0f Distribusi Masif: 63.9% transaksi pasar dikendalikan 3 broker yang membuang barang. Risiko SANGAT TINGGI."
+        }
+      },
+      "technical": {
+        "ticker": "BBCA",
+        "score": 7.2,
+        "current_price": 6375.0,
+        "signal": "HOLD",
+        "trend": "sideways",
+        "setup": "RSI bullish momentum; Harga mendekati MA100 (support kuat di 6220); Harga di atas MA20 (short-term bullish); Harga di atas MA50 (mid-term bullish); Harga di atas MA100 (intermediate-term bullish); Harga di bawah MA200 (long-term bearish); Golden cross MA20/MA50; Death cross MA50/MA100 (mid-intermediate bearish); Death cross MA100/MA200 (intermediate-long bearish); MACD bearish momentum; Volume normal; Trend utama: sideways (harga di antara MA major)",
+        "entry_zone": "6196-6372",
+        "entry_low": 6196.0,
+        "entry_high": 6372.0,
+        "target": "7013",
+        "stop_loss": "6056",
+        "support_near": null,
+        "resistance_near": null,
+        "support_strong": null,
+        "resistance_strong": null,
+        "divergence": {
+          "rsi": "none",
+          "macd": "none"
+        },
+        "candlestick_patterns": [],
+        "data_used": [
+          "RSI: 56.0",
+          "MA20: 6372",
+          "MA50: 6107",
+          "MA100: 6220",
+          "MA200: 7072",
+          "MACD: bearish",
+          "Vol ratio 5/20: 0.71",
+          "52W pos: 37%",
+          "Trend: sideways (0)"
+        ],
+        "confidence": "HIGH",
+        "tradingview_ta": {
+          "error": "Can't access TradingView's API. HTTP status code: 429. Check for invalid symbol, exchange, or indicators."
+        },
+        "tp1": 6466.0,
+        "tp2": 6743.0,
+        "tp3": 7013.0,
+        "tp1_size": 0.22,
+        "tp2_size": 0.44,
+        "tp3_size": 0.34,
+        "risk_reward_tp1": "1:1.9",
+        "risk_reward_tp2": "1:3.9",
+        "risk_reward_tp3": "1:5.8",
+        "tp_constraints_met": true
+      },
+      "fundamental": {
+        "ticker": "BBCA",
+        "score": 8.0,
+        "signal": "BUY",
+        "key_points": [
+          "PER 13.2x \u2014 valuasi wajar",
+          "ROE 21.47% \u2014 sangat baik",
+          "DER 0.01x \u2014 leverage rendah",
+          "Net income konsisten naik 3 tahun terakhir",
+          "EPS konsisten naik 3 tahun terakhir",
+          "Revenue konsisten naik 3 tahun terakhir"
+        ],
+        "risks": [
+          "Payout ratio sangat tinggi: 6282.0%"
+        ],
+        "data_used": [
+          "PER: 13.2x",
+          "PBV: 2.89x",
+          "ROE: 21.47%",
+          "DER: 0.01x",
+          "Revenue Growth: 3.1%",
+          "Earnings Growth: -0.1%",
+          "Rata-rata Net Income 3 tahun: 57,147",
+          "Rata-rata EPS 3 tahun: 463.58",
+          "Rata-rata Revenue 3 tahun: 118,548",
+          "Rata-rata Dividend Yield 5 tahun: 4.85%",
+          "Dividend Payout Ratio: 6282.0%",
+          "Fair Value: 6,056 (FAIRLY_VALUED)",
+          "Upside to fair value: -5.00%",
+          "CAGR Revenue: 7.62% (2017\u20132026)",
+          "CAGR Net Income: 10.88% (2017\u20132026)",
+          "CAGR Eps: 10.88% (2017\u20132026)"
+        ],
+        "fair_value": {
+          "current_price": 6375.0,
+          "method": "blended",
+          "fair_value_low": 4988.0,
+          "fair_value_base": 6056.0,
+          "fair_value_high": 7451.0,
+          "upside_pct": -5.0,
+          "margin_of_safety_pct": -5.27,
+          "valuation_label": "FAIRLY_VALUED",
+          "methods": {
+            "pe_based": {
+              "available": true,
+              "eps": 481.13,
+              "target_pe": 13.5,
+              "fair_value": 6495.0
+            },
+            "pbv_roe_based": {
+              "available": true,
+              "bvps": 2193.77,
+              "roe_pct": 21.47,
+              "sustainable_growth_pct": 7.98,
+              "required_return_pct": 13.5,
+              "fair_pbv": 2.44,
+              "fair_value": 5363.0
+            },
+            "eps_growth_based": {
+              "available": true,
+              "eps": 481.13,
+              "growth_pct": -0.13,
+              "target_pe": 14.47,
+              "fair_value": 6964.0
+            }
+          },
+          "notes": [
+            "EPS source: derived_from_current_price_per",
+            "BVPS source: info_bvps",
+            "Target PE baseline sektor Keuangan/Bank: 12.5x"
+          ],
+          "confidence": "HIGH"
+        },
+        "confidence": "HIGH"
+      },
+      "news": {
+        "ticker": "BBCA",
+        "score": 8.3,
+        "summary": "Sentimen pasar (6 berita) untuk BBCA cenderung positif (score: 8.3).",
+        "articles": [
+          {
+            "title": "[NEWS] Darma Henwa (DEWA) mempertahankan outlook positif untuk semester kedua 2026, didorong oleh dimulainya operasional tambang PT Sebuku Sejaka Coal, potensi kontrak baru di luar grup BUMI, serta potensi ekspansi margin laba kotor. Meskipun terdapat risiko terkait revisi kuota produksi RKAB, perusahaan telah mengamankan dukungan pendanaan perbankan (BBCA, BMRI) untuk ekspansi operasionalnya.",
+            "description": "\ud83d\udcf0 DEWA 2Q26 Earnings Call: Outlook 2H26 Positif seiring Penambahan Kontrak Kerja\n\nDarma Henwa ([%HnyT%]) pada Selasa (11/8) mengadakan earnings call untuk membahas kinerja 1H26, sekaligus memberikan outlook kinerja 2H26. Berikut beberapa catatan penting kami:\n\nPenjelasan Manajemen Terkait One\u2013off pada 2Q26\n\n\u25aa\ufe0f Manajemen DEWA menjelaskan bahwa meningkatnya nilai wajar investasi saham pada 2Q26 terkait dengan investasi pada PT Pendopo Energi Batubara, yang disebabkan oleh menguatnya dolar AS terhadap rupiah dari level saat penilaian terakhir dilakukan pada 2020. Penilaian tersebut dilakukan seiring dengan bergantinya auditor perseroan, dengan penilaian berikutnya diperkirakan dilakukan setiap 3 tahun.\n\nUpdate Pekerjaan untuk PT Sebuku Sejaka Coal\n\n\u25aa\ufe0f DEWA telah memulai aktivitas pengeboran untuk tambang PT Sebuku Sejaka Coal pada awal Agustus 2026.\n\n\u25aa\ufe0f Manajemen menjelaskan bahwa ruang lingkup pekerjaan yang dilakukan di tambang PT Sebuku Sejaka Coal akan lebih luas dibandingkan pengerjaan di anak usaha Bumi Resources ([%paWh%]), yakni PT Arutmin Indonesia dan PT Kaltim Prima Coal, karena mencakup land clearing, maintenance infrastruktur, dan blasting, selain overburden removal dan coal digging.\n\n\u25aa\ufe0f Cakupan pekerjaan yang lebih luas di tambang PT Sebuku Sejaka Coal mengimplikasikan pendapatan per bcm yang lebih tinggi, tetapi belum tentu tercermin pada kenaikan margin.\n\n\u25aa\ufe0f Capex untuk PT Sebuku Sejaka Coal diperkirakan mencapai ~Rp1 T, yang akan didanai sebagian oleh utang bank dari konsorsium Bank Central Asia ([%dRGd%]) dan Bank Mandiri (BMRI), serta vendor financing. \n\nOutlook 2H26 Positif: Didorong Volume dibandingkan Tarif\n\n\u25aa\ufe0f Kami tetap mempertahankan outlook positif untuk DEWA selama 2H26, seiring dengan: 1) potensi penambahan kontrak pengerjaan di luar grup BUMI; 2) ekspansi margin laba kotor seiring dengan proporsi pengerjaan internal yang akan mencapai 100%; serta 3) harga batu bara yang tetap terjaga pada level tinggi.\n\n\u25aa\ufe0f Dari sisi tarif pengerjaan, manajemen mengekspektasikan realisasi yang flat pada tahun ini untuk proyek PT Arutmin Indonesia dan PT Kaltim Prima Coal, tetapi tarif konsolidasi berpotensi sedikit meningkat seiring dengan dimulainya pengerjaan kontrak PT Sebuku Sejaka Coal yang diperkirakan memiliki tarif lebih tinggi.\n\n\u25aa\ufe0f Risiko utama tetap terletak pada hasil revisi kuota produksi RKAB 2026, yang akan mempengaruhi volume pertambangan dari klien DEWA.\n\nBaca ulasan kami terkait kinerja DEWA pada 2Q26/1H26 di sini [[%BqMa%]].\n\n------\nEverson Sugianto ([%BXyh%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-12 02:30:21.502487+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] Laporan bulanan registrasi pemegang efek BBCA menunjukkan struktur kepemilikan saham yang stabil, dengan pengendali PT Dwimuria Investama Andalan memegang 54,942% dan porsi publik sebesar 42,46%. Evaluasi: Rutin (Laporan administratif standar tanpa perubahan material pada pengendalian perusahaan).",
+            "description": "[NOTIF_TYPE_COMPANY_SHAREHOLDING] Report: \"Laporan Bulanan Registrasi Pemegang Efek [BBCA]\"\nRingkasan Kinerja: BBCA (Bank Central Asia) melaporkan struktur pemegang saham Juli 2026, dengan pengendali PT Dwimuria Investama Andalan memiliki 54,942% dan free float publik 42,46%.\nPoin Kunci:\n- PT Dwimuria Investama Andalan menguasai 54,942% saham.\n- Porsi saham publik (free float) tercatat sebesar 42,46%.\n- Jumlah pemegang saham nasabah SID berkurang 14.418 orang.\n- Robert Budi Hartono merupakan pemilik manfaat utama perseroan.\nKesimpulan: Laporan bulanan rutin ini menunjukkan struktur kepemilikan yang stabil tanpa perubahan material pada pengendalian perusahaan.",
+            "published_at": "2026-08-07 10:30:20.360026+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] Grahaprima Suksesmandiri (GTRA) memperoleh fasilitas kredit investasi senilai Rp130,5 miliar dari Bank Central Asia (BBCA) untuk pembelian armada truk komersial dengan tenor 6 tahun dan bunga 7,5% per tahun.",
+            "description": "GTRA Dapat Fasilitas Kredit hingga Rp130,5 M untuk Pembelian Truk\n\n\u25aa\ufe0f Grahaprima Suksesmandiri ([%bvZI%]) mendapatkan fasilitas kredit investasi kendaraan niaga hingga Rp130,5 M dari Bank Central Asia ([%MjOo%]), yang akan digunakan untuk investasi pembelian kendaraan truk komersial.\n\n\u25aa\ufe0f Fasilitas bertenor 6 tahun ini memiliki bunga 7,5% per tahun, serta setara 32,11% dari total ekuitas GTRA. \n\n[Sumber: Keterbukaan Informasi]\n\n-------\nStockbit Group",
+            "published_at": "2026-08-06 09:00:19.009884+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] BBCA melaporkan perubahan Pengendali Terakhir (PSPT) menjadi Robert Budi Hartono secara tunggal pasca wafatnya Bambang Hartono. Perubahan ini bersifat administratif karena kepemilikan pengendali (PT Dwimuria Investama Andalan) tetap sama. Evaluasi: Rutin (Tidak berdampak pada operasional atau kinerja keuangan).",
+            "description": "[NOTIF_TYPE_NEW_REPORT] Perubahan dalam pengendalian baik langsung maupun tidak langsung terhadap Emiten atau Perusahaan Publik [BBCA]\nRingkasan Kinerja: BBCA (BCA) melaporkan perubahan pengendali utama menjadi Robert Budi Hartono secara tunggal, menyusul wafatnya Bambang Hartono.\nPoin Kunci:\n- Robert Budi Hartono menjadi Pemegang Saham Pengendali Terakhir (PSPT) tunggal.\n- Perubahan ini terjadi setelah wafatnya Bambang Hartono.\n- Kepemilikan Robert Budi Hartono di PT Dwimuria Investama Andalan tetap 51%.\n- OJK telah mencatat perubahan struktur kepemilikan per 30 Juli 2026.\nKesimpulan: Struktur kendali utama terkonsolidasi di bawah satu individu, namun tidak mengubah kepemilikan mayoritas keluarga Hartono melalui PT DIA.",
+            "published_at": "2026-08-01 03:03:36.276741+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] BBCA mencatatkan laba bersih 1H26 sebesar Rp29,5 T (+2% YoY), sesuai ekspektasi konsensus. Meskipun NIM sempat tertekan pada 2Q26, manajemen optimis margin akan pulih di 2H26 seiring peningkatan loan yield akibat kenaikan BI Rate. Kualitas aset relatif stabil, dan BBCA dinilai memiliki prospek margin yang lebih kuat dibandingkan BMRI.",
+            "description": "\ud83c\udfe6 BBCA: Laba Bersih +2% YoY pada 1H26, Loan Yield Mulai Naik\n\nBank Central Asia ([%OnGu%]) mencatat laba bersih Rp14,9 T pada 2Q26 (+0% YoY, +1% QoQ), sehingga laba bersih selama 1H26 mencapai Rp29,5 T (+2% YoY) dan sejalan dengan ekspektasi karena setara 49% estimasi 2026F konsensus (vs. rata\u2013rata 2 tahun terakhir: 50%). Secara umum, kinerja laba bersih BBCA secara tahunan relatif flat akibat pertumbuhan kredit terkompensasi oleh penurunan margin. Beberapa highlights kami dari kinerja BBCA pada 2Q26 antara lain: 1) kredit terakselerasi pada 2Q26; dan 2) Net Interest Margin (NIM) telah mencapai bottom\u2013nya pada 2Q26 dan berpotensi pulih pada kuartal\u2013kuartal mendatang.\n\nPertumbuhan Kredit Terkompensasi Penurunan Margin \u2014 Kredit BBCA tumbuh +8% YoY per Juni 2026, di mana mayoritas pertumbuhan tersebut baru terlihat pada 2Q26 dengan kenaikan +4% QoQ yang utamanya masih didorong oleh segmen swasta (private). Pertumbuhan kredit per Juni 2026 tersebut tidak terefleksi ke pertumbuhan Net Interest Income (NII) akibat penurunan Net Interest Margin (NIM) seiring penurunan loan yield, sejalan dengan BI Rate yang lebih rendah sebelum kembali dinaikkan oleh Bank Indonesia mulai Mei 2026. NIM pada 2Q26/1H26 tercatat berada di level 5,3%, -50 bps lebih rendah secara tahunan.\n\nLoan Yield Mulai Meningkat, Berpotensi Dorong Pemulihan NIM pada 2H26 \u2014 Manajemen BBCA mengatakan dalam earnings call 2Q26 bahwa sejak BI Rate mulai kembali dinaikkan pada Mei 2026, BBCA mulai melihat peningkatkan loan yield. Manajemen optimis bahwa tren peningkatan loan yield ini dapat mendukung prospek NIM mulai 3Q26, sehingga NIM selama 2026 masih dapat mencapai guidance di kisaran 5,4\u20135,6%. Ekspektasi ini didasarkan pada proyeksi BBCA bahwa BI Rate masih akan naik 2x lagi hingga akhir tahun, dengan asumsi The Fed menaikkan suku bunga AS sebanyak 1x hingga akhir 2026. Aspek kualitas aset secara umum relatif stabil, dengan LAR turun -20 bps QoQ meski NPL naik +10 bps QoQ. Cost of Credit (CoC) gross pada 2Q26 tercatat sebesar 0,4%, turun dari level 0,6% pada 1Q26. Manajemen mempertahankan guidance CoC 2026 di kisaran 0,4\u20130,5%, dengan potensi naik ke 0,6% jika kondisi makro menjadi lebih menantang.\n\n\ud83d\udd11 Key Takeaway\n\nSecara relatif, kami menilai BBCA berada pada posisi yang lebih baik dari aspek margin dibandingkan BMRI yang juga telah melaporkan kinerja 2Q26. BBCA melihat loan yield mulai meningkat sejalan dengan kenaikan BI Rate, sementara kredit baru BMRI yang lebih banyak didorong oleh related parties memiliki loan yield yang lebih rendah sehingga menekan margin. Menarik untuk dipantau apakah perbedaan dinamika antara BBCA dan himpunan bank milik negara (Himbara) juga terlihat pada kinerja BBNI dan BBRI yang belum melaporkan kinerja 2Q26.\n\nStockbit Snips 28 Juli 2026\n[%dQjX%]",
+            "published_at": "2026-07-28 13:30:17.457424+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] Fitch Ratings mempertahankan rating 'AA-(idn)' dengan prospek 'stable' bagi DCI Indonesia (DCII), yang mencerminkan kepercayaan terhadap rencana ekspansi agresif perusahaan. Meskipun rasio utang diproyeksikan meningkat untuk mendanai capex, dukungan akses pendanaan dari Bank Central Asia (BBCA) dan Bank Mandiri (BMRI) dianggap solid untuk menopang pertumbuhan EBITDA jangka panjang.",
+            "description": "Fitch Pertahankan Rating DCII di \u2018AA-(idn)\u2019 dengan Prospek \u2018Stable\u2019\n\n\u2022 Fitch Ratings Indonesia mempertahankan national long\u2013term rating DCI Indonesia ([%FlED%]) di level \u2018AA-(idn)\u2019 dengan prospek \u2018stable\u2019, yang didasarkan pada posisi perseroan sebagai operator data center terbesar di Indonesia di tengah rencana ekspansi agresif perseroan yang akan mengerek rasio utangnya.\n\nFitch memproyeksikan kapasitas terpasang DCII akan melonjak dari 128 MW pada 2025 menjadi lebih dari 850 MW dalam 2\u20133 tahun ke depan, yang akan mendorong EBITDA tahunan DCII naik dari Rp1,5 T menjadi ke kisaran Rp5\u20136 T pada 2027\u20132028.\n\n\u2022 Pendanaan DCI masih terbatas pada pembiayaan bank, di mana aksesnya kepada bank domestik didukung oleh profil bisnis yang kuat dengan arus kas yang terkontrak. \n\n\u2022\u00a0Fitch mencatat bahwa DCII memiliki contracted\u2013to\u2013shell capacity \u2014 yakni, rasio kapasitas data center yang sudah terkontrak penyewa dibandingkan total kapasitas fisik yang tersedia \u2014 di atas level 90%, dengan profil kredit tenant yang solid.\n\n\u2022 DCII sendiri telah mengantongi tambahan fasilitas kredit investasi Rp17 T dari Bank Central Asia ([%nCbB%]) dan Bank Mandiri ([%ZlXN%]) untuk mendanai capex sekitar Rp10\u201315 T per tahun pada periode 2026\u20132027, di mana Fitch memperkirakan tekanan jatuh tempo utang baru akan signifikan mulai 2029.\n\n\u2022\u00a0Seiring ekspansi yang didanai oleh utang tersebut, Fitch memperkirakan EBITDA net leverage DCII akan naik dari level 1x pada 2025 ke kisaran 5,5\u20136x pada 2026, sebelum diproyeksikan turun kembali ke sekitar 4x pada 2027 saat kapasitas baru mulai beroperasi.\n\n\u2022\u00a0Fitch menyebut bahwa rating DCII berpotensi tertekan jika EBITDA net leverage DCII bertahan di atas 5,5x atau capex yang agresif tidak didukung oleh kontrak penyewa. Sebaliknya, rating berpeluang naik jika DCII mampu memperbesar skala usaha secara signifikan sambil menjaga EBITDA net leverage di bawah 4,5 kali.\n\n[Sumber: Fitch Ratings Indonesia]\n\n______\nStockbit Group",
+            "published_at": "2026-07-20 06:30:12.878556+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          }
+        ],
+        "reports": [],
+        "news_articles": [
+          {
+            "title": "[NEWS] Darma Henwa (DEWA) mempertahankan outlook positif untuk semester kedua 2026, didorong oleh dimulainya operasional tambang PT Sebuku Sejaka Coal, potensi kontrak baru di luar grup BUMI, serta potensi ekspansi margin laba kotor. Meskipun terdapat risiko terkait revisi kuota produksi RKAB, perusahaan telah mengamankan dukungan pendanaan perbankan (BBCA, BMRI) untuk ekspansi operasionalnya.",
+            "description": "\ud83d\udcf0 DEWA 2Q26 Earnings Call: Outlook 2H26 Positif seiring Penambahan Kontrak Kerja\n\nDarma Henwa ([%HnyT%]) pada Selasa (11/8) mengadakan earnings call untuk membahas kinerja 1H26, sekaligus memberikan outlook kinerja 2H26. Berikut beberapa catatan penting kami:\n\nPenjelasan Manajemen Terkait One\u2013off pada 2Q26\n\n\u25aa\ufe0f Manajemen DEWA menjelaskan bahwa meningkatnya nilai wajar investasi saham pada 2Q26 terkait dengan investasi pada PT Pendopo Energi Batubara, yang disebabkan oleh menguatnya dolar AS terhadap rupiah dari level saat penilaian terakhir dilakukan pada 2020. Penilaian tersebut dilakukan seiring dengan bergantinya auditor perseroan, dengan penilaian berikutnya diperkirakan dilakukan setiap 3 tahun.\n\nUpdate Pekerjaan untuk PT Sebuku Sejaka Coal\n\n\u25aa\ufe0f DEWA telah memulai aktivitas pengeboran untuk tambang PT Sebuku Sejaka Coal pada awal Agustus 2026.\n\n\u25aa\ufe0f Manajemen menjelaskan bahwa ruang lingkup pekerjaan yang dilakukan di tambang PT Sebuku Sejaka Coal akan lebih luas dibandingkan pengerjaan di anak usaha Bumi Resources ([%paWh%]), yakni PT Arutmin Indonesia dan PT Kaltim Prima Coal, karena mencakup land clearing, maintenance infrastruktur, dan blasting, selain overburden removal dan coal digging.\n\n\u25aa\ufe0f Cakupan pekerjaan yang lebih luas di tambang PT Sebuku Sejaka Coal mengimplikasikan pendapatan per bcm yang lebih tinggi, tetapi belum tentu tercermin pada kenaikan margin.\n\n\u25aa\ufe0f Capex untuk PT Sebuku Sejaka Coal diperkirakan mencapai ~Rp1 T, yang akan didanai sebagian oleh utang bank dari konsorsium Bank Central Asia ([%dRGd%]) dan Bank Mandiri (BMRI), serta vendor financing. \n\nOutlook 2H26 Positif: Didorong Volume dibandingkan Tarif\n\n\u25aa\ufe0f Kami tetap mempertahankan outlook positif untuk DEWA selama 2H26, seiring dengan: 1) potensi penambahan kontrak pengerjaan di luar grup BUMI; 2) ekspansi margin laba kotor seiring dengan proporsi pengerjaan internal yang akan mencapai 100%; serta 3) harga batu bara yang tetap terjaga pada level tinggi.\n\n\u25aa\ufe0f Dari sisi tarif pengerjaan, manajemen mengekspektasikan realisasi yang flat pada tahun ini untuk proyek PT Arutmin Indonesia dan PT Kaltim Prima Coal, tetapi tarif konsolidasi berpotensi sedikit meningkat seiring dengan dimulainya pengerjaan kontrak PT Sebuku Sejaka Coal yang diperkirakan memiliki tarif lebih tinggi.\n\n\u25aa\ufe0f Risiko utama tetap terletak pada hasil revisi kuota produksi RKAB 2026, yang akan mempengaruhi volume pertambangan dari klien DEWA.\n\nBaca ulasan kami terkait kinerja DEWA pada 2Q26/1H26 di sini [[%BqMa%]].\n\n------\nEverson Sugianto ([%BXyh%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-12 02:30:21.502487+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] Laporan bulanan registrasi pemegang efek BBCA menunjukkan struktur kepemilikan saham yang stabil, dengan pengendali PT Dwimuria Investama Andalan memegang 54,942% dan porsi publik sebesar 42,46%. Evaluasi: Rutin (Laporan administratif standar tanpa perubahan material pada pengendalian perusahaan).",
+            "description": "[NOTIF_TYPE_COMPANY_SHAREHOLDING] Report: \"Laporan Bulanan Registrasi Pemegang Efek [BBCA]\"\nRingkasan Kinerja: BBCA (Bank Central Asia) melaporkan struktur pemegang saham Juli 2026, dengan pengendali PT Dwimuria Investama Andalan memiliki 54,942% dan free float publik 42,46%.\nPoin Kunci:\n- PT Dwimuria Investama Andalan menguasai 54,942% saham.\n- Porsi saham publik (free float) tercatat sebesar 42,46%.\n- Jumlah pemegang saham nasabah SID berkurang 14.418 orang.\n- Robert Budi Hartono merupakan pemilik manfaat utama perseroan.\nKesimpulan: Laporan bulanan rutin ini menunjukkan struktur kepemilikan yang stabil tanpa perubahan material pada pengendalian perusahaan.",
+            "published_at": "2026-08-07 10:30:20.360026+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] Grahaprima Suksesmandiri (GTRA) memperoleh fasilitas kredit investasi senilai Rp130,5 miliar dari Bank Central Asia (BBCA) untuk pembelian armada truk komersial dengan tenor 6 tahun dan bunga 7,5% per tahun.",
+            "description": "GTRA Dapat Fasilitas Kredit hingga Rp130,5 M untuk Pembelian Truk\n\n\u25aa\ufe0f Grahaprima Suksesmandiri ([%bvZI%]) mendapatkan fasilitas kredit investasi kendaraan niaga hingga Rp130,5 M dari Bank Central Asia ([%MjOo%]), yang akan digunakan untuk investasi pembelian kendaraan truk komersial.\n\n\u25aa\ufe0f Fasilitas bertenor 6 tahun ini memiliki bunga 7,5% per tahun, serta setara 32,11% dari total ekuitas GTRA. \n\n[Sumber: Keterbukaan Informasi]\n\n-------\nStockbit Group",
+            "published_at": "2026-08-06 09:00:19.009884+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] BBCA melaporkan perubahan Pengendali Terakhir (PSPT) menjadi Robert Budi Hartono secara tunggal pasca wafatnya Bambang Hartono. Perubahan ini bersifat administratif karena kepemilikan pengendali (PT Dwimuria Investama Andalan) tetap sama. Evaluasi: Rutin (Tidak berdampak pada operasional atau kinerja keuangan).",
+            "description": "[NOTIF_TYPE_NEW_REPORT] Perubahan dalam pengendalian baik langsung maupun tidak langsung terhadap Emiten atau Perusahaan Publik [BBCA]\nRingkasan Kinerja: BBCA (BCA) melaporkan perubahan pengendali utama menjadi Robert Budi Hartono secara tunggal, menyusul wafatnya Bambang Hartono.\nPoin Kunci:\n- Robert Budi Hartono menjadi Pemegang Saham Pengendali Terakhir (PSPT) tunggal.\n- Perubahan ini terjadi setelah wafatnya Bambang Hartono.\n- Kepemilikan Robert Budi Hartono di PT Dwimuria Investama Andalan tetap 51%.\n- OJK telah mencatat perubahan struktur kepemilikan per 30 Juli 2026.\nKesimpulan: Struktur kendali utama terkonsolidasi di bawah satu individu, namun tidak mengubah kepemilikan mayoritas keluarga Hartono melalui PT DIA.",
+            "published_at": "2026-08-01 03:03:36.276741+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] BBCA mencatatkan laba bersih 1H26 sebesar Rp29,5 T (+2% YoY), sesuai ekspektasi konsensus. Meskipun NIM sempat tertekan pada 2Q26, manajemen optimis margin akan pulih di 2H26 seiring peningkatan loan yield akibat kenaikan BI Rate. Kualitas aset relatif stabil, dan BBCA dinilai memiliki prospek margin yang lebih kuat dibandingkan BMRI.",
+            "description": "\ud83c\udfe6 BBCA: Laba Bersih +2% YoY pada 1H26, Loan Yield Mulai Naik\n\nBank Central Asia ([%OnGu%]) mencatat laba bersih Rp14,9 T pada 2Q26 (+0% YoY, +1% QoQ), sehingga laba bersih selama 1H26 mencapai Rp29,5 T (+2% YoY) dan sejalan dengan ekspektasi karena setara 49% estimasi 2026F konsensus (vs. rata\u2013rata 2 tahun terakhir: 50%). Secara umum, kinerja laba bersih BBCA secara tahunan relatif flat akibat pertumbuhan kredit terkompensasi oleh penurunan margin. Beberapa highlights kami dari kinerja BBCA pada 2Q26 antara lain: 1) kredit terakselerasi pada 2Q26; dan 2) Net Interest Margin (NIM) telah mencapai bottom\u2013nya pada 2Q26 dan berpotensi pulih pada kuartal\u2013kuartal mendatang.\n\nPertumbuhan Kredit Terkompensasi Penurunan Margin \u2014 Kredit BBCA tumbuh +8% YoY per Juni 2026, di mana mayoritas pertumbuhan tersebut baru terlihat pada 2Q26 dengan kenaikan +4% QoQ yang utamanya masih didorong oleh segmen swasta (private). Pertumbuhan kredit per Juni 2026 tersebut tidak terefleksi ke pertumbuhan Net Interest Income (NII) akibat penurunan Net Interest Margin (NIM) seiring penurunan loan yield, sejalan dengan BI Rate yang lebih rendah sebelum kembali dinaikkan oleh Bank Indonesia mulai Mei 2026. NIM pada 2Q26/1H26 tercatat berada di level 5,3%, -50 bps lebih rendah secara tahunan.\n\nLoan Yield Mulai Meningkat, Berpotensi Dorong Pemulihan NIM pada 2H26 \u2014 Manajemen BBCA mengatakan dalam earnings call 2Q26 bahwa sejak BI Rate mulai kembali dinaikkan pada Mei 2026, BBCA mulai melihat peningkatkan loan yield. Manajemen optimis bahwa tren peningkatan loan yield ini dapat mendukung prospek NIM mulai 3Q26, sehingga NIM selama 2026 masih dapat mencapai guidance di kisaran 5,4\u20135,6%. Ekspektasi ini didasarkan pada proyeksi BBCA bahwa BI Rate masih akan naik 2x lagi hingga akhir tahun, dengan asumsi The Fed menaikkan suku bunga AS sebanyak 1x hingga akhir 2026. Aspek kualitas aset secara umum relatif stabil, dengan LAR turun -20 bps QoQ meski NPL naik +10 bps QoQ. Cost of Credit (CoC) gross pada 2Q26 tercatat sebesar 0,4%, turun dari level 0,6% pada 1Q26. Manajemen mempertahankan guidance CoC 2026 di kisaran 0,4\u20130,5%, dengan potensi naik ke 0,6% jika kondisi makro menjadi lebih menantang.\n\n\ud83d\udd11 Key Takeaway\n\nSecara relatif, kami menilai BBCA berada pada posisi yang lebih baik dari aspek margin dibandingkan BMRI yang juga telah melaporkan kinerja 2Q26. BBCA melihat loan yield mulai meningkat sejalan dengan kenaikan BI Rate, sementara kredit baru BMRI yang lebih banyak didorong oleh related parties memiliki loan yield yang lebih rendah sehingga menekan margin. Menarik untuk dipantau apakah perbedaan dinamika antara BBCA dan himpunan bank milik negara (Himbara) juga terlihat pada kinerja BBNI dan BBRI yang belum melaporkan kinerja 2Q26.\n\nStockbit Snips 28 Juli 2026\n[%dQjX%]",
+            "published_at": "2026-07-28 13:30:17.457424+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] Fitch Ratings mempertahankan rating 'AA-(idn)' dengan prospek 'stable' bagi DCI Indonesia (DCII), yang mencerminkan kepercayaan terhadap rencana ekspansi agresif perusahaan. Meskipun rasio utang diproyeksikan meningkat untuk mendanai capex, dukungan akses pendanaan dari Bank Central Asia (BBCA) dan Bank Mandiri (BMRI) dianggap solid untuk menopang pertumbuhan EBITDA jangka panjang.",
+            "description": "Fitch Pertahankan Rating DCII di \u2018AA-(idn)\u2019 dengan Prospek \u2018Stable\u2019\n\n\u2022 Fitch Ratings Indonesia mempertahankan national long\u2013term rating DCI Indonesia ([%FlED%]) di level \u2018AA-(idn)\u2019 dengan prospek \u2018stable\u2019, yang didasarkan pada posisi perseroan sebagai operator data center terbesar di Indonesia di tengah rencana ekspansi agresif perseroan yang akan mengerek rasio utangnya.\n\nFitch memproyeksikan kapasitas terpasang DCII akan melonjak dari 128 MW pada 2025 menjadi lebih dari 850 MW dalam 2\u20133 tahun ke depan, yang akan mendorong EBITDA tahunan DCII naik dari Rp1,5 T menjadi ke kisaran Rp5\u20136 T pada 2027\u20132028.\n\n\u2022 Pendanaan DCI masih terbatas pada pembiayaan bank, di mana aksesnya kepada bank domestik didukung oleh profil bisnis yang kuat dengan arus kas yang terkontrak. \n\n\u2022\u00a0Fitch mencatat bahwa DCII memiliki contracted\u2013to\u2013shell capacity \u2014 yakni, rasio kapasitas data center yang sudah terkontrak penyewa dibandingkan total kapasitas fisik yang tersedia \u2014 di atas level 90%, dengan profil kredit tenant yang solid.\n\n\u2022 DCII sendiri telah mengantongi tambahan fasilitas kredit investasi Rp17 T dari Bank Central Asia ([%nCbB%]) dan Bank Mandiri ([%ZlXN%]) untuk mendanai capex sekitar Rp10\u201315 T per tahun pada periode 2026\u20132027, di mana Fitch memperkirakan tekanan jatuh tempo utang baru akan signifikan mulai 2029.\n\n\u2022\u00a0Seiring ekspansi yang didanai oleh utang tersebut, Fitch memperkirakan EBITDA net leverage DCII akan naik dari level 1x pada 2025 ke kisaran 5,5\u20136x pada 2026, sebelum diproyeksikan turun kembali ke sekitar 4x pada 2027 saat kapasitas baru mulai beroperasi.\n\n\u2022\u00a0Fitch menyebut bahwa rating DCII berpotensi tertekan jika EBITDA net leverage DCII bertahan di atas 5,5x atau capex yang agresif tidak didukung oleh kontrak penyewa. Sebaliknya, rating berpeluang naik jika DCII mampu memperbesar skala usaha secara signifikan sambil menjaga EBITDA net leverage di bawah 4,5 kali.\n\n[Sumber: Fitch Ratings Indonesia]\n\n______\nStockbit Group",
+            "published_at": "2026-07-20 06:30:12.878556+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          }
+        ],
+        "has_quarterly_report": false,
+        "report_context": {
+          "has_recent_report": false,
+          "is_financial_report": false,
+          "report_category": null,
+          "quarter": null,
+          "sentiment": null,
+          "sentiment_score": null,
+          "published_at": null,
+          "days_since_publish": null,
+          "decay_weight": 0.0,
+          "summary": null,
+          "news_weight_boosted": false
+        }
+      }
+    }
+  },
+  "candidates": [
+    "BBCA"
+  ],
+  "finalists": [
+    {
+      "ticker": "BBCA",
+      "final_score": 4.76,
+      "composite_score": 5.51,
+      "weight_mode": "big_cap",
+      "debate_bonus": -0.55,
+      "ml_bonus": -0.2
+    }
+  ],
+  "ml_predictions": {
+    "BBCA": {
+      "pred_prob": 19.04,
+      "max_pred_prob": 19.04,
+      "predictions_multiday": {
+        "1d": 19.04,
+        "3d": 10.02,
+        "5d": 10.52,
+        "7d": 2.16
+      },
+      "signal": "AVOID",
+      "confidence": "MEDIUM"
+    }
+  },
+  "final_report": {
+    "generated_at": "2026-08-13T18:08:16.141513",
+    "market_condition": "Pasar saham Indonesia menghadapi tekanan makro signifikan dengan IHSG terkoreksi -1,13% ke level 6.301,77 meskipun masih bertahan +0,51% di atas MA20. Pelemahan Rupiah ke level 17.872,58 per USD (WEAK_IDR) dan penurunan harga minyak dunia (-2,07%) menciptakan kondisi risk-off yang mempengaruhi sentimen investor institusi. Meskipun market breadth sangat tinggi (0,90) dan momentum teknikal solid (0,65) mengonfirmasi sinyal BULLISH dengan keyakinan HIGH (skor gabungan 0,72), prospek sektoral mayoritas netral dengan sektor properti berprospek negatif. Tingkat risiko pasar yang tinggi (Market Risk HIGH) menuntut strategi selektif dengan fokus pada emiten berkapitalisasi besar yang memiliki fundamental sangat kokoh dan resiliensi terhadap volatilitas makro.",
+    "top_picks": [
+      {
+        "rank": 1,
+        "ticker": "BBCA",
+        "thesis": "Bank Central Asia (BBCA) merupakan pilihan defensif terbaik di tengah kondisi pasar yang volatil berkat kombinasi fundamental yang sangat kokoh dan posisi teknikal yang masih terjaga di atas support krusial. Dari sisi fundamental, BBCA menunjukkan profitabilitas luar biasa tinggi dengan ROE 21,47%, struktur modal yang sangat aman dengan DER hanya 0,01x, serta rekam jejak pertumbuhan jangka panjang yang konsisten dengan CAGR Net Income dan EPS sebesar 10,88% dalam periode 2017-2026. Pendapatan, laba bersih, dan EPS konsisten naik dalam 3 tahun terakhir, didukung oleh kualitas aset yang relatif stabil dengan NPL terkendali dan Cost of Credit (CoC) gross pada 2Q26 di level 0,4%. Manajemen BBCA optimis bahwa Net Interest Margin (NIM) yang sempat tertekan ke 5,3% pada 2Q26 akan pulih di 2H26 seiring peningkatan loan yield akibat kenaikan BI Rate yang telah dimulai sejak Mei 2026, dengan proyeksi NIM tetap bisa mencapai guidance di kisaran 5,4-5,6%. Katalis positif tambahan datang dari dukungan pendanaan konsorsium BBCA dan BMRI untuk ekspansi operasional DEWA (Darma Henwa) senilai ~Rp1 triliun, yang mengonfirmasi posisi BBCA sebagai lender pilihan untuk proyek-proyek ekspansi korporasi besar. Dari sisi teknikal, harga 6.375 saat ini bertahan di atas MA20 (6.372) dan support dinamis MA100 (6.220) dalam pola tren utama yang konsisten sideways. Terbentuknya Golden Cross MA20/MA50 dengan RSI di level 56,0 (area netral) menunjukkan momentum bullish jangka pendek masih terjaga, meskipun MACD masih bearish dan volume transaksi relatif rendah (Vol ratio 5/20 di 0,71). Namun, dari kacamata bandarmologi, terdeteksi tekanan distribusi masif oleh broker institusi asing dalam 7 hari terakhir, dengan AK (UBS Securities) melepas 728.214 lot (avg 6.360) dan BK (JP Morgan) melepas 218.303 lot (avg 6.363), di mana 3 broker penjual teratas menguasai 63,9% dominasi transaksi. Posisi harga saat ini (6.375) berada di atas modal bandar 1 bulan (6.291) sebesar +1,34% dan sudah sedikit melampaui Fair Value base di 6.056 (upside -5,0%, status FAIRLY_VALUED), sehingga margin of safety saat ini belum cukup tebal untuk penambahan posisi agresif. Meskipun demikian, akumulasi 1 bulan masih positif (+749.004 lot) dipimpin DX (BNI Sekuritas) dengan avg 6.291 dan ZP (Maybank Sekuritas) dengan avg 6.321, mengonfirmasi bahwa smart money domestik masih melakukan akumulasi bertahap di level yang lebih rendah. Kombinasi fundamental sangat kuat, posisi teknikal yang masih bertahan di atas support krusial, serta valuasi yang FAIRLY_VALUED membuat BBCA layak dijadikan pilihan utama dengan strategi HOLD untuk investor yang sudah memiliki posisi, dan Buy on Pullback untuk investor baru yang menunggu koreksi ke zona entry ideal di area 6.196-6.322 (mendekati MA20 dan modal bandar 1 bulan). Risiko utama yang perlu dipantau adalah lanjutan aksi distribusi institusi asing, potensi breakdown support MA100 (6.220) jika tekanan makro semakin intensif, serta risiko revisi kuota produksi RKAB 2026 yang dapat mempengaruhi volume pertumbuhan kredit ke sektor pertambangan. Namun, dengan resiliensi fundamental yang sangat tinggi, BBCA tetap menjadi pilihan paling aman di tengah volatilitas pasar saat ini.",
+        "time_horizon": "Positional (4-6 minggu)",
+        "price_prediction": {
+          "current_price": 6375.0,
+          "predictions": {
+            "day_1": {
+              "price": 6407.0,
+              "pct_change": "+0.5%",
+              "price_range": [
+                6215.0,
+                6599.0
+              ]
+            },
+            "day_3": {
+              "price": 6452.0,
+              "pct_change": "+1.2%",
+              "price_range": [
+                6258.0,
+                6645.0
+              ]
+            },
+            "day_5": {
+              "price": 6490.0,
+              "pct_change": "+1.8%",
+              "price_range": [
+                6295.0,
+                6684.0
+              ]
+            },
+            "day_7": {
+              "price": 6522.0,
+              "pct_change": "+2.3%",
+              "price_range": [
+                6326.0,
+                6717.0
+              ]
+            }
+          },
+          "confidence": "MEDIUM",
+          "reasoning": "Prediksi rule-based yang bearish perlu disesuaikan mengingat BBCA memiliki fundamental sangat kuat (ROE 21.47%, DER rendah 0.01x) dan valuasi masih wajar di PER 13.2x. Meskipun skor momentum dan volume menunjukkan sinyal netral-lemah, posisi harga saat ini berada 0.25% di atas cost bandar mingguan dan 1.34% di atas cost bandar bulanan, mengindikasikan masih ada ruang untuk kenaikan terbatas. RSI menunjukkan momentum bullish dan harga bertahan di atas MA20, MA50, dan MA100 yang mengkonfirmasi support kuat di zona 6220-6260. Dengan IHSG yang slightly bullish dan tidak volatil, serta track record pertumbuhan revenue, EPS, dan net income yang konsisten 3 tahun terakhir, BBCA berpotensi sideways-to-slightly-bullish dalam jangka pendek 1-7 hari dengan target konservatif +2-3%.",
+          "key_drivers": [
+            "Fundamental sangat solid: ROE 21.47%, DER rendah 0.01x, pertumbuhan revenue/EPS/net income konsisten 3 tahun",
+            "RSI bullish momentum dan harga bertahan di atas MA20/MA50/MA100 memberikan support teknikal kuat di zona 6220-6260",
+            "Posisi harga masih dekat dengan cost bandar (6359-6291) menunjukkan potensi akumulasi lanjutan oleh institusi",
+            "IHSG slightly bullish dengan volatilitas rendah mendukung pergerakan positif saham big cap perbankan",
+            "Valuasi PER 13.2x masih wajar untuk bank dengan ROE >20%, memberikan margin of safety"
+          ],
+          "risks": [
+            "MACD bearish momentum dan death cross MA50/MA100 serta MA100/MA200 menunjukkan tekanan jangka menengah-panjang yang dapat membatasi upside",
+            "Volume normal (skor 0.4) dan bandarmologi netral (skor 3.5) menandakan kurangnya katalis kuat untuk breakout signifikan",
+            "Harga masih di bawah MA200 (long-term bearish) dan setup teknikal sideways dapat berlanjut tanpa trigger eksternal positif"
+          ],
+          "entry_style": "Buy on Pullback"
+        },
+        "ml_prediction": {
+          "pred_prob": 19.04,
+          "max_pred_prob": 19.04,
+          "predictions_multiday": {
+            "1d": 19.04,
+            "3d": 10.02,
+            "5d": 10.52,
+            "7d": 2.16
+          },
+          "signal": "AVOID",
+          "confidence": "MEDIUM"
+        },
+        "fair_value": {
+          "current_price": 6375.0,
+          "method": "blended",
+          "fair_value_low": 4988.0,
+          "fair_value_base": 6056.0,
+          "fair_value_high": 7451.0,
+          "upside_pct": -5.0,
+          "margin_of_safety_pct": -5.27,
+          "valuation_label": "FAIRLY_VALUED",
+          "methods": {
+            "pe_based": {
+              "available": true,
+              "eps": 481.13,
+              "target_pe": 13.5,
+              "fair_value": 6495.0
+            },
+            "pbv_roe_based": {
+              "available": true,
+              "bvps": 2193.77,
+              "roe_pct": 21.47,
+              "sustainable_growth_pct": 7.98,
+              "required_return_pct": 13.5,
+              "fair_pbv": 2.44,
+              "fair_value": 5363.0
+            },
+            "eps_growth_based": {
+              "available": true,
+              "eps": 481.13,
+              "growth_pct": -0.13,
+              "target_pe": 14.47,
+              "fair_value": 6964.0
+            }
+          },
+          "notes": [
+            "EPS source: derived_from_current_price_per",
+            "BVPS source: info_bvps",
+            "Target PE baseline sektor Keuangan/Bank: 12.5x"
+          ],
+          "confidence": "HIGH"
+        },
+        "pred_return": 0.0,
+        "decision_label": "HOLD",
+        "bandar_context": {
+          "broker_utama": "ZP (Maybank Sekuritas)",
+          "avg_cost_7d": 6359,
+          "avg_cost_1m": 6291,
+          "active_days_1m": "N/A",
+          "distance_current": "+1.3%"
+        },
+        "entry_zone": "6196\u20136372",
+        "max_entry": "6372",
+        "tp1": 6466.0,
+        "tp2": 6743.0,
+        "tp3": 7013.0,
+        "target_1": 6466.0,
+        "target_2": 6743.0,
+        "target_3": 7013.0,
+        "tp1_size": 0.22,
+        "tp2_size": 0.44,
+        "tp3_size": 0.34,
+        "risk_reward_tp1": "1:1.9",
+        "risk_reward_tp2": "1:3.9",
+        "risk_reward_tp3": "1:5.8",
+        "stop_loss": 6056.0,
+        "risk_reward": "1:0.3",
+        "position_strategy": "Exit 22% at TP1, 44% at TP2, 34% at TP3",
+        "position_size": "20% portofolio",
+        "conviction": "MEDIUM",
+        "entry_reasoning": "Zona entry ideal BBCA berada di rentang 6.196-6.372 yang merupakan area konsolidasi teknikal antara support dinamis MA100 (6.220) dan MA20 (6.372), sekaligus mendekati modal rata-rata bandar domestik 1 bulan di 6.291 (ZP Maybank Sekuritas dan DX BNI Sekuritas). Meskipun harga saat ini (6.375) sudah sedikit melampaui batas atas zona entry dan berada di atas Fair Value base (6.056) dengan status FAIRLY_VALUED, posisi harga masih bertahan di atas support krusial MA20 (6.372) yang menandakan struktur bullish jangka pendek masih terjaga. Golden Cross MA20/MA50 dengan RSI di 56,0 (area netral) memberikan konfirmasi bahwa momentum bullish jangka pendek masih berpeluang berlanjut. Namun, terdeteksi tekanan distribusi masif oleh broker institusi asing dalam 7 hari terakhir dengan dominasi transaksi jual mencapai 63,9%, sehingga strategi Buy on Pullback menjadi pilihan paling rasional untuk menunggu koreksi ke area 6.196-6.322 (mendekati MA20 dan modal bandar 1 bulan) yang memberikan margin of safety lebih baik. Target profit TP1 di 6.466 (+1,9x reward) merupakan level resistance Fibonacci pertama, TP2 di 6.743 (+3,9x reward) merupakan level resistance Fibonacci kedua, dan TP3 di 7.013 (+5,8x reward) merupakan area resistance kuat mendekati MA200 (7.072) yang menjadi garis resistansi long-term. Stop Loss ketat di 6.056 (Fair Value base) memberikan risk/reward ratio minimum 1:1,9 yang memadai untuk strategi positional trading. Dengan risk/reward ratio yang solid dan fundamental sangat kuat, BBCA layak diakumulasi secara bertahap di zona entry 6.196-6.372 dengan prioritas Buy on Pullback untuk memaksimalkan margin of safety.",
+        "agent_scores": {
+          "bandarm": {
+            "score": 3.5,
+            "weight": "30%",
+            "contribution": 1.05
+          },
+          "technical": {
+            "score": 7.2,
+            "weight": "22%",
+            "contribution": 1.58
+          },
+          "fundamental": {
+            "score": 8.0,
+            "weight": "22%",
+            "contribution": 1.76
+          },
+          "macro": {
+            "score": 4.5,
+            "weight": "13%",
+            "contribution": 0.58
+          },
+          "composite": 6.06
+        },
+        "bandarm_signal": "NEUTRAL",
+        "broker_to_watch": [
+          "ZP (Maybank Sekuritas)",
+          "RX (Macquarie Securities)"
+        ],
+        "broker_true_costs": {
+          "w7": [
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "true_cost": 6359,
+              "total_buy_lot": 817915,
+              "total_buy_value": 520477030000,
+              "active_days": "6/7 hari",
+              "distance_pct": 0.25,
+              "status": "\u26a1 KONSISTEN \u2014 PANTAU KETAT"
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "true_cost": 6358,
+              "total_buy_lot": 271182,
+              "total_buy_value": 173042567500,
+              "active_days": "4/7 hari",
+              "distance_pct": 0.27,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "true_cost": 6398,
+              "total_buy_lot": 221555,
+              "total_buy_value": 141807255000,
+              "active_days": "5/7 hari",
+              "distance_pct": -0.36,
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "true_cost": 6339,
+              "total_buy_lot": 135541,
+              "total_buy_value": 85419195000,
+              "active_days": "3/7 hari",
+              "distance_pct": 0.57,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "true_cost": 6325,
+              "total_buy_lot": 90902,
+              "total_buy_value": 56737592500,
+              "active_days": "3/7 hari",
+              "distance_pct": 0.79,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "OD",
+              "broker_name": "BRI Danareksa Sekuritas",
+              "true_cost": 6339,
+              "total_buy_lot": 68919,
+              "total_buy_value": 43535165000,
+              "active_days": "4/7 hari",
+              "distance_pct": 0.57,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "true_cost": 6348,
+              "total_buy_lot": 57809,
+              "total_buy_value": 36674792500,
+              "active_days": "3/7 hari",
+              "distance_pct": 0.43,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "GR",
+              "broker_name": "Goldman Sachs",
+              "true_cost": 6338,
+              "total_buy_lot": 49345,
+              "total_buy_value": 31203705000,
+              "active_days": "3/7 hari",
+              "distance_pct": 0.58,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "XC",
+              "broker_name": "Ajaib Sekuritas",
+              "true_cost": 6344,
+              "total_buy_lot": 28395,
+              "total_buy_value": 17885517500,
+              "active_days": "3/7 hari",
+              "distance_pct": 0.49,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "DP",
+              "broker_name": "Dinar Sekuritas",
+              "true_cost": 6314,
+              "total_buy_lot": 22796,
+              "total_buy_value": 14368625000,
+              "active_days": "1/7 hari",
+              "distance_pct": 0.97,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            }
+          ],
+          "w1m": [
+            {
+              "broker": "DX",
+              "broker_name": "BNI Sekuritas",
+              "true_cost": 6291,
+              "total_buy_lot": 4552165,
+              "total_buy_value": 2864077797500,
+              "active_days": "20/30 hari",
+              "distance_pct": 1.34,
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "true_cost": 6321,
+              "total_buy_lot": 2782731,
+              "total_buy_value": 1771688675000,
+              "active_days": "19/30 hari",
+              "distance_pct": 0.85,
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "true_cost": 6173,
+              "total_buy_lot": 1084531,
+              "total_buy_value": 665424035000,
+              "active_days": "14/30 hari",
+              "distance_pct": 3.27,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "true_cost": 6309,
+              "total_buy_lot": 511684,
+              "total_buy_value": 322173272500,
+              "active_days": "15/30 hari",
+              "distance_pct": 1.05,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "true_cost": 6294,
+              "total_buy_lot": 197646,
+              "total_buy_value": 123172190000,
+              "active_days": "14/30 hari",
+              "distance_pct": 1.29,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Samuel Sekuritas",
+              "true_cost": 6228,
+              "total_buy_lot": 165016,
+              "total_buy_value": 102738865000,
+              "active_days": "10/30 hari",
+              "distance_pct": 2.36,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Indo Premier Sekuritas",
+              "true_cost": 6274,
+              "total_buy_lot": 71139,
+              "total_buy_value": 41883790000,
+              "active_days": "10/30 hari",
+              "distance_pct": 1.61,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "TP",
+              "broker_name": "OCBC Sekuritas",
+              "true_cost": 6338,
+              "total_buy_lot": 47636,
+              "total_buy_value": 30039287500,
+              "active_days": "7/30 hari",
+              "distance_pct": 0.58,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "DP",
+              "broker_name": "Dinar Sekuritas",
+              "true_cost": 6337,
+              "total_buy_lot": 23988,
+              "total_buy_value": 15068492500,
+              "active_days": "3/30 hari",
+              "distance_pct": 0.6,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "OD",
+              "broker_name": "BRI Danareksa Sekuritas",
+              "true_cost": 6297,
+              "total_buy_lot": 18430,
+              "total_buy_value": 11361917500,
+              "active_days": "12/30 hari",
+              "distance_pct": 1.24,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            }
+          ]
+        },
+        "broker_distributors": {
+          "w7": [
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "avg_sell": 6360,
+              "total_sell_lot": 728214,
+              "total_sell_value": 462568562500,
+              "active_days": "6/7 hari",
+              "distance_pct": 0.24,
+              "status": "\u26a0\ufe0f DISTRIBUSI KONSISTEN"
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "avg_sell": 6363,
+              "total_sell_lot": 218303,
+              "total_sell_value": 138567907500,
+              "active_days": "4/7 hari",
+              "distance_pct": 0.19,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "avg_sell": 6377,
+              "total_sell_lot": 199720,
+              "total_sell_value": 127568560000,
+              "active_days": "3/7 hari",
+              "distance_pct": -0.03,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "avg_sell": 6377,
+              "total_sell_lot": 167396,
+              "total_sell_value": 106749780000,
+              "active_days": "6/7 hari",
+              "distance_pct": -0.03,
+              "status": "\u26a0\ufe0f DISTRIBUSI KONSISTEN"
+            },
+            {
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "avg_sell": 6366,
+              "total_sell_lot": 113586,
+              "total_sell_value": 72443997500,
+              "active_days": "4/7 hari",
+              "distance_pct": 0.14,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "avg_sell": 6357,
+              "total_sell_lot": 104290,
+              "total_sell_value": 66275295000,
+              "active_days": "4/7 hari",
+              "distance_pct": 0.28,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "avg_sell": 6360,
+              "total_sell_lot": 103165,
+              "total_sell_value": 63942692500,
+              "active_days": "4/7 hari",
+              "distance_pct": 0.24,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "DX",
+              "broker_name": "BNI Sekuritas",
+              "avg_sell": 6265,
+              "total_sell_lot": 70372,
+              "total_sell_value": 44030202500,
+              "active_days": "3/7 hari",
+              "distance_pct": 1.76,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "DR",
+              "broker_name": "RHB Sekuritas",
+              "avg_sell": 6397,
+              "total_sell_lot": 54909,
+              "total_sell_value": 35249760000,
+              "active_days": "3/7 hari",
+              "distance_pct": -0.34,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AG",
+              "broker_name": "Alindo Sekuritas",
+              "avg_sell": 6396,
+              "total_sell_lot": 36616,
+              "total_sell_value": 23578355000,
+              "active_days": "1/7 hari",
+              "distance_pct": -0.33,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            }
+          ],
+          "w1m": [
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "avg_sell": 6292,
+              "total_sell_lot": 3452107,
+              "total_sell_value": 2151305850000,
+              "active_days": "18/30 hari",
+              "distance_pct": 1.32,
+              "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "avg_sell": 6289,
+              "total_sell_lot": 1566536,
+              "total_sell_value": 985346307500,
+              "active_days": "20/30 hari",
+              "distance_pct": 1.37,
+              "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "avg_sell": 6287,
+              "total_sell_lot": 1259605,
+              "total_sell_value": 788181635000,
+              "active_days": "19/30 hari",
+              "distance_pct": 1.4,
+              "status": "\u26a0\ufe0f DISTRIBUSI AKTIF"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "avg_sell": 6239,
+              "total_sell_lot": 679716,
+              "total_sell_value": 421437697500,
+              "active_days": "13/30 hari",
+              "distance_pct": 2.18,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "avg_sell": 6303,
+              "total_sell_lot": 337289,
+              "total_sell_value": 214738027500,
+              "active_days": "16/30 hari",
+              "distance_pct": 1.14,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "avg_sell": 6307,
+              "total_sell_lot": 334794,
+              "total_sell_value": 213359965000,
+              "active_days": "13/30 hari",
+              "distance_pct": 1.08,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "avg_sell": 6327,
+              "total_sell_lot": 325327,
+              "total_sell_value": 207660772500,
+              "active_days": "13/30 hari",
+              "distance_pct": 0.76,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "avg_sell": 6304,
+              "total_sell_lot": 285100,
+              "total_sell_value": 194775942500,
+              "active_days": "17/30 hari",
+              "distance_pct": 1.13,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "avg_sell": 6324,
+              "total_sell_lot": 295879,
+              "total_sell_value": 191309067500,
+              "active_days": "16/30 hari",
+              "distance_pct": 0.81,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "avg_sell": 6321,
+              "total_sell_lot": 169609,
+              "total_sell_value": 107334955000,
+              "active_days": "5/30 hari",
+              "distance_pct": 0.85,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            }
+          ]
+        },
+        "weight_mode": "big_cap",
+        "composite_score": 6.06,
+        "final_score": 4.76
+      }
+    ],
+    "watchlist": [],
+    "avoid": [],
+    "llm_synthesis": {
+      "market_condition_summary": "Pasar saham Indonesia menghadapi tekanan makro signifikan dengan IHSG terkoreksi -1,13% ke level 6.301,77 meskipun masih bertahan +0,51% di atas MA20. Pelemahan Rupiah ke level 17.872,58 per USD (WEAK_IDR) dan penurunan harga minyak dunia (-2,07%) menciptakan kondisi risk-off yang mempengaruhi sentimen investor institusi. Meskipun market breadth sangat tinggi (0,90) dan momentum teknikal solid (0,65) mengonfirmasi sinyal BULLISH dengan keyakinan HIGH (skor gabungan 0,72), prospek sektoral mayoritas netral dengan sektor properti berprospek negatif. Tingkat risiko pasar yang tinggi (Market Risk HIGH) menuntut strategi selektif dengan fokus pada emiten berkapitalisasi besar yang memiliki fundamental sangat kokoh dan resiliensi terhadap volatilitas makro.",
+      "ranked_tickers": [
+        {
+          "rank": 1,
+          "ticker": "BBCA",
+          "conviction": "MEDIUM",
+          "thesis": "Bank Central Asia (BBCA) merupakan pilihan defensif terbaik di tengah kondisi pasar yang volatil berkat kombinasi fundamental yang sangat kokoh dan posisi teknikal yang masih terjaga di atas support krusial. Dari sisi fundamental, BBCA menunjukkan profitabilitas luar biasa tinggi dengan ROE 21,47%, struktur modal yang sangat aman dengan DER hanya 0,01x, serta rekam jejak pertumbuhan jangka panjang yang konsisten dengan CAGR Net Income dan EPS sebesar 10,88% dalam periode 2017-2026. Pendapatan, laba bersih, dan EPS konsisten naik dalam 3 tahun terakhir, didukung oleh kualitas aset yang relatif stabil dengan NPL terkendali dan Cost of Credit (CoC) gross pada 2Q26 di level 0,4%. Manajemen BBCA optimis bahwa Net Interest Margin (NIM) yang sempat tertekan ke 5,3% pada 2Q26 akan pulih di 2H26 seiring peningkatan loan yield akibat kenaikan BI Rate yang telah dimulai sejak Mei 2026, dengan proyeksi NIM tetap bisa mencapai guidance di kisaran 5,4-5,6%. Katalis positif tambahan datang dari dukungan pendanaan konsorsium BBCA dan BMRI untuk ekspansi operasional DEWA (Darma Henwa) senilai ~Rp1 triliun, yang mengonfirmasi posisi BBCA sebagai lender pilihan untuk proyek-proyek ekspansi korporasi besar. Dari sisi teknikal, harga 6.375 saat ini bertahan di atas MA20 (6.372) dan support dinamis MA100 (6.220) dalam pola tren utama yang konsisten sideways. Terbentuknya Golden Cross MA20/MA50 dengan RSI di level 56,0 (area netral) menunjukkan momentum bullish jangka pendek masih terjaga, meskipun MACD masih bearish dan volume transaksi relatif rendah (Vol ratio 5/20 di 0,71). Namun, dari kacamata bandarmologi, terdeteksi tekanan distribusi masif oleh broker institusi asing dalam 7 hari terakhir, dengan AK (UBS Securities) melepas 728.214 lot (avg 6.360) dan BK (JP Morgan) melepas 218.303 lot (avg 6.363), di mana 3 broker penjual teratas menguasai 63,9% dominasi transaksi. Posisi harga saat ini (6.375) berada di atas modal bandar 1 bulan (6.291) sebesar +1,34% dan sudah sedikit melampaui Fair Value base di 6.056 (upside -5,0%, status FAIRLY_VALUED), sehingga margin of safety saat ini belum cukup tebal untuk penambahan posisi agresif. Meskipun demikian, akumulasi 1 bulan masih positif (+749.004 lot) dipimpin DX (BNI Sekuritas) dengan avg 6.291 dan ZP (Maybank Sekuritas) dengan avg 6.321, mengonfirmasi bahwa smart money domestik masih melakukan akumulasi bertahap di level yang lebih rendah. Kombinasi fundamental sangat kuat, posisi teknikal yang masih bertahan di atas support krusial, serta valuasi yang FAIRLY_VALUED membuat BBCA layak dijadikan pilihan utama dengan strategi HOLD untuk investor yang sudah memiliki posisi, dan Buy on Pullback untuk investor baru yang menunggu koreksi ke zona entry ideal di area 6.196-6.322 (mendekati MA20 dan modal bandar 1 bulan). Risiko utama yang perlu dipantau adalah lanjutan aksi distribusi institusi asing, potensi breakdown support MA100 (6.220) jika tekanan makro semakin intensif, serta risiko revisi kuota produksi RKAB 2026 yang dapat mempengaruhi volume pertumbuhan kredit ke sektor pertambangan. Namun, dengan resiliensi fundamental yang sangat tinggi, BBCA tetap menjadi pilihan paling aman di tengah volatilitas pasar saat ini.",
+          "entry_low": 6196,
+          "entry_high": 6372,
+          "entry_style": "Buy on Pullback",
+          "tp1": 6466,
+          "tp2": 6743,
+          "tp3": 7013,
+          "stop_loss": 6056,
+          "entry_reasoning": "Zona entry ideal BBCA berada di rentang 6.196-6.372 yang merupakan area konsolidasi teknikal antara support dinamis MA100 (6.220) dan MA20 (6.372), sekaligus mendekati modal rata-rata bandar domestik 1 bulan di 6.291 (ZP Maybank Sekuritas dan DX BNI Sekuritas). Meskipun harga saat ini (6.375) sudah sedikit melampaui batas atas zona entry dan berada di atas Fair Value base (6.056) dengan status FAIRLY_VALUED, posisi harga masih bertahan di atas support krusial MA20 (6.372) yang menandakan struktur bullish jangka pendek masih terjaga. Golden Cross MA20/MA50 dengan RSI di 56,0 (area netral) memberikan konfirmasi bahwa momentum bullish jangka pendek masih berpeluang berlanjut. Namun, terdeteksi tekanan distribusi masif oleh broker institusi asing dalam 7 hari terakhir dengan dominasi transaksi jual mencapai 63,9%, sehingga strategi Buy on Pullback menjadi pilihan paling rasional untuk menunggu koreksi ke area 6.196-6.322 (mendekati MA20 dan modal bandar 1 bulan) yang memberikan margin of safety lebih baik. Target profit TP1 di 6.466 (+1,9x reward) merupakan level resistance Fibonacci pertama, TP2 di 6.743 (+3,9x reward) merupakan level resistance Fibonacci kedua, dan TP3 di 7.013 (+5,8x reward) merupakan area resistance kuat mendekati MA200 (7.072) yang menjadi garis resistansi long-term. Stop Loss ketat di 6.056 (Fair Value base) memberikan risk/reward ratio minimum 1:1,9 yang memadai untuk strategi positional trading. Dengan risk/reward ratio yang solid dan fundamental sangat kuat, BBCA layak diakumulasi secara bertahap di zona entry 6.196-6.372 dengan prioritas Buy on Pullback untuk memaksimalkan margin of safety.",
+          "time_horizon": "Positional (4-6 minggu)"
+        }
+      ],
+      "watchlist": [],
+      "avoid": []
+    },
+    "total_analyzed": 1,
+    "total_finalists": 1,
+    "synthesis_mode": "llm"
+  }
+}

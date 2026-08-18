@@ -86,7 +86,7 @@ def present_all(
             if fair_value and isinstance(analysis, dict):
                 analysis = {**analysis, "fair_value": fair_value}
         elif agent == "bandarmologi":
-            analysis = ticker_scores.get("bandarmologi", {})
+            analysis = ticker_scores.get("bandarmologi") or ticker_scores.get("bandarm", {})
             if fair_value and isinstance(analysis, dict):
                 analysis = {**analysis, "fair_value": fair_value}
         else:
