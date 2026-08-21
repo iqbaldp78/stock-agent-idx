@@ -122,7 +122,42 @@ class PaperTradingService:
             if dirty:
                 self.session.commit()
         return wallet
-    
+
+    def recalculate_wallet_from_trades(self, wallet_id: Optional[int] = None) -> PaperWallet:
+        """Kalkulasi ulang saldo cash, total_invested, dan total_pnl wallet dari daftar trades."""
+        wallet = self.get_or_create_wallet()
+        w_id = wallet_id or wallet.id
+        
+        trades = self.session.query(PaperTrade).filter(PaperTrade.wallet_id == w_id).all()
+        topup = wallet.total_topup or Decimal("0")
+        total_invested = Decimal("0")
+        total_pnl = Decimal("0")
+        total_buy_cost = Decimal("0")
+        total_net_sell = Decimal("0")
+        
+        for t in trades:
+            fee = t.fee or Decimal("0")
+            realized_pnl = t.realized_pnl or Decimal("0")
+            amount = t.amount or Decimal("0")
+            
+            if t.status in ["OPEN", "PENDING_LIMIT", "PENDING_STOP"]:
+                total_invested += amount
+                total_buy_cost += (amount + fee)
+            elif t.status in ["CLOSED", "TP_HIT", "SL_HIT"]:
+                total_pnl += realized_pnl
+                total_buy_cost += (amount + fee)
+                net_sell = amount + realized_pnl
+                total_net_sell += net_sell
+                
+        cash = topup - total_buy_cost + total_net_sell
+        wallet.cash = cash
+        wallet.total_invested = total_invested
+        wallet.total_pnl = total_pnl
+        wallet.updated_at = datetime.utcnow()
+        self.session.commit()
+        self.session.refresh(wallet)
+        return wallet
+
     def topup(self, amount: float) -> dict:
         """
         Topup wallet dengan modal virtual.

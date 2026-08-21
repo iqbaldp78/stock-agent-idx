@@ -396,6 +396,7 @@ class MlPredictionLog(Base):
     ticker = Column(String(10), nullable=False)
     horizon = Column(String(5), nullable=False)  # e.g., '1d', '3d', '5d', '7d'
     pred_return_pct = Column(Numeric(8, 4), nullable=False)
+    entry_price = Column(Float, nullable=True)
     pred_price = Column(Float, nullable=True)
     predicted_direction = Column(String(10), nullable=True)
     actual_close_price = Column(Float, nullable=True)

@@ -368,7 +368,8 @@ def get_ml_predictions(
                     m.actual_return_pct,
                     m.is_correct,
                     m.trade_date,
-                    m.horizon
+                    m.horizon,
+                    m.entry_price
                 FROM ml_prediction_log m
                 {sql_where}
                 ORDER BY m.pred_return_pct DESC
@@ -384,6 +385,13 @@ def get_ml_predictions(
                 actual_close = float(r[4]) if r[4] is not None else None
                 actual_return = float(r[5]) if r[5] is not None else None
                 is_correct = r[6]
+                entry_price = float(r[9]) if len(r) > 9 and r[9] is not None else None
+                
+                # Fallback calculation jika entry_price null namun pred_price ada
+                if entry_price is None and pred_price is not None:
+                    target_pct = (prob_pct / 100.0 - 0.50) * 0.05
+                    if target_pct != -1:
+                        entry_price = round(pred_price / (1.0 + target_pct), 2)
                 
                 if is_correct is True or (actual_return is not None and actual_return > 0):
                     status = "BENAR"
@@ -396,6 +404,7 @@ def get_ml_predictions(
                     "ticker": ticker,
                     "direction": pred_dir,
                     "probability_pct": round(prob_pct, 2),
+                    "entry_price": round(entry_price, 2) if entry_price is not None else None,
                     "pred_price": round(pred_price, 2) if pred_price else None,
                     "actual_close": round(actual_close, 2) if actual_close else None,
                     "actual_return_pct": round(float(actual_return), 2) if actual_return is not None else None,

@@ -1,21 +1,2172 @@
 {
   "ticker": "DEWA",
-  "timestamp": "2026-08-14T05:22:33.241608",
-  "top_picks": [],
-  "debate_log": [],
-  "composites": {},
-  "scores": {},
-  "candidates": [],
-  "finalists": [],
-  "ml_predictions": {},
+  "timestamp": "2026-08-18T14:26:55.488808",
+  "top_picks": [
+    {
+      "rank": 1,
+      "ticker": "DEWA",
+      "thesis": "PT Darma Henwa Tbk (DEWA) memiliki katalis operasional jangka menengah yang cukup solid di semester II 2026, didorong oleh dimulainya pengerjaan proyek pertambangan baru PT Sebuku Sejaka Coal (potensi overburden 55 juta bcm dan batu bara 5 juta ton/tahun) serta pencapaian 100% pengerjaan internal pada proyek Bengalon KPC yang berhasil mengerek margin laba kotor Q2 2026 ke level tertinggi 20.7%. Perseroan juga telah mengamankan fasilitas capex ~Rp1 Triliun dari konsorsium perbankan utama (BBCA dan BMRI). Kendati demikian, tingkat keyakinan (conviction) terhadap DEWA ditetapkan pada level LOW akibat tiga risiko struktural utama: (1) Valuasi saham saat ini di Rp446 tergolong EXPENSIVE, berada jauh di atas Nilai Wajar (Fair Value blended) di Rp288 (potensi downside -35.36% dan Margin of Safety -54.7%), dengan PER 25.8x yang sangat mahal dibanding rata-rata industri jasa tambang (8x-11x); (2) Kualitas pertumbuhan laba bersih 1H26 (+89% YoY menjadi Rp354.28 Miliar) terdistorsi signifikan oleh pendapatan non-operasional one-off berupa revaluasi investasi saham PT Pendopo Energi Batubara senilai Rp229.37 Miliar, sementara core profit operasional riil stagnan (+1% YoY); dan (3) Struktur bandarmologi 7 hari terakhir menunjukkan sinyal distribusi masif dari broker institusi/big players (MG menjual 641 ribu lot @466, BB menjual 481 ribu lot @451) yang ditampung secara agresif oleh broker ritel (XL Stockbit memborong 762 ribu lot @462 dan YP Mirae 361 ribu lot @462), di mana top 3 seller menguasai 48.9% transaksi pasar. Dengan tidak ditemukannya pola reversal candlestick spesifik pada harga saat ini, keputusan investasi terbaik adalah menunggu retracement ke area support teknikal yang jauh lebih aman.",
+      "time_horizon": "Swing Trade (2-4 minggu)",
+      "price_prediction": {
+        "current_price": 446.0,
+        "predictions": {
+          "day_1": {
+            "price": 446.0,
+            "pct_change": "-0.1%",
+            "price_range": [
+              432.0,
+              459.0
+            ]
+          },
+          "day_3": {
+            "price": 448.0,
+            "pct_change": "+0.5%",
+            "price_range": [
+              435.0,
+              462.0
+            ]
+          },
+          "day_5": {
+            "price": 453.0,
+            "pct_change": "+1.5%",
+            "price_range": [
+              439.0,
+              466.0
+            ]
+          },
+          "day_7": {
+            "price": 457.0,
+            "pct_change": "+2.5%",
+            "price_range": [
+              443.0,
+              471.0
+            ]
+          }
+        },
+        "confidence": "MEDIUM",
+        "reasoning": "DEWA saat ini berada dalam tren sideways dengan sinyal teknikal campuran \u2014 RSI menunjukkan momentum bullish namun MACD masih bearish, sementara harga berada di atas MA50 dan MA100 tetapi di bawah MA20 dan MA200. Yang menarik adalah data bandarmologi menunjukkan harga saat ini (446) berada 3.46% di bawah rata-rata cost bandar 7 hari terakhir (462), yang mengindikasikan posisi entry ideal karena bandar kemungkinan akan mendorong harga naik untuk melindungi posisi mereka. Dari sisi fundamental, DEWA memiliki profil yang sangat kuat dengan ROE 55.26% dan pertumbuhan earnings 120.6% yang akseleratif, serta revenue yang konsisten naik selama 3 tahun terakhir. Kondisi makro IHSG yang bullish dan volatilitas rendah juga mendukung potensi kenaikan moderat. Oleh karena itu, prediksi rule-based yang cenderung negatif perlu disesuaikan menjadi sedikit positif, mengingat kombinasi fundamental kuat, posisi harga di bawah avg cost bandar, dan kondisi makro yang mendukung.",
+        "key_drivers": [
+          "Harga saat ini 3.46% di bawah rata-rata cost bandar 7 hari (462), menciptakan zona entry ideal dan potensi support dari aksi bandar untuk mempertahankan posisi",
+          "Fundamental sangat solid dengan ROE 55.26% dan earnings growth 120.6% yang jauh di atas rata-rata sektor",
+          "Golden cross MA20/MA50 mengindikasikan potensi pembalikan bullish jangka pendek-menengah",
+          "Kondisi makro IHSG bullish dengan volatilitas rendah mendukung sentimen positif untuk saham-saham mid-cap",
+          "Revenue konsisten naik 3 tahun terakhir dan dividend yield di atas rata-rata 5 tahun menunjukkan daya tarik investasi jangka menengah"
+        ],
+        "risks": [
+          "Death cross MA50/MA100 dan MA100/MA200 menunjukkan tekanan bearish jangka menengah-panjang yang masih berlaku, harga bisa kembali turun ke area support 417-421",
+          "Volume perdagangan normal tanpa anomali akumulasi signifikan dari bandar, sehingga belum ada konfirmasi kuat untuk rally besar",
+          "MACD masih dalam momentum bearish dan harga di bawah MA200 menandakan tren jangka panjang belum sepenuhnya pulih"
+        ],
+        "entry_style": "Buy on Retracement"
+      },
+      "ml_prediction": {
+        "pred_prob": 38.81,
+        "max_pred_prob": 47.75,
+        "predictions_multiday": {
+          "1d": 38.81,
+          "3d": 43.68,
+          "5d": 47.75,
+          "7d": 45.49
+        },
+        "signal": "HOLD",
+        "confidence": "MEDIUM"
+      },
+      "fair_value": {
+        "current_price": 446.0,
+        "method": "blended",
+        "fair_value_low": 177.0,
+        "fair_value_base": 288.0,
+        "fair_value_high": 532.0,
+        "upside_pct": -35.36,
+        "margin_of_safety_pct": -54.7,
+        "valuation_label": "EXPENSIVE",
+        "methods": {
+          "pe_based": {
+            "available": true,
+            "eps": 17.26,
+            "target_pe": 11.0,
+            "fair_value": 190.0
+          },
+          "pbv_roe_based": {
+            "available": true,
+            "bvps": 198.98,
+            "roe_pct": 55.26,
+            "sustainable_growth_pct": 10.5,
+            "required_return_pct": 13.5,
+            "fair_pbv": 2.5,
+            "fair_value": 497.0
+          },
+          "eps_growth_based": {
+            "available": true,
+            "eps": 17.26,
+            "growth_pct": 120.64,
+            "target_pe": 12.8,
+            "fair_value": 221.0
+          }
+        },
+        "notes": [
+          "EPS source: derived_from_current_price_per",
+          "BVPS source: info_bvps",
+          "Target PE baseline sektor Komoditas/Tambang: 8.0x"
+        ],
+        "confidence": "HIGH"
+      },
+      "pred_return": 0.0,
+      "decision_label": "HOLD",
+      "bandar_context": {
+        "broker_utama": "XL (Stockbit Sekuritas)",
+        "avg_cost_7d": 462,
+        "avg_cost_1m": 419,
+        "active_days_1m": "N/A",
+        "distance_current": "+6.4%"
+      },
+      "entry_zone": "407\u2013430",
+      "max_entry": "430",
+      "tp1": 477.0,
+      "tp2": 539.0,
+      "tp3": 619.0,
+      "target_1": 477.0,
+      "target_2": 539.0,
+      "target_3": 619.0,
+      "tp1_size": 0.3,
+      "tp2_size": 0.4,
+      "tp3_size": 0.3,
+      "risk_reward_tp1": "1:4.1",
+      "risk_reward_tp2": "1:8.3",
+      "risk_reward_tp3": "1:12.5",
+      "stop_loss": 395.0,
+      "risk_reward": "1:1.0",
+      "position_strategy": "Exit 30% at TP1, 40% at TP2, 30% at TP3",
+      "position_size": "10% portofolio",
+      "conviction": "LOW",
+      "entry_reasoning": "Entry tidak direkomendasikan pada harga pasar saat ini (Rp446) karena harga berada dalam struktur distribusi ritel dan tertahan di bawah resisten dinamis MA20 (455.6) serta MA200 (463.5). Strategi entry yang rasional adalah Buy on Retracement di rentang Rp407 - Rp430. Area ini disintesis dari konfluensi indikator teknikal TradingView, mencakup Support Fibonacci Terdekat di Rp407, Pivot Point Classic Middle di Rp406.7, Pivot Camarilla S2-S3 (Rp401 - Rp421), serta penopang rata-rata pergerakan MA100 di Rp417.7. Penetapan Stop Loss diletakkan di Rp395 (di bawah MA50 di Rp380.0 dan support psikologis Rp400) untuk membatasi risiko maksimal sebesar ~5.5% dari rata-rata entry zone (~Rp418). Target Profit 1 ditentukan di Rp477 (merujuk resisten MA20/MA200 dan Fib Resistance terdekat 488), Target Profit 2 di Rp539 (Fibonacci R1 / Pivot Classic R1), dan Target Profit 3 di Rp619 (Fibonacci Resistance Kuat). Setup perdagangan ini menghasilkan Risk to Reward Ratio minimum sebesar 1:2.56 untuk TP1, yang secara ketat memenuhi batas rasionalitas manajemen risiko (minimum 1:1.5).",
+      "agent_scores": {
+        "bandarm": {
+          "score": 1.5,
+          "weight": "35%",
+          "contribution": 0.52
+        },
+        "technical": {
+          "score": 5.5,
+          "weight": "22%",
+          "contribution": 1.21
+        },
+        "fundamental": {
+          "score": 6.8,
+          "weight": "18%",
+          "contribution": 1.22
+        },
+        "macro": {
+          "score": 5.5,
+          "weight": "13%",
+          "contribution": 0.72
+        },
+        "composite": 4.79
+      },
+      "bandarm_signal": "NEUTRAL",
+      "broker_to_watch": [
+        "XL (Stockbit Sekuritas)",
+        "YP (Mirae Asset Sekuritas)"
+      ],
+      "broker_true_costs": {
+        "w7": [
+          {
+            "broker": "XL",
+            "broker_name": "Stockbit Sekuritas",
+            "true_cost": 462,
+            "total_buy_lot": 762313,
+            "total_buy_value": 35508572200,
+            "active_days": "5/7 hari",
+            "distance_pct": -3.46,
+            "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+          },
+          {
+            "broker": "YP",
+            "broker_name": "Mirae Asset Sekuritas",
+            "true_cost": 462,
+            "total_buy_lot": 361467,
+            "total_buy_value": 17355095600,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.46,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "CP",
+            "broker_name": "Valbury Sekuritas",
+            "true_cost": 463,
+            "total_buy_lot": 286646,
+            "total_buy_value": 13203326000,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.67,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "XC",
+            "broker_name": "Ajaib Sekuritas",
+            "true_cost": 463,
+            "total_buy_lot": 276027,
+            "total_buy_value": 12985258000,
+            "active_days": "4/7 hari",
+            "distance_pct": -3.67,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "SQ",
+            "broker_name": "BCA Sekuritas",
+            "true_cost": 460,
+            "total_buy_lot": 261355,
+            "total_buy_value": 11691014400,
+            "active_days": "4/7 hari",
+            "distance_pct": -3.04,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "AK",
+            "broker_name": "UBS Securities",
+            "true_cost": 462,
+            "total_buy_lot": 231343,
+            "total_buy_value": 10860620800,
+            "active_days": "1/7 hari",
+            "distance_pct": -3.46,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "OD",
+            "broker_name": "BRI Danareksa Sekuritas",
+            "true_cost": 456,
+            "total_buy_lot": 165098,
+            "total_buy_value": 7249802600,
+            "active_days": "2/7 hari",
+            "distance_pct": -2.19,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "YB",
+            "broker_name": "Unknown",
+            "true_cost": 461,
+            "total_buy_lot": 147251,
+            "total_buy_value": 6939682200,
+            "active_days": "2/7 hari",
+            "distance_pct": -3.25,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "NI",
+            "broker_name": "BNI Sekuritas",
+            "true_cost": 460,
+            "total_buy_lot": 130490,
+            "total_buy_value": 5900901600,
+            "active_days": "2/7 hari",
+            "distance_pct": -3.04,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "AO",
+            "broker_name": "Unknown",
+            "true_cost": 464,
+            "total_buy_lot": 125866,
+            "total_buy_value": 5697279400,
+            "active_days": "2/7 hari",
+            "distance_pct": -3.88,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          }
+        ],
+        "w1m": [
+          {
+            "broker": "AK",
+            "broker_name": "UBS Securities",
+            "true_cost": 419,
+            "total_buy_lot": 1686100,
+            "total_buy_value": 53831197200,
+            "active_days": "12/30 hari",
+            "distance_pct": 6.44,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "LG",
+            "broker_name": "Trimegah Sekuritas",
+            "true_cost": 417,
+            "total_buy_lot": 1465593,
+            "total_buy_value": 52432334800,
+            "active_days": "14/30 hari",
+            "distance_pct": 6.95,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "PD",
+            "broker_name": "Indo Premier Sekuritas",
+            "true_cost": 423,
+            "total_buy_lot": 1071993,
+            "total_buy_value": 35935817000,
+            "active_days": "12/30 hari",
+            "distance_pct": 5.44,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "IF",
+            "broker_name": "Samuel Sekuritas",
+            "true_cost": 390,
+            "total_buy_lot": 951791,
+            "total_buy_value": 35458192200,
+            "active_days": "7/30 hari",
+            "distance_pct": 14.36,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "ZP",
+            "broker_name": "Maybank Sekuritas",
+            "true_cost": 441,
+            "total_buy_lot": 526849,
+            "total_buy_value": 24713308400,
+            "active_days": "10/30 hari",
+            "distance_pct": 1.13,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "NI",
+            "broker_name": "BNI Sekuritas",
+            "true_cost": 420,
+            "total_buy_lot": 579932,
+            "total_buy_value": 24613686800,
+            "active_days": "8/30 hari",
+            "distance_pct": 6.19,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "BB",
+            "broker_name": "Verdhana Sekuritas",
+            "true_cost": 420,
+            "total_buy_lot": 514773,
+            "total_buy_value": 21076373200,
+            "active_days": "7/30 hari",
+            "distance_pct": 6.19,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "YU",
+            "broker_name": "CIMB Sekuritas",
+            "true_cost": 434,
+            "total_buy_lot": 311338,
+            "total_buy_value": 12654552200,
+            "active_days": "14/30 hari",
+            "distance_pct": 2.76,
+            "status": "\ud83d\udcca AKUMULASI RINGAN"
+          },
+          {
+            "broker": "DR",
+            "broker_name": "RHB Sekuritas",
+            "true_cost": 439,
+            "total_buy_lot": 206871,
+            "total_buy_value": 9616612600,
+            "active_days": "10/30 hari",
+            "distance_pct": 1.59,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          },
+          {
+            "broker": "AI",
+            "broker_name": "UOB Kay Hian Sekuritas",
+            "true_cost": 443,
+            "total_buy_lot": 160313,
+            "total_buy_value": 7391470800,
+            "active_days": "7/30 hari",
+            "distance_pct": 0.68,
+            "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+          }
+        ]
+      },
+      "broker_distributors": {
+        "w7": [
+          {
+            "broker": "MG",
+            "broker_name": "Unknown",
+            "avg_sell": 466,
+            "total_sell_lot": 641352,
+            "total_sell_value": 28783189000,
+            "active_days": "3/7 hari",
+            "distance_pct": -4.29,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "BB",
+            "broker_name": "Verdhana Sekuritas",
+            "avg_sell": 451,
+            "total_sell_lot": 481546,
+            "total_sell_value": 21695734600,
+            "active_days": "1/7 hari",
+            "distance_pct": -1.11,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "YU",
+            "broker_name": "CIMB Sekuritas",
+            "avg_sell": 462,
+            "total_sell_lot": 419241,
+            "total_sell_value": 19418887600,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.46,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "KZ",
+            "broker_name": "Daewoo Securities",
+            "avg_sell": 454,
+            "total_sell_lot": 377351,
+            "total_sell_value": 16996103200,
+            "active_days": "2/7 hari",
+            "distance_pct": -1.76,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "AZ",
+            "broker_name": "Sucor Sekuritas",
+            "avg_sell": 462,
+            "total_sell_lot": 330716,
+            "total_sell_value": 15551625400,
+            "active_days": "4/7 hari",
+            "distance_pct": -3.46,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "LG",
+            "broker_name": "Trimegah Sekuritas",
+            "avg_sell": 461,
+            "total_sell_lot": 302073,
+            "total_sell_value": 13983617000,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.25,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "AI",
+            "broker_name": "UOB Kay Hian Sekuritas",
+            "avg_sell": 466,
+            "total_sell_lot": 241655,
+            "total_sell_value": 11416320600,
+            "active_days": "3/7 hari",
+            "distance_pct": -4.29,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "ZP",
+            "broker_name": "Maybank Sekuritas",
+            "avg_sell": 457,
+            "total_sell_lot": 143983,
+            "total_sell_value": 6371364600,
+            "active_days": "2/7 hari",
+            "distance_pct": -2.41,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "BQ",
+            "broker_name": "Ciptadana Sekuritas",
+            "avg_sell": 463,
+            "total_sell_lot": 120814,
+            "total_sell_value": 5635686200,
+            "active_days": "2/7 hari",
+            "distance_pct": -3.67,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "IF",
+            "broker_name": "Samuel Sekuritas",
+            "avg_sell": 461,
+            "total_sell_lot": 69604,
+            "total_sell_value": 3207301400,
+            "active_days": "3/7 hari",
+            "distance_pct": -3.25,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          }
+        ],
+        "w1m": [
+          {
+            "broker": "XL",
+            "broker_name": "Stockbit Sekuritas",
+            "avg_sell": 429,
+            "total_sell_lot": 1507480,
+            "total_sell_value": 54688266600,
+            "active_days": "14/30 hari",
+            "distance_pct": 3.96,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "KK",
+            "broker_name": "KGI Sekuritas",
+            "avg_sell": 440,
+            "total_sell_lot": 708341,
+            "total_sell_value": 32140518200,
+            "active_days": "9/30 hari",
+            "distance_pct": 1.36,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "CC",
+            "broker_name": "Mandiri Sekuritas",
+            "avg_sell": 424,
+            "total_sell_lot": 854433,
+            "total_sell_value": 30567712200,
+            "active_days": "13/30 hari",
+            "distance_pct": 5.19,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "KZ",
+            "broker_name": "Daewoo Securities",
+            "avg_sell": 424,
+            "total_sell_lot": 609267,
+            "total_sell_value": 26133578200,
+            "active_days": "5/30 hari",
+            "distance_pct": 5.19,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "IN",
+            "broker_name": "Unknown",
+            "avg_sell": 381,
+            "total_sell_lot": 635829,
+            "total_sell_value": 22727277800,
+            "active_days": "6/30 hari",
+            "distance_pct": 17.06,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "DH",
+            "broker_name": "Sinarmas Sekuritas",
+            "avg_sell": 439,
+            "total_sell_lot": 370599,
+            "total_sell_value": 16933173800,
+            "active_days": "4/30 hari",
+            "distance_pct": 1.59,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "BK",
+            "broker_name": "JP Morgan",
+            "avg_sell": 376,
+            "total_sell_lot": 555588,
+            "total_sell_value": 16700870000,
+            "active_days": "10/30 hari",
+            "distance_pct": 18.62,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          },
+          {
+            "broker": "YP",
+            "broker_name": "Mirae Asset Sekuritas",
+            "avg_sell": 428,
+            "total_sell_lot": 472235,
+            "total_sell_value": 16579389800,
+            "active_days": "15/30 hari",
+            "distance_pct": 4.21,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "AZ",
+            "broker_name": "Sucor Sekuritas",
+            "avg_sell": 424,
+            "total_sell_lot": 481922,
+            "total_sell_value": 16551244000,
+            "active_days": "13/30 hari",
+            "distance_pct": 5.19,
+            "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+          },
+          {
+            "broker": "RX",
+            "broker_name": "Macquarie Securities",
+            "avg_sell": 401,
+            "total_sell_lot": 329695,
+            "total_sell_value": 14143248000,
+            "active_days": "3/30 hari",
+            "distance_pct": 11.22,
+            "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+          }
+        ]
+      },
+      "weight_mode": "default",
+      "composite_score": 4.79,
+      "final_score": 3.42
+    }
+  ],
+  "debate_log": [
+    {
+      "round": 1,
+      "ticker": "MARKET",
+      "agent": "macro",
+      "argument": "IHSG menunjukkan tren teknikal bullish berada +2,49% di atas MA20 pada level 6.450, namun pergerakan nilai tukar USD/IDR yang sangat melemah mencapai 17.831 memberikan tekanan pada emiten berorientasi domestik dan importir. Outlook pada seluruh sektor utama (perbankan, pertambangan, konsumsi, infrastruktur, properti) serta pergerakan komoditas saat ini masih berada dalam fase netral dengan tingkat risiko pasar tergolong MEDIUM. Sinyal makro yang bercampur antara penguatan teknikal IHSG dan pelemahan nilai tukar Rupiah menjustifikasi posisi HOLD.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "DEWA",
+      "agent": "bandarmologi",
+      "argument": "Terjadi distribusi oleh big players seperti MG (641 ribu lot @466) dan BB / Verdhana Sekuritas (481 ribu lot @451) dalam 7 hari terakhir, dengan net value -15.67 miliar IDR. Sebaliknya, akumulasi justru didominasi oleh broker ritel XL dan YP, serta dominasi 3 top seller mengontrol 48.9% transaksi pasar. Harga saat ini (446) telah melampaui rata-rata modal bandar 1 bulan (419) dan tergolong mahal (EXPENSIVE) jauh di atas Fair Value fundamental 288 (upside -35.36%). Pola penampungan barang oleh ritel di area overvalued ini berisiko tinggi terhadap jebakan distribusi.",
+      "vote": "SELL"
+    },
+    {
+      "round": 1,
+      "ticker": "DEWA",
+      "agent": "technical",
+      "argument": "DEWA saat ini bergerak sideways pada harga 446, terjebak di antara resisten dinamik MA20 (455,6) dan support MA50 (380,0). Ringkasan TradingView TA mencatatkan sinyal NEUTRAL (10 BUY, 7 SELL, 9 NEUTRAL) didukung RSI di 54,4 yang menunjukkan momentum netral serta MACD yang masih berada dalam tren bearish momentum. Volume transaksi relatif sepi dengan rasio volume 5/20 sebesar 0,61, menandakan belum adanya dorongan breakout ber-volume tinggi. Secara fundamental, harga saat ini di 446 tergolong mahal (EXPENSIVE) dibandingkan Fair Value base di 288,0. Rekomendasi teknikal saat ini adalah HOLD hingga ada konfirmasi breakout di atas resisten 488 atau retracement teruji di zona entry 407-435 dengan Stop Loss di 424 dan TP1 di 477.",
+      "vote": "HOLD"
+    },
+    {
+      "round": 1,
+      "ticker": "DEWA",
+      "agent": "fundamental",
+      "argument": "DEWA menunjukkan angka profitabilitas permukaan yang tinggi dengan ROE 55.26% dan pertumbuhan laba 120.6%. Namun, temuan utama laporan riset mencatat bahwa lonjakan laba bersih 89% YoY pada 1H26 didorong oleh faktor satu kali (one-off), sedangkan core profit operasional relatif flat. Dari sudut pandang valuasi fundamental, harga pasar DEWA saat ini di Rp446.0 sudah tergolong EXPENSIVE dan berada jauh di atas nilai wajar blended (Fair Value) di Rp288.0 dengan potensi downside -35.36% (margin of safety -54.7%). Angka PER 25.8x sangat mahal untuk emiten jasa kontraktor tambang (target PE baseline 8.0x-11.0x), serta Dividend Payout Ratio sebesar 861.0% tergolong tidak sustainable. Walaupun terdapat katalis positif operasional 2H26 dari proyek PT Sebuku Sejaka Coal dan dukungan pendanaan perbankan (BBCA, BMRI), tingginya valuasi dan risiko kuota produksi RKAB membuat risk-reward saham ini kurang menarik.",
+      "vote": "SELL"
+    },
+    {
+      "round": 2,
+      "ticker": "DEWA",
+      "agent": "bandarmologi",
+      "argument": "Saya mendukung rekomendasi SELL dari analis Fundamental dan meng-override sinyal HOLD dari Technical. Data broker summary 7 hari terakhir secara jelas mengindikasikan retail trap: transaksi akumulasi diisi oleh sekuritas ritel (XL Stockbit membeli 762 ribu lot dan YP Mirae 361 ribu lot), sementara big players (MG, BB, YU) melakukan distribusi masif dengan dominasi mencapai 48,9% volume pasar. Mengingat harga Rp446 saat ini berada di atas avg cost bandar 1 bulan (Rp419) dan jauh melampaui Fair Value fundamental Rp288 (EXPENSIVE), aksi jualan masif big money yang ditampung ritel ini merupakan sinyal bahaya untuk segera keluar.",
+      "vote": "SELL"
+    },
+    {
+      "round": 2,
+      "ticker": "DEWA",
+      "agent": "technical",
+      "argument": "Saya menyetujui sinyal kewaspadaan dari tim Fundamental dan Bandarmologi. Secara teknikal, harga DEWA saat ini (446) berada jauh di atas nilai wajar Fair Value fundamental (288, upside -35.36%) dan tertahan di bawah resistance dinamis MA20 (455.6) serta MA200 (463.5). Struktur harga menunjukkan tren sideways yang terbebani oleh death cross MA50/MA100 dan MA100/MA200, didukung momentum MACD bearish serta volume transaksi yang minim (Vol ratio 5/20 di 0.61). Rekomendasi TradingView TA juga berada pada posisi NEUTRAL (10 Buy, 7 Sell, 9 Neutral). Tanpa breakout yang terkonfirmasi volume tinggi di atas resistance 488, distribusi pelaku pasar berisiko mendorong harga breakdown menuju area support terdekat 407.",
+      "vote": "SELL"
+    },
+    {
+      "round": 2,
+      "ticker": "DEWA",
+      "agent": "fundamental",
+      "argument": "Saya mendukung analisis bandarmologi yang mengidentifikasi distribusi smart money dan menolak rekomendasi HOLD dari teknikal yang terlalu pasif. Walaupun DEWA mencatatkan ROE kuat 55.26% dan pertumbuhan laba 120.6%, harga saat ini di 446.0 sudah tergolong EXPENSIVE karena berada jauh di atas Fair Value base 288.0 (downside -35.36%, Margin of Safety -54.7%). PER 25.8x sangat mahal dibanding target PE baseline sektor komoditas/tambang yang sebesar 8.0x. Tambahan lagi, Dividend Payout Ratio sebesar 861.0% sangat tidak sehat dan tidak berkelanjutan. Bukti distribusi big player sebesar -15.67 miliar IDR ke akun ritel semakin mengonfirmasi bahwa harga saham sudah terlalu mahal dan rentan terkoreksi tajam.",
+      "vote": "SELL"
+    }
+  ],
+  "composites": {
+    "DEWA": {
+      "ticker": "DEWA",
+      "composite_score": 4.79,
+      "weights_used": {
+        "bandarm": 0.35,
+        "technical": 0.22,
+        "fundamental": 0.18,
+        "macro": 0.13,
+        "news": 0.12
+      },
+      "weight_mode": "default",
+      "sector": "Energy",
+      "usdidr_adj": 0.0,
+      "usdidr_narrative": "",
+      "breakdown": {
+        "bandarm": {
+          "score": 1.5,
+          "weight": 0.35,
+          "contribution": 0.52
+        },
+        "technical": {
+          "score": 5.5,
+          "weight": 0.22,
+          "contribution": 1.21
+        },
+        "fundamental": {
+          "score": 6.8,
+          "weight": 0.18,
+          "contribution": 1.22
+        },
+        "macro": {
+          "score": 5.5,
+          "weight": 0.13,
+          "contribution": 0.72
+        },
+        "news": {
+          "score": 9.3,
+          "weight": 0.12,
+          "contribution": 1.12
+        }
+      }
+    }
+  },
+  "scores": {
+    "DEWA": {
+      "bandarm": {
+        "ticker": "DEWA",
+        "score": 1.5,
+        "signal": "NEUTRAL",
+        "weight": "40%",
+        "window_7d": {
+          "period": "2026-08-10 s/d 2026-08-18",
+          "bandar_signal": "Moderate Accumulation",
+          "assessment": "Moderate Accumulation",
+          "net_lot": -380479,
+          "net_value": -15668276800,
+          "total_buyer": 10,
+          "total_seller": 10,
+          "top_accumulators": [
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "total_buy_lot": 762313,
+              "total_buy_value": 35508572200,
+              "avg_price": 462,
+              "active_days": "5/7 hari",
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI",
+              "distance_pct": -3.463203463203463
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "total_buy_lot": 361467,
+              "total_buy_value": 17355095600,
+              "avg_price": 462,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -3.463203463203463
+            },
+            {
+              "broker": "CP",
+              "broker_name": "Valbury Sekuritas",
+              "total_buy_lot": 286646,
+              "total_buy_value": 13203326000,
+              "avg_price": 463,
+              "active_days": "3/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -3.6717062634989204
+            },
+            {
+              "broker": "XC",
+              "broker_name": "Ajaib Sekuritas",
+              "total_buy_lot": 276027,
+              "total_buy_value": 12985258000,
+              "avg_price": 463,
+              "active_days": "4/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -3.6717062634989204
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "total_buy_lot": 261355,
+              "total_buy_value": 11691014400,
+              "avg_price": 460,
+              "active_days": "4/7 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": -3.0434782608695654
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_buy_lot": 231343,
+              "total_buy_value": 10860620800,
+              "avg_price": 462,
+              "active_days": "1/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -3.463203463203463
+            },
+            {
+              "broker": "OD",
+              "broker_name": "BRI Danareksa Sekuritas",
+              "total_buy_lot": 165098,
+              "total_buy_value": 7249802600,
+              "avg_price": 456,
+              "active_days": "2/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -2.1929824561403506
+            },
+            {
+              "broker": "YB",
+              "broker_name": "Unknown",
+              "total_buy_lot": 147251,
+              "total_buy_value": 6939682200,
+              "avg_price": 461,
+              "active_days": "2/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -3.2537960954446854
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "total_buy_lot": 130490,
+              "total_buy_value": 5900901600,
+              "avg_price": 460,
+              "active_days": "2/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -3.0434782608695654
+            },
+            {
+              "broker": "AO",
+              "broker_name": "Unknown",
+              "total_buy_lot": 125866,
+              "total_buy_value": 5697279400,
+              "avg_price": 464,
+              "active_days": "2/7 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": -3.8793103448275863
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "MG",
+              "broker_name": "Unknown",
+              "total_sell_lot": 641352,
+              "total_sell_value": 28783189000,
+              "avg_price": 466,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "total_sell_lot": 481546,
+              "total_sell_value": 21695734600,
+              "avg_price": 451,
+              "active_days": "1/7 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_sell_lot": 419241,
+              "total_sell_value": 19418887600,
+              "avg_price": 462,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_sell_lot": 377351,
+              "total_sell_value": 16996103200,
+              "avg_price": 454,
+              "active_days": "2/7 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "total_sell_lot": 330716,
+              "total_sell_value": 15551625400,
+              "avg_price": 462,
+              "active_days": "4/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "total_sell_lot": 302073,
+              "total_sell_value": 13983617000,
+              "avg_price": 461,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "total_sell_lot": 241655,
+              "total_sell_value": 11416320600,
+              "avg_price": 466,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "total_sell_lot": 143983,
+              "total_sell_value": 6371364600,
+              "avg_price": 457,
+              "active_days": "2/7 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "BQ",
+              "broker_name": "Ciptadana Sekuritas",
+              "total_sell_lot": 120814,
+              "total_sell_value": 5635686200,
+              "avg_price": 463,
+              "active_days": "2/7 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Samuel Sekuritas",
+              "total_sell_lot": 69604,
+              "total_sell_value": 3207301400,
+              "avg_price": 461,
+              "active_days": "3/7 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_7d": 0
+        },
+        "window_1m": {
+          "period": "2026-07-08 s/d 2026-08-18",
+          "bandar_signal": "Light Accumulation",
+          "assessment": "Light Accumulation",
+          "net_lot": 950164,
+          "net_value": 30558266600,
+          "total_buyer": 10,
+          "total_seller": 10,
+          "top_accumulators": [
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "total_buy_lot": 1686100,
+              "total_buy_value": 53831197200,
+              "avg_price": 419,
+              "active_days": "12/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 6.443914081145586
+            },
+            {
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "total_buy_lot": 1465593,
+              "total_buy_value": 52432334800,
+              "avg_price": 417,
+              "active_days": "14/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 6.954436450839328
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Indo Premier Sekuritas",
+              "total_buy_lot": 1071993,
+              "total_buy_value": 35935817000,
+              "avg_price": 423,
+              "active_days": "12/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 5.4373522458628845
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Samuel Sekuritas",
+              "total_buy_lot": 951791,
+              "total_buy_value": 35458192200,
+              "avg_price": 390,
+              "active_days": "7/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 14.358974358974358
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "total_buy_lot": 526849,
+              "total_buy_value": 24713308400,
+              "avg_price": 441,
+              "active_days": "10/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 1.1337868480725624
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "total_buy_lot": 579932,
+              "total_buy_value": 24613686800,
+              "avg_price": 420,
+              "active_days": "8/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 6.190476190476191
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "total_buy_lot": 514773,
+              "total_buy_value": 21076373200,
+              "avg_price": 420,
+              "active_days": "7/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 6.190476190476191
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "total_buy_lot": 311338,
+              "total_buy_value": 12654552200,
+              "avg_price": 434,
+              "active_days": "14/30 hari",
+              "status": "\ud83d\udcca AKUMULASI RINGAN",
+              "distance_pct": 2.7649769585253456
+            },
+            {
+              "broker": "DR",
+              "broker_name": "RHB Sekuritas",
+              "total_buy_lot": 206871,
+              "total_buy_value": 9616612600,
+              "avg_price": 439,
+              "active_days": "10/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 1.5945330296127564
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "total_buy_lot": 160313,
+              "total_buy_value": 7391470800,
+              "avg_price": 443,
+              "active_days": "7/30 hari",
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN",
+              "distance_pct": 0.6772009029345373
+            }
+          ],
+          "top_distributors": [
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "total_sell_lot": 1507480,
+              "total_sell_value": 54688266600,
+              "avg_price": 429,
+              "active_days": "14/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KK",
+              "broker_name": "KGI Sekuritas",
+              "total_sell_lot": 708341,
+              "total_sell_value": 32140518200,
+              "avg_price": 440,
+              "active_days": "9/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "total_sell_lot": 854433,
+              "total_sell_value": 30567712200,
+              "avg_price": 424,
+              "active_days": "13/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "total_sell_lot": 609267,
+              "total_sell_value": 26133578200,
+              "avg_price": 424,
+              "active_days": "5/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "IN",
+              "broker_name": "Unknown",
+              "total_sell_lot": 635829,
+              "total_sell_value": 22727277800,
+              "avg_price": 381,
+              "active_days": "6/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "DH",
+              "broker_name": "Sinarmas Sekuritas",
+              "total_sell_lot": 370599,
+              "total_sell_value": 16933173800,
+              "avg_price": 439,
+              "active_days": "4/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "total_sell_lot": 555588,
+              "total_sell_value": 16700870000,
+              "avg_price": 376,
+              "active_days": "10/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "total_sell_lot": 472235,
+              "total_sell_value": 16579389800,
+              "avg_price": 428,
+              "active_days": "15/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "total_sell_lot": 481922,
+              "total_sell_value": 16551244000,
+              "avg_price": 424,
+              "active_days": "13/30 hari",
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "total_sell_lot": 329695,
+              "total_sell_value": 14143248000,
+              "avg_price": 401,
+              "active_days": "3/30 hari",
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            }
+          ],
+          "distribution_signal": "DISTRIBUTION",
+          "foreign_net_1m": 0
+        },
+        "price_analysis": {
+          "current_price": 446.0,
+          "bandar_avg_7d": 462,
+          "bandar_avg_1m": 419,
+          "distance_from_7d": "-3.46%",
+          "distance_from_1m": "+6.44%",
+          "ideal_entry_zone": "417\u2013421",
+          "max_entry": "471",
+          "entry_status": "\ud83d\udfe2 IDEAL",
+          "entry_label": "Harga 3.5% DI BAWAH avg cost bandar seminggu terakhir \u2014 ideal entry",
+          "net_foreign_7d": "netral",
+          "net_foreign_1m": "netral",
+          "anomali_akumulasi_7d": null,
+          "anomali_akumulasi_1m": null,
+          "anomali_distribusi_7d": null,
+          "anomali_distribusi_1m": null
+        },
+        "broker_to_watch": [
+          "XL (Stockbit Sekuritas)",
+          "YP (Mirae Asset Sekuritas)"
+        ],
+        "data_used": [
+          "Stockbit broker summary 7H & 1M",
+          "Fase Re-Akumulasi (Estafet): Bandar lama mungkin taking profit, tapi ada bandar baru yang nampung agresif minggu ini",
+          "Distribution 7H: Dist, Top3 sell >= 30% value",
+          "Distribution 1M: Top3 sell >= 30% value",
+          "Konsentrasi Beli (52%) vs Jual (49%) -> Imbang (Netral)",
+          "Dominance 48.9% (>40) + Dist -> Penalti -1.0",
+          "Penalty: Broker retail XL akumulasi di rank 1 (score -1.0)",
+          "Penalty: Broker retail YP akumulasi di rank 2 (score -1.0)"
+        ],
+        "confidence": "LOW",
+        "insight_concentration": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_aggressiveness": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_fomo_trap": {
+          "type": "neutral",
+          "narrative": ""
+        },
+        "insight_dominance": {
+          "type": "risk",
+          "narrative": "\u26a0\ufe0f Distribusi Masif: 48.9% transaksi pasar dikendalikan 3 broker yang membuang barang. Risiko SANGAT TINGGI."
+        }
+      },
+      "technical": {
+        "ticker": "DEWA",
+        "score": 5.5,
+        "current_price": 446.0,
+        "signal": "HOLD",
+        "trend": "sideways",
+        "setup": "RSI bullish momentum; Harga di bawah MA20 (short-term bearish); Harga di atas MA50 (mid-term bullish); Harga di atas MA100 (intermediate-term bullish); Harga di bawah MA200 (long-term bearish); Golden cross MA20/MA50; Death cross MA50/MA100 (mid-intermediate bearish); Death cross MA100/MA200 (intermediate-long bearish); MACD bearish momentum; Volume normal; Trend utama: sideways (harga di antara MA major)",
+        "entry_zone": "407-435",
+        "entry_low": 407.0,
+        "entry_high": 435.0,
+        "target": "491",
+        "stop_loss": "424",
+        "support_near": "407",
+        "resistance_near": "488",
+        "support_strong": "195",
+        "resistance_strong": "619",
+        "divergence": {
+          "rsi": "none",
+          "macd": "none"
+        },
+        "candlestick_patterns": [],
+        "data_used": [
+          "TV Fib Support Terdekat: 407",
+          "TV Fib Support Kuat: 195",
+          "TV Fib Resistance Terdekat: 488",
+          "TV Fib Resistance Kuat: 619",
+          "RSI: 54.4",
+          "MA20: 454",
+          "MA50: 380",
+          "MA100: 417",
+          "MA200: 463",
+          "MACD: bearish",
+          "Vol ratio 5/20: 0.61",
+          "52W pos: 36%",
+          "Trend: sideways (0)"
+        ],
+        "confidence": "HIGH",
+        "tradingview_ta": {
+          "summary": {
+            "RECOMMENDATION": "NEUTRAL",
+            "BUY": 10,
+            "SELL": 7,
+            "NEUTRAL": 9
+          },
+          "indicators": {
+            "Recommend.Other": -0.09090909090909091,
+            "Recommend.All": 0.08787878787878788,
+            "Recommend.MA": 0.26666666666666666,
+            "RSI": 54.40756171029933,
+            "RSI[1]": 55.664382938545046,
+            "Stoch.K": 24.74747474747474,
+            "Stoch.D": 30.9027777777778,
+            "Stoch.K[1]": 24.99999999999996,
+            "Stoch.D[1]": 27.531472359058526,
+            "CCI20": -27.800791678174356,
+            "CCI20[1]": -22.68375313006356,
+            "ADX": 35.2168823048507,
+            "ADX+DI": 26.73363697272279,
+            "ADX-DI": 15.252368731094727,
+            "ADX+DI[1]": 25.770220988375645,
+            "ADX-DI[1]": 16.082052858041244,
+            "AO": 49.06470588235334,
+            "AO[1]": 59.65882352941219,
+            "Mom": -18,
+            "Mom[1]": -10,
+            "MACD.macd": 19.721534960344627,
+            "MACD.signal": 25.26823755334096,
+            "Rec.Stoch.RSI": 0,
+            "Stoch.RSI.K": 2.025713337959104,
+            "Rec.WR": 0,
+            "W.R": -78.125,
+            "Rec.BBPower": 1,
+            "BBPower": 6.978060766675185,
+            "Rec.UO": 0,
+            "UO": 31.26199539117241,
+            "close": 446,
+            "EMA5": 452.02823232678855,
+            "SMA5": 449.9999999999999,
+            "EMA10": 453.9251111317465,
+            "SMA10": 461.80000000000007,
+            "EMA20": 441.5690152916649,
+            "SMA20": 455.5999999999993,
+            "EMA30": 427.9166789416762,
+            "SMA30": 419.60000000000014,
+            "EMA50": 416.20354269680234,
+            "SMA50": 380.08000000000044,
+            "EMA100": 421.2582132061189,
+            "SMA100": 417.74999999999955,
+            "EMA200": 408.14104966200176,
+            "SMA200": 463.5,
+            "Rec.Ichimoku": 0,
+            "Ichimoku.BLine": 411,
+            "Rec.VWMA": -1,
+            "VWMA": 454.8463496393904,
+            "Rec.HullMA9": 1,
+            "HullMA9": 443.51851851851853,
+            "Pivot.M.Classic.S3": null,
+            "Pivot.M.Classic.S2": 194.66666666666669,
+            "Pivot.M.Classic.S1": 327.33333333333337,
+            "Pivot.M.Classic.Middle": 406.6666666666667,
+            "Pivot.M.Classic.R1": 539.3333333333334,
+            "Pivot.M.Classic.R2": 618.6666666666667,
+            "Pivot.M.Classic.R3": 830.6666666666667,
+            "Pivot.M.Fibonacci.S3": 194.66666666666669,
+            "Pivot.M.Fibonacci.S2": 275.65066666666667,
+            "Pivot.M.Fibonacci.S1": 325.6826666666667,
+            "Pivot.M.Fibonacci.Middle": 406.6666666666667,
+            "Pivot.M.Fibonacci.R1": 487.65066666666667,
+            "Pivot.M.Fibonacci.R2": 537.6826666666667,
+            "Pivot.M.Fibonacci.R3": 618.6666666666667,
+            "Pivot.M.Camarilla.S3": 401.7,
+            "Pivot.M.Camarilla.S2": 421.1333333333333,
+            "Pivot.M.Camarilla.S1": 440.56666666666666,
+            "Pivot.M.Camarilla.Middle": 406.6666666666667,
+            "Pivot.M.Camarilla.R1": 479.43333333333334,
+            "Pivot.M.Camarilla.R2": 498.8666666666667,
+            "Pivot.M.Camarilla.R3": 518.3,
+            "Pivot.M.Woodie.S3": 158,
+            "Pivot.M.Woodie.S2": 216,
+            "Pivot.M.Woodie.S1": 370,
+            "Pivot.M.Woodie.Middle": 428,
+            "Pivot.M.Woodie.R1": 582,
+            "Pivot.M.Woodie.R2": 640,
+            "Pivot.M.Woodie.R3": 794,
+            "Pivot.M.Demark.S1": 367,
+            "Pivot.M.Demark.Middle": 426.5,
+            "Pivot.M.Demark.R1": 579,
+            "open": 456,
+            "P.SAR": 492.706752,
+            "BB.lower": 427.49733108755515,
+            "BB.upper": 483.7026689124434,
+            "AO[2]": 70.09411764705919,
+            "volume": 414084500,
+            "change": -0.8888888888888888,
+            "low": 446,
+            "high": 464
+          }
+        },
+        "tp1": 477.0,
+        "tp2": 549.0,
+        "tp3": 619.0,
+        "tp1_size": 0.3,
+        "tp2_size": 0.4,
+        "tp3_size": 0.3,
+        "risk_reward_tp1": "1:4.1",
+        "risk_reward_tp2": "1:8.3",
+        "risk_reward_tp3": "1:12.5",
+        "tp_constraints_met": true
+      },
+      "fundamental": {
+        "ticker": "DEWA",
+        "score": 6.8,
+        "signal": "HOLD",
+        "key_points": [
+          "PBV 2.26x \u2014 wajar",
+          "ROE 55.26% \u2014 sangat baik",
+          "Earnings growth 120.6% \u2014 akseleratif",
+          "Revenue konsisten naik 3 tahun terakhir",
+          "Dividend yield saat ini di atas rata-rata 5 tahun (0.39%)"
+        ],
+        "risks": [
+          "PER 25.8x \u2014 mahal",
+          "Payout ratio sangat tinggi: 861.0%",
+          "Valuasi mahal: EXPENSIVE (upside -35.4%)"
+        ],
+        "data_used": [
+          "PER: 25.8x",
+          "PBV: 2.26x",
+          "ROE: 55.26%",
+          "DER: 0.56x",
+          "Revenue Growth: 8.7%",
+          "Earnings Growth: 120.6%",
+          "Rata-rata Net Income 3 tahun: 1,690",
+          "Rata-rata EPS 3 tahun: 41.54",
+          "Rata-rata Revenue 3 tahun: 6,279",
+          "Rata-rata Dividend Yield 5 tahun: 0.39%",
+          "Dividend Payout Ratio: 861.0%",
+          "Fair Value: 288 (EXPENSIVE)",
+          "Upside to fair value: -35.36%",
+          "CAGR Revenue: 7.84% (2017\u20132026)",
+          "CAGR Net Income: 38.83% (2017\u20132026)",
+          "CAGR Eps: 38.81% (2017\u20132026)"
+        ],
+        "fair_value": {
+          "current_price": 446.0,
+          "method": "blended",
+          "fair_value_low": 177.0,
+          "fair_value_base": 288.0,
+          "fair_value_high": 532.0,
+          "upside_pct": -35.36,
+          "margin_of_safety_pct": -54.7,
+          "valuation_label": "EXPENSIVE",
+          "methods": {
+            "pe_based": {
+              "available": true,
+              "eps": 17.26,
+              "target_pe": 11.0,
+              "fair_value": 190.0
+            },
+            "pbv_roe_based": {
+              "available": true,
+              "bvps": 198.98,
+              "roe_pct": 55.26,
+              "sustainable_growth_pct": 10.5,
+              "required_return_pct": 13.5,
+              "fair_pbv": 2.5,
+              "fair_value": 497.0
+            },
+            "eps_growth_based": {
+              "available": true,
+              "eps": 17.26,
+              "growth_pct": 120.64,
+              "target_pe": 12.8,
+              "fair_value": 221.0
+            }
+          },
+          "notes": [
+            "EPS source: derived_from_current_price_per",
+            "BVPS source: info_bvps",
+            "Target PE baseline sektor Komoditas/Tambang: 8.0x"
+          ],
+          "confidence": "HIGH"
+        },
+        "confidence": "HIGH"
+      },
+      "news": {
+        "ticker": "DEWA",
+        "score": 9.3,
+        "summary": "Sentimen pasar (4 berita, 2 report) untuk DEWA cenderung positif (score: 9.3). [Report Keuangan Q2 2026 rilis: sentimen Bullish]",
+        "articles": [
+          {
+            "title": "[NEWS] Darma Henwa (DEWA) mempertahankan outlook positif untuk semester kedua 2026, didorong oleh dimulainya operasional tambang PT Sebuku Sejaka Coal, potensi kontrak baru di luar grup BUMI, serta potensi ekspansi margin laba kotor. Meskipun terdapat risiko terkait revisi kuota produksi RKAB, perusahaan telah mengamankan dukungan pendanaan perbankan (BBCA, BMRI) untuk ekspansi operasionalnya.",
+            "description": "\ud83d\udcf0 DEWA 2Q26 Earnings Call: Outlook 2H26 Positif seiring Penambahan Kontrak Kerja\n\nDarma Henwa ([%HnyT%]) pada Selasa (11/8) mengadakan earnings call untuk membahas kinerja 1H26, sekaligus memberikan outlook kinerja 2H26. Berikut beberapa catatan penting kami:\n\nPenjelasan Manajemen Terkait One\u2013off pada 2Q26\n\n\u25aa\ufe0f Manajemen DEWA menjelaskan bahwa meningkatnya nilai wajar investasi saham pada 2Q26 terkait dengan investasi pada PT Pendopo Energi Batubara, yang disebabkan oleh menguatnya dolar AS terhadap rupiah dari level saat penilaian terakhir dilakukan pada 2020. Penilaian tersebut dilakukan seiring dengan bergantinya auditor perseroan, dengan penilaian berikutnya diperkirakan dilakukan setiap 3 tahun.\n\nUpdate Pekerjaan untuk PT Sebuku Sejaka Coal\n\n\u25aa\ufe0f DEWA telah memulai aktivitas pengeboran untuk tambang PT Sebuku Sejaka Coal pada awal Agustus 2026.\n\n\u25aa\ufe0f Manajemen menjelaskan bahwa ruang lingkup pekerjaan yang dilakukan di tambang PT Sebuku Sejaka Coal akan lebih luas dibandingkan pengerjaan di anak usaha Bumi Resources ([%paWh%]), yakni PT Arutmin Indonesia dan PT Kaltim Prima Coal, karena mencakup land clearing, maintenance infrastruktur, dan blasting, selain overburden removal dan coal digging.\n\n\u25aa\ufe0f Cakupan pekerjaan yang lebih luas di tambang PT Sebuku Sejaka Coal mengimplikasikan pendapatan per bcm yang lebih tinggi, tetapi belum tentu tercermin pada kenaikan margin.\n\n\u25aa\ufe0f Capex untuk PT Sebuku Sejaka Coal diperkirakan mencapai ~Rp1 T, yang akan didanai sebagian oleh utang bank dari konsorsium Bank Central Asia ([%dRGd%]) dan Bank Mandiri (BMRI), serta vendor financing. \n\nOutlook 2H26 Positif: Didorong Volume dibandingkan Tarif\n\n\u25aa\ufe0f Kami tetap mempertahankan outlook positif untuk DEWA selama 2H26, seiring dengan: 1) potensi penambahan kontrak pengerjaan di luar grup BUMI; 2) ekspansi margin laba kotor seiring dengan proporsi pengerjaan internal yang akan mencapai 100%; serta 3) harga batu bara yang tetap terjaga pada level tinggi.\n\n\u25aa\ufe0f Dari sisi tarif pengerjaan, manajemen mengekspektasikan realisasi yang flat pada tahun ini untuk proyek PT Arutmin Indonesia dan PT Kaltim Prima Coal, tetapi tarif konsolidasi berpotensi sedikit meningkat seiring dengan dimulainya pengerjaan kontrak PT Sebuku Sejaka Coal yang diperkirakan memiliki tarif lebih tinggi.\n\n\u25aa\ufe0f Risiko utama tetap terletak pada hasil revisi kuota produksi RKAB 2026, yang akan mempengaruhi volume pertambangan dari klien DEWA.\n\nBaca ulasan kami terkait kinerja DEWA pada 2Q26/1H26 di sini [[%BqMa%]].\n\n------\nEverson Sugianto ([%BXyh%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-12 02:30:21.502487+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] Darma Henwa (DEWA) mencatatkan pertumbuhan laba bersih 89% YoY di 1H26, didorong oleh faktor one-off. Meski core profit relatif flat, kinerja operasional menunjukkan margin laba kotor yang kuat berkat peningkatan porsi pengerjaan internal. Prospek 2H26 diproyeksikan lebih solid, meskipun realisasi pertumbuhan bergantung pada kuota produksi RKAB untuk kontrak baru.",
+            "description": "DEWA 1H26: Laba Bersih +89% YoY, Core Profit +1% YoY\n\nStockbit's take:\n\n\u25aa\ufe0f Laba bersih Darma Henwa ([%OLYi%]) tumbuh +182% QoQ pada 2Q26, sehingga naik +89% YoY selama 1H26.\n\n\u25aa\ufe0f Pertumbuhan laba bersih didukung oleh faktor one\u2013off berupa penyesuaian nilai wajar investasi saham yang tidak dirinci perseroan, yang mengkompensasi kenaikan beban bunga akibat denda pinjaman bank yang juga bersifat one\u2013off.\n\n\u25aa\ufe0f Mengesampingkan kedua faktor one\u2013off tersebut, core profit relatif flat secara kuartalan pada 2Q26 dan tumbuh +1% YoY selama 1H26, sejalan dengan ekspektasi, sementara EBITDA tumbuh lebih solid.\n\n\u25aa\ufe0f Momentum pertumbuhan laba bersih selama 2H26 berpotensi lebih kencang dibandingkan 1H26, seiring: 1) porsi pengerjaan internal yang akan mencapai 100%; dan 2) penambahan kontrak dari klien di luar ekosistem Bumi Resources ([%OvvQ%]), PT Sebuku Sejaka Coal, meski bergantung pada hasil revisi kuota produksi RKAB 2026.\n\nCore Profit Sejalan dengan Ekspektasi \u2014\u00a0 DEWA mencatat laba bersih Rp262 M pada 2Q26 (+182% QoQ, +121% YoY), sehingga laba bersih selama 1H26 mencapai Rp354 M (+89% YoY). Kenaikan laba bersih didukung oleh penyesuaian nilai wajar investasi saham sebesar Rp229 M pada 2Q26, yang mengkompensasi kenaikan beban keuangan yang signifikan (+95% QoQ) terutama akibat denda pinjaman bank yang bersifat one\u2013off senilai Rp46 M. Mengesampingkan kedua beban one\u2013off tersebut, core profit flat secara kuartalan pada 2Q26 dan tumbuh +1% YoY selama 1H26, sejalan dengan ekspektasi karena setara 41% estimasi 2026F konsensus, dengan ekspektasi momentum pertumbuhan selama 2H26 akan lebih solid dibandingkan 1H26. Core profit yang flat secara kuartalan pada 2Q26 terjadi di tengah pertumbuhan pendapatan yang solid dan ekspansi margin laba kotor, sementara terdapat kenaikan pada beban karyawan pada opex (+109% QoQ) dan beban bunga underlying dari pinjaman bank (+51% QoQ).\n\nKenaikan Tarif Pengerjaan & Porsi Pengerjaan Internal Dorong Margin Laba Kotor \u2014\u00a0 Kenaikan pendapatan +7% QoQ pada 2Q26 lebih didorong oleh kenaikan tarif pengerjaan (+9% QoQ) dibandingkan volume material moved (-1% QoQ). Volume material moved menurun seiring turunnya volume pengerjaan subkontraktor (-53% QoQ), sementara volume pengerjaan internal naik +14% QoQ, sehingga porsi pengerjaan secara internal naik menjadi 89% (vs. 1Q26: 77%). Naiknya proporsi pengerjaan internal terjadi seiring dimulainya pengerjaan internal penuh pada proyek Bengalon milik PT Kaltim Prima Coal sejak Mei 2026. Margin laba kotor secara kuartalan pun mencapai level tertingginya setidaknya sejak 1Q22 di 20,7% (vs. 1Q26: 17,3%). Selama 1H26, pendapatan tumbuh +3% YoY, didukung kenaikan material moved (+9% YoY), sementara EBITDA naik +19% YoY, sejalan dengan ekspektasi karena setara 44% estimasi 2026F konsensus.\n\nMomentum 2H26 Berpotensi Solid, tapi Bergantung pada Realisasi RKAB \u2014  Kami menilai DEWA tidak akan kesulitan mencapai estimasi konsensus 2026F, seiring potensi core profit yang lebih tinggi pada 2H26 dibandingkan 1H26. Penilaian kami didasarkan oleh pertimbangan bahwa porsi pengerjaan internal akan mencapai 100% pada 2H26, serta diperolehnya kontrak jasa pertambangan untuk tambang di luar ekosistem BUMI, PT Sebuku Sejaka Coal, dengan estimasi volume overburden hingga 55 juta bcm dan produksi batu bara hingga 5 juta ton per tahun. Meski demikian, kami tetap wait and see terhadap realisasi kontrak PT Sebuku Sejaka Coal karena kinerjanya akan dipengaruhi oleh hasil revisi kuota produksi RKAB 2026, mengingat status tambang PT Sebuku Sejaka Coal sebagai IUP OP. Sebelumnya, pemerintah mengumumkan bahwa tambang yang tidak mengalami pemangkasan kuota produksi 2026 adalah pemegang izin PKP2B generasi I dan BUMN pemegang izin IUP [[%RoqQ%]].\n\n------\nEverson Sugianto ([%XUdU%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-10 02:30:39.237589+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] [DEWA] merilis laporan bulanan registrasi pemegang efek untuk Juli 2026. Terjadi pergeseran kepemilikan saham dari investor asing ke lokal, meningkatkan porsi lokal menjadi 73,13%, namun komposisi pemegang saham utama tidak berubah. Evaluasi: Rutin (administratif tanpa dampak pada fundamental).",
+            "description": "[NOTIF_TYPE_COMPANY_SHAREHOLDING] Report: \"Laporan Bulanan Registrasi Pemegang Efek [DEWA]\"\nRingkasan Kinerja: DEWA (Darma Henwa) melaporkan pergeseran 218,55 juta saham dari investor asing ke lokal pada Juli 2026, meningkatkan porsi lokal menjadi 73,13%.\nPoin Kunci:\n- Kepemilikan investor lokal bertambah 218,55 juta saham.\n- Porsi investor lokal naik menjadi 73,13% dari total saham.\n- Komposisi pemegang saham utama di atas 5% tidak berubah.\n- Saham publik (free float) tercatat 49,7%, turun dari 49,83%.\nKesimpulan: Laporan bulanan rutin yang menunjukkan pergeseran kepemilikan minor tanpa mengubah struktur pengendali atau komposisi pemegang saham utama.",
+            "published_at": "2026-08-07 14:30:11.623694+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[FINANCIAL_REPORT] [DEWA] merilis Laporan Keuangan Interim Semester I 2026. Evaluasi: Kinerja Sangat Bagus (Laba bersih melonjak 89% YoY menjadi Rp354,28 miliar, didorong oleh efisiensi biaya dan peningkatan margin laba bruto).",
+            "description": "[NOTIF_TYPE_NEW_REPORT] Report: \"Penyampaian Laporan Keuangan Interim Auditan [DEWA]\"\nRingkasan Kinerja: DEWA (Darma Henwa) membukukan laba bersih semester I 2026 sebesar Rp354,28 miliar, melonjak 89% YoY, didorong oleh peningkatan pendapatan dan efisiensi biaya.\nPoin Kunci:\n- Laba bersih diatribusikan ke entitas induk naik 89% menjadi Rp354,28 miliar.\n- Pendapatan usaha tumbuh 3,13% YoY menjadi Rp3,21 triliun.\n- Laba bruto meningkat 23,45% menjadi Rp612,16 miliar.\n- Total aset per 30 Juni 2026 mencapai Rp17,63 triliun.\nKesimpulan: Laporan kinerja keuangan semesteran rutin yang menunjukkan pertumbuhan laba signifikan tanpa perubahan struktur perusahaan.",
+            "published_at": "2026-08-07 14:00:21.778235+00:00",
+            "source": "Stockbit RAG Financial_report",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "financial_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[FINANCIAL_REPORT] PT Darma Henwa Tbk [DEWA] melaporkan lonjakan laba bersih sebesar 89% YoY menjadi Rp354,28 miliar pada semester I 2026. Meskipun kenaikan laba bersih sangat signifikan, pertumbuhan ini didorong oleh keuntungan investasi saham (non-operasional), sedangkan pendapatan usaha hanya tumbuh moderat sebesar 3,1%. Evaluasi: Sentimen Positif (Kinerja laba tumbuh tinggi, namun perlu dicatat bahwa kualitas laba didukung oleh faktor one-off).",
+            "description": "[NOTIF_TYPE_NEW_REPORT] Report: \"Penyampaian Laporan Keuangan Interim Auditan [DEWA]\"\nRingkasan Kinerja: DEWA (Darma Henwa) membukukan laba bersih Rp354,28 miliar pada semester I 2026, naik 89% YoY, yang ditopang oleh keuntungan investasi saham.\nPoin Kunci:\n- Laba bersih semester I 2026 mencapai Rp354,28 miliar, naik 89% YoY.\n- Kenaikan laba ditopang keuntungan investasi saham sebesar Rp229,37 miliar.\n- Pendapatan usaha tumbuh 3,1% menjadi Rp3,21 triliun.\n- Total aset meningkat menjadi Rp17,63 triliun per 30 Juni 2026.\nKesimpulan: Kenaikan laba bersih signifikan, namun sebagian besar berasal dari keuntungan investasi saham yang belum direalisasi.",
+            "published_at": "2026-08-07 14:00:12.603809+00:00",
+            "source": "Stockbit RAG Financial_report",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "financial_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] PT Darma Henwa Tbk (DEWA) membentuk tiga anak usaha baru yang bergerak di sektor pembangkit listrik, layanan kepelabuhan, dan hospitality. Langkah ini dilakukan untuk melakukan diversifikasi sumber pendapatan perusahaan serta memperluas peluang perolehan proyek di masa mendatang.",
+            "description": "DEWA Bentuk 3 Anak Usaha Baru di Bidang Pembangkit Listrik, Kepelabuhan & Hospitality\n\n\u2022 Darma Henwa ([%oNHj%]) mengumumkan telah mendirikan 3 anak usaha yang masing\u2013masing bergerak di bidang pembangkitan tenaga listrik, aktivitas pelayanan kepelabuhan laut, dan hospitality, yakni PT DH Listrik, PT DH Infrastruktur, dan PT DH Arunika Hospitality.\n\n\u2022 DEWA memiliki 99,9% saham di masing\u2013masing anak usaha tersebut, dengan 0,1% sisanya dimiliki oleh PT Cipta Multi Prima.\n\n\u2022\u00a0DEWA tidak merinci modal ditempatkan dan disetor pada masing\u2013masing anak usaha tersebut, tetapi menjelaskan bahwa pembentukan 3 anak usaha tersebut ditujukan untuk menciptakan sumber pendapatan baru dan memperluas peluang dalam memperoleh proyek\u2013proyek baru di masa mendatang.\n\n[Sumber: Keterbukaan Informasi]\n\n______\n\nStockbit Group",
+            "published_at": "2026-07-20 03:00:10.872777+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          }
+        ],
+        "reports": [],
+        "news_articles": [
+          {
+            "title": "[NEWS] Darma Henwa (DEWA) mempertahankan outlook positif untuk semester kedua 2026, didorong oleh dimulainya operasional tambang PT Sebuku Sejaka Coal, potensi kontrak baru di luar grup BUMI, serta potensi ekspansi margin laba kotor. Meskipun terdapat risiko terkait revisi kuota produksi RKAB, perusahaan telah mengamankan dukungan pendanaan perbankan (BBCA, BMRI) untuk ekspansi operasionalnya.",
+            "description": "\ud83d\udcf0 DEWA 2Q26 Earnings Call: Outlook 2H26 Positif seiring Penambahan Kontrak Kerja\n\nDarma Henwa ([%HnyT%]) pada Selasa (11/8) mengadakan earnings call untuk membahas kinerja 1H26, sekaligus memberikan outlook kinerja 2H26. Berikut beberapa catatan penting kami:\n\nPenjelasan Manajemen Terkait One\u2013off pada 2Q26\n\n\u25aa\ufe0f Manajemen DEWA menjelaskan bahwa meningkatnya nilai wajar investasi saham pada 2Q26 terkait dengan investasi pada PT Pendopo Energi Batubara, yang disebabkan oleh menguatnya dolar AS terhadap rupiah dari level saat penilaian terakhir dilakukan pada 2020. Penilaian tersebut dilakukan seiring dengan bergantinya auditor perseroan, dengan penilaian berikutnya diperkirakan dilakukan setiap 3 tahun.\n\nUpdate Pekerjaan untuk PT Sebuku Sejaka Coal\n\n\u25aa\ufe0f DEWA telah memulai aktivitas pengeboran untuk tambang PT Sebuku Sejaka Coal pada awal Agustus 2026.\n\n\u25aa\ufe0f Manajemen menjelaskan bahwa ruang lingkup pekerjaan yang dilakukan di tambang PT Sebuku Sejaka Coal akan lebih luas dibandingkan pengerjaan di anak usaha Bumi Resources ([%paWh%]), yakni PT Arutmin Indonesia dan PT Kaltim Prima Coal, karena mencakup land clearing, maintenance infrastruktur, dan blasting, selain overburden removal dan coal digging.\n\n\u25aa\ufe0f Cakupan pekerjaan yang lebih luas di tambang PT Sebuku Sejaka Coal mengimplikasikan pendapatan per bcm yang lebih tinggi, tetapi belum tentu tercermin pada kenaikan margin.\n\n\u25aa\ufe0f Capex untuk PT Sebuku Sejaka Coal diperkirakan mencapai ~Rp1 T, yang akan didanai sebagian oleh utang bank dari konsorsium Bank Central Asia ([%dRGd%]) dan Bank Mandiri (BMRI), serta vendor financing. \n\nOutlook 2H26 Positif: Didorong Volume dibandingkan Tarif\n\n\u25aa\ufe0f Kami tetap mempertahankan outlook positif untuk DEWA selama 2H26, seiring dengan: 1) potensi penambahan kontrak pengerjaan di luar grup BUMI; 2) ekspansi margin laba kotor seiring dengan proporsi pengerjaan internal yang akan mencapai 100%; serta 3) harga batu bara yang tetap terjaga pada level tinggi.\n\n\u25aa\ufe0f Dari sisi tarif pengerjaan, manajemen mengekspektasikan realisasi yang flat pada tahun ini untuk proyek PT Arutmin Indonesia dan PT Kaltim Prima Coal, tetapi tarif konsolidasi berpotensi sedikit meningkat seiring dengan dimulainya pengerjaan kontrak PT Sebuku Sejaka Coal yang diperkirakan memiliki tarif lebih tinggi.\n\n\u25aa\ufe0f Risiko utama tetap terletak pada hasil revisi kuota produksi RKAB 2026, yang akan mempengaruhi volume pertambangan dari klien DEWA.\n\nBaca ulasan kami terkait kinerja DEWA pada 2Q26/1H26 di sini [[%BqMa%]].\n\n------\nEverson Sugianto ([%BXyh%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-12 02:30:21.502487+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] Darma Henwa (DEWA) mencatatkan pertumbuhan laba bersih 89% YoY di 1H26, didorong oleh faktor one-off. Meski core profit relatif flat, kinerja operasional menunjukkan margin laba kotor yang kuat berkat peningkatan porsi pengerjaan internal. Prospek 2H26 diproyeksikan lebih solid, meskipun realisasi pertumbuhan bergantung pada kuota produksi RKAB untuk kontrak baru.",
+            "description": "DEWA 1H26: Laba Bersih +89% YoY, Core Profit +1% YoY\n\nStockbit's take:\n\n\u25aa\ufe0f Laba bersih Darma Henwa ([%OLYi%]) tumbuh +182% QoQ pada 2Q26, sehingga naik +89% YoY selama 1H26.\n\n\u25aa\ufe0f Pertumbuhan laba bersih didukung oleh faktor one\u2013off berupa penyesuaian nilai wajar investasi saham yang tidak dirinci perseroan, yang mengkompensasi kenaikan beban bunga akibat denda pinjaman bank yang juga bersifat one\u2013off.\n\n\u25aa\ufe0f Mengesampingkan kedua faktor one\u2013off tersebut, core profit relatif flat secara kuartalan pada 2Q26 dan tumbuh +1% YoY selama 1H26, sejalan dengan ekspektasi, sementara EBITDA tumbuh lebih solid.\n\n\u25aa\ufe0f Momentum pertumbuhan laba bersih selama 2H26 berpotensi lebih kencang dibandingkan 1H26, seiring: 1) porsi pengerjaan internal yang akan mencapai 100%; dan 2) penambahan kontrak dari klien di luar ekosistem Bumi Resources ([%OvvQ%]), PT Sebuku Sejaka Coal, meski bergantung pada hasil revisi kuota produksi RKAB 2026.\n\nCore Profit Sejalan dengan Ekspektasi \u2014\u00a0 DEWA mencatat laba bersih Rp262 M pada 2Q26 (+182% QoQ, +121% YoY), sehingga laba bersih selama 1H26 mencapai Rp354 M (+89% YoY). Kenaikan laba bersih didukung oleh penyesuaian nilai wajar investasi saham sebesar Rp229 M pada 2Q26, yang mengkompensasi kenaikan beban keuangan yang signifikan (+95% QoQ) terutama akibat denda pinjaman bank yang bersifat one\u2013off senilai Rp46 M. Mengesampingkan kedua beban one\u2013off tersebut, core profit flat secara kuartalan pada 2Q26 dan tumbuh +1% YoY selama 1H26, sejalan dengan ekspektasi karena setara 41% estimasi 2026F konsensus, dengan ekspektasi momentum pertumbuhan selama 2H26 akan lebih solid dibandingkan 1H26. Core profit yang flat secara kuartalan pada 2Q26 terjadi di tengah pertumbuhan pendapatan yang solid dan ekspansi margin laba kotor, sementara terdapat kenaikan pada beban karyawan pada opex (+109% QoQ) dan beban bunga underlying dari pinjaman bank (+51% QoQ).\n\nKenaikan Tarif Pengerjaan & Porsi Pengerjaan Internal Dorong Margin Laba Kotor \u2014\u00a0 Kenaikan pendapatan +7% QoQ pada 2Q26 lebih didorong oleh kenaikan tarif pengerjaan (+9% QoQ) dibandingkan volume material moved (-1% QoQ). Volume material moved menurun seiring turunnya volume pengerjaan subkontraktor (-53% QoQ), sementara volume pengerjaan internal naik +14% QoQ, sehingga porsi pengerjaan secara internal naik menjadi 89% (vs. 1Q26: 77%). Naiknya proporsi pengerjaan internal terjadi seiring dimulainya pengerjaan internal penuh pada proyek Bengalon milik PT Kaltim Prima Coal sejak Mei 2026. Margin laba kotor secara kuartalan pun mencapai level tertingginya setidaknya sejak 1Q22 di 20,7% (vs. 1Q26: 17,3%). Selama 1H26, pendapatan tumbuh +3% YoY, didukung kenaikan material moved (+9% YoY), sementara EBITDA naik +19% YoY, sejalan dengan ekspektasi karena setara 44% estimasi 2026F konsensus.\n\nMomentum 2H26 Berpotensi Solid, tapi Bergantung pada Realisasi RKAB \u2014  Kami menilai DEWA tidak akan kesulitan mencapai estimasi konsensus 2026F, seiring potensi core profit yang lebih tinggi pada 2H26 dibandingkan 1H26. Penilaian kami didasarkan oleh pertimbangan bahwa porsi pengerjaan internal akan mencapai 100% pada 2H26, serta diperolehnya kontrak jasa pertambangan untuk tambang di luar ekosistem BUMI, PT Sebuku Sejaka Coal, dengan estimasi volume overburden hingga 55 juta bcm dan produksi batu bara hingga 5 juta ton per tahun. Meski demikian, kami tetap wait and see terhadap realisasi kontrak PT Sebuku Sejaka Coal karena kinerjanya akan dipengaruhi oleh hasil revisi kuota produksi RKAB 2026, mengingat status tambang PT Sebuku Sejaka Coal sebagai IUP OP. Sebelumnya, pemerintah mengumumkan bahwa tambang yang tidak mengalami pemangkasan kuota produksi 2026 adalah pemegang izin PKP2B generasi I dan BUMN pemegang izin IUP [[%RoqQ%]].\n\n------\nEverson Sugianto ([%XUdU%])\nInvestment Analyst Stockbit",
+            "published_at": "2026-08-10 02:30:39.237589+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[ROUTINE_REPORT] [DEWA] merilis laporan bulanan registrasi pemegang efek untuk Juli 2026. Terjadi pergeseran kepemilikan saham dari investor asing ke lokal, meningkatkan porsi lokal menjadi 73,13%, namun komposisi pemegang saham utama tidak berubah. Evaluasi: Rutin (administratif tanpa dampak pada fundamental).",
+            "description": "[NOTIF_TYPE_COMPANY_SHAREHOLDING] Report: \"Laporan Bulanan Registrasi Pemegang Efek [DEWA]\"\nRingkasan Kinerja: DEWA (Darma Henwa) melaporkan pergeseran 218,55 juta saham dari investor asing ke lokal pada Juli 2026, meningkatkan porsi lokal menjadi 73,13%.\nPoin Kunci:\n- Kepemilikan investor lokal bertambah 218,55 juta saham.\n- Porsi investor lokal naik menjadi 73,13% dari total saham.\n- Komposisi pemegang saham utama di atas 5% tidak berubah.\n- Saham publik (free float) tercatat 49,7%, turun dari 49,83%.\nKesimpulan: Laporan bulanan rutin yang menunjukkan pergeseran kepemilikan minor tanpa mengubah struktur pengendali atau komposisi pemegang saham utama.",
+            "published_at": "2026-08-07 14:30:11.623694+00:00",
+            "source": "Stockbit RAG Routine_report",
+            "url": "",
+            "sentiment": "Neutral",
+            "doc_type": "routine_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[FINANCIAL_REPORT] [DEWA] merilis Laporan Keuangan Interim Semester I 2026. Evaluasi: Kinerja Sangat Bagus (Laba bersih melonjak 89% YoY menjadi Rp354,28 miliar, didorong oleh efisiensi biaya dan peningkatan margin laba bruto).",
+            "description": "[NOTIF_TYPE_NEW_REPORT] Report: \"Penyampaian Laporan Keuangan Interim Auditan [DEWA]\"\nRingkasan Kinerja: DEWA (Darma Henwa) membukukan laba bersih semester I 2026 sebesar Rp354,28 miliar, melonjak 89% YoY, didorong oleh peningkatan pendapatan dan efisiensi biaya.\nPoin Kunci:\n- Laba bersih diatribusikan ke entitas induk naik 89% menjadi Rp354,28 miliar.\n- Pendapatan usaha tumbuh 3,13% YoY menjadi Rp3,21 triliun.\n- Laba bruto meningkat 23,45% menjadi Rp612,16 miliar.\n- Total aset per 30 Juni 2026 mencapai Rp17,63 triliun.\nKesimpulan: Laporan kinerja keuangan semesteran rutin yang menunjukkan pertumbuhan laba signifikan tanpa perubahan struktur perusahaan.",
+            "published_at": "2026-08-07 14:00:21.778235+00:00",
+            "source": "Stockbit RAG Financial_report",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "financial_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[FINANCIAL_REPORT] PT Darma Henwa Tbk [DEWA] melaporkan lonjakan laba bersih sebesar 89% YoY menjadi Rp354,28 miliar pada semester I 2026. Meskipun kenaikan laba bersih sangat signifikan, pertumbuhan ini didorong oleh keuntungan investasi saham (non-operasional), sedangkan pendapatan usaha hanya tumbuh moderat sebesar 3,1%. Evaluasi: Sentimen Positif (Kinerja laba tumbuh tinggi, namun perlu dicatat bahwa kualitas laba didukung oleh faktor one-off).",
+            "description": "[NOTIF_TYPE_NEW_REPORT] Report: \"Penyampaian Laporan Keuangan Interim Auditan [DEWA]\"\nRingkasan Kinerja: DEWA (Darma Henwa) membukukan laba bersih Rp354,28 miliar pada semester I 2026, naik 89% YoY, yang ditopang oleh keuntungan investasi saham.\nPoin Kunci:\n- Laba bersih semester I 2026 mencapai Rp354,28 miliar, naik 89% YoY.\n- Kenaikan laba ditopang keuntungan investasi saham sebesar Rp229,37 miliar.\n- Pendapatan usaha tumbuh 3,1% menjadi Rp3,21 triliun.\n- Total aset meningkat menjadi Rp17,63 triliun per 30 Juni 2026.\nKesimpulan: Kenaikan laba bersih signifikan, namun sebagian besar berasal dari keuntungan investasi saham yang belum direalisasi.",
+            "published_at": "2026-08-07 14:00:12.603809+00:00",
+            "source": "Stockbit RAG Financial_report",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "financial_report",
+            "impact_scope": "Micro"
+          },
+          {
+            "title": "[NEWS] PT Darma Henwa Tbk (DEWA) membentuk tiga anak usaha baru yang bergerak di sektor pembangkit listrik, layanan kepelabuhan, dan hospitality. Langkah ini dilakukan untuk melakukan diversifikasi sumber pendapatan perusahaan serta memperluas peluang perolehan proyek di masa mendatang.",
+            "description": "DEWA Bentuk 3 Anak Usaha Baru di Bidang Pembangkit Listrik, Kepelabuhan & Hospitality\n\n\u2022 Darma Henwa ([%oNHj%]) mengumumkan telah mendirikan 3 anak usaha yang masing\u2013masing bergerak di bidang pembangkitan tenaga listrik, aktivitas pelayanan kepelabuhan laut, dan hospitality, yakni PT DH Listrik, PT DH Infrastruktur, dan PT DH Arunika Hospitality.\n\n\u2022 DEWA memiliki 99,9% saham di masing\u2013masing anak usaha tersebut, dengan 0,1% sisanya dimiliki oleh PT Cipta Multi Prima.\n\n\u2022\u00a0DEWA tidak merinci modal ditempatkan dan disetor pada masing\u2013masing anak usaha tersebut, tetapi menjelaskan bahwa pembentukan 3 anak usaha tersebut ditujukan untuk menciptakan sumber pendapatan baru dan memperluas peluang dalam memperoleh proyek\u2013proyek baru di masa mendatang.\n\n[Sumber: Keterbukaan Informasi]\n\n______\n\nStockbit Group",
+            "published_at": "2026-07-20 03:00:10.872777+00:00",
+            "source": "Stockbit RAG News",
+            "url": "",
+            "sentiment": "Bullish",
+            "doc_type": "news",
+            "impact_scope": "Micro"
+          }
+        ],
+        "has_quarterly_report": true,
+        "report_context": {
+          "has_recent_report": true,
+          "is_financial_report": true,
+          "report_category": "FINANCIAL_REPORT",
+          "quarter": "Q2 2026",
+          "sentiment": "Bullish",
+          "sentiment_score": 9,
+          "published_at": "2026-08-07 14:00:21.778235+00:00",
+          "days_since_publish": 11,
+          "decay_weight": 0.27,
+          "summary": "[DEWA] merilis Laporan Keuangan Interim Semester I 2026. Evaluasi: Kinerja Sangat Bagus (Laba bersih melonjak 89% YoY menjadi Rp354,28 miliar, didorong oleh efisiensi biaya dan peningkatan margin laba bruto).",
+          "news_weight_boosted": true
+        }
+      }
+    }
+  },
+  "candidates": [
+    "DEWA"
+  ],
+  "finalists": [
+    {
+      "ticker": "DEWA",
+      "final_score": 3.42,
+      "composite_score": 4.87,
+      "weight_mode": "default",
+      "debate_bonus": -1.45,
+      "ml_bonus": 0.0
+    }
+  ],
+  "ml_predictions": {
+    "DEWA": {
+      "pred_prob": 38.81,
+      "max_pred_prob": 47.75,
+      "predictions_multiday": {
+        "1d": 38.81,
+        "3d": 43.68,
+        "5d": 47.75,
+        "7d": 45.49
+      },
+      "signal": "HOLD",
+      "confidence": "MEDIUM"
+    }
+  },
   "final_report": {
-    "generated_at": "2026-08-14T05:22:33.240999",
-    "market_condition": "UNKNOWN",
-    "top_picks": [],
-    "watchlist": [],
-    "avoid": [],
-    "total_analyzed": 0,
-    "total_finalists": 0,
-    "synthesis_mode": "none"
+    "generated_at": "2026-08-18T14:26:55.487529",
+    "market_condition": "IHSG saat ini berada dalam fase konsolidasi dengan kecenderungan tren teknikal Bullish jangka pendek (+2.49% di atas MA20 pada level 6.449,83). Indikator market breadth menunjukkan partisipasi pasar yang sangat sehat dengan Advance/Decline ratio sebesar 3,33 dan tingkat partisipasi pasar 64.6%, ditopang skor momentum solid di level 0,75. Rotasi sektoral berjalan aktif terutama pada sektor pertambangan dan perbankan pasca rilis laporan keuangan. Namun demikian, kewaspadaan tinggi tetap diperlukan mengingat indikator makro moneter menunjukkan pelemahan nilai tukar Rupiah (USD/IDR berada di level 17.830,68) yang berpotensi memicu kerentanan arus modal asing. Selain itu, terdapat potensi tekanan fiskal dari target pemangkasan kuota RKAB pertambangan serta risiko beban jaminan sosial. Dalam kondisi pasar ini, strategi investasi berfokus pada selektivitas ketat, memprioritaskan emiten dengan kejelasan akumulasi smart money dan disiplin pada level retracement teknikal.",
+    "top_picks": [
+      {
+        "rank": 1,
+        "ticker": "DEWA",
+        "thesis": "PT Darma Henwa Tbk (DEWA) memiliki katalis operasional jangka menengah yang cukup solid di semester II 2026, didorong oleh dimulainya pengerjaan proyek pertambangan baru PT Sebuku Sejaka Coal (potensi overburden 55 juta bcm dan batu bara 5 juta ton/tahun) serta pencapaian 100% pengerjaan internal pada proyek Bengalon KPC yang berhasil mengerek margin laba kotor Q2 2026 ke level tertinggi 20.7%. Perseroan juga telah mengamankan fasilitas capex ~Rp1 Triliun dari konsorsium perbankan utama (BBCA dan BMRI). Kendati demikian, tingkat keyakinan (conviction) terhadap DEWA ditetapkan pada level LOW akibat tiga risiko struktural utama: (1) Valuasi saham saat ini di Rp446 tergolong EXPENSIVE, berada jauh di atas Nilai Wajar (Fair Value blended) di Rp288 (potensi downside -35.36% dan Margin of Safety -54.7%), dengan PER 25.8x yang sangat mahal dibanding rata-rata industri jasa tambang (8x-11x); (2) Kualitas pertumbuhan laba bersih 1H26 (+89% YoY menjadi Rp354.28 Miliar) terdistorsi signifikan oleh pendapatan non-operasional one-off berupa revaluasi investasi saham PT Pendopo Energi Batubara senilai Rp229.37 Miliar, sementara core profit operasional riil stagnan (+1% YoY); dan (3) Struktur bandarmologi 7 hari terakhir menunjukkan sinyal distribusi masif dari broker institusi/big players (MG menjual 641 ribu lot @466, BB menjual 481 ribu lot @451) yang ditampung secara agresif oleh broker ritel (XL Stockbit memborong 762 ribu lot @462 dan YP Mirae 361 ribu lot @462), di mana top 3 seller menguasai 48.9% transaksi pasar. Dengan tidak ditemukannya pola reversal candlestick spesifik pada harga saat ini, keputusan investasi terbaik adalah menunggu retracement ke area support teknikal yang jauh lebih aman.",
+        "time_horizon": "Swing Trade (2-4 minggu)",
+        "price_prediction": {
+          "current_price": 446.0,
+          "predictions": {
+            "day_1": {
+              "price": 446.0,
+              "pct_change": "-0.1%",
+              "price_range": [
+                432.0,
+                459.0
+              ]
+            },
+            "day_3": {
+              "price": 448.0,
+              "pct_change": "+0.5%",
+              "price_range": [
+                435.0,
+                462.0
+              ]
+            },
+            "day_5": {
+              "price": 453.0,
+              "pct_change": "+1.5%",
+              "price_range": [
+                439.0,
+                466.0
+              ]
+            },
+            "day_7": {
+              "price": 457.0,
+              "pct_change": "+2.5%",
+              "price_range": [
+                443.0,
+                471.0
+              ]
+            }
+          },
+          "confidence": "MEDIUM",
+          "reasoning": "DEWA saat ini berada dalam tren sideways dengan sinyal teknikal campuran \u2014 RSI menunjukkan momentum bullish namun MACD masih bearish, sementara harga berada di atas MA50 dan MA100 tetapi di bawah MA20 dan MA200. Yang menarik adalah data bandarmologi menunjukkan harga saat ini (446) berada 3.46% di bawah rata-rata cost bandar 7 hari terakhir (462), yang mengindikasikan posisi entry ideal karena bandar kemungkinan akan mendorong harga naik untuk melindungi posisi mereka. Dari sisi fundamental, DEWA memiliki profil yang sangat kuat dengan ROE 55.26% dan pertumbuhan earnings 120.6% yang akseleratif, serta revenue yang konsisten naik selama 3 tahun terakhir. Kondisi makro IHSG yang bullish dan volatilitas rendah juga mendukung potensi kenaikan moderat. Oleh karena itu, prediksi rule-based yang cenderung negatif perlu disesuaikan menjadi sedikit positif, mengingat kombinasi fundamental kuat, posisi harga di bawah avg cost bandar, dan kondisi makro yang mendukung.",
+          "key_drivers": [
+            "Harga saat ini 3.46% di bawah rata-rata cost bandar 7 hari (462), menciptakan zona entry ideal dan potensi support dari aksi bandar untuk mempertahankan posisi",
+            "Fundamental sangat solid dengan ROE 55.26% dan earnings growth 120.6% yang jauh di atas rata-rata sektor",
+            "Golden cross MA20/MA50 mengindikasikan potensi pembalikan bullish jangka pendek-menengah",
+            "Kondisi makro IHSG bullish dengan volatilitas rendah mendukung sentimen positif untuk saham-saham mid-cap",
+            "Revenue konsisten naik 3 tahun terakhir dan dividend yield di atas rata-rata 5 tahun menunjukkan daya tarik investasi jangka menengah"
+          ],
+          "risks": [
+            "Death cross MA50/MA100 dan MA100/MA200 menunjukkan tekanan bearish jangka menengah-panjang yang masih berlaku, harga bisa kembali turun ke area support 417-421",
+            "Volume perdagangan normal tanpa anomali akumulasi signifikan dari bandar, sehingga belum ada konfirmasi kuat untuk rally besar",
+            "MACD masih dalam momentum bearish dan harga di bawah MA200 menandakan tren jangka panjang belum sepenuhnya pulih"
+          ],
+          "entry_style": "Buy on Retracement"
+        },
+        "ml_prediction": {
+          "pred_prob": 38.81,
+          "max_pred_prob": 47.75,
+          "predictions_multiday": {
+            "1d": 38.81,
+            "3d": 43.68,
+            "5d": 47.75,
+            "7d": 45.49
+          },
+          "signal": "HOLD",
+          "confidence": "MEDIUM"
+        },
+        "fair_value": {
+          "current_price": 446.0,
+          "method": "blended",
+          "fair_value_low": 177.0,
+          "fair_value_base": 288.0,
+          "fair_value_high": 532.0,
+          "upside_pct": -35.36,
+          "margin_of_safety_pct": -54.7,
+          "valuation_label": "EXPENSIVE",
+          "methods": {
+            "pe_based": {
+              "available": true,
+              "eps": 17.26,
+              "target_pe": 11.0,
+              "fair_value": 190.0
+            },
+            "pbv_roe_based": {
+              "available": true,
+              "bvps": 198.98,
+              "roe_pct": 55.26,
+              "sustainable_growth_pct": 10.5,
+              "required_return_pct": 13.5,
+              "fair_pbv": 2.5,
+              "fair_value": 497.0
+            },
+            "eps_growth_based": {
+              "available": true,
+              "eps": 17.26,
+              "growth_pct": 120.64,
+              "target_pe": 12.8,
+              "fair_value": 221.0
+            }
+          },
+          "notes": [
+            "EPS source: derived_from_current_price_per",
+            "BVPS source: info_bvps",
+            "Target PE baseline sektor Komoditas/Tambang: 8.0x"
+          ],
+          "confidence": "HIGH"
+        },
+        "pred_return": 0.0,
+        "decision_label": "HOLD",
+        "bandar_context": {
+          "broker_utama": "XL (Stockbit Sekuritas)",
+          "avg_cost_7d": 462,
+          "avg_cost_1m": 419,
+          "active_days_1m": "N/A",
+          "distance_current": "+6.4%"
+        },
+        "entry_zone": "407\u2013430",
+        "max_entry": "430",
+        "tp1": 477.0,
+        "tp2": 539.0,
+        "tp3": 619.0,
+        "target_1": 477.0,
+        "target_2": 539.0,
+        "target_3": 619.0,
+        "tp1_size": 0.3,
+        "tp2_size": 0.4,
+        "tp3_size": 0.3,
+        "risk_reward_tp1": "1:4.1",
+        "risk_reward_tp2": "1:8.3",
+        "risk_reward_tp3": "1:12.5",
+        "stop_loss": 395.0,
+        "risk_reward": "1:1.0",
+        "position_strategy": "Exit 30% at TP1, 40% at TP2, 30% at TP3",
+        "position_size": "10% portofolio",
+        "conviction": "LOW",
+        "entry_reasoning": "Entry tidak direkomendasikan pada harga pasar saat ini (Rp446) karena harga berada dalam struktur distribusi ritel dan tertahan di bawah resisten dinamis MA20 (455.6) serta MA200 (463.5). Strategi entry yang rasional adalah Buy on Retracement di rentang Rp407 - Rp430. Area ini disintesis dari konfluensi indikator teknikal TradingView, mencakup Support Fibonacci Terdekat di Rp407, Pivot Point Classic Middle di Rp406.7, Pivot Camarilla S2-S3 (Rp401 - Rp421), serta penopang rata-rata pergerakan MA100 di Rp417.7. Penetapan Stop Loss diletakkan di Rp395 (di bawah MA50 di Rp380.0 dan support psikologis Rp400) untuk membatasi risiko maksimal sebesar ~5.5% dari rata-rata entry zone (~Rp418). Target Profit 1 ditentukan di Rp477 (merujuk resisten MA20/MA200 dan Fib Resistance terdekat 488), Target Profit 2 di Rp539 (Fibonacci R1 / Pivot Classic R1), dan Target Profit 3 di Rp619 (Fibonacci Resistance Kuat). Setup perdagangan ini menghasilkan Risk to Reward Ratio minimum sebesar 1:2.56 untuk TP1, yang secara ketat memenuhi batas rasionalitas manajemen risiko (minimum 1:1.5).",
+        "agent_scores": {
+          "bandarm": {
+            "score": 1.5,
+            "weight": "35%",
+            "contribution": 0.52
+          },
+          "technical": {
+            "score": 5.5,
+            "weight": "22%",
+            "contribution": 1.21
+          },
+          "fundamental": {
+            "score": 6.8,
+            "weight": "18%",
+            "contribution": 1.22
+          },
+          "macro": {
+            "score": 5.5,
+            "weight": "13%",
+            "contribution": 0.72
+          },
+          "composite": 4.79
+        },
+        "bandarm_signal": "NEUTRAL",
+        "broker_to_watch": [
+          "XL (Stockbit Sekuritas)",
+          "YP (Mirae Asset Sekuritas)"
+        ],
+        "broker_true_costs": {
+          "w7": [
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "true_cost": 462,
+              "total_buy_lot": 762313,
+              "total_buy_value": 35508572200,
+              "active_days": "5/7 hari",
+              "distance_pct": -3.46,
+              "status": "\ud83d\udcc8 AKTIF AKUMULASI"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "true_cost": 462,
+              "total_buy_lot": 361467,
+              "total_buy_value": 17355095600,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.46,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "CP",
+              "broker_name": "Valbury Sekuritas",
+              "true_cost": 463,
+              "total_buy_lot": 286646,
+              "total_buy_value": 13203326000,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.67,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "XC",
+              "broker_name": "Ajaib Sekuritas",
+              "true_cost": 463,
+              "total_buy_lot": 276027,
+              "total_buy_value": 12985258000,
+              "active_days": "4/7 hari",
+              "distance_pct": -3.67,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "SQ",
+              "broker_name": "BCA Sekuritas",
+              "true_cost": 460,
+              "total_buy_lot": 261355,
+              "total_buy_value": 11691014400,
+              "active_days": "4/7 hari",
+              "distance_pct": -3.04,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "true_cost": 462,
+              "total_buy_lot": 231343,
+              "total_buy_value": 10860620800,
+              "active_days": "1/7 hari",
+              "distance_pct": -3.46,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "OD",
+              "broker_name": "BRI Danareksa Sekuritas",
+              "true_cost": 456,
+              "total_buy_lot": 165098,
+              "total_buy_value": 7249802600,
+              "active_days": "2/7 hari",
+              "distance_pct": -2.19,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "YB",
+              "broker_name": "Unknown",
+              "true_cost": 461,
+              "total_buy_lot": 147251,
+              "total_buy_value": 6939682200,
+              "active_days": "2/7 hari",
+              "distance_pct": -3.25,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "true_cost": 460,
+              "total_buy_lot": 130490,
+              "total_buy_value": 5900901600,
+              "active_days": "2/7 hari",
+              "distance_pct": -3.04,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "AO",
+              "broker_name": "Unknown",
+              "true_cost": 464,
+              "total_buy_lot": 125866,
+              "total_buy_value": 5697279400,
+              "active_days": "2/7 hari",
+              "distance_pct": -3.88,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            }
+          ],
+          "w1m": [
+            {
+              "broker": "AK",
+              "broker_name": "UBS Securities",
+              "true_cost": 419,
+              "total_buy_lot": 1686100,
+              "total_buy_value": 53831197200,
+              "active_days": "12/30 hari",
+              "distance_pct": 6.44,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "true_cost": 417,
+              "total_buy_lot": 1465593,
+              "total_buy_value": 52432334800,
+              "active_days": "14/30 hari",
+              "distance_pct": 6.95,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "PD",
+              "broker_name": "Indo Premier Sekuritas",
+              "true_cost": 423,
+              "total_buy_lot": 1071993,
+              "total_buy_value": 35935817000,
+              "active_days": "12/30 hari",
+              "distance_pct": 5.44,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Samuel Sekuritas",
+              "true_cost": 390,
+              "total_buy_lot": 951791,
+              "total_buy_value": 35458192200,
+              "active_days": "7/30 hari",
+              "distance_pct": 14.36,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "true_cost": 441,
+              "total_buy_lot": 526849,
+              "total_buy_value": 24713308400,
+              "active_days": "10/30 hari",
+              "distance_pct": 1.13,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "NI",
+              "broker_name": "BNI Sekuritas",
+              "true_cost": 420,
+              "total_buy_lot": 579932,
+              "total_buy_value": 24613686800,
+              "active_days": "8/30 hari",
+              "distance_pct": 6.19,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "true_cost": 420,
+              "total_buy_lot": 514773,
+              "total_buy_value": 21076373200,
+              "active_days": "7/30 hari",
+              "distance_pct": 6.19,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "true_cost": 434,
+              "total_buy_lot": 311338,
+              "total_buy_value": 12654552200,
+              "active_days": "14/30 hari",
+              "distance_pct": 2.76,
+              "status": "\ud83d\udcca AKUMULASI RINGAN"
+            },
+            {
+              "broker": "DR",
+              "broker_name": "RHB Sekuritas",
+              "true_cost": 439,
+              "total_buy_lot": 206871,
+              "total_buy_value": 9616612600,
+              "active_days": "10/30 hari",
+              "distance_pct": 1.59,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "true_cost": 443,
+              "total_buy_lot": 160313,
+              "total_buy_value": 7391470800,
+              "active_days": "7/30 hari",
+              "distance_pct": 0.68,
+              "status": "\u26a0\ufe0f TIDAK KONSISTEN"
+            }
+          ]
+        },
+        "broker_distributors": {
+          "w7": [
+            {
+              "broker": "MG",
+              "broker_name": "Unknown",
+              "avg_sell": 466,
+              "total_sell_lot": 641352,
+              "total_sell_value": 28783189000,
+              "active_days": "3/7 hari",
+              "distance_pct": -4.29,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "BB",
+              "broker_name": "Verdhana Sekuritas",
+              "avg_sell": 451,
+              "total_sell_lot": 481546,
+              "total_sell_value": 21695734600,
+              "active_days": "1/7 hari",
+              "distance_pct": -1.11,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "YU",
+              "broker_name": "CIMB Sekuritas",
+              "avg_sell": 462,
+              "total_sell_lot": 419241,
+              "total_sell_value": 19418887600,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.46,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "avg_sell": 454,
+              "total_sell_lot": 377351,
+              "total_sell_value": 16996103200,
+              "active_days": "2/7 hari",
+              "distance_pct": -1.76,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "avg_sell": 462,
+              "total_sell_lot": 330716,
+              "total_sell_value": 15551625400,
+              "active_days": "4/7 hari",
+              "distance_pct": -3.46,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "LG",
+              "broker_name": "Trimegah Sekuritas",
+              "avg_sell": 461,
+              "total_sell_lot": 302073,
+              "total_sell_value": 13983617000,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.25,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AI",
+              "broker_name": "UOB Kay Hian Sekuritas",
+              "avg_sell": 466,
+              "total_sell_lot": 241655,
+              "total_sell_value": 11416320600,
+              "active_days": "3/7 hari",
+              "distance_pct": -4.29,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "ZP",
+              "broker_name": "Maybank Sekuritas",
+              "avg_sell": 457,
+              "total_sell_lot": 143983,
+              "total_sell_value": 6371364600,
+              "active_days": "2/7 hari",
+              "distance_pct": -2.41,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "BQ",
+              "broker_name": "Ciptadana Sekuritas",
+              "avg_sell": 463,
+              "total_sell_lot": 120814,
+              "total_sell_value": 5635686200,
+              "active_days": "2/7 hari",
+              "distance_pct": -3.67,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "IF",
+              "broker_name": "Samuel Sekuritas",
+              "avg_sell": 461,
+              "total_sell_lot": 69604,
+              "total_sell_value": 3207301400,
+              "active_days": "3/7 hari",
+              "distance_pct": -3.25,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            }
+          ],
+          "w1m": [
+            {
+              "broker": "XL",
+              "broker_name": "Stockbit Sekuritas",
+              "avg_sell": 429,
+              "total_sell_lot": 1507480,
+              "total_sell_value": 54688266600,
+              "active_days": "14/30 hari",
+              "distance_pct": 3.96,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KK",
+              "broker_name": "KGI Sekuritas",
+              "avg_sell": 440,
+              "total_sell_lot": 708341,
+              "total_sell_value": 32140518200,
+              "active_days": "9/30 hari",
+              "distance_pct": 1.36,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "CC",
+              "broker_name": "Mandiri Sekuritas",
+              "avg_sell": 424,
+              "total_sell_lot": 854433,
+              "total_sell_value": 30567712200,
+              "active_days": "13/30 hari",
+              "distance_pct": 5.19,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "KZ",
+              "broker_name": "Daewoo Securities",
+              "avg_sell": 424,
+              "total_sell_lot": 609267,
+              "total_sell_value": 26133578200,
+              "active_days": "5/30 hari",
+              "distance_pct": 5.19,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "IN",
+              "broker_name": "Unknown",
+              "avg_sell": 381,
+              "total_sell_lot": 635829,
+              "total_sell_value": 22727277800,
+              "active_days": "6/30 hari",
+              "distance_pct": 17.06,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "DH",
+              "broker_name": "Sinarmas Sekuritas",
+              "avg_sell": 439,
+              "total_sell_lot": 370599,
+              "total_sell_value": 16933173800,
+              "active_days": "4/30 hari",
+              "distance_pct": 1.59,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "BK",
+              "broker_name": "JP Morgan",
+              "avg_sell": 376,
+              "total_sell_lot": 555588,
+              "total_sell_value": 16700870000,
+              "active_days": "10/30 hari",
+              "distance_pct": 18.62,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            },
+            {
+              "broker": "YP",
+              "broker_name": "Mirae Asset Sekuritas",
+              "avg_sell": 428,
+              "total_sell_lot": 472235,
+              "total_sell_value": 16579389800,
+              "active_days": "15/30 hari",
+              "distance_pct": 4.21,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "AZ",
+              "broker_name": "Sucor Sekuritas",
+              "avg_sell": 424,
+              "total_sell_lot": 481922,
+              "total_sell_value": 16551244000,
+              "active_days": "13/30 hari",
+              "distance_pct": 5.19,
+              "status": "\u26a0\ufe0f DISTRIBUSI RINGAN"
+            },
+            {
+              "broker": "RX",
+              "broker_name": "Macquarie Securities",
+              "avg_sell": 401,
+              "total_sell_lot": 329695,
+              "total_sell_value": 14143248000,
+              "active_days": "3/30 hari",
+              "distance_pct": 11.22,
+              "status": "\u2139\ufe0f DISTRIBUSI SESUAI"
+            }
+          ]
+        },
+        "weight_mode": "default",
+        "composite_score": 4.79,
+        "final_score": 3.42
+      }
+    ],
+    "watchlist": [
+      "BBCA",
+      "BMRI"
+    ],
+    "avoid": [
+      "DEWA (pada harga pasar Rp446) \u2014 Valuasi tergolong EXPENSIVE (Fair Value Rp288 vs harga Rp446), distribusi masif smart money (MG, BB) yang ditampung akun ritel (XL, YP), dan lonjakan laba bersih 1H26 didominasi oleh keuntungan one-off revaluasi investasi saham."
+    ],
+    "llm_synthesis": {
+      "market_condition_summary": "IHSG saat ini berada dalam fase konsolidasi dengan kecenderungan tren teknikal Bullish jangka pendek (+2.49% di atas MA20 pada level 6.449,83). Indikator market breadth menunjukkan partisipasi pasar yang sangat sehat dengan Advance/Decline ratio sebesar 3,33 dan tingkat partisipasi pasar 64.6%, ditopang skor momentum solid di level 0,75. Rotasi sektoral berjalan aktif terutama pada sektor pertambangan dan perbankan pasca rilis laporan keuangan. Namun demikian, kewaspadaan tinggi tetap diperlukan mengingat indikator makro moneter menunjukkan pelemahan nilai tukar Rupiah (USD/IDR berada di level 17.830,68) yang berpotensi memicu kerentanan arus modal asing. Selain itu, terdapat potensi tekanan fiskal dari target pemangkasan kuota RKAB pertambangan serta risiko beban jaminan sosial. Dalam kondisi pasar ini, strategi investasi berfokus pada selektivitas ketat, memprioritaskan emiten dengan kejelasan akumulasi smart money dan disiplin pada level retracement teknikal.",
+      "ranked_tickers": [
+        {
+          "rank": 1,
+          "ticker": "DEWA",
+          "conviction": "LOW",
+          "thesis": "PT Darma Henwa Tbk (DEWA) memiliki katalis operasional jangka menengah yang cukup solid di semester II 2026, didorong oleh dimulainya pengerjaan proyek pertambangan baru PT Sebuku Sejaka Coal (potensi overburden 55 juta bcm dan batu bara 5 juta ton/tahun) serta pencapaian 100% pengerjaan internal pada proyek Bengalon KPC yang berhasil mengerek margin laba kotor Q2 2026 ke level tertinggi 20.7%. Perseroan juga telah mengamankan fasilitas capex ~Rp1 Triliun dari konsorsium perbankan utama (BBCA dan BMRI). Kendati demikian, tingkat keyakinan (conviction) terhadap DEWA ditetapkan pada level LOW akibat tiga risiko struktural utama: (1) Valuasi saham saat ini di Rp446 tergolong EXPENSIVE, berada jauh di atas Nilai Wajar (Fair Value blended) di Rp288 (potensi downside -35.36% dan Margin of Safety -54.7%), dengan PER 25.8x yang sangat mahal dibanding rata-rata industri jasa tambang (8x-11x); (2) Kualitas pertumbuhan laba bersih 1H26 (+89% YoY menjadi Rp354.28 Miliar) terdistorsi signifikan oleh pendapatan non-operasional one-off berupa revaluasi investasi saham PT Pendopo Energi Batubara senilai Rp229.37 Miliar, sementara core profit operasional riil stagnan (+1% YoY); dan (3) Struktur bandarmologi 7 hari terakhir menunjukkan sinyal distribusi masif dari broker institusi/big players (MG menjual 641 ribu lot @466, BB menjual 481 ribu lot @451) yang ditampung secara agresif oleh broker ritel (XL Stockbit memborong 762 ribu lot @462 dan YP Mirae 361 ribu lot @462), di mana top 3 seller menguasai 48.9% transaksi pasar. Dengan tidak ditemukannya pola reversal candlestick spesifik pada harga saat ini, keputusan investasi terbaik adalah menunggu retracement ke area support teknikal yang jauh lebih aman.",
+          "entry_low": 407,
+          "entry_high": 430,
+          "entry_style": "Buy on Retracement",
+          "tp1": 477,
+          "tp2": 539,
+          "tp3": 619,
+          "stop_loss": 395,
+          "entry_reasoning": "Entry tidak direkomendasikan pada harga pasar saat ini (Rp446) karena harga berada dalam struktur distribusi ritel dan tertahan di bawah resisten dinamis MA20 (455.6) serta MA200 (463.5). Strategi entry yang rasional adalah Buy on Retracement di rentang Rp407 - Rp430. Area ini disintesis dari konfluensi indikator teknikal TradingView, mencakup Support Fibonacci Terdekat di Rp407, Pivot Point Classic Middle di Rp406.7, Pivot Camarilla S2-S3 (Rp401 - Rp421), serta penopang rata-rata pergerakan MA100 di Rp417.7. Penetapan Stop Loss diletakkan di Rp395 (di bawah MA50 di Rp380.0 dan support psikologis Rp400) untuk membatasi risiko maksimal sebesar ~5.5% dari rata-rata entry zone (~Rp418). Target Profit 1 ditentukan di Rp477 (merujuk resisten MA20/MA200 dan Fib Resistance terdekat 488), Target Profit 2 di Rp539 (Fibonacci R1 / Pivot Classic R1), dan Target Profit 3 di Rp619 (Fibonacci Resistance Kuat). Setup perdagangan ini menghasilkan Risk to Reward Ratio minimum sebesar 1:2.56 untuk TP1, yang secara ketat memenuhi batas rasionalitas manajemen risiko (minimum 1:1.5).",
+          "time_horizon": "Swing Trade (2-4 minggu)"
+        }
+      ],
+      "watchlist": [
+        "BBCA",
+        "BMRI"
+      ],
+      "avoid": [
+        "DEWA (pada harga pasar Rp446) \u2014 Valuasi tergolong EXPENSIVE (Fair Value Rp288 vs harga Rp446), distribusi masif smart money (MG, BB) yang ditampung akun ritel (XL, YP), dan lonjakan laba bersih 1H26 didominasi oleh keuntungan one-off revaluasi investasi saham."
+      ]
+    },
+    "total_analyzed": 1,
+    "total_finalists": 1,
+    "synthesis_mode": "llm"
   }
 }

@@ -154,17 +154,21 @@ def run_performance_check():
         db.commit()
         db.close()
 
-        # Run ML Validation at 17:00 WIB after market close
-        logger.info("Running ML Evening Validation (cron_ml_validate)...")
-        try:
-            subprocess.run(["python3", "scripts/cron_ml_validate.py"], check=False)
-        except Exception as ve:
-            logger.warning(f"ML evening validation error: {ve}")
-
     except Exception as e:
         logger.exception(f"Performance check failed: {e}")
 
     logger.info("=== PERFORMANCE CHECK END ===")
+
+
+def run_ml_validation_eod():
+    """Validate ML predictions at EOD (17:00 WIB)."""
+    logger.info("=== ML VALIDATION EOD START ===")
+    try:
+        import subprocess
+        subprocess.run(["python3", "scripts/cron_ml_validate.py"], check=False)
+    except Exception as e:
+        logger.warning(f"ML EOD validation error: {e}")
+    logger.info("=== ML VALIDATION EOD END ===")
 
 
 def run_news_ingester():
@@ -442,6 +446,14 @@ def main():
         CronTrigger(hour=17, minute=0, timezone="Asia/Jakarta"),
         id="performance_check",
         name="Check TP/SL for All Signals",
+    )
+
+    # ML Validation EOD: Every day at 17:00 WIB
+    scheduler.add_job(
+        run_ml_validation_eod,
+        CronTrigger(hour=17, minute=0, timezone="Asia/Jakarta"),
+        id="ml_validation_eod",
+        name="ML Validation EOD",
     )
 
     # IHSG Performance Validation Check: Every day at 17:15 WIB

@@ -738,19 +738,101 @@ elif page == "🎯 Single Analysis":
         st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
         run_clicked = st.button("▶️ Analisis Sekarang", type="primary", use_container_width=True, disabled=st.session_state.get("single_analysis_running", False))
 
-    # Quick Select Pills
-    st.markdown("**Quick Select Ticker Populer:**")
-    quick_cols = st.columns(6)
-    quick_tickers = ["BBCA", "BBRI", "TLKM", "ASII", "AMMN", "BREN"]
-    for idx, qt in enumerate(quick_tickers):
-        with quick_cols[idx]:
-            if st.button(qt, key=f"quick_t_{qt}", use_container_width=True):
-                st.session_state["single_ticker_input"] = qt
-                st.rerun()
+    # Helper to get recent single analysis runs
+    def get_recent_single_runs(directory: str, limit: int = 8) -> list[dict]:
+        if not os.path.exists(directory):
+            return []
+        import glob
+        all_files = glob.glob(os.path.join(directory, "*.json"))
+        # Exclude latest_single_result.json, prefer timestamped files
+        timestamped_files = [f for f in all_files if not os.path.basename(f).startswith("latest_")]
+        target_files = timestamped_files if timestamped_files else [f for f in all_files if not f.endswith("latest_single_result.json")]
+        
+        runs = []
+        for fpath in target_files:
+            try:
+                fname = os.path.basename(fpath)
+                with open(fpath, "r") as f:
+                    data = json.load(f)
+                t_code = data.get("ticker")
+                ts_str = data.get("timestamp")
+                if not t_code:
+                    continue
+                
+                dt = None
+                if ts_str:
+                    try:
+                        dt = datetime.fromisoformat(ts_str)
+                    except Exception:
+                        pass
+                if dt is None:
+                    dt = datetime.fromtimestamp(os.path.getmtime(fpath))
+                
+                composites_data = data.get("composites", {})
+                comp_score = composites_data.get(t_code, {}).get("composite_score")
+                top_picks_data = data.get("top_picks", [])
+                conviction_val = "NEUTRAL"
+                if top_picks_data and isinstance(top_picks_data, list):
+                    conviction_val = top_picks_data[0].get("conviction", "NEUTRAL")
+                elif data.get("finalists"):
+                    conviction_val = "FINALIST"
+                    
+                runs.append({
+                    "file": fname,
+                    "ticker": t_code,
+                    "timestamp": dt,
+                    "ts_str": dt.strftime("%d %b %Y, %H:%M WIB"),
+                    "score": comp_score,
+                    "conviction": conviction_val,
+                })
+            except Exception:
+                continue
+                
+        runs.sort(key=lambda x: x["timestamp"], reverse=True)
+        return runs[:limit]
+
+    # Quick / Recent Runs List
+    results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "single_analysis_results")
+    st.markdown("##### 🕒 Riwayat Run Terakhir")
+    recent_runs = get_recent_single_runs(results_dir, limit=8)
+    if recent_runs:
+        h_col1, h_col2, h_col3, h_col4, h_col5 = st.columns([1.2, 2.5, 1.8, 1.8, 1.7])
+        with h_col1:
+            st.caption("**Ticker**")
+        with h_col2:
+            st.caption("**Waktu Analisis**")
+        with h_col3:
+            st.caption("**Conviction / Signal**")
+        with h_col4:
+            st.caption("**Composite Score**")
+        with h_col5:
+            st.caption("**Aksi**")
+        
+        for idx, run in enumerate(recent_runs):
+            r_col1, r_col2, r_col3, r_col4, r_col5 = st.columns([1.2, 2.5, 1.8, 1.8, 1.7])
+            with r_col1:
+                st.markdown(f"**`{run['ticker']}`**")
+            with r_col2:
+                st.caption(f"🕒 {run['ts_str']}")
+            with r_col3:
+                c_val = run['conviction'] or "NEUTRAL"
+                badge_color = "green" if c_val in ["HIGH", "STRONG BUY"] else "orange" if c_val in ["MEDIUM", "BUY", "LOW"] else "gray"
+                st.markdown(f":{badge_color}[**{c_val}**]")
+            with r_col4:
+                score_str = f"{run['score']:.2f} / 10" if run['score'] is not None else "N/A"
+                st.markdown(f"⭐ **{score_str}**")
+            with r_col5:
+                if st.button("Lihat Detail ↗", key=f"btn_recent_run_{idx}_{run['file']}", use_container_width=True):
+                    st.session_state["single_ticker_input"] = run["ticker"]
+                    st.session_state["selected_analysis_file"] = run["file"]
+                    st.rerun()
+    else:
+        st.info("ℹ️ Belum ada riwayat analisis saham.")
 
     if run_clicked and input_ticker:
         st.session_state["single_analysis_running"] = True
         st.session_state["single_analysis_ticker"] = input_ticker
+        st.session_state["selected_analysis_file"] = None
         p = subprocess.Popen([sys.executable, "scripts/run_analysis_job.py", input_ticker], preexec_fn=os.setsid)
         st.session_state["single_analysis_pid"] = p.pid
         st.rerun()
@@ -758,11 +840,15 @@ elif page == "🎯 Single Analysis":
     st.divider()
 
     # 3. Render Results from JSON File
-    results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "single_analysis_results")
-    
     # Check for available result JSON files
     latest_file = None
-    if input_ticker:
+    selected_file = st.session_state.get("selected_analysis_file")
+    if selected_file:
+        full_selected = os.path.join(results_dir, selected_file)
+        if os.path.exists(full_selected):
+            latest_file = full_selected
+            
+    if not latest_file and input_ticker:
         specific_file = os.path.join(results_dir, f"latest_{input_ticker}.json")
         if os.path.exists(specific_file):
             latest_file = specific_file
@@ -815,23 +901,26 @@ elif page == "🎯 Single Analysis":
 
             # Match pick for this ticker
             pick = None
-            if top_picks:
+            if top_picks and isinstance(top_picks, list):
                 for p in top_picks:
                     if isinstance(p, dict) and p.get("ticker") == res_ticker:
                         pick = p
                         break
+                if not pick and len(top_picks) > 0 and isinstance(top_picks[0], dict):
+                    pick = top_picks[0]
 
             ticker_scores = scores.get(res_ticker, {}) if isinstance(scores, dict) else {}
             tech_data = ticker_scores.get("technical", {}) if isinstance(ticker_scores, dict) else {}
             fund_data = ticker_scores.get("fundamental", {}) if isinstance(ticker_scores, dict) else {}
             bandarm_data = ticker_scores.get("bandarm", {}) if isinstance(ticker_scores, dict) else {}
             news_data = ticker_scores.get("news", {}) if isinstance(ticker_scores, dict) else {}
+            macro_data = ticker_scores.get("macro", {}) if isinstance(ticker_scores, dict) else {}
 
             comp_obj = composites.get(res_ticker, {}) if isinstance(composites, dict) else {}
             comp_score_val = _extract_score(comp_obj)
 
+            # Fallback pick construction if pick is None
             if not pick:
-                # Construct fallback pick dictionary
                 entry_l = tech_data.get("entry_low") if isinstance(tech_data, dict) else None
                 entry_h = tech_data.get("entry_high") if isinstance(tech_data, dict) else None
                 sl = tech_data.get("stop_loss") if isinstance(tech_data, dict) else None
@@ -855,98 +944,282 @@ elif page == "🎯 Single Analysis":
                     "thesis": setup_val
                 }
 
-            if pick:
-                # Key Metrics Cards
-                c1, c2, c3, c4 = st.columns(4)
-                conviction = pick.get("conviction", "NEUTRAL")
-                comp_score = pick.get("composite_score", comp_score_val)
-                comp_num = _extract_score(comp_score)
-                
-                with c1:
-                    st.metric("Signal / Conviction", value=str(conviction))
-                with c2:
-                    st.metric("Composite Score", value=f"{comp_num:.2f} / 10" if comp_num else "N/A")
-                with c3:
+            # Extract extracted details with rich fallback from agent scores
+            price_pred = pick.get("price_prediction") or comp_obj.get("price_prediction") or {}
+            cp_val = price_pred.get("current_price") or fund_data.get("current_price") or tech_data.get("current_price") or 0
+            if not cp_val and hasattr(st, "session_state"):
+                try:
+                    cp_val = get_live_price(res_ticker)
+                except Exception:
+                    pass
+
+            fair_val_obj = pick.get("fair_value") or fund_data.get("fair_value") or {}
+            bandar_ctx = pick.get("bandar_context") or bandarm_data.get("bandar_context") or {}
+            broker_tc = pick.get("broker_true_costs") or bandarm_data.get("broker_true_costs") or {}
+            ml_pred_obj = pick.get("ml_prediction") or ml_preds.get(res_ticker) or comp_obj.get("ml_prediction") or {}
+
+            conviction = pick.get("conviction") or tech_data.get("signal") or "NEUTRAL"
+            comp_score = pick.get("composite_score", comp_score_val)
+            comp_num = _extract_score(comp_score)
+            entry_style = price_pred.get("entry_style") or pick.get("entry_style") or ""
+
+            # Top Container Card
+            with st.container(border=True):
+                # 1. Header Row
+                h_col1, h_col2 = st.columns([2.5, 1.5])
+                with h_col1:
+                    cp_text = f"Rp {cp_val:,.0f}" if cp_val else "N/A"
+                    st.markdown(f"## **{res_ticker}** &nbsp; <span style='font-size: 24px; color: #4ade80;'>{cp_text}</span>", unsafe_allow_html=True)
+                with h_col2:
+                    conv_color = "🟢" if conviction in ["STRONG BUY", "BUY", "HIGH"] else "🔴" if conviction in ["SELL", "AVOID"] else "🟡"
+                    st.markdown(f"**Signal:** {conv_color} `{conviction}`")
+                    if entry_style:
+                        st.markdown(f"**Strategi:** 🏷️ `{entry_style}`")
+
+                st.divider()
+
+                # 2. Key Metrics Row 1
+                m1, m2, m3, m4 = st.columns(4)
+                with m1:
+                    st.metric("🎯 AI Confidence", f"{comp_num:.2f} / 10" if comp_num else "N/A")
+                with m2:
+                    fv_base = fair_val_obj.get("fair_value_base")
+                    fv_upside = fair_val_obj.get("upside_pct")
+                    fv_text = f"Rp {fv_base:,.0f}" if isinstance(fv_base, (int, float)) else "N/A"
+                    fv_delta = f"{fv_upside:+.1f}%" if isinstance(fv_upside, (int, float)) else None
+                    st.metric("💰 Target Fair Value", fv_text, delta=fv_delta)
+                with m3:
+                    b_cost = bandar_ctx.get("avg_cost_7d") or bandar_ctx.get("avg_cost_1m")
+                    b_cost_text = f"Rp {b_cost:,.0f}" if isinstance(b_cost, (int, float)) else "N/A"
+                    b_dist = bandar_ctx.get("distance_current")
+                    st.metric("🏦 Bandar Avg Cost", b_cost_text, delta=b_dist)
+                with m4:
+                    pos_size = pick.get("position_size") or pick.get("position_sizing") or "100%"
+                    st.metric("📦 Position Sizing", str(pos_size))
+
+                # 3. Trading Parameters Row 2
+                p1, p2, p3, p4 = st.columns(4)
+                with p1:
                     entry_l = pick.get("entry_low")
                     entry_h = pick.get("entry_high")
-                    el_num = _extract_score(entry_l)
-                    eh_num = _extract_score(entry_h)
-                    entry_str = f"{el_num:,.0f} - {eh_num:,.0f}" if (entry_l and entry_h) else "N/A"
-                    st.metric("Entry Zone", value=entry_str)
-                with c4:
+                    entry_zone_raw = pick.get("entry_zone")
+                    if entry_l and entry_h:
+                        entry_str = f"{_extract_score(entry_l):,.0f} – {_extract_score(entry_h):,.0f}"
+                    elif entry_zone_raw:
+                        entry_str = str(entry_zone_raw)
+                    else:
+                        entry_str = "N/A"
+                    st.metric("🎯 Entry Range", entry_str)
+                with p2:
+                    val_t1 = pick.get("target_1") or pick.get("tp1")
+                    t1_num = _extract_score(val_t1)
+                    rr1 = pick.get("risk_reward_tp1")
+                    st.metric("🚀 Target 1 (TP1)", f"Rp {t1_num:,.0f}" if val_t1 else "N/A", delta=rr1)
+                with p3:
+                    val_t2 = pick.get("target_2") or pick.get("tp2")
+                    val_t3 = pick.get("target_3") or pick.get("tp3")
+                    t2_num = _extract_score(val_t2)
+                    t3_num = _extract_score(val_t3)
+                    t23_str = f"{t2_num:,.0f} / {t3_num:,.0f}" if (val_t2 and val_t3) else "N/A"
+                    st.metric("🎯 Target 2 / 3", t23_str)
+                with p4:
                     sl = pick.get("stop_loss")
                     sl_num = _extract_score(sl)
-                    sl_str = f"{sl_num:,.0f}" if sl else "N/A"
-                    st.metric("Stop Loss", value=sl_str)
+                    st.metric("🛑 Stop Loss", f"Rp {sl_num:,.0f}" if sl else "N/A")
 
-                # Target Prices & Sizing
-                st.markdown("### 🎯 Target Prices & Position Sizing")
-                t1_col, t2_col, t3_col, tp_size = st.columns(4)
-                with t1_col:
-                    val_t1 = pick.get("target_1")
-                    t1_num = _extract_score(val_t1)
-                    st.metric("Target 1 (TP1)", value=f"{t1_num:,.0f}" if val_t1 else "N/A")
-                with t2_col:
-                    val_t2 = pick.get("target_2")
-                    t2_num = _extract_score(val_t2)
-                    st.metric("Target 2 (TP2)", value=f"{t2_num:,.0f}" if val_t2 else "N/A")
-                with t3_col:
-                    val_t3 = pick.get("target_3")
-                    t3_num = _extract_score(val_t3)
-                    st.metric("Target 3 (TP3)", value=f"{t3_num:,.0f}" if val_t3 else "N/A")
-                with tp_size:
-                    sizing_val = pick.get("tp_position_sizing") or pick.get("position_sizing", "100%")
-                    st.metric("Position Sizing", value=str(sizing_val))
+                # 4. Fair Value Section
+                if fair_val_obj and isinstance(fair_val_obj, dict):
+                    st.divider()
+                    fv_base = fair_val_obj.get("fair_value_base")
+                    fv_low = fair_val_obj.get("fair_value_low")
+                    fv_high = fair_val_obj.get("fair_value_high")
+                    fv_upside = fair_val_obj.get("upside_pct")
+                    fv_label = fair_val_obj.get("valuation_label", "N/A")
+                    fv_conf = fair_val_obj.get("confidence", "N/A")
 
-                # Thesis Summary
+                    fv_icon = "🟢" if "UNDERVALUED" in fv_label else "🔴" if ("EXPENSIVE" in fv_label or "OVERVALUED" in fv_label) else "🟡"
+                    fv_val_str = f"Rp {fv_base:,.0f}" if isinstance(fv_base, (int, float)) else "N/A"
+                    upside_str = f"{fv_upside:+.2f}%" if isinstance(fv_upside, (int, float)) else "N/A"
+
+                    st.markdown(f"💰 **Fair Value:** {fv_icon} **{fv_val_str}** | Upside: **{upside_str}** | `{fv_label}` ({fv_conf} Confidence)")
+
+                    with st.expander(f"📐 Detail Fair Value {res_ticker}", expanded=False):
+                        if fv_low and fv_high:
+                            st.markdown(f"**Range Estimasi:** Rp {fv_low:,.0f} – Rp {fv_high:,.0f}")
+                        methods = fair_val_obj.get("methods", {})
+                        if methods and isinstance(methods, dict):
+                            st.markdown("**Metode Valuasi:**")
+                            for m_name, m_data in methods.items():
+                                if isinstance(m_data, dict) and m_data.get("available"):
+                                    m_fv = m_data.get("fair_value")
+                                    st.markdown(f"- **{m_name.replace('_', ' ').title()}**: Rp {m_fv:,.0f}" if m_fv else f"- **{m_name}**: N/A")
+                        notes = fair_val_obj.get("notes", [])
+                        if notes:
+                            st.caption("📝 " + " | ".join(notes[:3]))
+
+                # 5. ML Swing Prediction & Multi-Day Price Projections
+                if price_pred or ml_pred_obj:
+                    st.divider()
+                    st.markdown("### 🤖 ML Prediction & Multi-Day Projections")
+
+                    ml_sig = ml_pred_obj.get("signal") or price_pred.get("confidence") or "N/A"
+                    ml_win_raw = ml_pred_obj.get("pred_prob") or ml_pred_obj.get("probability") or 0
+                    ml_win_num = _extract_score(ml_win_raw)
+                    ml_win_pct = ml_win_num if ml_win_num > 1.0 else (ml_win_num * 100)
+                    ml_conf_val = ml_pred_obj.get("confidence") or price_pred.get("confidence") or "MEDIUM"
+
+                    c_ml1, c_ml2, c_ml3 = st.columns(3)
+                    with c_ml1:
+                        st.metric("ML Signal", str(ml_sig))
+                    with c_ml2:
+                        st.metric("Win Probability (1D)", f"{ml_win_pct:.1f}%")
+                    with c_ml3:
+                        st.metric("Confidence", str(ml_conf_val))
+
+                    projections = price_pred.get("predictions", {})
+                    if projections and isinstance(projections, dict):
+                        st.markdown("**🎯 Proyeksi Target Harga:**")
+                        col_d1, col_d3, col_d5, col_d7 = st.columns(4)
+                        for col_proj, key in [(col_d1, "day_1"), (col_d3, "day_3"), (col_d5, "day_5"), (col_d7, "day_7")]:
+                            if key in projections:
+                                pred = projections[key]
+                                p_price = pred.get("price")
+                                p_pct = pred.get("pct_change", "N/A")
+                                p_range = pred.get("price_range")
+                                p_pct_num = float(str(p_pct).replace('%', '').replace('+', '')) if isinstance(p_pct, str) and p_pct not in ('N/A', '') else (p_pct if isinstance(p_pct, (int, float)) else 0)
+                                with col_proj:
+                                    with st.container(border=True):
+                                        st.caption(f"**{key.replace('_', '+').upper()}**")
+                                        st.metric(
+                                            "Target",
+                                            f"Rp {int(p_price):,.0f}" if isinstance(p_price, (int, float)) else str(p_price),
+                                            delta=str(p_pct),
+                                            delta_color="normal" if p_pct_num >= 0 else "inverse"
+                                        )
+                                        if p_range and len(p_range) == 2:
+                                            st.caption(f"Range: {p_range[0]:,.0f} – {p_range[1]:,.0f}")
+
+                    reasoning = price_pred.get("reasoning", "")
+                    drivers = price_pred.get("key_drivers", [])
+                    risks = price_pred.get("risks", [])
+                    if reasoning or drivers or risks:
+                        with st.expander("📝 Reasoning & Key Drivers / Risks", expanded=False):
+                            if reasoning:
+                                st.markdown("#### 📝 Reasoning")
+                                st.markdown(reasoning)
+                            if drivers:
+                                st.markdown("#### 📈 Key Drivers:")
+                                for i, d in enumerate(drivers, 1):
+                                    st.markdown(f"{i}. {d}")
+                            if risks:
+                                st.markdown("#### ⚠️ Risks:")
+                                for i, r in enumerate(risks, 1):
+                                    st.markdown(f"{i}. {r}")
+
+                # 6. Bandarmologi & True Cost Broker Akumulasi
+                if broker_tc or bandar_ctx:
+                    st.divider()
+                    st.markdown("### 🏦 Bandarmologi & Broker Flow")
+                    if bandar_ctx:
+                        b_ut = bandar_ctx.get("broker_utama", "")
+                        b_7d = bandar_ctx.get("avg_cost_7d")
+                        b_1m = bandar_ctx.get("avg_cost_1m")
+                        b_dist = bandar_ctx.get("distance_current", "")
+                        b_7d_str = f"Rp {b_7d:,.0f}" if isinstance(b_7d, (int, float)) else "N/A"
+                        b_1m_str = f"Rp {b_1m:,.0f}" if isinstance(b_1m, (int, float)) else "N/A"
+                        st.markdown(f"**Broker Utama:** `{b_ut}` | **Avg Cost 7D:** {b_7d_str} | **Avg Cost 1M:** {b_1m_str} ({b_dist})")
+
+                    true_cost_rows = broker_tc.get("w7") or broker_tc.get("w1m") or []
+                    if true_cost_rows and isinstance(true_cost_rows, list):
+                        with st.expander("🏦 True Cost Broker Akumulasi", expanded=False):
+                            import pandas as pd
+                            def format_val(v):
+                                if not isinstance(v, (int, float)): return str(v)
+                                if v >= 1e12: return f"{v/1e12:.2f}T"
+                                if v >= 1e9: return f"{v/1e9:.2f}B"
+                                if v >= 1e6: return f"{v/1e6:.2f}M"
+                                return f"{v:,.0f}"
+
+                            def format_lot_cnt(l):
+                                if not isinstance(l, (int, float)): return str(l)
+                                if l >= 1000: return f"{l/1000:.1f}K"
+                                return f"{l:,.0f}"
+
+                            tc_table = []
+                            for b in true_cost_rows[:8]:
+                                dist = b.get("distance_pct")
+                                tc_table.append({
+                                    "Broker": b.get("broker", ""),
+                                    "Sekuritas": b.get("broker_name", ""),
+                                    "True Cost": b.get("true_cost", 0),
+                                    "Total Buy Lot": format_lot_cnt(b.get("total_buy_lot", 0)),
+                                    "Total Buy Value": format_val(b.get("total_buy_value", 0)),
+                                    "Harga vs Cost": f"{dist:+.2f}%" if isinstance(dist, (int, float)) else "N/A",
+                                    "Active": b.get("active_days", ""),
+                                    "Status": b.get("status", "")
+                                })
+                            st.dataframe(
+                                pd.DataFrame(tc_table),
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    "True Cost": st.column_config.NumberColumn(format="Rp %.0f"),
+                                }
+                            )
+
+                # 7. Investment Thesis & Reasoning
                 thesis = pick.get("thesis") or pick.get("entry_reasoning", "")
                 if thesis:
-                    with st.expander("💡 Investment Thesis & Entry Reasoning", expanded=True):
+                    st.divider()
+                    st.markdown("### 💡 Investment Thesis & Entry Strategy")
+                    with st.expander("Lihat Rangkuman Investment Thesis", expanded=True):
                         st.markdown(f"> {thesis}")
 
-            # Agent Breakdown Scores
-            st.markdown("### 🤖 Multi-Agent Breakdown Scores")
-            sc1, sc2, sc3, sc4, sc5 = st.columns(5)
-            
-            tech_num = _extract_score(tech_data)
-            bandar_num = _extract_score(bandarm_data) or _extract_score(fund_data)
-            news_num = _extract_score(news_data)
-            macro_num = _extract_score(ticker_scores.get("macro", 0))
-            
-            ml_prob_raw = ml_preds.get(res_ticker, {}).get("probability", 0) if (isinstance(ml_preds, dict) and res_ticker in ml_preds and isinstance(ml_preds[res_ticker], dict)) else 0
-            ml_num = _extract_score(ml_prob_raw)
-            
-            with sc1:
-                st.metric("Technical Score", f"{tech_num:.2f}")
-            with sc2:
-                st.metric("Bandarmologi / Fund", f"{bandar_num:.2f}")
-            with sc3:
-                st.metric("Sentiment Score", f"{news_num:.2f}")
-            with sc4:
-                st.metric("Macro Score", f"{macro_num:.2f}")
-            with sc5:
-                st.metric("ML Swing Prob", f"{ml_num*100:.1f}%")
+                # 8. Agent Breakdown Scores
+                st.divider()
+                st.markdown("### 🤖 Multi-Agent Breakdown Scores")
+                sc1, sc2, sc3, sc4, sc5 = st.columns(5)
+                
+                tech_num = _extract_score(tech_data)
+                bandar_num = _extract_score(bandarm_data)
+                fund_num = _extract_score(fund_data)
+                news_num = _extract_score(news_data)
+                macro_num = _extract_score(macro_data) if macro_data else _extract_score(ticker_scores.get("macro", 0))
+                
+                with sc1:
+                    st.metric("Technical Score", f"{tech_num:.2f}")
+                with sc2:
+                    st.metric("Bandarmologi", f"{bandar_num:.2f}" if bandar_num else f"{fund_num:.2f}")
+                with sc3:
+                    st.metric("Fundamental", f"{fund_num:.2f}")
+                with sc4:
+                    st.metric("Sentiment / News", f"{news_num:.2f}")
+                with sc5:
+                    st.metric("Macro Score", f"{macro_num:.2f}")
 
-            # Debate Log Section
-            if debate_log:
-                st.markdown("### ⚔️ Debate Bull vs Bear Agent Log")
-                with st.expander("📜 Lihat Log Perdebatan Bull vs Bear Agent", expanded=False):
-                    for item in debate_log:
-                        agent_name = item.get("agent") or item.get("speaker", "Agent")
-                        content = item.get("content") or item.get("message") or item.get("argument", "")
-                        role = item.get("role", "")
-                        
-                        if "bull" in str(agent_name).lower() or "bull" in str(role).lower():
-                            st.success(f"🟢 **{agent_name}**: {content}")
-                        elif "bear" in str(agent_name).lower() or "bear" in str(role).lower():
-                            st.error(f"🔴 **{agent_name}**: {content}")
-                        else:
-                            st.info(f"⚖️ **{agent_name}**: {content}")
-            
-            st.caption("ℹ️ *Catatan: Data di halaman ini disimpan secara terpisah dalam file JSON di folder `data/single_analysis_results/` dan tidak dimasukkan ke dalam tabel database utama Top Picks harian.*")
+                # 9. Debate Log Section
+                if debate_log:
+                    st.divider()
+                    st.markdown("### ⚔️ Debate Bull vs Bear Agent Log")
+                    with st.expander("📜 Lihat Log Perdebatan Bull vs Bear Agent", expanded=False):
+                        for item in debate_log:
+                            agent_name = item.get("agent") or item.get("speaker", "Agent")
+                            content = item.get("content") or item.get("message") or item.get("argument", "")
+                            role = item.get("role", "")
+                            
+                            if "bull" in str(agent_name).lower() or "bull" in str(role).lower():
+                                st.success(f"🟢 **{agent_name}**: {content}")
+                            elif "bear" in str(agent_name).lower() or "bear" in str(role).lower():
+                                st.error(f"🔴 **{agent_name}**: {content}")
+                            else:
+                                st.info(f"⚖️ **{agent_name}**: {content}")
+                
+                st.caption("ℹ️ *Catatan: Data di halaman ini disimpan secara terpisah dalam file JSON di folder `data/single_analysis_results/` dan tidak dimasukkan ke dalam tabel database utama Top Picks harian.*")
 
         except Exception as err:
             st.error(f"Gagal membaca file hasil analisis `{latest_file}`: {err}")
+            import traceback
+            st.code(traceback.format_exc())
     else:
         st.info(f"💡 Belum ada hasil analisis tersimpan untuk ticker **{input_ticker}**. Ketik ticker dan klik **▶️ Analisis Sekarang** di atas untuk memulai.")
 

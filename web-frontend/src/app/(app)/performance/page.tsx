@@ -221,6 +221,7 @@ interface MlPredictionRow {
   ticker: string;
   direction: string;
   probability_pct: number;
+  entry_price: number | null;
   pred_price: number | null;
   actual_close: number | null;
   actual_return_pct: number | null;
@@ -606,6 +607,7 @@ export default function AIPerformancePage() {
                         <th className="px-6 py-3.5">Ticker</th>
                         <th className="px-6 py-3.5 text-center">Prediksi Arah</th>
                         <th className="px-6 py-3.5 text-center">Probabilitas (%)</th>
+                        <th className="px-6 py-3.5 text-right">Harga Entry</th>
                         <th className="px-6 py-3.5 text-right">Target Price</th>
                         <th className="px-6 py-3.5 text-right">Harga Terakhir</th>
                         <th className="px-6 py-3.5 text-center">Status Validasi</th>
@@ -641,6 +643,9 @@ export default function AIPerformancePage() {
                               </div>
                             </div>
                           </td>
+                          <td className="px-6 py-4 text-right font-medium text-text">
+                            {row.entry_price ? formatCurrency(row.entry_price) : '-'}
+                          </td>
                           <td className="px-6 py-4 text-right font-bold text-text">
                             {row.pred_price ? formatCurrency(row.pred_price) : '-'}
                           </td>
@@ -662,7 +667,7 @@ export default function AIPerformancePage() {
                       ))}
                       {paginatedMlRows.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="px-6 py-12 text-center text-secondary font-sans">
+                          <td colSpan={7} className="px-6 py-12 text-center text-secondary font-sans">
                             Tidak ada prediksi saham yang cocok untuk kriteria ini. Silakan ganti Horizon, Tanggal, atau Filter Arah.
                           </td>
                         </tr>

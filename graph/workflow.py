@@ -46,8 +46,9 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     universe: list
+    is_custom_universe: bool
     candidates: list
     macro_data: dict
     scores: dict          # {ticker: {agent: result}}
@@ -65,19 +66,21 @@ class AgentState(TypedDict):
 def run_filter(state: AgentState) -> dict:
     """Phase 1: Rule-based filter ~55 → ~30 saham."""
     universe = state.get("universe") or get_universe()
+    is_custom = state.get("is_custom_universe", False)
     
-    # Exclude Konglo Play stocks
-    try:
-        from db import SessionLocal
-        from db.models import Universe
-        db = SessionLocal()
-        konglo_tickers = [t[0] for t in db.query(Universe.ticker).filter_by(is_konglo=True).all()]
-        db.close()
-        universe = [t for t in universe if t not in konglo_tickers]
-    except Exception as e:
-        logger.warning(f"[FILTER] Failed to fetch Konglo tickers for exclusion: {e}")
+    # Exclude Konglo Play stocks ONLY for default universe batch runs (not for single-ticker / custom runs)
+    if not is_custom and len(universe) > 10:
+        try:
+            from db import SessionLocal
+            from db.models import Universe
+            db = SessionLocal()
+            konglo_tickers = [t[0] for t in db.query(Universe.ticker).filter_by(is_konglo=True).all()]
+            db.close()
+            universe = [t for t in universe if t not in konglo_tickers]
+        except Exception as e:
+            logger.warning(f"[FILTER] Failed to fetch Konglo tickers for exclusion: {e}")
         
-    logger.info(f"[FILTER] Input (excluding Konglo): {len(universe)} tickers")
+    logger.info(f"[FILTER] Input: {len(universe)} tickers (is_custom={is_custom})")
 
     candidates = apply_filter(universe)
     logger.info(f"[FILTER] Output: {len(candidates)} candidates")
@@ -706,12 +709,14 @@ def run_full_analysis(universe: list[str] | None = None, auto_train_ml: bool = T
     else:
         portfolio_tickers = []
 
+    is_custom = universe is not None
     final_universe = universe or get_universe()
     final_universe = list(set(final_universe + portfolio_tickers))
 
     app = build_workflow()
     initial_state = {
         "universe": final_universe,
+        "is_custom_universe": is_custom,
         "candidates": [],
         "macro_data": {},
         "scores": {},

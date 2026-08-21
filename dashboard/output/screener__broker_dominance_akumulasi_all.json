@@ -1,523 +1,568 @@
 [
   {
-    "ticker": "TPIA",
-    "price": 2200.0,
-    "change_pct": 2.33,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 613735595000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
     "ticker": "BBCA",
-    "price": 6275.0,
-    "change_pct": 0.4,
+    "price": 6400.0,
+    "change_pct": 1.59,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 419357717500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "ANTM",
-    "price": 2840.0,
-    "change_pct": 0.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 165846695000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BBRI",
-    "price": 2920.0,
-    "change_pct": 0.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 155603049000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "TLKM",
-    "price": 2560.0,
-    "change_pct": -1.16,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 148881458000,
+    "net_value_idr": 295453010000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "AMMN",
-    "price": 3940.0,
-    "change_pct": -0.76,
+    "price": 4470.0,
+    "change_pct": 7.97,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 147808890000,
+    "net_value_idr": 270246147000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
-    "ticker": "EMAS",
-    "price": 6200.0,
-    "change_pct": 0.0,
+    "ticker": "BBRI",
+    "price": 3140.0,
+    "change_pct": 1.95,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 126716502500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "UNTR",
-    "price": 24500.0,
-    "change_pct": -1.9,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 107752872500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BMRI",
-    "price": 4090.0,
-    "change_pct": -0.24,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 104105789000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BUMI",
-    "price": 159.0,
-    "change_pct": -1.24,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 102762302200,
+    "net_value_idr": 231465023000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "DSSA",
-    "price": 825.0,
-    "change_pct": -1.2,
+    "price": 1020.0,
+    "change_pct": -1.92,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 91614895000,
+    "net_value_idr": 182008078500,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
-    "ticker": "ASII",
-    "price": 4960.0,
-    "change_pct": -0.6,
+    "ticker": "BUMI",
+    "price": 190.0,
+    "change_pct": 4.4,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 90099489000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BULL",
-    "price": 398.0,
-    "change_pct": -0.5,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 84250550800,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BBNI",
-    "price": 3460.0,
-    "change_pct": -0.86,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 82006175000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "MDKA",
-    "price": 2610.0,
-    "change_pct": 0.38,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 77545488000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "TINS",
-    "price": 3420.0,
-    "change_pct": -1.72,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 71769350000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "ADRO",
-    "price": 2450.0,
-    "change_pct": 0.41,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 71530857000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "ITMG",
-    "price": 24450.0,
-    "change_pct": -0.31,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 67598935000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "CUAN",
-    "price": 660.0,
-    "change_pct": -0.75,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 67571594500,
+    "net_value_idr": 172314707700,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "BRMS",
-    "price": 545.0,
-    "change_pct": -0.91,
+    "price": 685.0,
+    "change_pct": 9.6,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 61343645000,
+    "net_value_idr": 170531572000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
-    "ticker": "AMRT",
-    "price": 1305.0,
-    "change_pct": -0.38,
+    "ticker": "BMRI",
+    "price": 4150.0,
+    "change_pct": 0.24,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 57670215000,
+    "net_value_idr": 147177277000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
-    "ticker": "BRPT",
-    "price": 1785.0,
-    "change_pct": 0.85,
+    "ticker": "TLKM",
+    "price": 2610.0,
+    "change_pct": 0.38,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 44130737500,
+    "net_value_idr": 144762614000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
-    "ticker": "INCO",
-    "price": 4640.0,
-    "change_pct": -2.11,
+    "ticker": "ANTM",
+    "price": 3140.0,
+    "change_pct": 3.63,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 43747178000,
+    "net_value_idr": 119711194000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
-    "ticker": "KLBF",
-    "price": 700.0,
-    "change_pct": -0.71,
+    "ticker": "TPIA",
+    "price": 1965.0,
+    "change_pct": 0.77,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 41442301000,
+    "net_value_idr": 104999145000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BBNI",
+    "price": 3590.0,
+    "change_pct": 0.84,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 104955185000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "UNTR",
+    "price": 23825.0,
+    "change_pct": 1.06,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 93422095000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "MBMA",
+    "price": 565.0,
+    "change_pct": 10.78,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 87685568000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "TINS",
+    "price": 3990.0,
+    "change_pct": -1.48,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 84224338000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "ASII",
+    "price": 4790.0,
+    "change_pct": 1.27,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 77985076000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "DEWA",
-    "price": 440.0,
-    "change_pct": -0.9,
+    "price": 456.0,
+    "change_pct": 3.64,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 34952860600,
+    "net_value_idr": 77310500200,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "INET",
+    "price": 314.0,
+    "change_pct": 9.03,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 76922997600,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "EMAS",
+    "price": 7900.0,
+    "change_pct": 2.6,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 69624480000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "BREN",
-    "price": 3300.0,
-    "change_pct": 0.3,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 31914323000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BIPI",
-    "price": 136.0,
-    "change_pct": -0.73,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 30841605200,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "ADMR",
-    "price": 1440.0,
-    "change_pct": 0.35,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 29081003000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BNBR",
-    "price": 90.0,
-    "change_pct": -6.25,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 28183566400,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BUVA",
-    "price": 810.0,
+    "price": 3450.0,
     "change_pct": 0.0,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 27688740000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "ENRG",
-    "price": 1225.0,
-    "change_pct": -0.81,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 25181628500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "AKRA",
-    "price": 1465.0,
-    "change_pct": 1.38,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 24810248500,
+    "net_value_idr": 69294983000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "ISAT",
-    "price": 1900.0,
-    "change_pct": 1.88,
+    "price": 2730.0,
+    "change_pct": -0.36,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 21215760000,
+    "net_value_idr": 66813991000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "CUAN",
+    "price": 825.0,
+    "change_pct": 1.23,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 64312334500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "ARCI",
+    "price": 1370.0,
+    "change_pct": 5.38,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 63744367500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "KLBF",
+    "price": 825.0,
+    "change_pct": 5.77,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 60273375000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BULL",
+    "price": 462.0,
+    "change_pct": 0.43,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 53768743200,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "VKTR",
+    "price": 930.0,
+    "change_pct": 6.29,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 44479405000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BRPT",
+    "price": 1880.0,
+    "change_pct": 1.35,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 40931957000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BNBR",
+    "price": 104.0,
+    "change_pct": 4.0,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 40392584800,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "ITMG",
+    "price": 25400.0,
+    "change_pct": 1.6,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 40367730000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "PACK",
+    "price": 352.0,
+    "change_pct": 10.0,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 40061039400,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "MDKA",
+    "price": 2940.0,
+    "change_pct": 3.16,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 39969040000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "NCKL",
+    "price": 950.0,
+    "change_pct": 2.7,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 39099844000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "ADMR",
+    "price": 1690.0,
+    "change_pct": 3.36,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 38843146000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "ENRG",
+    "price": 1310.0,
+    "change_pct": 1.16,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 33154074500,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "PTRO",
-    "price": 4600.0,
-    "change_pct": -1.08,
+    "price": 5250.0,
+    "change_pct": 0.0,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 21123237000,
+    "net_value_idr": 30115542500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "CDIA",
+    "price": 705.0,
+    "change_pct": 2.17,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 29867299500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "INCO",
+    "price": 5250.0,
+    "change_pct": 3.45,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 27912565000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "SSIA",
+    "price": 1765.0,
+    "change_pct": 0.28,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 27606562000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "ESSA",
+    "price": 635.0,
+    "change_pct": 2.42,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 27290395500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "PGAS",
+    "price": 1525.0,
+    "change_pct": 1.33,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 25768816500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "MEDC",
+    "price": 1420.0,
+    "change_pct": -0.35,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 24928461500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "JGLE",
+    "price": 91.0,
+    "change_pct": 1.11,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 24582908100,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "ADRO",
+    "price": 2560.0,
+    "change_pct": 0.0,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 21710001000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "UNVR",
+    "price": 1835.0,
+    "change_pct": 3.09,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 17746669500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "ICBP",
+    "price": 7700.0,
+    "change_pct": 0.33,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 17460947500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BYAN",
+    "price": 16175.0,
+    "change_pct": 3.35,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 17145725000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "AMRT",
+    "price": 1375.0,
+    "change_pct": 1.48,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 14908628500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BIPI",
+    "price": 152.0,
+    "change_pct": 1.33,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 14793629100,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "RAJA",
+    "price": 825.0,
+    "change_pct": 2.48,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 13717742000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "EXCL",
+    "price": 2830.0,
+    "change_pct": -1.05,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 10932603000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "CBDK",
+    "price": 3930.0,
+    "change_pct": 3.69,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 9722016000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BUVA",
+    "price": 745.0,
+    "change_pct": 2.76,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 8701871000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BRIS",
+    "price": 1770.0,
+    "change_pct": 0.57,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 8183979000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "AKRA",
+    "price": 1395.0,
+    "change_pct": 0.36,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 8129177000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "PANI",
+    "price": 6075.0,
+    "change_pct": 0.83,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 7340332500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "PTBA",
+    "price": 2400.0,
+    "change_pct": 1.27,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 7033828000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "RATU",
+    "price": 4260.0,
+    "change_pct": 2.65,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 6912304000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "BBTN",
+    "price": 1205.0,
+    "change_pct": 0.42,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 6230646000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "PGEO",
+    "price": 1070.0,
+    "change_pct": 1.9,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 5779226500,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "OASA",
+    "price": 318.0,
+    "change_pct": 1.27,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 5345241000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "TOWR",
+    "price": 428.0,
+    "change_pct": 1.42,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 4607662000,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "MINA",
+    "price": 272.0,
+    "change_pct": 0.0,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 4327305800,
+    "foreign_flow": "NET SELL",
+    "foreign_net_val": 0
+  },
+  {
+    "ticker": "MSIN",
+    "price": 352.0,
+    "change_pct": 0.57,
+    "accumulation_status": "ACCUMULATION",
+    "net_value_idr": 3913769400,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "PADI",
     "price": 71.0,
-    "change_pct": -2.74,
+    "change_pct": 1.43,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 20927809200,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "NCKL",
-    "price": 850.0,
-    "change_pct": 0.59,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 20870860000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "RAJA",
-    "price": 865.0,
-    "change_pct": -1.14,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 19636935000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "RATU",
-    "price": 4740.0,
-    "change_pct": -2.27,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 17496103500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "MEDC",
-    "price": 1235.0,
-    "change_pct": -2.37,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 14784898000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "TOWR",
-    "price": 404.0,
-    "change_pct": 1.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 14206785800,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "SSIA",
-    "price": 1585.0,
-    "change_pct": -0.63,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 13885449000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "MBMA",
-    "price": 482.0,
-    "change_pct": 0.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 12355698400,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "ESSA",
-    "price": 615.0,
-    "change_pct": 0.82,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 12282930500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "PTBA",
-    "price": 2330.0,
-    "change_pct": 0.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 12106017000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "ICBP",
-    "price": 6950.0,
-    "change_pct": 0.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 11983627500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "CDIA",
-    "price": 650.0,
-    "change_pct": -1.52,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 10516073000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "UNVR",
-    "price": 1695.0,
-    "change_pct": 0.3,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 9953583000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "VKTR",
-    "price": 710.0,
-    "change_pct": -0.7,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 9225450500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "PGAS",
-    "price": 1490.0,
-    "change_pct": -0.33,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 8987179000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "ARCI",
-    "price": 1045.0,
-    "change_pct": 0.97,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 8875613500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BRIS",
-    "price": 1760.0,
-    "change_pct": -0.85,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 8120758500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "PGEO",
-    "price": 1010.0,
-    "change_pct": 1.51,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 7847225500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "CBDK",
-    "price": 3410.0,
-    "change_pct": 0.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 7123602000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "INET",
-    "price": 214.0,
-    "change_pct": -0.93,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 6641768000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "PANI",
-    "price": 6025.0,
-    "change_pct": 1.69,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 5964282500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "EXCL",
-    "price": 2420.0,
-    "change_pct": -0.41,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 5095636000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "PACK",
-    "price": 220.0,
-    "change_pct": -0.9,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 4946170600,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "MINA",
-    "price": 264.0,
-    "change_pct": -0.75,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 4720443200,
+    "net_value_idr": 2805552700,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
@@ -526,52 +571,16 @@
     "price": 50.0,
     "change_pct": 0.0,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 4641845000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "OASA",
-    "price": 318.0,
-    "change_pct": -1.85,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 4264139400,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BBTN",
-    "price": 1195.0,
-    "change_pct": 0.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 3857917000,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "MSIN",
-    "price": 400.0,
-    "change_pct": 0.0,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 1929361400,
+    "net_value_idr": 677360000,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   },
   {
     "ticker": "TBIG",
-    "price": 1380.0,
-    "change_pct": -1.08,
+    "price": 1410.0,
+    "change_pct": 0.71,
     "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 1457900500,
-    "foreign_flow": "NET SELL",
-    "foreign_net_val": 0
-  },
-  {
-    "ticker": "BYAN",
-    "price": 12150.0,
-    "change_pct": 0.83,
-    "accumulation_status": "ACCUMULATION",
-    "net_value_idr": 111160000,
+    "net_value_idr": 190175500,
     "foreign_flow": "NET SELL",
     "foreign_net_val": 0
   }

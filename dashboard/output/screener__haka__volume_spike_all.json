@@ -1,1 +1,416 @@
-[]
+[
+  {
+    "ticker": "MBMA",
+    "price": 565.0,
+    "change_pct": 10.78,
+    "volume_multiplier": 9.2,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 3688017,
+    "avg_volume_20d": 400962
+  },
+  {
+    "ticker": "BYAN",
+    "price": 16175.0,
+    "change_pct": 3.35,
+    "volume_multiplier": 7.17,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 26817,
+    "avg_volume_20d": 3742
+  },
+  {
+    "ticker": "BRMS",
+    "price": 685.0,
+    "change_pct": 9.6,
+    "volume_multiplier": 7.08,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 8291461,
+    "avg_volume_20d": 1171484
+  },
+  {
+    "ticker": "ARCI",
+    "price": 1370.0,
+    "change_pct": 5.38,
+    "volume_multiplier": 6.89,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 1097901,
+    "avg_volume_20d": 159363
+  },
+  {
+    "ticker": "VKTR",
+    "price": 930.0,
+    "change_pct": 6.29,
+    "volume_multiplier": 6.23,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 1648504,
+    "avg_volume_20d": 264564
+  },
+  {
+    "ticker": "CBDK",
+    "price": 3930.0,
+    "change_pct": 3.69,
+    "volume_multiplier": 5.69,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 39548,
+    "avg_volume_20d": 6954
+  },
+  {
+    "ticker": "AMMN",
+    "price": 4470.0,
+    "change_pct": 7.97,
+    "volume_multiplier": 5.64,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 1617850,
+    "avg_volume_20d": 286935
+  },
+  {
+    "ticker": "INET",
+    "price": 314.0,
+    "change_pct": 9.03,
+    "volume_multiplier": 5.62,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 9147228,
+    "avg_volume_20d": 1626268
+  },
+  {
+    "ticker": "CDIA",
+    "price": 705.0,
+    "change_pct": 2.17,
+    "volume_multiplier": 5.5,
+    "status": "\u26a1 HAKA",
+    "volume": 717209,
+    "avg_volume_20d": 130340
+  },
+  {
+    "ticker": "ANTM",
+    "price": 3140.0,
+    "change_pct": 3.63,
+    "volume_multiplier": 4.67,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 1418846,
+    "avg_volume_20d": 304043
+  },
+  {
+    "ticker": "KLBF",
+    "price": 825.0,
+    "change_pct": 5.77,
+    "volume_multiplier": 4.63,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 1199595,
+    "avg_volume_20d": 258854
+  },
+  {
+    "ticker": "NCKL",
+    "price": 950.0,
+    "change_pct": 2.7,
+    "volume_multiplier": 4.55,
+    "status": "\u26a1 HAKA",
+    "volume": 718059,
+    "avg_volume_20d": 157671
+  },
+  {
+    "ticker": "UNTR",
+    "price": 23825.0,
+    "change_pct": 1.06,
+    "volume_multiplier": 4.54,
+    "status": "\u26a1 HAKA",
+    "volume": 54229,
+    "avg_volume_20d": 11947
+  },
+  {
+    "ticker": "UNVR",
+    "price": 1835.0,
+    "change_pct": 3.09,
+    "volume_multiplier": 4.43,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 193693,
+    "avg_volume_20d": 43767
+  },
+  {
+    "ticker": "PGAS",
+    "price": 1525.0,
+    "change_pct": 1.33,
+    "volume_multiplier": 4.21,
+    "status": "\u26a1 HAKA",
+    "volume": 274506,
+    "avg_volume_20d": 65265
+  },
+  {
+    "ticker": "MSIN",
+    "price": 352.0,
+    "change_pct": 0.57,
+    "volume_multiplier": 4.09,
+    "status": "\u26a1 HAKA",
+    "volume": 505073,
+    "avg_volume_20d": 123462
+  },
+  {
+    "ticker": "ITMG",
+    "price": 25400.0,
+    "change_pct": 1.6,
+    "volume_multiplier": 4.08,
+    "status": "\u26a1 HAKA",
+    "volume": 15440,
+    "avg_volume_20d": 3782
+  },
+  {
+    "ticker": "BUMI",
+    "price": 190.0,
+    "change_pct": 4.4,
+    "volume_multiplier": 4.0,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 35465767,
+    "avg_volume_20d": 8867965
+  },
+  {
+    "ticker": "ADMR",
+    "price": 1690.0,
+    "change_pct": 3.36,
+    "volume_multiplier": 3.91,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 310020,
+    "avg_volume_20d": 79258
+  },
+  {
+    "ticker": "MDKA",
+    "price": 2940.0,
+    "change_pct": 3.16,
+    "volume_multiplier": 3.85,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 410173,
+    "avg_volume_20d": 106565
+  },
+  {
+    "ticker": "BBNI",
+    "price": 3590.0,
+    "change_pct": 0.84,
+    "volume_multiplier": 3.83,
+    "status": "\u26a1 HAKA",
+    "volume": 338385,
+    "avg_volume_20d": 88411
+  },
+  {
+    "ticker": "EMAS",
+    "price": 7900.0,
+    "change_pct": 2.6,
+    "volume_multiplier": 3.73,
+    "status": "\u26a1 HAKA",
+    "volume": 234165,
+    "avg_volume_20d": 62705
+  },
+  {
+    "ticker": "CUAN",
+    "price": 825.0,
+    "change_pct": 1.23,
+    "volume_multiplier": 3.58,
+    "status": "\u26a1 HAKA",
+    "volume": 2881622,
+    "avg_volume_20d": 805189
+  },
+  {
+    "ticker": "BNBR",
+    "price": 104.0,
+    "change_pct": 4.0,
+    "volume_multiplier": 3.26,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 20239081,
+    "avg_volume_20d": 6213064
+  },
+  {
+    "ticker": "BBRI",
+    "price": 3140.0,
+    "change_pct": 1.95,
+    "volume_multiplier": 3.25,
+    "status": "\u26a1 HAKA",
+    "volume": 1561203,
+    "avg_volume_20d": 480558
+  },
+  {
+    "ticker": "INCO",
+    "price": 5250.0,
+    "change_pct": 3.45,
+    "volume_multiplier": 3.23,
+    "status": "\ud83d\ude80 SUPER HAKA",
+    "volume": 125270,
+    "avg_volume_20d": 38828
+  },
+  {
+    "ticker": "ASII",
+    "price": 4790.0,
+    "change_pct": 1.27,
+    "volume_multiplier": 2.98,
+    "status": "\u26a1 HAKA",
+    "volume": 407002,
+    "avg_volume_20d": 136592
+  },
+  {
+    "ticker": "ENRG",
+    "price": 1310.0,
+    "change_pct": 1.16,
+    "volume_multiplier": 2.89,
+    "status": "\u26a1 HAKA",
+    "volume": 742844,
+    "avg_volume_20d": 257376
+  },
+  {
+    "ticker": "OASA",
+    "price": 318.0,
+    "change_pct": 1.27,
+    "volume_multiplier": 2.77,
+    "status": "\u26a1 HAKA",
+    "volume": 226922,
+    "avg_volume_20d": 81984
+  },
+  {
+    "ticker": "ESSA",
+    "price": 635.0,
+    "change_pct": 2.42,
+    "volume_multiplier": 2.71,
+    "status": "\u26a1 HAKA",
+    "volume": 963437,
+    "avg_volume_20d": 354996
+  },
+  {
+    "ticker": "BIPI",
+    "price": 152.0,
+    "change_pct": 1.33,
+    "volume_multiplier": 2.53,
+    "status": "\u26a1 HAKA",
+    "volume": 4132014,
+    "avg_volume_20d": 1631966
+  },
+  {
+    "ticker": "BBCA",
+    "price": 6400.0,
+    "change_pct": 1.59,
+    "volume_multiplier": 2.32,
+    "status": "\u26a1 HAKA",
+    "volume": 677498,
+    "avg_volume_20d": 292448
+  },
+  {
+    "ticker": "DEWA",
+    "price": 456.0,
+    "change_pct": 3.64,
+    "volume_multiplier": 2.27,
+    "status": "\u26a1 HAKA",
+    "volume": 5705855,
+    "avg_volume_20d": 2514246
+  },
+  {
+    "ticker": "PTBA",
+    "price": 2400.0,
+    "change_pct": 1.27,
+    "volume_multiplier": 2.22,
+    "status": "\u26a1 HAKA",
+    "volume": 78257,
+    "avg_volume_20d": 35316
+  },
+  {
+    "ticker": "RATU",
+    "price": 4260.0,
+    "change_pct": 2.65,
+    "volume_multiplier": 2.14,
+    "status": "\u26a1 HAKA",
+    "volume": 60907,
+    "avg_volume_20d": 28479
+  },
+  {
+    "ticker": "BRIS",
+    "price": 1770.0,
+    "change_pct": 0.57,
+    "volume_multiplier": 2.11,
+    "status": "\u26a1 HAKA",
+    "volume": 79421,
+    "avg_volume_20d": 37555
+  },
+  {
+    "ticker": "PANI",
+    "price": 6075.0,
+    "change_pct": 0.83,
+    "volume_multiplier": 2.1,
+    "status": "\u26a1 HAKA",
+    "volume": 26942,
+    "avg_volume_20d": 12800
+  },
+  {
+    "ticker": "PADI",
+    "price": 71.0,
+    "change_pct": 1.43,
+    "volume_multiplier": 1.87,
+    "status": "\u26a1 HAKA",
+    "volume": 1597422,
+    "avg_volume_20d": 854232
+  },
+  {
+    "ticker": "AMRT",
+    "price": 1375.0,
+    "change_pct": 1.48,
+    "volume_multiplier": 1.83,
+    "status": "\u26a1 HAKA",
+    "volume": 182499,
+    "avg_volume_20d": 99494
+  },
+  {
+    "ticker": "PACK",
+    "price": 352.0,
+    "change_pct": 10.0,
+    "volume_multiplier": 1.82,
+    "status": "\u26a1 HAKA",
+    "volume": 950752,
+    "avg_volume_20d": 522798
+  },
+  {
+    "ticker": "PGEO",
+    "price": 1070.0,
+    "change_pct": 1.9,
+    "volume_multiplier": 1.7,
+    "status": "\u26a1 HAKA",
+    "volume": 117986,
+    "avg_volume_20d": 69396
+  },
+  {
+    "ticker": "TPIA",
+    "price": 1965.0,
+    "change_pct": 0.77,
+    "volume_multiplier": 1.69,
+    "status": "\u26a1 HAKA",
+    "volume": 1745376,
+    "avg_volume_20d": 1029962
+  },
+  {
+    "ticker": "RAJA",
+    "price": 825.0,
+    "change_pct": 2.48,
+    "volume_multiplier": 1.54,
+    "status": "\u26a1 HAKA",
+    "volume": 508375,
+    "avg_volume_20d": 329771
+  },
+  {
+    "ticker": "BRPT",
+    "price": 1880.0,
+    "change_pct": 1.35,
+    "volume_multiplier": 1.54,
+    "status": "\u26a1 HAKA",
+    "volume": 562459,
+    "avg_volume_20d": 365984
+  },
+  {
+    "ticker": "TOWR",
+    "price": 428.0,
+    "change_pct": 1.42,
+    "volume_multiplier": 1.51,
+    "status": "\u26a1 HAKA",
+    "volume": 262467,
+    "avg_volume_20d": 174316
+  },
+  {
+    "ticker": "TBIG",
+    "price": 1410.0,
+    "change_pct": 0.71,
+    "volume_multiplier": 1.41,
+    "status": "\u26a1 HAKA",
+    "volume": 1893,
+    "avg_volume_20d": 1346
+  }
+]

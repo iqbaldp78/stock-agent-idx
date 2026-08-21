@@ -34,3 +34,7 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Data & Analysis Results
+data/single_analysis_results/
+data/*.json

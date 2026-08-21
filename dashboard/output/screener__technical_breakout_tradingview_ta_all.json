@@ -1,92 +1,212 @@
 [
   {
-    "ticker": "ADRO",
-    "price": 2510,
-    "recommendation": "BUY",
+    "ticker": "ICBP",
+    "price": 7700,
+    "recommendation": "STRONG_BUY",
     "buy_signals": 16,
-    "sell_signals": 2,
-    "rsi_14": 57.75,
+    "sell_signals": 1,
+    "rsi_14": 70.97,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "ITMG",
+    "price": 25400,
+    "recommendation": "STRONG_BUY",
+    "buy_signals": 16,
+    "sell_signals": 1,
+    "rsi_14": 64.74,
     "macd_bullish": false,
     "ma_alignment": "MA20 > MA50 Bullish"
   },
   {
-    "ticker": "AKRA",
-    "price": 1455,
+    "ticker": "MDKA",
+    "price": 2940,
+    "recommendation": "STRONG_BUY",
+    "buy_signals": 16,
+    "sell_signals": 0,
+    "rsi_14": 57.59,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "ISAT",
+    "price": 2730,
+    "recommendation": "BUY",
+    "buy_signals": 15,
+    "sell_signals": 5,
+    "rsi_14": 80.86,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "MEDC",
+    "price": 1420,
+    "recommendation": "BUY",
+    "buy_signals": 15,
+    "sell_signals": 2,
+    "rsi_14": 63.49,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "ARCI",
+    "price": 1370,
+    "recommendation": "BUY",
+    "buy_signals": 15,
+    "sell_signals": 2,
+    "rsi_14": 70.59,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "BBRI",
+    "price": 3140,
     "recommendation": "BUY",
     "buy_signals": 14,
     "sell_signals": 2,
-    "rsi_14": 62.62,
+    "rsi_14": 61.31,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "BYAN",
+    "price": 16175,
+    "recommendation": "BUY",
+    "buy_signals": 14,
+    "sell_signals": 3,
+    "rsi_14": 73.89,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "TINS",
+    "price": 3990,
+    "recommendation": "BUY",
+    "buy_signals": 14,
+    "sell_signals": 3,
+    "rsi_14": 61.63,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "TOWR",
+    "price": 428,
+    "recommendation": "BUY",
+    "buy_signals": 14,
+    "sell_signals": 3,
+    "rsi_14": 66.4,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "UNVR",
+    "price": 1835,
+    "recommendation": "BUY",
+    "buy_signals": 14,
+    "sell_signals": 2,
+    "rsi_14": 60.07,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "ADRO",
+    "price": 2560,
+    "recommendation": "BUY",
+    "buy_signals": 13,
+    "sell_signals": 5,
+    "rsi_14": 58.04,
+    "macd_bullish": false,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "EXCL",
+    "price": 2830,
+    "recommendation": "BUY",
+    "buy_signals": 13,
+    "sell_signals": 7,
+    "rsi_14": 63.28,
+    "macd_bullish": true,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "INCO",
+    "price": 5250,
+    "recommendation": "BUY",
+    "buy_signals": 13,
+    "sell_signals": 4,
+    "rsi_14": 54.27,
+    "macd_bullish": false,
+    "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "KLBF",
+    "price": 825,
+    "recommendation": "BUY",
+    "buy_signals": 13,
+    "sell_signals": 5,
+    "rsi_14": 66.2,
     "macd_bullish": true,
     "ma_alignment": "MA20 > MA50 Bullish"
   },
   {
     "ticker": "BBCA",
-    "price": 6450,
+    "price": 6400,
     "recommendation": "BUY",
-    "buy_signals": 14,
-    "sell_signals": 3,
-    "rsi_14": 58.55,
+    "buy_signals": 12,
+    "sell_signals": 4,
+    "rsi_14": 54.92,
     "macd_bullish": false,
     "ma_alignment": "MA20 > MA50 Bullish"
   },
   {
-    "ticker": "BBRI",
-    "price": 2990,
-    "recommendation": "BUY",
-    "buy_signals": 13,
-    "sell_signals": 4,
-    "rsi_14": 55.86,
-    "macd_bullish": true,
-    "ma_alignment": "Neutral"
-  },
-  {
-    "ticker": "BBNI",
-    "price": 3550,
+    "ticker": "PGAS",
+    "price": 1525,
     "recommendation": "BUY",
     "buy_signals": 12,
     "sell_signals": 5,
-    "rsi_14": 53.54,
+    "rsi_14": 54.59,
     "macd_bullish": true,
-    "ma_alignment": "Neutral"
+    "ma_alignment": "MA20 > MA50 Bullish"
   },
   {
-    "ticker": "ESSA",
-    "price": 635,
+    "ticker": "PGEO",
+    "price": 1070,
     "recommendation": "BUY",
     "buy_signals": 12,
     "sell_signals": 4,
-    "rsi_14": 56.0,
-    "macd_bullish": true,
-    "ma_alignment": "Neutral"
+    "rsi_14": 56.49,
+    "macd_bullish": false,
+    "ma_alignment": "MA20 > MA50 Bullish"
   },
   {
-    "ticker": "BYAN",
-    "price": 12075,
+    "ticker": "ANTM",
+    "price": 3140,
     "recommendation": "BUY",
     "buy_signals": 11,
     "sell_signals": 5,
-    "rsi_14": 59.74,
+    "rsi_14": 57.62,
     "macd_bullish": true,
     "ma_alignment": "MA20 > MA50 Bullish"
   },
   {
-    "ticker": "ASII",
-    "price": 4950,
-    "recommendation": "SELL",
-    "buy_signals": 6,
-    "sell_signals": 10,
-    "rsi_14": 49.7,
-    "macd_bullish": true,
-    "ma_alignment": "MA20 > MA50 Bullish"
-  },
-  {
-    "ticker": "ADMR",
-    "price": 1490,
-    "recommendation": "SELL",
-    "buy_signals": 6,
-    "sell_signals": 11,
-    "rsi_14": 49.54,
+    "ticker": "BBNI",
+    "price": 3590,
+    "recommendation": "BUY",
+    "buy_signals": 10,
+    "sell_signals": 6,
+    "rsi_14": 52.52,
     "macd_bullish": false,
     "ma_alignment": "MA20 > MA50 Bullish"
+  },
+  {
+    "ticker": "PTBA",
+    "price": 2400,
+    "recommendation": "BUY",
+    "buy_signals": 10,
+    "sell_signals": 6,
+    "rsi_14": 53.68,
+    "macd_bullish": true,
+    "ma_alignment": "Neutral"
   }
 ]

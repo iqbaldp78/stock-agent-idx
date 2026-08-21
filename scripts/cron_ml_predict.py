@@ -143,12 +143,14 @@ def run_ml_prediction(target_date: date = None, tickers: list = None) -> int:
                         ticker=ticker,
                         horizon=horizon,
                         pred_return_pct=prob_val,
+                        entry_price=last_close,
                         pred_price=pred_price,
                         predicted_direction="NAIK" if prob_val >= buy_threshold else "TURUN"
                     )
                     session.add(new_log)
                 else:
                     existing.pred_return_pct = prob_val
+                    existing.entry_price = last_close
                     existing.pred_price = pred_price
                     existing.predicted_direction = "NAIK" if prob_val >= buy_threshold else "TURUN"
 
