@@ -960,6 +960,32 @@ OHLCV_DERIVED_FEATURES = [
 MIN_HISTORY_ROWS = 200
 
 
+# SATU sumber kebenaran untuk definisi label ML, dipakai bersama oleh
+# prepare_training_data() (bikin target) DAN cron_ml_validate.py (nilai
+# benar/salah prediksi live). Sebelumnya training memakai threshold di bawah
+# ini sementara validator live memakai `actual_return > 0`, sehingga win rate
+# yang dilaporkan tidak pernah mengukur hal yang sama dengan yang dilatih.
+#
+# Nilai = kenaikan minimum (fraksi) selama horizon agar label = 1.
+# Di-tune untuk target buy precision >= 50%.
+TARGET_THRESHOLDS: dict[str, float] = {
+    "1d": 0.006,
+    "3d": 0.018,
+    "5d": 0.025,
+    "7d": 0.030,
+}
+
+# Jumlah hari BURSA (bukan kalender) yang dilewati tiap horizon. Harus cocok
+# dengan shift() di prepare_training_data() dan dengan window yang dipakai
+# validator, kalau tidak horizon 3d diam-diam diukur sepanjang 4 hari.
+TARGET_HORIZON_DAYS: dict[str, int] = {
+    "1d": 1,
+    "3d": 3,
+    "5d": 5,
+    "7d": 7,
+}
+
+
 def _bandar_accum_ratio(foreign_net_1m, dist_avg_1m):
     """
     Satu definisi bandar_accum_ratio, dipakai training (Series) maupun live (skalar).
@@ -1193,12 +1219,14 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
 
-    # Targets: Binary classification — 1 for significant price increase, 0 otherwise
-    # Thresholds tuned for >=50% buy precision target: 1D=0.6%, 3D=1.8%, 5D=2.5%, 7D=3.0%
-    df['target_1d'] = (df['Close'].shift(-1) > df['Close'] * 1.006).astype(int)
-    df['target_3d'] = (df['Close'].shift(-3) > df['Close'] * 1.018).astype(int)
-    df['target_5d'] = (df['Close'].shift(-5) > df['Close'] * 1.025).astype(int)
-    df['target_7d'] = (df['Close'].shift(-7) > df['Close'] * 1.030).astype(int)
+    # Targets: Binary classification — 1 for significant price increase, 0 otherwise.
+    # Threshold & jumlah hari diambil dari TARGET_THRESHOLDS/TARGET_HORIZON_DAYS
+    # supaya validator live menilai label yang PERSIS sama.
+    for _hz, _days in TARGET_HORIZON_DAYS.items():
+        _thr = TARGET_THRESHOLDS[_hz]
+        df[f'target_{_hz}'] = (
+            df['Close'].shift(-_days) > df['Close'] * (1 + _thr)
+        ).astype(int)
 
     # Seluruh fitur turunan data pasar dihitung oleh SATU fungsi yang dipakai
     # bersama dengan extract_features() — lihat compute_ohlcv_features().

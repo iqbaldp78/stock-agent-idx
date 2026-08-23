@@ -393,9 +393,14 @@ def get_ml_predictions(
                     if target_pct != -1:
                         entry_price = round(pred_price / (1.0 + target_pct), 2)
                 
-                if is_correct is True or (actual_return is not None and actual_return > 0):
+                # is_correct adalah SATU-SATUNYA sumber kebenaran — dihitung oleh
+                # cron_ml_validate.py dengan threshold label yang sama seperti training.
+                # Fallback `actual_return > 0` yang lama menimpa verdict tersimpan:
+                # sinyal 5d dengan is_correct=False tapi return +0.3% tampil "BENAR",
+                # sehingga akurasi di UI selalu lebih tinggi dari yang sebenarnya.
+                if is_correct is True:
                     status = "BENAR"
-                elif is_correct is False or (actual_return is not None and actual_return <= 0):
+                elif is_correct is False:
                     status = "SALAH"
                 else:
                     status = "PENDING"
