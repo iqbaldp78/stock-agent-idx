@@ -434,7 +434,14 @@ def main():
     parser.add_argument("--checkpoints-dir", default="models/checkpoints", help="Output model directory")
     parser.add_argument("--metadata-output", default="models/checkpoints/lgbm_multiday_meta.json", help="Output metadata JSON")
     parser.add_argument("--validate-only", action="store_true", help="Only validate accuracy on holdout, do not save production models")
-    parser.add_argument("--walk-forward", action="store_true", help="Use expanding walk-forward validation instead of single holdout split")
+    # Default ON. Single holdout split memakai test_size di ekor data tanpa purge
+    # gap yang benar, jadi label horizon 3d/5d/7d di batas blok bocor ke train dan
+    # edge-nya jadi artefak split: holdout melaporkan +4-5pp konsisten di semua
+    # horizon, sementara log live menunjukkan edge ~0. Walk-forward dengan purge
+    # gap adalah pengukuran yang bisa dipercaya. Pakai --no-walk-forward hanya
+    # untuk membandingkan dengan angka lama.
+    parser.add_argument("--walk-forward", action=argparse.BooleanOptionalAction, default=True,
+                        help="Expanding walk-forward validation dengan purge gap (default: aktif)")
     parser.add_argument("--n-folds", type=int, default=4, help="Number of walk-forward folds")
     parser.add_argument("--purge-days", type=int, default=7, help="Purge gap days between train/val/test (default: 7)")
     parser.add_argument("--exclude-tickers", nargs="*", default=[], help="Ticker(s) to exclude from per-ticker training/validation")

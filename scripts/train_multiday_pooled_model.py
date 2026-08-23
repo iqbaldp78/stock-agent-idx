@@ -178,7 +178,8 @@ def main():
     parser.add_argument("--metadata-output", default="models/checkpoints_pooled/lgbm_multiday_pooled_meta.json")
     parser.add_argument("--test-size", type=float, default=0.2)
     parser.add_argument("--validate-only", action="store_true")
-    parser.add_argument("--walk-forward", action="store_true")
+    # Default ON, alasannya sama seperti di train_multiday_model.py.
+    parser.add_argument("--walk-forward", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--n-folds", type=int, default=4)
     args = parser.parse_args()
 
