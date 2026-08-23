@@ -1,0 +1,144 @@
+{
+  "1d": {
+    "in_sample": {
+      "n_days": 579,
+      "mean_top_pct": 0.08639522185191341,
+      "mean_bottom_pct": 0.26150767525946983,
+      "mean_all_pct": 0.10826935976503246,
+      "mean_spread_pct": -0.17511245340755635,
+      "t_stat_overlap_adj": -2.407503560402361,
+      "hit_rate_pct": 47.49568221070812,
+      "top_beats_avg_pct": 47.15025906735752
+    },
+    "out_of_sample": {
+      "n_days": 576,
+      "mean_top_pct": 0.32500095574744664,
+      "mean_bottom_pct": 0.2398391122164084,
+      "mean_all_pct": 0.17809009772589524,
+      "mean_spread_pct": 0.08516184353103833,
+      "t_stat_overlap_adj": 0.9084792925140731,
+      "hit_rate_pct": 53.125,
+      "top_beats_avg_pct": 50.86805555555556
+    },
+    "features_used": {
+      "atr": "-",
+      "bb_lower_dist": "-",
+      "body_ratio": "-",
+      "candlestick_winrate": "-",
+      "close_to_high": "+",
+      "close_to_low": "-",
+      "close_vs_avg": "-",
+      "day_foreign_net": "+",
+      "dist_avg_7d": "-",
+      "is_bullish_pattern": "-",
+      "ma_dist_5": "-",
+      "macd": "+",
+      "range_pct": "-",
+      "ret_1d": "-",
+      "ret_1d_lag5": "+",
+      "ret_2d": "-",
+      "stock_vs_ihsg_1d": "-",
+      "vol_profile_20d_lower": "-",
+      "vol_ratio": "+",
+      "volume_spike": "+"
+    },
+    "n_features": 20,
+    "split_date": "2024-03-07"
+  },
+  "3d": {
+    "in_sample": {
+      "n_days": 579,
+      "mean_top_pct": 0.4536918865508209,
+      "mean_bottom_pct": 0.3979079598770966,
+      "mean_all_pct": 0.3431121475852552,
+      "mean_spread_pct": 0.05578392667372428,
+      "t_stat_overlap_adj": 0.25221619455557853,
+      "hit_rate_pct": 53.8860103626943,
+      "top_beats_avg_pct": 50.77720207253886
+    },
+    "out_of_sample": {
+      "n_days": 574,
+      "mean_top_pct": 1.0621866626401189,
+      "mean_bottom_pct": 0.19961686994303401,
+      "mean_all_pct": 0.5393597983801945,
+      "mean_spread_pct": 0.8625697926970849,
+      "t_stat_overlap_adj": 3.2633952988072608,
+      "hit_rate_pct": 60.45296167247387,
+      "top_beats_avg_pct": 59.756097560975604
+    },
+    "features_used": {
+      "close_to_high": "+",
+      "close_to_low": "-",
+      "close_vs_avg": "-",
+      "ticker_id": "-",
+      "vol_profile_20d_upper": "+",
+      "vol_ratio": "+",
+      "volume_spike": "+"
+    },
+    "n_features": 7,
+    "split_date": "2024-03-07"
+  },
+  "5d": {
+    "in_sample": {
+      "n_days": 579,
+      "mean_top_pct": 0.615945013797322,
+      "mean_bottom_pct": 1.0714507507077857,
+      "mean_all_pct": 0.5901003511985364,
+      "mean_spread_pct": -0.4555057369104638,
+      "t_stat_overlap_adj": -1.0860638832568759,
+      "hit_rate_pct": 45.25043177892919,
+      "top_beats_avg_pct": 48.18652849740933
+    },
+    "out_of_sample": {
+      "n_days": 572,
+      "mean_top_pct": 0.9838358774007026,
+      "mean_bottom_pct": 1.3370492383255317,
+      "mean_all_pct": 0.9179912569395111,
+      "mean_spread_pct": -0.353213360924829,
+      "t_stat_overlap_adj": -0.7735184084626979,
+      "hit_rate_pct": 46.67832167832168,
+      "top_beats_avg_pct": 49.3006993006993
+    },
+    "features_used": {
+      "close_to_low": "-",
+      "ma_dist_50": "-",
+      "ticker_id": "-",
+      "vol_profile_20d_mid": "-",
+      "vol_profile_20d_upper": "+"
+    },
+    "n_features": 5,
+    "split_date": "2024-03-07"
+  },
+  "7d": {
+    "in_sample": {
+      "n_days": 579,
+      "mean_top_pct": 0.950063599549791,
+      "mean_bottom_pct": 1.4818876460908657,
+      "mean_all_pct": 0.8308429296012448,
+      "mean_spread_pct": -0.5318240465410745,
+      "t_stat_overlap_adj": -0.901636001487045,
+      "hit_rate_pct": 46.286701208981,
+      "top_beats_avg_pct": 50.086355785837654
+    },
+    "out_of_sample": {
+      "n_days": 570,
+      "mean_top_pct": 1.1665281841447452,
+      "mean_bottom_pct": 2.3585068261259234,
+      "mean_all_pct": 1.3139634422135547,
+      "mean_spread_pct": -1.191978641981178,
+      "t_stat_overlap_adj": -1.7056011147393042,
+      "hit_rate_pct": 40.70175438596491,
+      "top_beats_avg_pct": 44.73684210526316
+    },
+    "features_used": {
+      "close_to_low": "-",
+      "ma_dist_50": "-",
+      "ticker_id": "-",
+      "vol_profile_20d_mid": "-",
+      "vol_profile_20d_upper": "+",
+      "vol_trend_5d": "-"
+    },
+    "n_features": 6,
+    "split_date": "2024-03-07"
+  }
+}

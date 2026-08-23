@@ -1,0 +1,645 @@
+{
+  "window": {
+    "start": "2026-08-08",
+    "end": "2026-08-21",
+    "days": 14,
+    "trading_days": 11
+  },
+  "headline": {
+    "buy_signals": 365,
+    "buy_win_rate": 36.986301369863014,
+    "ci": 4.952763346021514,
+    "base_rate": 34.30769230769231,
+    "matured": 1950,
+    "pooled_corr": 0.9077745935211082,
+    "pooled_edge": -0.01813400346946115,
+    "corr_days": 46
+  },
+  "horizons": [
+    {
+      "horizon": "1d",
+      "threshold_pct": 0.6,
+      "matured": 715,
+      "buy": 152,
+      "buy_win": 39.473684210526315,
+      "ci": 7.770701532264818,
+      "base": 39.58041958041958,
+      "edge": -0.10673536989326493,
+      "overall_acc": 55.94405594405595,
+      "ret_buy": 0.21143815789473686,
+      "ret_all": 0.6179430769230769,
+      "corr": 0.9559630369009423,
+      "corr_days": 15,
+      "holdout": {
+        "buy_precision": 43.35,
+        "base_rate": 38.12,
+        "edge": 5.230000000000004,
+        "n_usable": 44,
+        "n_degenerate": 21
+      }
+    },
+    {
+      "horizon": "3d",
+      "threshold_pct": 1.7999999999999998,
+      "matured": 585,
+      "buy": 93,
+      "buy_win": 35.483870967741936,
+      "ci": 9.724431997236184,
+      "base": 32.64957264957265,
+      "edge": 2.8342983181692887,
+      "overall_acc": 62.73504273504273,
+      "ret_buy": 1.128404301075269,
+      "ret_all": 1.3876909401709403,
+      "corr": 0.8806488733072673,
+      "corr_days": 13,
+      "holdout": {
+        "buy_precision": 38.16,
+        "base_rate": 34.02,
+        "edge": 4.1399999999999935,
+        "n_usable": 29,
+        "n_degenerate": 36
+      }
+    },
+    {
+      "horizon": "5d",
+      "threshold_pct": 2.5,
+      "matured": 390,
+      "buy": 66,
+      "buy_win": 39.39393939393939,
+      "ci": 11.788453580118684,
+      "base": 28.46153846153846,
+      "edge": 10.932400932400931,
+      "overall_acc": 67.94871794871794,
+      "ret_buy": 3.223287878787879,
+      "ret_all": 1.6678641025641026,
+      "corr": 0.7945748590542029,
+      "corr_days": 10,
+      "holdout": {
+        "buy_precision": 40.39,
+        "base_rate": 35.42,
+        "edge": 4.969999999999999,
+        "n_usable": 29,
+        "n_degenerate": 36
+      }
+    },
+    {
+      "horizon": "7d",
+      "threshold_pct": 3.0,
+      "matured": 260,
+      "buy": 54,
+      "buy_win": 29.62962962962963,
+      "ci": 12.179156784469686,
+      "base": 32.30769230769231,
+      "edge": -2.678062678062677,
+      "overall_acc": 59.23076923076923,
+      "ret_buy": 2.857762962962963,
+      "ret_all": 2.757498076923077,
+      "corr": 0.9588729731743927,
+      "corr_days": 8,
+      "holdout": {
+        "buy_precision": 42.16,
+        "base_rate": 37.39,
+        "edge": 4.769999999999996,
+        "n_usable": 35,
+        "n_degenerate": 30
+      }
+    }
+  ],
+  "daily": [
+    {
+      "horizon": "1d",
+      "date": "2026-08-03",
+      "buy": 12,
+      "buy_win": 0.0,
+      "base": 23.4375,
+      "in_window": false
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-05",
+      "buy": 33,
+      "buy_win": 54.54545454545455,
+      "base": 62.5,
+      "in_window": false
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-06",
+      "buy": 13,
+      "buy_win": 61.53846153846154,
+      "base": 56.25,
+      "in_window": false
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-07",
+      "buy": 14,
+      "buy_win": 28.571428571428573,
+      "base": 32.8125,
+      "in_window": false
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-08",
+      "buy": 13,
+      "buy_win": 46.15384615384615,
+      "base": 35.38461538461539,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-10",
+      "buy": 11,
+      "buy_win": 45.45454545454545,
+      "base": 35.38461538461539,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-11",
+      "buy": 18,
+      "buy_win": 0.0,
+      "base": 9.23076923076923,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-12",
+      "buy": 20,
+      "buy_win": 0.0,
+      "base": 0.0,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-13",
+      "buy": 13,
+      "buy_win": 69.23076923076923,
+      "base": 66.15384615384616,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-14",
+      "buy": 12,
+      "buy_win": 0.0,
+      "base": 6.153846153846154,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-17",
+      "buy": 13,
+      "buy_win": 84.61538461538461,
+      "base": 72.3076923076923,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-18",
+      "buy": 11,
+      "buy_win": 90.9090909090909,
+      "base": 72.3076923076923,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-19",
+      "buy": 13,
+      "buy_win": 23.076923076923077,
+      "base": 26.153846153846153,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-20",
+      "buy": 14,
+      "buy_win": 85.71428571428571,
+      "base": 70.76923076923077,
+      "in_window": true
+    },
+    {
+      "horizon": "1d",
+      "date": "2026-08-21",
+      "buy": 14,
+      "buy_win": 28.571428571428573,
+      "base": 41.53846153846154,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-03",
+      "buy": 6,
+      "buy_win": 33.333333333333336,
+      "base": 34.375,
+      "in_window": false
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-05",
+      "buy": 29,
+      "buy_win": 65.51724137931035,
+      "base": 51.5625,
+      "in_window": false
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-06",
+      "buy": 10,
+      "buy_win": 70.0,
+      "base": 40.625,
+      "in_window": false
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-07",
+      "buy": 9,
+      "buy_win": 11.11111111111111,
+      "base": 17.1875,
+      "in_window": false
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-08",
+      "buy": 9,
+      "buy_win": 11.11111111111111,
+      "base": 7.6923076923076925,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-10",
+      "buy": 11,
+      "buy_win": 9.090909090909092,
+      "base": 7.6923076923076925,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-11",
+      "buy": 9,
+      "buy_win": 11.11111111111111,
+      "base": 21.53846153846154,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-12",
+      "buy": 6,
+      "buy_win": 33.333333333333336,
+      "base": 23.076923076923077,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-13",
+      "buy": 11,
+      "buy_win": 63.63636363636363,
+      "base": 47.69230769230769,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-14",
+      "buy": 13,
+      "buy_win": 23.076923076923077,
+      "base": 21.53846153846154,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-17",
+      "buy": 15,
+      "buy_win": 60.0,
+      "base": 63.07692307692308,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-18",
+      "buy": 11,
+      "buy_win": 63.63636363636363,
+      "base": 63.07692307692308,
+      "in_window": true
+    },
+    {
+      "horizon": "3d",
+      "date": "2026-08-19",
+      "buy": 8,
+      "buy_win": 25.0,
+      "base": 38.46153846153846,
+      "in_window": true
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-03",
+      "buy": 10,
+      "buy_win": 30.0,
+      "base": 45.3125,
+      "in_window": false
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-05",
+      "buy": 25,
+      "buy_win": 32.0,
+      "base": 34.375,
+      "in_window": false
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-06",
+      "buy": 11,
+      "buy_win": 18.181818181818183,
+      "base": 26.5625,
+      "in_window": false
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-07",
+      "buy": 9,
+      "buy_win": 11.11111111111111,
+      "base": 25.0,
+      "in_window": false
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-08",
+      "buy": 10,
+      "buy_win": 10.0,
+      "base": 7.6923076923076925,
+      "in_window": true
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-10",
+      "buy": 6,
+      "buy_win": 0.0,
+      "base": 7.6923076923076925,
+      "in_window": true
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-11",
+      "buy": 14,
+      "buy_win": 35.714285714285715,
+      "base": 21.53846153846154,
+      "in_window": true
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-12",
+      "buy": 11,
+      "buy_win": 27.272727272727273,
+      "base": 33.84615384615385,
+      "in_window": true
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-13",
+      "buy": 13,
+      "buy_win": 61.53846153846154,
+      "base": 56.92307692307692,
+      "in_window": true
+    },
+    {
+      "horizon": "5d",
+      "date": "2026-08-14",
+      "buy": 12,
+      "buy_win": 75.0,
+      "base": 43.07692307692308,
+      "in_window": true
+    },
+    {
+      "horizon": "7d",
+      "date": "2026-08-03",
+      "buy": 9,
+      "buy_win": 33.333333333333336,
+      "base": 34.375,
+      "in_window": false
+    },
+    {
+      "horizon": "7d",
+      "date": "2026-08-05",
+      "buy": 28,
+      "buy_win": 35.714285714285715,
+      "base": 43.75,
+      "in_window": false
+    },
+    {
+      "horizon": "7d",
+      "date": "2026-08-06",
+      "buy": 14,
+      "buy_win": 14.285714285714286,
+      "base": 28.125,
+      "in_window": false
+    },
+    {
+      "horizon": "7d",
+      "date": "2026-08-07",
+      "buy": 15,
+      "buy_win": 13.333333333333334,
+      "base": 26.5625,
+      "in_window": false
+    },
+    {
+      "horizon": "7d",
+      "date": "2026-08-08",
+      "buy": 13,
+      "buy_win": 7.6923076923076925,
+      "base": 20.0,
+      "in_window": true
+    },
+    {
+      "horizon": "7d",
+      "date": "2026-08-10",
+      "buy": 13,
+      "buy_win": 7.6923076923076925,
+      "base": 20.0,
+      "in_window": true
+    },
+    {
+      "horizon": "7d",
+      "date": "2026-08-11",
+      "buy": 14,
+      "buy_win": 35.714285714285715,
+      "base": 32.30769230769231,
+      "in_window": true
+    },
+    {
+      "horizon": "7d",
+      "date": "2026-08-12",
+      "buy": 14,
+      "buy_win": 64.28571428571429,
+      "base": 56.92307692307692,
+      "in_window": true
+    }
+  ],
+  "tickers": [
+    {
+      "ticker": "ISAT",
+      "buy": 10,
+      "win": 90.0
+    },
+    {
+      "ticker": "MEDC",
+      "buy": 8,
+      "win": 87.5
+    },
+    {
+      "ticker": "PACK",
+      "buy": 13,
+      "win": 76.92307692307692
+    },
+    {
+      "ticker": "DSSA",
+      "buy": 9,
+      "win": 66.66666666666667
+    },
+    {
+      "ticker": "CUAN",
+      "buy": 5,
+      "win": 60.0
+    },
+    {
+      "ticker": "ADMR",
+      "buy": 23,
+      "win": 56.52173913043478
+    },
+    {
+      "ticker": "BRMS",
+      "buy": 6,
+      "win": 50.0
+    },
+    {
+      "ticker": "AMMN",
+      "buy": 6,
+      "win": 50.0
+    },
+    {
+      "ticker": "BUMI",
+      "buy": 18,
+      "win": 50.0
+    },
+    {
+      "ticker": "BULL",
+      "buy": 21,
+      "win": 47.61904761904762
+    },
+    {
+      "ticker": "ENRG",
+      "buy": 16,
+      "win": 43.75
+    },
+    {
+      "ticker": "ADRO",
+      "buy": 10,
+      "win": 40.0
+    },
+    {
+      "ticker": "CDIA",
+      "buy": 11,
+      "win": 36.36363636363637
+    },
+    {
+      "ticker": "MDKA",
+      "buy": 17,
+      "win": 35.294117647058826
+    },
+    {
+      "ticker": "EMAS",
+      "buy": 12,
+      "win": 33.333333333333336
+    },
+    {
+      "ticker": "ESSA",
+      "buy": 13,
+      "win": 30.76923076923077
+    },
+    {
+      "ticker": "ANTM",
+      "buy": 7,
+      "win": 28.571428571428573
+    },
+    {
+      "ticker": "BUVA",
+      "buy": 12,
+      "win": 25.0
+    },
+    {
+      "ticker": "BIPI",
+      "buy": 14,
+      "win": 21.428571428571427
+    },
+    {
+      "ticker": "PGAS",
+      "buy": 5,
+      "win": 20.0
+    },
+    {
+      "ticker": "JGLE",
+      "buy": 13,
+      "win": 15.384615384615385
+    },
+    {
+      "ticker": "DEWA",
+      "buy": 13,
+      "win": 15.384615384615385
+    },
+    {
+      "ticker": "VKTR",
+      "buy": 7,
+      "win": 14.285714285714286
+    },
+    {
+      "ticker": "BNBR",
+      "buy": 7,
+      "win": 14.285714285714286
+    },
+    {
+      "ticker": "RAJA",
+      "buy": 10,
+      "win": 10.0
+    },
+    {
+      "ticker": "RATU",
+      "buy": 10,
+      "win": 10.0
+    },
+    {
+      "ticker": "OASA",
+      "buy": 7,
+      "win": 0.0
+    },
+    {
+      "ticker": "INCO",
+      "buy": 9,
+      "win": 0.0
+    },
+    {
+      "ticker": "AKRA",
+      "buy": 9,
+      "win": 0.0
+    }
+  ],
+  "freshness": {
+    "pending": 1170,
+    "pending_from": "2026-08-13",
+    "max_trade_date": "2026-08-24",
+    "last_validated": "2026-08-22 13:16:39.369549"
+  },
+  "training": {
+    "run_date": "2026-08-22T03:57:35.574816",
+    "period": "5y",
+    "min_rows": 120,
+    "test_size": 0.2,
+    "walk_forward": false,
+    "n_folds": 4
+  },
+  "thresholds": {
+    "1d": 0.6,
+    "3d": 1.7999999999999998,
+    "5d": 2.5,
+    "7d": 3.0
+  }
+}

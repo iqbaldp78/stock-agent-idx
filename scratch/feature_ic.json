@@ -1,0 +1,2327 @@
+{
+  "period": "5y",
+  "tickers": [
+    "TBIG",
+    "BMRI",
+    "AMMN",
+    "TPIA",
+    "PADI",
+    "RAJA",
+    "AKRA",
+    "ESSA",
+    "BBNI",
+    "ISAT",
+    "OASA",
+    "BRIS",
+    "MDKA",
+    "NCKL",
+    "ASII",
+    "EMAS",
+    "INCO",
+    "ITMG",
+    "PANI",
+    "BUMI",
+    "PTBA",
+    "BRPT",
+    "ADRO",
+    "JGLE",
+    "ARCI",
+    "DSSA",
+    "ANTM",
+    "VKTR",
+    "PGAS",
+    "TOWR",
+    "ICBP",
+    "BYAN",
+    "MSIN",
+    "CBDK",
+    "MBMA",
+    "BNBR",
+    "BULL",
+    "DEWA",
+    "BBCA",
+    "CUAN",
+    "PGEO",
+    "RATU",
+    "UNTR",
+    "PACK",
+    "PTRO",
+    "AMRT",
+    "CDIA",
+    "BRMS",
+    "SSIA",
+    "UNVR",
+    "GOTO",
+    "KLBF",
+    "BUVA",
+    "ENRG",
+    "BBRI",
+    "MINA",
+    "BIPI",
+    "TINS",
+    "EXCL",
+    "BBTN",
+    "MEDC",
+    "TLKM",
+    "INET",
+    "ADMR",
+    "BREN"
+  ],
+  "n_rows": 68159,
+  "min_tickers_per_date": 10,
+  "trained_features": [
+    "atr",
+    "bandar_accum_ratio",
+    "bb_lower_dist",
+    "bb_upper_dist",
+    "body_ratio",
+    "candlestick_winrate",
+    "close_to_high",
+    "close_to_low",
+    "close_vs_avg",
+    "day_foreign_net",
+    "day_of_week",
+    "foreign_flow_zscore",
+    "foreign_net_1m",
+    "foreign_net_7d",
+    "frequency_1d",
+    "gap_continuation",
+    "gap_open",
+    "ihsg_ma_dist_20",
+    "ihsg_ret_1d",
+    "ihsg_ret_5d",
+    "ihsg_rsi",
+    "ihsg_trend",
+    "ihsg_volatility",
+    "is_bearish_pattern",
+    "is_bullish_pattern",
+    "is_bullish_trend",
+    "ma_dist_20",
+    "ma_dist_200",
+    "ma_dist_5",
+    "ma_dist_50",
+    "macd",
+    "macd_hist",
+    "ob_imbalance_proxy_20d",
+    "range_concentration_20d",
+    "range_pct",
+    "ret_10d",
+    "ret_1d",
+    "ret_1d_lag1",
+    "ret_1d_lag2",
+    "ret_1d_lag3",
+    "ret_1d_lag4",
+    "ret_1d_lag5",
+    "ret_1d_zscore",
+    "ret_2d",
+    "ret_3d",
+    "ret_5d",
+    "rsi",
+    "rsi_14_prev",
+    "stoch_d",
+    "stoch_k",
+    "stock_vs_ihsg_1d",
+    "vol_ratio",
+    "vol_trend_5d",
+    "volatility_10d",
+    "volatility_20d",
+    "volume_spike",
+    "volume_spike_prev",
+    "vwap_deviation_20d"
+  ],
+  "untrained_features": [
+    "bandarm_score",
+    "commodity_score",
+    "dist_avg_1m",
+    "dist_avg_7d",
+    "dominance_score",
+    "haka_score",
+    "ihsg_trend_3d",
+    "is_fomo_trap",
+    "is_retail_accum",
+    "news_count_30d",
+    "news_count_7d",
+    "news_score",
+    "news_sent_30d",
+    "news_sent_7d",
+    "report_count_30d",
+    "report_count_7d",
+    "report_sent_30d",
+    "report_sent_7d",
+    "resistance_proximity",
+    "retail_buy_ratio_7d",
+    "retail_sell_ratio_7d",
+    "signed_volume_20d",
+    "support_proximity",
+    "ticker_id",
+    "top3_buy_ratio_1m",
+    "top3_buy_ratio_7d",
+    "top3_sell_ratio_1m",
+    "top3_sell_ratio_7d",
+    "vol_profile_20d_lower",
+    "vol_profile_20d_mid",
+    "vol_profile_20d_upper"
+  ],
+  "horizons": {
+    "1d": {
+      "n_dates": 1155,
+      "avg_tickers_per_date": 59.0,
+      "features": {
+        "ticker_id": {
+          "mean_ic": 0.0001959561047632497,
+          "t_stat": 0.04974894240552078,
+          "n_dates": 1154,
+          "coverage": 0.999
+        },
+        "bandarm_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "dist_avg_7d": {
+          "mean_ic": -0.026072250756279673,
+          "t_stat": -4.554778216662713,
+          "n_dates": 1154,
+          "coverage": 0.999
+        },
+        "dist_avg_1m": {
+          "mean_ic": -0.0074557269311928435,
+          "t_stat": -1.3068676575497287,
+          "n_dates": 1154,
+          "coverage": 0.999
+        },
+        "foreign_net_7d": {
+          "mean_ic": 0.009422695599949365,
+          "t_stat": 2.094932183460647,
+          "n_dates": 1148,
+          "coverage": 0.994
+        },
+        "foreign_net_1m": {
+          "mean_ic": 0.010272325502419629,
+          "t_stat": 2.3453219562685814,
+          "n_dates": 1125,
+          "coverage": 0.974
+        },
+        "day_foreign_net": {
+          "mean_ic": 0.021683326314468423,
+          "t_stat": 4.639657919080263,
+          "n_dates": 1149,
+          "coverage": 0.995
+        },
+        "frequency_1d": {
+          "mean_ic": -0.016336049502549015,
+          "t_stat": -3.089353401802291,
+          "n_dates": 1150,
+          "coverage": 0.996
+        },
+        "close_vs_avg": {
+          "mean_ic": -0.05114087526560135,
+          "t_stat": -9.536839448305205,
+          "n_dates": 1148,
+          "coverage": 0.994
+        },
+        "top3_buy_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_sell_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "retail_buy_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "retail_sell_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_buy_ratio_1m": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_sell_ratio_1m": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "is_retail_accum": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "dominance_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "haka_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "is_fomo_trap": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "rsi": {
+          "mean_ic": -0.018182532723210437,
+          "t_stat": -2.2628421768452145,
+          "n_dates": 562,
+          "coverage": 0.487
+        },
+        "is_bullish_trend": {
+          "mean_ic": 0.0086771194913159,
+          "t_stat": 1.8293189463044204,
+          "n_dates": 1097,
+          "coverage": 0.95
+        },
+        "vol_ratio": {
+          "mean_ic": 0.005782529831525587,
+          "t_stat": 0.8769703607926714,
+          "n_dates": 618,
+          "coverage": 0.535
+        },
+        "ret_1d": {
+          "mean_ic": -0.03086868768287188,
+          "t_stat": -5.462151039142753,
+          "n_dates": 1137,
+          "coverage": 0.984
+        },
+        "ret_1d_lag1": {
+          "mean_ic": 0.0025964517774044295,
+          "t_stat": 0.4588905872053122,
+          "n_dates": 1121,
+          "coverage": 0.971
+        },
+        "ret_1d_lag2": {
+          "mean_ic": 0.00838397658953969,
+          "t_stat": 1.5751291619191796,
+          "n_dates": 1105,
+          "coverage": 0.957
+        },
+        "ret_1d_lag3": {
+          "mean_ic": 0.0021138700038020523,
+          "t_stat": 0.38859995911687906,
+          "n_dates": 1090,
+          "coverage": 0.944
+        },
+        "ret_1d_lag4": {
+          "mean_ic": 0.012682632500004402,
+          "t_stat": 2.249249260075361,
+          "n_dates": 1076,
+          "coverage": 0.932
+        },
+        "ret_1d_lag5": {
+          "mean_ic": 0.01831749535622629,
+          "t_stat": 3.4215327312305273,
+          "n_dates": 1062,
+          "coverage": 0.919
+        },
+        "ret_3d": {
+          "mean_ic": -0.02011211804083454,
+          "t_stat": -3.353931388570797,
+          "n_dates": 1106,
+          "coverage": 0.958
+        },
+        "ret_5d": {
+          "mean_ic": -0.017797792719718653,
+          "t_stat": -2.857512829045764,
+          "n_dates": 1077,
+          "coverage": 0.932
+        },
+        "volatility_10d": {
+          "mean_ic": -0.015859013169404905,
+          "t_stat": -2.2276057587283797,
+          "n_dates": 1009,
+          "coverage": 0.874
+        },
+        "volatility_20d": {
+          "mean_ic": -0.016373266330209035,
+          "t_stat": -2.0985370864915036,
+          "n_dates": 906,
+          "coverage": 0.784
+        },
+        "gap_open": {
+          "mean_ic": -0.0014840251577327194,
+          "t_stat": -0.28565108550071316,
+          "n_dates": 1137,
+          "coverage": 0.984
+        },
+        "ma_dist_5": {
+          "mean_ic": -0.029532273578984313,
+          "t_stat": -4.802072626857483,
+          "n_dates": 1091,
+          "coverage": 0.945
+        },
+        "ma_dist_20": {
+          "mean_ic": -0.015872192189419265,
+          "t_stat": -2.3192382519913677,
+          "n_dates": 916,
+          "coverage": 0.793
+        },
+        "ma_dist_50": {
+          "mean_ic": -0.010315518388108194,
+          "t_stat": -1.3037095785205213,
+          "n_dates": 657,
+          "coverage": 0.569
+        },
+        "ma_dist_200": {
+          "mean_ic": 0.004424207447399462,
+          "t_stat": 0.3295604512739267,
+          "n_dates": 123,
+          "coverage": 0.106
+        },
+        "volume_spike": {
+          "mean_ic": 0.005782529831525587,
+          "t_stat": 0.8769703607926714,
+          "n_dates": 618,
+          "coverage": 0.535
+        },
+        "support_proximity": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "resistance_proximity": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "range_pct": {
+          "mean_ic": -0.024227776402771538,
+          "t_stat": -3.8089817352926243,
+          "n_dates": 1150,
+          "coverage": 0.996
+        },
+        "macd": {
+          "mean_ic": 0.009938618998014015,
+          "t_stat": 1.718791107047322,
+          "n_dates": 1153,
+          "coverage": 0.998
+        },
+        "macd_hist": {
+          "mean_ic": -0.004726326687805324,
+          "t_stat": -0.8164686277734976,
+          "n_dates": 1153,
+          "coverage": 0.998
+        },
+        "bb_upper_dist": {
+          "mean_ic": 0.0021886443177147516,
+          "t_stat": 0.29802847082819034,
+          "n_dates": 916,
+          "coverage": 0.793
+        },
+        "bb_lower_dist": {
+          "mean_ic": -0.02649867154963808,
+          "t_stat": -3.9843033017274014,
+          "n_dates": 916,
+          "coverage": 0.793
+        },
+        "stoch_k": {
+          "mean_ic": -0.020209649648223495,
+          "t_stat": -1.9865192436983923,
+          "n_dates": 375,
+          "coverage": 0.325
+        },
+        "stoch_d": {
+          "mean_ic": -0.0009673002933718245,
+          "t_stat": -0.09234140225073947,
+          "n_dates": 361,
+          "coverage": 0.313
+        },
+        "atr": {
+          "mean_ic": -0.02484051837858416,
+          "t_stat": -3.1694534410410755,
+          "n_dates": 976,
+          "coverage": 0.845
+        },
+        "vol_profile_20d_upper": {
+          "mean_ic": 0.009239297498042257,
+          "t_stat": 1.900367692348758,
+          "n_dates": 1145,
+          "coverage": 0.991
+        },
+        "vol_profile_20d_mid": {
+          "mean_ic": -0.012940164232427465,
+          "t_stat": -3.1365997709159834,
+          "n_dates": 1145,
+          "coverage": 0.991
+        },
+        "vol_profile_20d_lower": {
+          "mean_ic": -0.011146885966681421,
+          "t_stat": -2.3100555282359947,
+          "n_dates": 1145,
+          "coverage": 0.991
+        },
+        "vwap_deviation_20d": {
+          "mean_ic": -0.0081921286576779,
+          "t_stat": -1.3627210375961984,
+          "n_dates": 1145,
+          "coverage": 0.991
+        },
+        "signed_volume_20d": {
+          "mean_ic": -0.010472978427389935,
+          "t_stat": -1.8528873120866995,
+          "n_dates": 1144,
+          "coverage": 0.99
+        },
+        "ob_imbalance_proxy_20d": {
+          "mean_ic": -0.0001205710070892732,
+          "t_stat": -0.0264731109135394,
+          "n_dates": 1145,
+          "coverage": 0.991
+        },
+        "range_concentration_20d": {
+          "mean_ic": -0.00016284802886334132,
+          "t_stat": -0.03502690227749373,
+          "n_dates": 1145,
+          "coverage": 0.991
+        },
+        "close_to_high": {
+          "mean_ic": 0.029348203421797288,
+          "t_stat": 4.773219459028199,
+          "n_dates": 1149,
+          "coverage": 0.995
+        },
+        "close_to_low": {
+          "mean_ic": -0.06660720817016427,
+          "t_stat": -12.971154381873571,
+          "n_dates": 1150,
+          "coverage": 0.996
+        },
+        "body_ratio": {
+          "mean_ic": -0.006282933550081804,
+          "t_stat": -1.4200063485224668,
+          "n_dates": 1150,
+          "coverage": 0.996
+        },
+        "ret_1d_zscore": {
+          "mean_ic": -0.034467117971058385,
+          "t_stat": -3.5638672322056517,
+          "n_dates": 374,
+          "coverage": 0.324
+        },
+        "vol_trend_5d": {
+          "mean_ic": 0.005663536354991184,
+          "t_stat": 0.8463476193631223,
+          "n_dates": 622,
+          "coverage": 0.539
+        },
+        "day_of_week": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "gap_continuation": {
+          "mean_ic": -0.008404877528448465,
+          "t_stat": -1.6958641974574606,
+          "n_dates": 1120,
+          "coverage": 0.97
+        },
+        "ret_2d": {
+          "mean_ic": -0.02620828038516973,
+          "t_stat": -4.408773196181565,
+          "n_dates": 1122,
+          "coverage": 0.971
+        },
+        "ret_10d": {
+          "mean_ic": -0.006002403071643777,
+          "t_stat": -0.9361298173833078,
+          "n_dates": 1009,
+          "coverage": 0.874
+        },
+        "rsi_14_prev": {
+          "mean_ic": 0.002526595877461498,
+          "t_stat": 0.3214929453333296,
+          "n_dates": 557,
+          "coverage": 0.482
+        },
+        "volume_spike_prev": {
+          "mean_ic": 0.000172290405794648,
+          "t_stat": 0.027098397005802344,
+          "n_dates": 613,
+          "coverage": 0.531
+        },
+        "ihsg_ret_1d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_ret_5d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_rsi": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_ma_dist_20": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_volatility": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_trend": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "stock_vs_ihsg_1d": {
+          "mean_ic": -0.03086868768287188,
+          "t_stat": -5.462151039142753,
+          "n_dates": 1137,
+          "coverage": 0.984
+        },
+        "foreign_flow_zscore": {
+          "mean_ic": 0.00746676440559799,
+          "t_stat": 1.7137754157860636,
+          "n_dates": 1135,
+          "coverage": 0.983
+        },
+        "news_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "commodity_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "bandar_accum_ratio": {
+          "mean_ic": 0.008258267939100578,
+          "t_stat": 1.886560051560955,
+          "n_dates": 1125,
+          "coverage": 0.974
+        },
+        "ihsg_trend_3d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "candlestick_winrate": {
+          "mean_ic": -0.011775088973794933,
+          "t_stat": -2.7897896336792654,
+          "n_dates": 1133,
+          "coverage": 0.981
+        },
+        "is_bullish_pattern": {
+          "mean_ic": -0.01500015817249755,
+          "t_stat": -3.4738832540044124,
+          "n_dates": 1041,
+          "coverage": 0.901
+        },
+        "is_bearish_pattern": {
+          "mean_ic": 0.0038225193604911555,
+          "t_stat": 0.9038681043229694,
+          "n_dates": 1055,
+          "coverage": 0.913
+        },
+        "report_sent_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_sent_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_count_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_count_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_sent_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_sent_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_count_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_count_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        }
+      }
+    },
+    "3d": {
+      "n_dates": 1153,
+      "avg_tickers_per_date": 58.9,
+      "features": {
+        "ticker_id": {
+          "mean_ic": 0.004347714219435829,
+          "t_stat": 1.1451690816893336,
+          "n_dates": 1153,
+          "coverage": 1.0
+        },
+        "bandarm_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "dist_avg_7d": {
+          "mean_ic": -0.015963962092761623,
+          "t_stat": -2.8418656710403862,
+          "n_dates": 1153,
+          "coverage": 1.0
+        },
+        "dist_avg_1m": {
+          "mean_ic": -0.003724056569813337,
+          "t_stat": -0.654813367475596,
+          "n_dates": 1153,
+          "coverage": 1.0
+        },
+        "foreign_net_7d": {
+          "mean_ic": 0.0012164342611847559,
+          "t_stat": 0.26904386365491917,
+          "n_dates": 1147,
+          "coverage": 0.995
+        },
+        "foreign_net_1m": {
+          "mean_ic": 0.006006397786354961,
+          "t_stat": 1.3111299460384866,
+          "n_dates": 1124,
+          "coverage": 0.975
+        },
+        "day_foreign_net": {
+          "mean_ic": 0.009434349712865287,
+          "t_stat": 2.1028055965722308,
+          "n_dates": 1148,
+          "coverage": 0.996
+        },
+        "frequency_1d": {
+          "mean_ic": -0.012666631262412008,
+          "t_stat": -2.477007588085156,
+          "n_dates": 1149,
+          "coverage": 0.997
+        },
+        "close_vs_avg": {
+          "mean_ic": -0.030318306936540407,
+          "t_stat": -5.914935164172394,
+          "n_dates": 1147,
+          "coverage": 0.995
+        },
+        "top3_buy_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_sell_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "retail_buy_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "retail_sell_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_buy_ratio_1m": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_sell_ratio_1m": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "is_retail_accum": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "dominance_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "haka_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "is_fomo_trap": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "rsi": {
+          "mean_ic": -0.011100390935110466,
+          "t_stat": -1.3659939297875554,
+          "n_dates": 561,
+          "coverage": 0.487
+        },
+        "is_bullish_trend": {
+          "mean_ic": 0.010404167666235864,
+          "t_stat": 2.1406226649971694,
+          "n_dates": 1096,
+          "coverage": 0.951
+        },
+        "vol_ratio": {
+          "mean_ic": 0.01180115066800042,
+          "t_stat": 1.8420357639840133,
+          "n_dates": 617,
+          "coverage": 0.535
+        },
+        "ret_1d": {
+          "mean_ic": -0.014783073177227815,
+          "t_stat": -2.704500495399879,
+          "n_dates": 1136,
+          "coverage": 0.985
+        },
+        "ret_1d_lag1": {
+          "mean_ic": -0.0011926491712272867,
+          "t_stat": -0.22140692063613848,
+          "n_dates": 1120,
+          "coverage": 0.971
+        },
+        "ret_1d_lag2": {
+          "mean_ic": 0.005240774260517888,
+          "t_stat": 0.9573664406586593,
+          "n_dates": 1104,
+          "coverage": 0.958
+        },
+        "ret_1d_lag3": {
+          "mean_ic": 0.008749422122991258,
+          "t_stat": 1.5736580339868662,
+          "n_dates": 1089,
+          "coverage": 0.944
+        },
+        "ret_1d_lag4": {
+          "mean_ic": 0.013870380507240229,
+          "t_stat": 2.460542890697773,
+          "n_dates": 1076,
+          "coverage": 0.933
+        },
+        "ret_1d_lag5": {
+          "mean_ic": 0.006495425816234862,
+          "t_stat": 1.1780051622693715,
+          "n_dates": 1062,
+          "coverage": 0.921
+        },
+        "ret_3d": {
+          "mean_ic": -0.014082512259578643,
+          "t_stat": -2.3746184866779196,
+          "n_dates": 1105,
+          "coverage": 0.958
+        },
+        "ret_5d": {
+          "mean_ic": -0.008220092060453498,
+          "t_stat": -1.3576806392819722,
+          "n_dates": 1076,
+          "coverage": 0.933
+        },
+        "volatility_10d": {
+          "mean_ic": 0.0007431169190421299,
+          "t_stat": 0.10359610234046748,
+          "n_dates": 1008,
+          "coverage": 0.874
+        },
+        "volatility_20d": {
+          "mean_ic": 0.0025573339137340678,
+          "t_stat": 0.3173067994443142,
+          "n_dates": 905,
+          "coverage": 0.785
+        },
+        "gap_open": {
+          "mean_ic": 0.002324000708237667,
+          "t_stat": 0.4663590427525515,
+          "n_dates": 1136,
+          "coverage": 0.985
+        },
+        "ma_dist_5": {
+          "mean_ic": -0.018091242571631534,
+          "t_stat": -3.0350680561436287,
+          "n_dates": 1090,
+          "coverage": 0.945
+        },
+        "ma_dist_20": {
+          "mean_ic": -0.014438397321209226,
+          "t_stat": -2.1475828835327033,
+          "n_dates": 915,
+          "coverage": 0.794
+        },
+        "ma_dist_50": {
+          "mean_ic": -0.015208619604044231,
+          "t_stat": -1.8964508024089233,
+          "n_dates": 656,
+          "coverage": 0.569
+        },
+        "ma_dist_200": {
+          "mean_ic": 0.021859681493511036,
+          "t_stat": 1.7273728285047945,
+          "n_dates": 122,
+          "coverage": 0.106
+        },
+        "volume_spike": {
+          "mean_ic": 0.01180115066800042,
+          "t_stat": 1.8420357639840133,
+          "n_dates": 617,
+          "coverage": 0.535
+        },
+        "support_proximity": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "resistance_proximity": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "range_pct": {
+          "mean_ic": -0.006324922308854891,
+          "t_stat": -1.003547743246853,
+          "n_dates": 1149,
+          "coverage": 0.997
+        },
+        "macd": {
+          "mean_ic": 0.010171089867945413,
+          "t_stat": 1.708080274160135,
+          "n_dates": 1152,
+          "coverage": 0.999
+        },
+        "macd_hist": {
+          "mean_ic": -0.0047064185903455714,
+          "t_stat": -0.8140368370215355,
+          "n_dates": 1152,
+          "coverage": 0.999
+        },
+        "bb_upper_dist": {
+          "mean_ic": -0.005811865683079224,
+          "t_stat": -0.7968925467220688,
+          "n_dates": 915,
+          "coverage": 0.794
+        },
+        "bb_lower_dist": {
+          "mean_ic": -0.012617606184410273,
+          "t_stat": -1.8906366750203467,
+          "n_dates": 915,
+          "coverage": 0.794
+        },
+        "stoch_k": {
+          "mean_ic": -0.016504194431032296,
+          "t_stat": -1.6472045884632052,
+          "n_dates": 375,
+          "coverage": 0.325
+        },
+        "stoch_d": {
+          "mean_ic": -0.004613677176305966,
+          "t_stat": -0.459709990475866,
+          "n_dates": 361,
+          "coverage": 0.313
+        },
+        "atr": {
+          "mean_ic": -0.009750128873515326,
+          "t_stat": -1.2053677601715769,
+          "n_dates": 975,
+          "coverage": 0.846
+        },
+        "vol_profile_20d_upper": {
+          "mean_ic": 0.014555384465577633,
+          "t_stat": 2.9347501719817615,
+          "n_dates": 1144,
+          "coverage": 0.992
+        },
+        "vol_profile_20d_mid": {
+          "mean_ic": -0.014341888667503664,
+          "t_stat": -3.4853143237092867,
+          "n_dates": 1144,
+          "coverage": 0.992
+        },
+        "vol_profile_20d_lower": {
+          "mean_ic": -0.01382322242167203,
+          "t_stat": -2.7510224312085576,
+          "n_dates": 1144,
+          "coverage": 0.992
+        },
+        "vwap_deviation_20d": {
+          "mean_ic": -0.005484962941394426,
+          "t_stat": -0.9258942500722224,
+          "n_dates": 1144,
+          "coverage": 0.992
+        },
+        "signed_volume_20d": {
+          "mean_ic": -0.004571186932938782,
+          "t_stat": -0.8007122494997024,
+          "n_dates": 1143,
+          "coverage": 0.991
+        },
+        "ob_imbalance_proxy_20d": {
+          "mean_ic": -0.003004187596827358,
+          "t_stat": -0.6533270362523855,
+          "n_dates": 1144,
+          "coverage": 0.992
+        },
+        "range_concentration_20d": {
+          "mean_ic": 0.005185186554056232,
+          "t_stat": 1.1424995708995482,
+          "n_dates": 1144,
+          "coverage": 0.992
+        },
+        "close_to_high": {
+          "mean_ic": 0.027120473151307733,
+          "t_stat": 4.625198502385751,
+          "n_dates": 1148,
+          "coverage": 0.996
+        },
+        "close_to_low": {
+          "mean_ic": -0.03736258689677928,
+          "t_stat": -7.196720386958447,
+          "n_dates": 1149,
+          "coverage": 0.997
+        },
+        "body_ratio": {
+          "mean_ic": -0.003456822156799449,
+          "t_stat": -0.7820002047552082,
+          "n_dates": 1149,
+          "coverage": 0.997
+        },
+        "ret_1d_zscore": {
+          "mean_ic": -0.024044295587289165,
+          "t_stat": -2.6183029997184457,
+          "n_dates": 374,
+          "coverage": 0.324
+        },
+        "vol_trend_5d": {
+          "mean_ic": 0.010876791510283383,
+          "t_stat": 1.703230162475248,
+          "n_dates": 621,
+          "coverage": 0.539
+        },
+        "day_of_week": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "gap_continuation": {
+          "mean_ic": -0.0010636300472027303,
+          "t_stat": -0.22263079544132613,
+          "n_dates": 1119,
+          "coverage": 0.971
+        },
+        "ret_2d": {
+          "mean_ic": -0.01600975351245762,
+          "t_stat": -2.799725651857321,
+          "n_dates": 1121,
+          "coverage": 0.972
+        },
+        "ret_10d": {
+          "mean_ic": -0.007499044197094272,
+          "t_stat": -1.191048174694471,
+          "n_dates": 1008,
+          "coverage": 0.874
+        },
+        "rsi_14_prev": {
+          "mean_ic": 0.0037725817832709816,
+          "t_stat": 0.4870660717568069,
+          "n_dates": 556,
+          "coverage": 0.482
+        },
+        "volume_spike_prev": {
+          "mean_ic": 0.006674472972417344,
+          "t_stat": 1.074925832172443,
+          "n_dates": 612,
+          "coverage": 0.531
+        },
+        "ihsg_ret_1d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_ret_5d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_rsi": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_ma_dist_20": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_volatility": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_trend": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "stock_vs_ihsg_1d": {
+          "mean_ic": -0.014783073177227815,
+          "t_stat": -2.704500495399879,
+          "n_dates": 1136,
+          "coverage": 0.985
+        },
+        "foreign_flow_zscore": {
+          "mean_ic": 0.0051314649172450625,
+          "t_stat": 1.179470457317928,
+          "n_dates": 1134,
+          "coverage": 0.984
+        },
+        "news_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "commodity_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "bandar_accum_ratio": {
+          "mean_ic": 0.0024495939016992434,
+          "t_stat": 0.5606420233881991,
+          "n_dates": 1124,
+          "coverage": 0.975
+        },
+        "ihsg_trend_3d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "candlestick_winrate": {
+          "mean_ic": -0.0035082724825608678,
+          "t_stat": -0.8308439029932386,
+          "n_dates": 1132,
+          "coverage": 0.982
+        },
+        "is_bullish_pattern": {
+          "mean_ic": -0.008792116812005618,
+          "t_stat": -2.0076291177764403,
+          "n_dates": 1040,
+          "coverage": 0.902
+        },
+        "is_bearish_pattern": {
+          "mean_ic": -0.003688399685418072,
+          "t_stat": -0.8660088685502796,
+          "n_dates": 1055,
+          "coverage": 0.915
+        },
+        "report_sent_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_sent_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_count_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_count_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_sent_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_sent_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_count_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_count_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        }
+      }
+    },
+    "5d": {
+      "n_dates": 1151,
+      "avg_tickers_per_date": 58.9,
+      "features": {
+        "ticker_id": {
+          "mean_ic": 0.007836038600709928,
+          "t_stat": 2.06451462621929,
+          "n_dates": 1151,
+          "coverage": 1.0
+        },
+        "bandarm_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "dist_avg_7d": {
+          "mean_ic": -0.011793520322615209,
+          "t_stat": -2.094089141944173,
+          "n_dates": 1151,
+          "coverage": 1.0
+        },
+        "dist_avg_1m": {
+          "mean_ic": -0.005064543092002351,
+          "t_stat": -0.8855093227022929,
+          "n_dates": 1151,
+          "coverage": 1.0
+        },
+        "foreign_net_7d": {
+          "mean_ic": -0.0026955365952136493,
+          "t_stat": -0.6115859011005927,
+          "n_dates": 1145,
+          "coverage": 0.995
+        },
+        "foreign_net_1m": {
+          "mean_ic": 0.006235995591373854,
+          "t_stat": 1.407081767669536,
+          "n_dates": 1122,
+          "coverage": 0.975
+        },
+        "day_foreign_net": {
+          "mean_ic": 0.004788058956588727,
+          "t_stat": 1.0722102131531788,
+          "n_dates": 1148,
+          "coverage": 0.997
+        },
+        "frequency_1d": {
+          "mean_ic": -0.016461914479469545,
+          "t_stat": -3.1592703834525926,
+          "n_dates": 1148,
+          "coverage": 0.997
+        },
+        "close_vs_avg": {
+          "mean_ic": -0.026309379822797744,
+          "t_stat": -5.1144273998369565,
+          "n_dates": 1146,
+          "coverage": 0.996
+        },
+        "top3_buy_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_sell_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "retail_buy_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "retail_sell_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_buy_ratio_1m": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_sell_ratio_1m": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "is_retail_accum": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "dominance_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "haka_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "is_fomo_trap": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "rsi": {
+          "mean_ic": -0.01198078288103021,
+          "t_stat": -1.4456968678539008,
+          "n_dates": 559,
+          "coverage": 0.486
+        },
+        "is_bullish_trend": {
+          "mean_ic": 0.007044497811694598,
+          "t_stat": 1.4109379952542385,
+          "n_dates": 1094,
+          "coverage": 0.95
+        },
+        "vol_ratio": {
+          "mean_ic": 0.010254888629783286,
+          "t_stat": 1.608553595390612,
+          "n_dates": 616,
+          "coverage": 0.535
+        },
+        "ret_1d": {
+          "mean_ic": -0.012255981106283335,
+          "t_stat": -2.203089904165279,
+          "n_dates": 1134,
+          "coverage": 0.985
+        },
+        "ret_1d_lag1": {
+          "mean_ic": 0.006090249459258149,
+          "t_stat": 1.0938687413411068,
+          "n_dates": 1118,
+          "coverage": 0.971
+        },
+        "ret_1d_lag2": {
+          "mean_ic": 0.005673223701545835,
+          "t_stat": 1.0253759652745704,
+          "n_dates": 1103,
+          "coverage": 0.958
+        },
+        "ret_1d_lag3": {
+          "mean_ic": 0.005332006999595403,
+          "t_stat": 0.9679531813577908,
+          "n_dates": 1088,
+          "coverage": 0.945
+        },
+        "ret_1d_lag4": {
+          "mean_ic": 0.013356870807256895,
+          "t_stat": 2.3989747910269896,
+          "n_dates": 1074,
+          "coverage": 0.933
+        },
+        "ret_1d_lag5": {
+          "mean_ic": 0.010828382609904765,
+          "t_stat": 1.952532734794076,
+          "n_dates": 1060,
+          "coverage": 0.921
+        },
+        "ret_3d": {
+          "mean_ic": -0.006186830490729097,
+          "t_stat": -1.026083984788644,
+          "n_dates": 1103,
+          "coverage": 0.958
+        },
+        "ret_5d": {
+          "mean_ic": -0.005061384041417138,
+          "t_stat": -0.8418114863790269,
+          "n_dates": 1074,
+          "coverage": 0.933
+        },
+        "volatility_10d": {
+          "mean_ic": 0.006676649785831515,
+          "t_stat": 0.9076754195789922,
+          "n_dates": 1006,
+          "coverage": 0.874
+        },
+        "volatility_20d": {
+          "mean_ic": 0.010645916862874636,
+          "t_stat": 1.2800556930640057,
+          "n_dates": 903,
+          "coverage": 0.785
+        },
+        "gap_open": {
+          "mean_ic": 0.0025057625173180256,
+          "t_stat": 0.49558747854553453,
+          "n_dates": 1134,
+          "coverage": 0.985
+        },
+        "ma_dist_5": {
+          "mean_ic": -0.012659548519568837,
+          "t_stat": -2.083100703363783,
+          "n_dates": 1088,
+          "coverage": 0.945
+        },
+        "ma_dist_20": {
+          "mean_ic": -0.011425632471961175,
+          "t_stat": -1.690933776286183,
+          "n_dates": 913,
+          "coverage": 0.793
+        },
+        "ma_dist_50": {
+          "mean_ic": -0.024551772839716077,
+          "t_stat": -2.939467890190936,
+          "n_dates": 654,
+          "coverage": 0.568
+        },
+        "ma_dist_200": {
+          "mean_ic": 0.03158436036798548,
+          "t_stat": 2.345939700982073,
+          "n_dates": 120,
+          "coverage": 0.104
+        },
+        "volume_spike": {
+          "mean_ic": 0.010254888629783286,
+          "t_stat": 1.608553595390612,
+          "n_dates": 616,
+          "coverage": 0.535
+        },
+        "support_proximity": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "resistance_proximity": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "range_pct": {
+          "mean_ic": -0.0036550895412317983,
+          "t_stat": -0.5619733861987576,
+          "n_dates": 1148,
+          "coverage": 0.997
+        },
+        "macd": {
+          "mean_ic": 0.004532944632242239,
+          "t_stat": 0.7426809767173729,
+          "n_dates": 1150,
+          "coverage": 0.999
+        },
+        "macd_hist": {
+          "mean_ic": -0.003363737145730579,
+          "t_stat": -0.5823732319185874,
+          "n_dates": 1150,
+          "coverage": 0.999
+        },
+        "bb_upper_dist": {
+          "mean_ic": -0.008020543427335098,
+          "t_stat": -1.0895143221195307,
+          "n_dates": 913,
+          "coverage": 0.793
+        },
+        "bb_lower_dist": {
+          "mean_ic": -0.003943971659473758,
+          "t_stat": -0.587480624804482,
+          "n_dates": 913,
+          "coverage": 0.793
+        },
+        "stoch_k": {
+          "mean_ic": -0.01520714835653024,
+          "t_stat": -1.5461620170497032,
+          "n_dates": 375,
+          "coverage": 0.326
+        },
+        "stoch_d": {
+          "mean_ic": -0.006670433969631973,
+          "t_stat": -0.667973706514829,
+          "n_dates": 361,
+          "coverage": 0.314
+        },
+        "atr": {
+          "mean_ic": -0.002180487867228117,
+          "t_stat": -0.2612985696814226,
+          "n_dates": 973,
+          "coverage": 0.845
+        },
+        "vol_profile_20d_upper": {
+          "mean_ic": 0.013517741269329914,
+          "t_stat": 2.6343879213053083,
+          "n_dates": 1142,
+          "coverage": 0.992
+        },
+        "vol_profile_20d_mid": {
+          "mean_ic": -0.01923760092568592,
+          "t_stat": -4.527310047146217,
+          "n_dates": 1142,
+          "coverage": 0.992
+        },
+        "vol_profile_20d_lower": {
+          "mean_ic": -0.010510543855344315,
+          "t_stat": -2.025015569916161,
+          "n_dates": 1142,
+          "coverage": 0.992
+        },
+        "vwap_deviation_20d": {
+          "mean_ic": -0.005278195084513221,
+          "t_stat": -0.8877465679403134,
+          "n_dates": 1142,
+          "coverage": 0.992
+        },
+        "signed_volume_20d": {
+          "mean_ic": -0.006572030136844125,
+          "t_stat": -1.1234603154322138,
+          "n_dates": 1141,
+          "coverage": 0.991
+        },
+        "ob_imbalance_proxy_20d": {
+          "mean_ic": -0.002645375704524124,
+          "t_stat": -0.5666548113801523,
+          "n_dates": 1142,
+          "coverage": 0.992
+        },
+        "range_concentration_20d": {
+          "mean_ic": 0.001748857892063227,
+          "t_stat": 0.3917325272327408,
+          "n_dates": 1142,
+          "coverage": 0.992
+        },
+        "close_to_high": {
+          "mean_ic": 0.024518610062557473,
+          "t_stat": 4.1381197183159495,
+          "n_dates": 1147,
+          "coverage": 0.997
+        },
+        "close_to_low": {
+          "mean_ic": -0.033778911621469405,
+          "t_stat": -6.3600338505564,
+          "n_dates": 1148,
+          "coverage": 0.997
+        },
+        "body_ratio": {
+          "mean_ic": -0.0011594324464634207,
+          "t_stat": -0.2642271791911145,
+          "n_dates": 1148,
+          "coverage": 0.997
+        },
+        "ret_1d_zscore": {
+          "mean_ic": -0.015045484204667966,
+          "t_stat": -1.648648216656716,
+          "n_dates": 374,
+          "coverage": 0.325
+        },
+        "vol_trend_5d": {
+          "mean_ic": 0.004975567418624764,
+          "t_stat": 0.7991824567200932,
+          "n_dates": 619,
+          "coverage": 0.538
+        },
+        "day_of_week": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "gap_continuation": {
+          "mean_ic": 0.001120254988958859,
+          "t_stat": 0.23413104185802533,
+          "n_dates": 1117,
+          "coverage": 0.97
+        },
+        "ret_2d": {
+          "mean_ic": -0.007637365735700651,
+          "t_stat": -1.3084519858123558,
+          "n_dates": 1119,
+          "coverage": 0.972
+        },
+        "ret_10d": {
+          "mean_ic": -0.008728081660146735,
+          "t_stat": -1.3865661027468403,
+          "n_dates": 1006,
+          "coverage": 0.874
+        },
+        "rsi_14_prev": {
+          "mean_ic": -0.001977917654682936,
+          "t_stat": -0.24656709216514788,
+          "n_dates": 554,
+          "coverage": 0.481
+        },
+        "volume_spike_prev": {
+          "mean_ic": 0.0027627121373875164,
+          "t_stat": 0.4274607100096458,
+          "n_dates": 612,
+          "coverage": 0.532
+        },
+        "ihsg_ret_1d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_ret_5d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_rsi": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_ma_dist_20": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_volatility": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_trend": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "stock_vs_ihsg_1d": {
+          "mean_ic": -0.012255981106283335,
+          "t_stat": -2.203089904165279,
+          "n_dates": 1134,
+          "coverage": 0.985
+        },
+        "foreign_flow_zscore": {
+          "mean_ic": 0.002504199197911574,
+          "t_stat": 0.5737395470325163,
+          "n_dates": 1132,
+          "coverage": 0.983
+        },
+        "news_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "commodity_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "bandar_accum_ratio": {
+          "mean_ic": 0.0021795641526657504,
+          "t_stat": 0.5068843396449997,
+          "n_dates": 1122,
+          "coverage": 0.975
+        },
+        "ihsg_trend_3d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "candlestick_winrate": {
+          "mean_ic": -0.00806263897891662,
+          "t_stat": -1.947337324823961,
+          "n_dates": 1132,
+          "coverage": 0.983
+        },
+        "is_bullish_pattern": {
+          "mean_ic": -0.008061604768004106,
+          "t_stat": -1.8641268884050686,
+          "n_dates": 1040,
+          "coverage": 0.904
+        },
+        "is_bearish_pattern": {
+          "mean_ic": 0.004823563684331933,
+          "t_stat": 1.1436222478712963,
+          "n_dates": 1055,
+          "coverage": 0.917
+        },
+        "report_sent_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_sent_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_count_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_count_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_sent_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_sent_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_count_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_count_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        }
+      }
+    },
+    "7d": {
+      "n_dates": 1149,
+      "avg_tickers_per_date": 58.9,
+      "features": {
+        "ticker_id": {
+          "mean_ic": 0.008735145051188652,
+          "t_stat": 2.2943432327178086,
+          "n_dates": 1149,
+          "coverage": 1.0
+        },
+        "bandarm_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "dist_avg_7d": {
+          "mean_ic": -0.010053775238009753,
+          "t_stat": -1.8370646638810562,
+          "n_dates": 1149,
+          "coverage": 1.0
+        },
+        "dist_avg_1m": {
+          "mean_ic": -0.006649955721516121,
+          "t_stat": -1.1372180424513527,
+          "n_dates": 1149,
+          "coverage": 1.0
+        },
+        "foreign_net_7d": {
+          "mean_ic": -0.002761107068784807,
+          "t_stat": -0.6343406099099619,
+          "n_dates": 1143,
+          "coverage": 0.995
+        },
+        "foreign_net_1m": {
+          "mean_ic": 0.0071178717429116484,
+          "t_stat": 1.6261657908901381,
+          "n_dates": 1120,
+          "coverage": 0.975
+        },
+        "day_foreign_net": {
+          "mean_ic": 0.0048724465764592734,
+          "t_stat": 1.1055662178729981,
+          "n_dates": 1148,
+          "coverage": 0.999
+        },
+        "frequency_1d": {
+          "mean_ic": -0.021980966205689036,
+          "t_stat": -4.179806883242342,
+          "n_dates": 1148,
+          "coverage": 0.999
+        },
+        "close_vs_avg": {
+          "mean_ic": -0.016978482695462094,
+          "t_stat": -3.28997763554868,
+          "n_dates": 1146,
+          "coverage": 0.997
+        },
+        "top3_buy_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_sell_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "retail_buy_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "retail_sell_ratio_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_buy_ratio_1m": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "top3_sell_ratio_1m": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "is_retail_accum": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "dominance_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "haka_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "is_fomo_trap": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "rsi": {
+          "mean_ic": -0.01897919452379177,
+          "t_stat": -2.2271123074026633,
+          "n_dates": 557,
+          "coverage": 0.485
+        },
+        "is_bullish_trend": {
+          "mean_ic": 0.004477311418497825,
+          "t_stat": 0.8785067051896888,
+          "n_dates": 1092,
+          "coverage": 0.95
+        },
+        "vol_ratio": {
+          "mean_ic": 0.007236742133923777,
+          "t_stat": 1.1418297672710132,
+          "n_dates": 616,
+          "coverage": 0.536
+        },
+        "ret_1d": {
+          "mean_ic": -0.004397186274564671,
+          "t_stat": -0.7872916686567061,
+          "n_dates": 1133,
+          "coverage": 0.986
+        },
+        "ret_1d_lag1": {
+          "mean_ic": 0.0035506103634597823,
+          "t_stat": 0.643481624910919,
+          "n_dates": 1117,
+          "coverage": 0.972
+        },
+        "ret_1d_lag2": {
+          "mean_ic": 0.005155660755343446,
+          "t_stat": 0.9249151117335945,
+          "n_dates": 1101,
+          "coverage": 0.958
+        },
+        "ret_1d_lag3": {
+          "mean_ic": 0.0071090861992743806,
+          "t_stat": 1.277133907558539,
+          "n_dates": 1086,
+          "coverage": 0.945
+        },
+        "ret_1d_lag4": {
+          "mean_ic": 0.008436290413277099,
+          "t_stat": 1.5225940528389657,
+          "n_dates": 1072,
+          "coverage": 0.933
+        },
+        "ret_1d_lag5": {
+          "mean_ic": 0.003927302557471072,
+          "t_stat": 0.7052220834087768,
+          "n_dates": 1058,
+          "coverage": 0.921
+        },
+        "ret_3d": {
+          "mean_ic": -0.00473038026896084,
+          "t_stat": -0.8085958715685545,
+          "n_dates": 1101,
+          "coverage": 0.958
+        },
+        "ret_5d": {
+          "mean_ic": -0.0046190607026435045,
+          "t_stat": -0.7891213461756463,
+          "n_dates": 1072,
+          "coverage": 0.933
+        },
+        "volatility_10d": {
+          "mean_ic": 0.006378067104397892,
+          "t_stat": 0.8557330759187917,
+          "n_dates": 1004,
+          "coverage": 0.874
+        },
+        "volatility_20d": {
+          "mean_ic": 0.013651000303496424,
+          "t_stat": 1.5970967643890552,
+          "n_dates": 901,
+          "coverage": 0.784
+        },
+        "gap_open": {
+          "mean_ic": -0.0022468289727227394,
+          "t_stat": -0.43780004851315524,
+          "n_dates": 1133,
+          "coverage": 0.986
+        },
+        "ma_dist_5": {
+          "mean_ic": -0.008150595778178329,
+          "t_stat": -1.3745780941063708,
+          "n_dates": 1086,
+          "coverage": 0.945
+        },
+        "ma_dist_20": {
+          "mean_ic": -0.01224151227412188,
+          "t_stat": -1.781098064346077,
+          "n_dates": 911,
+          "coverage": 0.793
+        },
+        "ma_dist_50": {
+          "mean_ic": -0.03416243249872679,
+          "t_stat": -3.8577011012870464,
+          "n_dates": 652,
+          "coverage": 0.567
+        },
+        "ma_dist_200": {
+          "mean_ic": 0.028789063852764325,
+          "t_stat": 2.0505109534372856,
+          "n_dates": 118,
+          "coverage": 0.103
+        },
+        "volume_spike": {
+          "mean_ic": 0.007236742133923777,
+          "t_stat": 1.1418297672710132,
+          "n_dates": 616,
+          "coverage": 0.536
+        },
+        "support_proximity": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "resistance_proximity": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "range_pct": {
+          "mean_ic": -0.0023093071727022935,
+          "t_stat": -0.35050764402562395,
+          "n_dates": 1148,
+          "coverage": 0.999
+        },
+        "macd": {
+          "mean_ic": -0.0005041275641905978,
+          "t_stat": -0.07824874933315361,
+          "n_dates": 1148,
+          "coverage": 0.999
+        },
+        "macd_hist": {
+          "mean_ic": -0.003924797072890704,
+          "t_stat": -0.6796794043588833,
+          "n_dates": 1148,
+          "coverage": 0.999
+        },
+        "bb_upper_dist": {
+          "mean_ic": -0.010724896671300976,
+          "t_stat": -1.4404737560571066,
+          "n_dates": 911,
+          "coverage": 0.793
+        },
+        "bb_lower_dist": {
+          "mean_ic": -0.0005591836236557938,
+          "t_stat": -0.0810378341133666,
+          "n_dates": 911,
+          "coverage": 0.793
+        },
+        "stoch_k": {
+          "mean_ic": -0.01964856974092943,
+          "t_stat": -1.9931419608902279,
+          "n_dates": 375,
+          "coverage": 0.326
+        },
+        "stoch_d": {
+          "mean_ic": -0.01632401188140082,
+          "t_stat": -1.6401962972063893,
+          "n_dates": 361,
+          "coverage": 0.314
+        },
+        "atr": {
+          "mean_ic": 0.0011721271882423803,
+          "t_stat": 0.13694813712603884,
+          "n_dates": 971,
+          "coverage": 0.845
+        },
+        "vol_profile_20d_upper": {
+          "mean_ic": 0.011680646563688047,
+          "t_stat": 2.2009649187109557,
+          "n_dates": 1140,
+          "coverage": 0.992
+        },
+        "vol_profile_20d_mid": {
+          "mean_ic": -0.024375785333418453,
+          "t_stat": -5.8091306605790765,
+          "n_dates": 1140,
+          "coverage": 0.992
+        },
+        "vol_profile_20d_lower": {
+          "mean_ic": -0.007937076685747254,
+          "t_stat": -1.4463601836300601,
+          "n_dates": 1140,
+          "coverage": 0.992
+        },
+        "vwap_deviation_20d": {
+          "mean_ic": -0.0055096550165421344,
+          "t_stat": -0.9278380190314697,
+          "n_dates": 1140,
+          "coverage": 0.992
+        },
+        "signed_volume_20d": {
+          "mean_ic": -0.011518655462667386,
+          "t_stat": -1.9097623393804306,
+          "n_dates": 1139,
+          "coverage": 0.991
+        },
+        "ob_imbalance_proxy_20d": {
+          "mean_ic": -0.004006037109122016,
+          "t_stat": -0.8340149348604757,
+          "n_dates": 1140,
+          "coverage": 0.992
+        },
+        "range_concentration_20d": {
+          "mean_ic": -0.005893348780396589,
+          "t_stat": -1.3080292269104588,
+          "n_dates": 1140,
+          "coverage": 0.992
+        },
+        "close_to_high": {
+          "mean_ic": 0.01950542650106822,
+          "t_stat": 3.275340770742976,
+          "n_dates": 1147,
+          "coverage": 0.998
+        },
+        "close_to_low": {
+          "mean_ic": -0.026162052077069467,
+          "t_stat": -4.941361467466724,
+          "n_dates": 1148,
+          "coverage": 0.999
+        },
+        "body_ratio": {
+          "mean_ic": -0.00342545758294652,
+          "t_stat": -0.8010174423845617,
+          "n_dates": 1148,
+          "coverage": 0.999
+        },
+        "ret_1d_zscore": {
+          "mean_ic": -0.0031796507851938544,
+          "t_stat": -0.34413456454785846,
+          "n_dates": 374,
+          "coverage": 0.326
+        },
+        "vol_trend_5d": {
+          "mean_ic": -0.0020708493240188483,
+          "t_stat": -0.3206474253595677,
+          "n_dates": 617,
+          "coverage": 0.537
+        },
+        "day_of_week": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "gap_continuation": {
+          "mean_ic": -0.0003337558313827743,
+          "t_stat": -0.0701829017123703,
+          "n_dates": 1117,
+          "coverage": 0.972
+        },
+        "ret_2d": {
+          "mean_ic": -0.005157269614899581,
+          "t_stat": -0.8978477802446883,
+          "n_dates": 1117,
+          "coverage": 0.972
+        },
+        "ret_10d": {
+          "mean_ic": -0.010223304111811651,
+          "t_stat": -1.609085097007826,
+          "n_dates": 1004,
+          "coverage": 0.874
+        },
+        "rsi_14_prev": {
+          "mean_ic": -0.010885862978900377,
+          "t_stat": -1.3161778874503491,
+          "n_dates": 552,
+          "coverage": 0.48
+        },
+        "volume_spike_prev": {
+          "mean_ic": 0.0012799854301719844,
+          "t_stat": 0.19909460220025038,
+          "n_dates": 611,
+          "coverage": 0.532
+        },
+        "ihsg_ret_1d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_ret_5d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_rsi": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_ma_dist_20": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_volatility": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "ihsg_trend": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "stock_vs_ihsg_1d": {
+          "mean_ic": -0.004397186274564671,
+          "t_stat": -0.7872916686567061,
+          "n_dates": 1133,
+          "coverage": 0.986
+        },
+        "foreign_flow_zscore": {
+          "mean_ic": 0.004023025137914518,
+          "t_stat": 0.9288951301717021,
+          "n_dates": 1130,
+          "coverage": 0.983
+        },
+        "news_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "commodity_score": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "bandar_accum_ratio": {
+          "mean_ic": 0.0002691537813774641,
+          "t_stat": 0.06183679488855213,
+          "n_dates": 1120,
+          "coverage": 0.975
+        },
+        "ihsg_trend_3d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "candlestick_winrate": {
+          "mean_ic": -0.0070258751701700135,
+          "t_stat": -1.6994264451151602,
+          "n_dates": 1132,
+          "coverage": 0.985
+        },
+        "is_bullish_pattern": {
+          "mean_ic": -0.0025631092391575814,
+          "t_stat": -0.5971589772045801,
+          "n_dates": 1040,
+          "coverage": 0.905
+        },
+        "is_bearish_pattern": {
+          "mean_ic": 0.007410555990149645,
+          "t_stat": 1.7848911382998165,
+          "n_dates": 1055,
+          "coverage": 0.918
+        },
+        "report_sent_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_sent_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_count_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "report_count_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_sent_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_sent_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_count_7d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        },
+        "news_count_30d": {
+          "mean_ic": null,
+          "t_stat": null,
+          "n_dates": 0,
+          "coverage": 0.0
+        }
+      }
+    }
+  }
+}

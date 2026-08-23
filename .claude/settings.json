@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec stock_postgres psql -U stockuser -d stockagent -c ' *)"
+    ]
+  }
+}
