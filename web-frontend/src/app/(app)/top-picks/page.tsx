@@ -165,11 +165,29 @@ export default function TopPicksPage() {
   const [picks, setPicks] = useState<any[]>([]);
   const [runDate, setRunDate] = useState<string>('');
   const [debateCandidates, setDebateCandidates] = useState<any[]>([]);
+  // Kualitas model ML untuk horizon yang ditampilkan di kolom ML PREDICTION.
+  // Kolom itu dipakai untuk memutuskan beli, jadi konteks seberapa bisa
+  // dipercaya sinyalnya harus ada di halaman yang sama.
+  const [mlQuality, setMlQuality] = useState<any | null>(null);
+  const [mlMeta, setMlMeta] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedStock, setSelectedStock] = useState<any | null>(null);
   const [showFairValueDetails, setShowFairValueDetails] = useState(false);
   const [showTrueCostDetails, setShowTrueCostDetails] = useState(true);
   const [showDistDetails, setShowDistDetails] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    authenticatedFetch('/api/model-quality')
+      .then(res => res.json())
+      .then(q => {
+        if (!alive) return;
+        setMlQuality(q?.horizons?.['1d'] ?? null);
+        setMlMeta(q ?? null);
+      })
+      .catch(() => { if (alive) { setMlQuality(null); setMlMeta(null); } });
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -879,6 +897,29 @@ export default function TopPicksPage() {
                   <p className="text-secondary text-sm mt-1">
                     Daftar emiten dengan peringkat skor komposit tertinggi yang lolos ke tahap debat multi-agent harian.
                   </p>
+                  {mlQuality && (() => {
+                    const tone =
+                      mlQuality.verdict === 'no_edge' ? 'border-red-500/40 bg-red-500/10 text-red-400'
+                      : mlQuality.verdict === 'edge' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                      : 'border-amber-500/40 bg-amber-500/10 text-amber-400';
+                    const edge = mlQuality.edge_pp;
+                    return (
+                      <div className={`mt-3 rounded-2xl border px-4 py-3 ${tone}`}>
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                          <span>Kolom ML PREDICTION (horizon 1d): {mlQuality.label}</span>
+                          {mlQuality.verdict !== 'unmeasured' && edge !== null && (
+                            <span className="font-mono px-2 py-0.5 rounded bg-black/20">
+                              edge {edge >= 0 ? '+' : '−'}{Math.abs(edge).toFixed(1)}pp
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-secondary text-xs mt-1.5 leading-relaxed">{mlQuality.message}</p>
+                        <p className="text-secondary/70 text-[11px] font-mono mt-1.5">
+                          dilatih {(mlMeta?.run_date || '').slice(0, 10)} · validasi {mlMeta?.walk_forward ? 'walk-forward' : 'single holdout'}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               
@@ -900,7 +941,18 @@ export default function TopPicksPage() {
                     {debateCandidates.map((cand: any, idx: number) => {
                       const isPicked = picks.some((p: any) => p.ticker === cand.ticker);
                       const mlSig = (cand.ml_prediction || "-").toUpperCase();
-                      const isMlBuy = mlSig === "BUY" || mlSig === "STRONG BUY";
+                      // HOLD / AVOID harus terlihat berbeda dari "tidak ada data".
+                      // Versi lama menampilkan keduanya sebagai "-", sehingga
+                      // "model menyarankan jangan beli" tidak bisa dibedakan dari
+                      // "model tidak punya prediksi untuk saham ini".
+                      const mlTone =
+                        mlSig === "STRONG BUY" || mlSig === "BUY"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : mlSig === "AVOID"
+                          ? "bg-red-500/10 text-red-400 border-red-500/20"
+                          : mlSig === "HOLD"
+                          ? "bg-white/5 text-secondary border-border"
+                          : null;
 
                       return (
                         <tr key={idx} className="border-b border-border/30 last:border-0 hover:bg-white/[0.02] transition duration-200">
@@ -910,12 +962,12 @@ export default function TopPicksPage() {
                           <td className="py-4 px-4 text-center font-mono text-text/80">{cand.technical_score.toFixed(1)}</td>
                           <td className="py-4 px-4 text-center font-mono text-text/80">{cand.fundamental_score.toFixed(1)}</td>
                           <td className="py-4 px-4 text-center font-mono">
-                            {isMlBuy ? (
-                              <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            {mlTone ? (
+                              <span className={`px-2.5 py-1 border rounded-full text-[10px] font-bold uppercase tracking-wider ${mlTone}`}>
                                 {mlSig}
                               </span>
                             ) : (
-                              <span className="text-secondary/50 font-semibold text-sm">-</span>
+                              <span className="text-secondary/50 font-semibold text-sm" title="Model tidak punya prediksi untuk saham ini">-</span>
                             )}
                           </td>
                           <td className="py-4 px-4 text-center text-secondary text-xs capitalize">{cand.weight_mode.replace('_', ' ')}</td>

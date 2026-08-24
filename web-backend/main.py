@@ -406,6 +406,10 @@ def get_ml_predictions(
                     if target_pct != -1:
                         entry_price = round(pred_price / (1.0 + target_pct), 2)
                 
+                # Fallback calculation actual_return jika actual_close dan entry_price ada
+                if actual_return is None and actual_close is not None and entry_price is not None and entry_price > 0:
+                    actual_return = ((actual_close - entry_price) / entry_price) * 100.0
+                
                 # is_correct adalah SATU-SATUNYA sumber kebenaran — dihitung oleh
                 # cron_ml_validate.py dengan threshold label yang sama seperti training.
                 # Fallback `actual_return > 0` yang lama menimpa verdict tersimpan:
@@ -418,8 +422,11 @@ def get_ml_predictions(
                 else:
                     status = "PENDING"
                     
+                trade_date_str = r[7].strftime("%Y-%m-%d") if r[7] else selected_date
+
                 predictions.append({
                     "ticker": ticker,
+                    "trade_date": trade_date_str,
                     "direction": pred_dir,
                     "probability_pct": round(prob_pct, 2),
                     "entry_price": round(entry_price, 2) if entry_price is not None else None,
@@ -727,7 +734,35 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
             # Fetch debate candidates with their detailed scores & ML predictions
             debate_candidates_info = []
             try:
+                # Horizon yang ditampilkan di kolom ML PREDICTION. Dipilih eksplisit
+                # karena satu ticker punya SATU baris per horizon, dan arah antar
+                # horizon bisa berlawanan (mis. PACK: 1d/3d/5d NAIK, 7d TURUN).
+                # Tanpa horizon yang dipatok, kolom ini menampilkan baris sembarang.
+                ML_DISPLAY_HORIZON = "1d"
+
                 def extract_ml_signal(ml_pred_raw, ticker: str = "") -> str:
+                    """
+                    Sinyal ML untuk satu ticker, apa adanya.
+
+                    Urutan sumber:
+                      1. signals.ml_prediction['signal'] -- keputusan yang BENAR-BENAR
+                         diambil model saat analisis. Dikembalikan apa adanya, termasuk
+                         HOLD dan AVOID.
+                      2. signals.ml_prediction['predictions_multiday'][1d] kalau signal
+                         tidak tersimpan.
+                      3. ml_prediction_log, horizon 1d, trade_date <= hari ini.
+
+                    Tiga hal yang SENGAJA tidak dilakukan lagi:
+                      - Menimpa keputusan model dengan probabilitas mentah. Versi lama
+                        meneruskan ke pengecekan probabilitas ketika signal bukan
+                        BUY/STRONG BUY, sehingga model yang memutuskan HOLD bisa tampil
+                        STRONG BUY hanya karena satu probabilitas melewati 60.
+                      - Memakai max() lintas horizon. Satu horizon optimis cukup untuk
+                        melabeli STRONG BUY walau horizon lain pesimis.
+                      - Mengambil baris ml_prediction_log tanpa filter horizon dan tanpa
+                        batas tanggal. Itu bisa mengambil horizon yang arahnya berlawanan,
+                        atau prediksi bertanggal BESOK yang hasilnya belum terjadi.
+                    """
                     if ml_pred_raw:
                         try:
                             if isinstance(ml_pred_raw, str):
@@ -736,34 +771,45 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                                 ml_pred = ml_pred_raw
                             else:
                                 ml_pred = {}
-                            
-                            sig = str(ml_pred.get("signal", "")).upper()
-                            if sig in ["BUY", "STRONG BUY"]:
+
+                            sig = str(ml_pred.get("signal", "") or "").upper().strip()
+                            if sig:
+                                # Keputusan model dipakai apa adanya -- tidak ditimpa.
                                 return sig
-                            
-                            multiday = ml_pred.get("predictions_multiday", {})
-                            if multiday and isinstance(multiday, dict):
-                                max_val = max(multiday.values()) if multiday.values() else 0
-                                if max_val >= 60.0:
-                                    return "STRONG BUY"
-                                elif max_val > 50.0:
-                                    return "BUY"
+
+                            multiday = ml_pred.get("predictions_multiday") or {}
+                            if isinstance(multiday, dict):
+                                val = multiday.get(ML_DISPLAY_HORIZON)
+                                if val is not None:
+                                    v = float(val)
+                                    if v >= 60.0:
+                                        return "STRONG BUY"
+                                    if v > 50.0:
+                                        return "BUY"
+                                    return "HOLD"
                         except Exception:
                             pass
 
-                    # Fallback to ml_prediction_log if available
+                    # Fallback ke ml_prediction_log: horizon dipatok, tanggal masa depan
+                    # dikecualikan, urutan deterministik.
                     if ticker:
                         try:
                             log_res = conn.execute(text("""
-                                SELECT predicted_direction, pred_return_pct 
-                                FROM ml_prediction_log 
-                                WHERE ticker = :ticker 
-                                ORDER BY trade_date DESC LIMIT 1
-                            """), {"ticker": ticker}).fetchone()
+                                SELECT predicted_direction, pred_return_pct
+                                FROM ml_prediction_log
+                                WHERE ticker = :ticker
+                                  AND LOWER(horizon) = :hz
+                                  AND trade_date <= CURRENT_DATE
+                                ORDER BY trade_date DESC
+                                LIMIT 1
+                            """), {"ticker": ticker, "hz": ML_DISPLAY_HORIZON}).fetchone()
                             if log_res:
-                                p_dir, p_ret = log_res[0], float(log_res[1] or 0)
-                                if p_dir == "NAIK" or p_ret > 0.50:
-                                    return "STRONG BUY" if (p_ret >= 0.60 or p_ret >= 60.0) else "BUY"
+                                p_dir = (log_res[0] or "").upper()
+                                p_ret = float(log_res[1] or 0)
+                                if p_dir == "NAIK":
+                                    # pred_return_pct disimpan sebagai probabilitas [0,1]
+                                    return "STRONG BUY" if p_ret >= 0.60 else "BUY"
+                                return "HOLD"
                         except Exception:
                             pass
 
