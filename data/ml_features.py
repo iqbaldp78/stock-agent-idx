@@ -1224,9 +1224,17 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     # supaya validator live menilai label yang PERSIS sama.
     for _hz, _days in TARGET_HORIZON_DAYS.items():
         _thr = TARGET_THRESHOLDS[_hz]
+        _future = df['Close'].shift(-_days)
+        # NaN HARUS dipertahankan di ekor deret. Perbandingan dengan NaN menghasilkan
+        # False, dan .astype(int) mengubahnya jadi 0 — sehingga baris paling akhir,
+        # yang hasilnya BELUM terjadi, mendapat label palsu "tidak naik" dan
+        # dropna() di bawah tidak pernah membuang apa pun. Bias itu justru menumpuk
+        # di data terbaru, bagian yang paling menentukan untuk model yang diretrain
+        # setiap hari. Simpan sebagai float ber-NaN eksplisit; cast ke int dilakukan
+        # setelah dropna().
         df[f'target_{_hz}'] = (
-            df['Close'].shift(-_days) > df['Close'] * (1 + _thr)
-        ).astype(int)
+            (_future > df['Close'] * (1 + _thr)).astype(float).where(_future.notna())
+        )
 
     # Seluruh fitur turunan data pasar dihitung oleh SATU fungsi yang dipakai
     # bersama dengan extract_features() — lihat compute_ohlcv_features().
@@ -1344,7 +1352,10 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
     # Ticker categorical id so the model can share signal across stocks
     df["ticker_id"] = 0 if not ticker else (_ticker_id(ticker))
 
-    # Drop rows with NaN (from rolling/shifting of targets and indicators)
+    # Drop rows with NaN (from rolling/shifting of targets and indicators).
+    # Membuang baris di mana horizon TERPANJANG belum matang, jadi setiap ticker
+    # kehilangan 7 baris terakhir. Itu memang harganya: label untuk baris itu
+    # belum ada di dunia nyata.
     df = df.dropna(subset=['target_1d', 'target_3d', 'target_5d', 'target_7d'])
 
     # Ensure all columns in FEATURE_COLUMNS exist
@@ -1352,5 +1363,5 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
         if col not in df.columns:
             df[col] = 0.0
 
-    targets = df[['target_1d', 'target_3d', 'target_5d', 'target_7d']]
+    targets = df[['target_1d', 'target_3d', 'target_5d', 'target_7d']].astype(int)
     return df[FEATURE_COLUMNS], targets

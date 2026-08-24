@@ -38,3 +38,9 @@ Thumbs.db
 # Data & Analysis Results
 data/single_analysis_results/
 data/*.json
+
+# Scratch / hasil studi sekali-jalan. Isinya output yang bisa dibuat ulang oleh
+# script (scripts/ml_scorecard.py, feature_ic_study.py, xs_quintile_study.py),
+# termasuk panel parquet puluhan MB. Kalau ada laporan yang mau disimpan permanen,
+# pindahkan ke readme/ atau docs/ — jangan di-track dari sini.
+scratch/
