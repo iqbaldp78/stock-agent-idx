@@ -217,6 +217,26 @@ const CustomEquityVsIhsgChart = ({ points }: { points: any[] }) => {
   );
 };
 
+// Konteks kualitas model yang dikirim bersama setiap respons prediksi. Ditampilkan
+// di atas tabel supaya sinyal tidak pernah terbaca sebagai "sudah terbukti akurat".
+interface ModelQuality {
+  buy_precision: number | null;
+  base_rate: number | null;
+  edge_pp: number | null;
+  lift: number | null;
+  n_usable: number | null;
+  n_degenerate: number | null;
+  verdict: 'no_edge' | 'marginal' | 'edge' | 'unmeasured';
+  label: string;
+  message: string;
+}
+
+interface ModelMeta {
+  run_date: string | null;
+  walk_forward: boolean | null;
+  trustworthy: boolean | null;
+}
+
 interface MlPredictionRow {
   ticker: string;
   direction: string;
@@ -252,6 +272,8 @@ export default function AIPerformancePage() {
   const [mlSearchQuery, setMlSearchQuery] = useState<string>('');
   const [mlLoading, setMlLoading] = useState<boolean>(false);
   const [mlPage, setMlPage] = useState<number>(1);
+  const [modelQuality, setModelQuality] = useState<ModelQuality | null>(null);
+  const [modelMeta, setModelMeta] = useState<ModelMeta | null>(null);
   const [minProbability, setMinProbability] = useState<number>(55);
   const mlItemsPerPage = 10;
 
@@ -273,6 +295,8 @@ export default function AIPerformancePage() {
         const data = await res.json();
         setMlPredictions(data.predictions || []);
         setAvailableDates(data.available_dates || []);
+        setModelQuality(data.model_quality ?? null);
+        setModelMeta(data.model_meta ?? null);
         if (data.trade_date) {
           setSelectedDate(data.trade_date);
         }
@@ -591,6 +615,55 @@ export default function AIPerformancePage() {
               </div>
             </div>
           </div>
+
+          {/* Kualitas Model — konteks wajib di atas tabel sinyal */}
+          {modelQuality && (() => {
+            const tone = {
+              no_edge:    { box: 'border-red-500/40 bg-red-500/10',        text: 'text-red-400',     icon: '⛔' },
+              unmeasured: { box: 'border-amber-500/40 bg-amber-500/10',    text: 'text-amber-400',   icon: '⚠️' },
+              marginal:   { box: 'border-amber-500/40 bg-amber-500/10',    text: 'text-amber-400',   icon: '≈'  },
+              edge:       { box: 'border-emerald-500/40 bg-emerald-500/10', text: 'text-emerald-400', icon: '✓'  },
+            }[modelQuality.verdict] ?? { box: 'border-border bg-white/5', text: 'text-secondary', icon: 'ℹ️' };
+            const fmtPp = (v: number | null) =>
+              v === null ? '–' : `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}pp`;
+            const fmtPct = (v: number | null) => (v === null ? '–' : `${v.toFixed(1)}%`);
+            return (
+              <div className={`rounded-3xl border p-5 shadow-xl space-y-3 ${tone.box}`}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-lg leading-none">{tone.icon}</span>
+                  <span className={`text-sm font-bold ${tone.text}`}>
+                    Kualitas model {selectedHorizon}: {modelQuality.label}
+                  </span>
+                  {modelQuality.verdict !== 'unmeasured' && (
+                    <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-black/20 ${tone.text}`}>
+                      edge {fmtPp(modelQuality.edge_pp)}
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs leading-relaxed text-secondary max-w-3xl">
+                  {modelQuality.message}
+                </p>
+
+                <div className="flex flex-wrap gap-x-5 gap-y-1.5 pt-1 text-[11px] font-mono text-secondary border-t border-white/10">
+                  <span>win rate sinyal BELI: <b className="text-text">{fmtPct(modelQuality.buy_precision)}</b></span>
+                  <span>peluang dasar pasar: <b className="text-text">{fmtPct(modelQuality.base_rate)}</b></span>
+                  <span>lift: <b className="text-text">{modelQuality.lift === null ? '–' : modelQuality.lift.toFixed(2)}</b></span>
+                  {modelQuality.n_degenerate !== null && (
+                    <span>model tanpa sinyal: <b className="text-text">{modelQuality.n_degenerate}</b>
+                      {modelQuality.n_usable !== null && `/${modelQuality.n_usable + modelQuality.n_degenerate}`}
+                    </span>
+                  )}
+                  {modelMeta?.run_date && (
+                    <span>dilatih: <b className="text-text">{modelMeta.run_date.slice(0, 10)}</b></span>
+                  )}
+                  <span>
+                    validasi: <b className="text-text">{modelMeta?.walk_forward ? 'walk-forward' : 'single holdout'}</b>
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Grid Table */}
           <div className="rounded-3xl border border-border bg-card p-6 shadow-xl space-y-4">

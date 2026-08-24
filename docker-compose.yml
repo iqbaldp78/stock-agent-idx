@@ -110,6 +110,13 @@ services:
       - ./graph:/app/graph
       - ./services:/app/services
       - ./scripts:/app/scripts
+      # models/ WAJIB di-mount: endpoint /api/model-quality membaca
+      # lgbm_multiday_meta.json untuk menampilkan edge model di sebelah setiap
+      # sinyal. Tanpa mount ini container memakai salinan bawaan image, sehingga
+      # API menyajikan metadata basi (pernah tertinggal 15 hari) dan UI bisa
+      # menampilkan kualitas model yang sudah tidak berlaku. Read-only: API
+      # hanya membaca, yang menulis adalah job training di container app.
+      - ./models:/app/models:ro
     depends_on:
       postgres:
         condition: service_healthy

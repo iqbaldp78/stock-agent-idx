@@ -107,6 +107,77 @@ div.stButton > button:hover {
 
 # === Database Helper ===
 
+def render_model_quality_banner(horizon: str = "1d", key: str = ""):
+    """
+    Tampilkan kualitas model apa adanya di atas angka akurasi.
+
+    Tanpa ini, "Hit Rate 62%" terbaca seolah model bekerja, padahal mayoritas
+    prediksi berisi TURUN dan "benar kalau tidak naik" mudah terpenuhi. Yang
+    menentukan apakah model menambah nilai adalah selisih win rate sinyal BELI
+    terhadap peluang dasar pasar (edge), dan itulah yang dimunculkan di sini.
+    """
+    try:
+        from services.model_quality import horizon_quality, load_model_quality
+        q = horizon_quality(horizon)
+        meta = load_model_quality()
+    except Exception as e:
+        st.caption(f"Kualitas model tidak dapat dibaca: {e}")
+        return
+
+    if str(horizon).lower() == "all":
+        rows = []
+        worst = "edge"
+        order = {"no_edge": 0, "unmeasured": 1, "marginal": 2, "edge": 3}
+        for hz in ("1d", "3d", "5d", "7d"):
+            d = meta.get("horizons", {}).get(hz)
+            if not d:
+                continue
+            e = d.get("edge_pp")
+            e_txt = "–" if e is None else f"{'+' if e >= 0 else '−'}{abs(e):.1f}pp"
+            rows.append(f"`{hz}` {d.get('label')} · edge {e_txt}")
+            if order.get(d.get("verdict"), 9) < order.get(worst, 9):
+                worst = d.get("verdict")
+        if not rows:
+            st.warning("Metadata training model belum ada — kualitas sinyal tidak diketahui.")
+            return
+        validasi_all = "walk-forward" if meta.get("walk_forward") else "single holdout"
+        msg_all = "**Kualitas model per horizon**  \n" + "  \n".join(rows) + \
+                  f"  \nValidasi {validasi_all}"
+        (st.error if worst == "no_edge" else
+         st.warning if worst in ("unmeasured", "marginal") else st.success)(msg_all)
+        return
+
+    if not q:
+        st.warning("Metadata training model belum ada — kualitas sinyal tidak diketahui.")
+        return
+
+    edge = q.get("edge_pp")
+    edge_txt = "–" if edge is None else f"{'+' if edge >= 0 else '−'}{abs(edge):.1f}pp"
+    verdict = q.get("verdict")
+    head = f"**Kualitas model {horizon.upper()}: {q.get('label')}**"
+    if verdict != "unmeasured":
+        head += f" · edge {edge_txt}"
+
+    body = q.get("message", "")
+    detail = (
+        f"win rate sinyal BELI **{q['buy_precision']:.1f}%** vs peluang dasar pasar "
+        f"**{q['base_rate']:.1f}%** · lift **{q['lift']:.2f}**"
+        if q.get("buy_precision") is not None and q.get("base_rate") is not None
+           and q.get("lift") is not None else ""
+    )
+    validasi = "walk-forward" if meta.get("walk_forward") else "single holdout"
+    run_date = (meta.get("run_date") or "")[:10]
+    footer = f"Dilatih {run_date} · validasi {validasi}" if run_date else f"Validasi {validasi}"
+
+    msg = "  \n".join(x for x in (head, body, detail, footer) if x)
+    if verdict == "no_edge":
+        st.error(msg)
+    elif verdict in ("unmeasured", "marginal"):
+        st.warning(msg)
+    else:
+        st.success(msg)
+
+
 def get_db_conn():
     return psycopg2.connect(
         dbname=os.getenv("POSTGRES_DB", "stockagent"),
@@ -3271,6 +3342,10 @@ elif page == "🤖 ML Validation":
                 
                 # --- KPI CARDS ---
                 st.subheader("🎯 Ringkasan Kinerja & Indikator Validasi")
+                # Konteks kualitas model HARUS mendahului angka akurasi di bawahnya:
+                # Hit Rate di kartu KPI adalah akurasi keseluruhan, yang tinggi bahkan
+                # ketika model tidak punya kemampuan apa pun.
+                render_model_quality_banner(str(horizon_filter).lower())
                 kpi_col1, kpi_col2, kpi_col3, kpi_col4, kpi_col5 = st.columns(5)
                 
                 total_val = len(df_validated)
@@ -3682,6 +3757,7 @@ elif page == "🤖 ML Validation":
                 
                 # Hit Rate Stats
                 st.subheader("Statistik Hit Rate (Per Row Tervalidasi)")
+                render_model_quality_banner("1d")
                 # Hitung berdasarkan data asli untuk akurasi persis
                 val_logs = [l for l in logs if l.is_correct is not None]
                 if val_logs:

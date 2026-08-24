@@ -316,6 +316,17 @@ def get_performance_history():
         return {"history": [], "summary": {"total_signals": 0, "winning_signals": 0, "losing_signals": 0, "win_rate": 0, "avg_return_pct": 0, "best_pick": None, "worst_pick": None, "current_streak": 0, "recent_win_rate": 0, "recent_avg_return_pct": 0}}
 
 
+@app.get("/api/model-quality")
+def get_model_quality():
+    """
+    Kualitas model ML apa adanya, dari metadata training terakhir. Dipakai UI untuk
+    menempelkan konteks di sebelah setiap sinyal, supaya prediksi tidak pernah
+    tampil seolah terbukti akurat padahal edge-nya nol atau belum terukur.
+    """
+    from services.model_quality import load_model_quality
+    return load_model_quality()
+
+
 @app.get("/api/performance/ml-predictions")
 def get_ml_predictions(
     trade_date: Optional[str] = Query(None, description="Trade date in YYYY-MM-DD format"),
@@ -337,7 +348,9 @@ def get_ml_predictions(
                     "available_dates": [],
                     "trade_date": None,
                     "horizon": horizon.upper() if horizon else "1D",
-                    "predictions": []
+                    "predictions": [],
+                    "model_quality": None,
+                    "model_meta": None,
                 }
             
             today_str = date.today().isoformat()
@@ -417,12 +430,24 @@ def get_ml_predictions(
                     "is_correct": is_correct
                 })
                 
+            from services.model_quality import load_model_quality
+            quality = load_model_quality()
+
             return {
                 "available_dates": available_dates,
                 "trade_date": selected_date,
                 "today_date": today_str,
                 "horizon": norm_horizon.upper(),
-                "predictions": predictions
+                "predictions": predictions,
+                # Konteks kualitas model ikut dikirim bersama prediksinya, bukan di
+                # endpoint terpisah, supaya UI tidak bisa menampilkan sinyal tanpa
+                # menampilkan seberapa bisa dipercaya sinyal itu.
+                "model_quality": quality.get("horizons", {}).get(norm_horizon),
+                "model_meta": {
+                    "run_date": quality.get("run_date"),
+                    "walk_forward": quality.get("walk_forward"),
+                    "trustworthy": quality.get("trustworthy"),
+                },
             }
     except Exception as e:
         print(f"Error fetching ml_predictions: {e}")
@@ -431,7 +456,9 @@ def get_ml_predictions(
             "available_dates": [],
             "trade_date": trade_date,
             "horizon": horizon,
-            "predictions": []
+            "predictions": [],
+            "model_quality": None,
+            "model_meta": None,
         }
 
 
