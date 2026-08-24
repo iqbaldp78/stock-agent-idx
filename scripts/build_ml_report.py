@@ -23,7 +23,10 @@ def main():
     ap.add_argument("--ic", default="scratch/feature_ic.json")
     ap.add_argument("--quintile", default="scratch/xs_quintile.json")
     ap.add_argument("--scorecard", default="scratch/ml_scorecard.json")
-    ap.add_argument("--out", default="scratch/REPORT.md")
+    # Default menulis ke readme/ (ter-track git), BUKAN scratch/ yang ada di
+    # .gitignore. Kalau default-nya scratch/, regenerasi berikutnya menulis ke lokasi
+    # yang tidak ter-track dan salinan di readme/ diam-diam jadi basi.
+    ap.add_argument("--out", default="readme/ML_MODEL_REPORT.md")
     a = ap.parse_args()
 
     ho, wf, ic, xq, sc = (load(a.holdout), load(a.walkforward), load(a.ic),
@@ -114,14 +117,37 @@ def main():
               "Artinya saham yang baru naik / terentang di atas rata-ratanya justru "
               "TERTINGGAL relatif terhadap universe pada beberapa hari berikutnya — "
               "polanya mean reversion, bukan momentum.\n")
-        # fitur konstan
+        # Fitur tanpa IC. DUA sebab yang berbeda dan tidak boleh dicampur:
+        #
+        #  a) market-wide  — nilainya sama untuk SEMUA saham pada tanggal yang sama
+        #     (indeks IHSG, hari dalam seminggu). Varians cross-sectional-nya nol
+        #     by construction, jadi IC memang tidak terdefinisi. Fitur ini SEHAT;
+        #     ia hanya tidak bisa membedakan saham mana yang lebih unggul, dan itu
+        #     wajar karena memang bukan tugasnya.
+        #  b) kosong — konstan sepanjang waktu, artinya tidak pernah terisi di
+        #     prepare_training_data() dan default-nya (0.0 / 5.0) yang terpakai.
+        #     Ini yang bermasalah.
+        #
+        # Pembagiannya diverifikasi terhadap panel fitur: varians dalam-tanggal nol
+        # tapi varians total > 0 -> market-wide; varians total nol -> kosong.
         allf = ic.get("horizons", {}).get("5d", {}).get("features", {})
-        const = sorted(f for f, d in allf.items() if d.get("t_stat") is None)
-        if const:
-            w(f"**{len(const)} fitur konstan / tanpa data di jalur training** — "
-              "artinya bukan 'dihitung tapi tidak dipakai', melainkan tidak pernah "
-              "terisi sama sekali di `prepare_training_data()`:\n")
-            w("`" + "`, `".join(const) + "`\n")
+        no_ic = sorted(f for f, d in allf.items() if d.get("t_stat") is None)
+        market_wide = [f for f in no_ic if f.startswith("ihsg_") or f == "day_of_week"]
+        empty = [f for f in no_ic if f not in market_wide]
+        if empty:
+            w(f"**{len(empty)} fitur KOSONG di jalur training** — bukan 'dihitung "
+              "tapi tidak dipakai', melainkan tidak pernah terisi sama sekali di "
+              "`prepare_training_data()`, sehingga nilai default (0.0 / 5.0) yang "
+              "terpakai. Menambahkannya ke `ML_TRAIN_FEATURES` tanpa mengisinya "
+              "lebih dulu hanya menambah kolom kosong:\n")
+            w("`" + "`, `".join(empty) + "`\n")
+        if market_wide:
+            w(f"{len(market_wide)} fitur lain tidak punya IC karena bersifat "
+              "**market-wide** — nilainya sama untuk semua saham pada tanggal yang "
+              "sama, jadi varians cross-sectional-nya nol *by construction*. Fitur "
+              "ini berfungsi normal; ia hanya tidak bisa memberi tahu saham mana "
+              "yang lebih unggul:\n")
+            w("`" + "`, `".join(market_wide) + "`\n")
     else:
         w("_IC study belum ada._\n")
 
