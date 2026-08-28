@@ -1447,6 +1447,15 @@ def get_portfolio_holdings(current_user: dict = Depends(get_current_user)):
                     "created_at": h.get("created_at"),
                     "updated_at": h.get("updated_at")
                 })
+            # Urutkan dari P&L PERSEN terkecil (rugi terdalam relatif) ke terbesar.
+            # Persen, bukan rupiah: posisi besar otomatis mendominasi urutan rupiah
+            # walau kerugian relatifnya kecil, sehingga yang paling perlu perhatian
+            # justru tenggelam.
+            # Sort dilakukan DI SINI, bukan di get_all_holdings(), karena
+            # update_current_prices() menghitung ulang unrealized_pnl_pct dari harga
+            # terbaru -- mengurutkan lewat ORDER BY di SQL akan memakai nilai lama
+            # yang tersimpan di tabel dan hasilnya bisa berbeda dari yang tampil.
+            mapped_holdings.sort(key=lambda h: float(h.get("unrealized_pnl_pct") or 0.0))
             holdings = mapped_holdings
         else:
             summary = {
