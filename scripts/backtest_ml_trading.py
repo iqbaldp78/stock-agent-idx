@@ -41,6 +41,14 @@ def run_ml_backtest(ticker: str, start_date: str, end_date: str, initial_capital
     if predictor.models.get(horizon) is None:
         print(f"Model horizon {horizon} not found")
         return None
+    if predictor.no_trade.get(horizon):
+        print(f"{ticker} [{horizon}] divonis NO-TRADE saat training (precision val "
+              f"tidak pernah di atas base rate) — backtest dilewati.")
+        return None
+    if threshold is None:
+        # Default: threshold per-ticker yang benar-benar dipakai produksi,
+        # bukan satu angka global untuk semua ticker.
+        threshold = predictor.thresholds.get(horizon, 0.50)
 
     capital = initial_capital
     position = 0
@@ -122,16 +130,19 @@ if __name__ == "__main__":
     parser.add_argument("--end", type=str, default="2026-12-31")
     parser.add_argument("--capital", type=float, default=10000000)
     parser.add_argument("--horizon", type=str, default="1d")
-    parser.add_argument("--threshold", type=float, default=0.50)
+    parser.add_argument("--threshold", type=float, default=None,
+                        help="Override threshold BUY global (sweep). Default: threshold "
+                             "per-ticker tersimpan dari training, dan model NO-TRADE dilewati.")
     args = parser.parse_args()
-    
+
+    thr_label = f"{args.threshold*100}%" if args.threshold is not None else "per-ticker (tersimpan)"
     if args.ticker.upper() == "ALL":
         from config import get_universe
         tickers = get_universe()
-        logging.info(f"Running ML Backtest for ALL ({len(tickers)} tickers) | Horizon: {args.horizon} | Threshold: {args.threshold*100}%")
+        logging.info(f"Running ML Backtest for ALL ({len(tickers)} tickers) | Horizon: {args.horizon} | Threshold: {thr_label}")
     else:
         tickers = [t.strip().upper() for t in args.ticker.split(',')]
-        logging.info(f"Running ML Backtest for {tickers} | Horizon: {args.horizon} | Threshold: {args.threshold*100}%")
+        logging.info(f"Running ML Backtest for {tickers} | Horizon: {args.horizon} | Threshold: {thr_label}")
         
     if not tickers:
         print("No tickers to run")
@@ -167,7 +178,7 @@ if __name__ == "__main__":
         db = SessionLocal()
         session_db = BacktestSession(
             horizon=args.horizon,
-            threshold=args.threshold,
+            threshold=args.threshold if args.threshold is not None else 0.0,  # 0.0 = per-ticker
             start_date=datetime.strptime(args.start, "%Y-%m-%d").date(),
             end_date=datetime.strptime(args.end, "%Y-%m-%d").date(),
             initial_capital=total_initial,

@@ -239,6 +239,7 @@ interface ModelMeta {
 
 interface MlPredictionRow {
   ticker: string;
+  trade_date?: string | null;
   direction: string;
   probability_pct: number;
   entry_price: number | null;
@@ -677,70 +678,98 @@ export default function AIPerformancePage() {
                   <table className="w-full border-collapse text-left text-sm">
                     <thead>
                       <tr className="border-b border-border bg-white/5 text-xs font-bold uppercase tracking-wider text-secondary">
+                        <th className="px-6 py-3.5">Tanggal</th>
                         <th className="px-6 py-3.5">Ticker</th>
                         <th className="px-6 py-3.5 text-center">Prediksi Arah</th>
                         <th className="px-6 py-3.5 text-center">Probabilitas (%)</th>
-                        <th className="px-6 py-3.5 text-right">Harga Entry</th>
+                        <th className="px-6 py-3.5 text-right">Harga Open</th>
                         <th className="px-6 py-3.5 text-right">Target Price</th>
                         <th className="px-6 py-3.5 text-right">Harga Terakhir</th>
+                        <th className="px-6 py-3.5 text-right">Perubahan (%)</th>
                         <th className="px-6 py-3.5 text-center">Status Validasi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 font-mono text-secondary">
-                      {paginatedMlRows.map((row) => (
-                        <tr key={`${row.ticker}-${row.direction}`} className="transition hover:bg-white/5">
-                          <td className="px-6 py-4 font-bold text-text text-base">{row.ticker}</td>
-                          <td className="px-6 py-4 text-center">
-                            <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold ${
-                              row.direction === 'NAIK'
-                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                                : 'border-rose-500/30 bg-rose-500/10 text-rose-400'
-                            }`}>
-                              {row.direction === 'NAIK' ? 'NAIK ↗️' : 'TURUN ↘️'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex flex-col items-center gap-1">
-                              <span className="font-bold text-text text-sm">{row.probability_pct.toFixed(2)}%</span>
-                              <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${
-                                    row.probability_pct >= 60
-                                      ? 'bg-emerald-400'
-                                      : row.probability_pct >= 50
-                                      ? 'bg-accent'
-                                      : 'bg-amber-400'
-                                  }`}
-                                  style={{ width: `${Math.min(row.probability_pct, 100)}%` }}
-                                ></div>
+                      {paginatedMlRows.map((row) => {
+                        const returnPct = row.actual_return_pct !== null && row.actual_return_pct !== undefined
+                          ? row.actual_return_pct
+                          : (row.entry_price && row.actual_close ? ((row.actual_close - row.entry_price) / row.entry_price) * 100 : null);
+                        const isPositive = returnPct !== null && returnPct > 0;
+                        const isNegative = returnPct !== null && returnPct < 0;
+
+                        return (
+                          <tr key={`${row.ticker}-${row.direction}-${row.trade_date || ''}`} className="transition hover:bg-white/5">
+                            <td className="px-6 py-4 font-mono text-xs text-secondary whitespace-nowrap">
+                              {row.trade_date || selectedDate || '-'}
+                            </td>
+                            <td className="px-6 py-4 font-bold text-text text-base">{row.ticker}</td>
+                            <td className="px-6 py-4 text-center">
+                              <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold ${
+                                row.direction === 'NAIK'
+                                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                                  : 'border-rose-500/30 bg-rose-500/10 text-rose-400'
+                              }`}>
+                                {row.direction === 'NAIK' ? 'NAIK ↗️' : 'TURUN ↘️'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="font-bold text-text text-sm">{row.probability_pct.toFixed(2)}%</span>
+                                <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${
+                                      row.probability_pct >= 60
+                                        ? 'bg-emerald-400'
+                                        : row.probability_pct >= 50
+                                        ? 'bg-accent'
+                                        : 'bg-amber-400'
+                                    }`}
+                                    style={{ width: `${Math.min(row.probability_pct, 100)}%` }}
+                                  ></div>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-right font-medium text-text">
-                            {row.entry_price ? formatCurrency(row.entry_price) : '-'}
-                          </td>
-                          <td className="px-6 py-4 text-right font-bold text-text">
-                            {row.pred_price ? formatCurrency(row.pred_price) : '-'}
-                          </td>
-                          <td className="px-6 py-4 text-right text-secondary">
-                            {row.actual_close ? formatCurrency(row.actual_close) : '-'}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold ${
-                              row.status === 'BENAR'
-                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                                : row.status === 'SALAH'
-                                ? 'border-rose-500/30 bg-rose-500/10 text-rose-400'
-                                : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-                            }`}>
-                              {row.status === 'BENAR' ? 'Benar ✅' : row.status === 'SALAH' ? 'Salah ❌' : 'Pending ⏳'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4 text-right font-medium text-text">
+                              {row.entry_price ? formatCurrency(row.entry_price) : '-'}
+                            </td>
+                            <td className="px-6 py-4 text-right font-bold text-text">
+                              {row.pred_price ? formatCurrency(row.pred_price) : '-'}
+                            </td>
+                            <td className="px-6 py-4 text-right font-medium text-text">
+                              {row.actual_close ? formatCurrency(row.actual_close) : '-'}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              {returnPct !== null ? (
+                                <span className={`inline-flex items-center font-bold text-xs px-2.5 py-1 rounded-lg ${
+                                  isPositive
+                                    ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                                    : isNegative
+                                    ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20'
+                                    : 'text-secondary bg-white/5 border border-border'
+                                }`}>
+                                  {isPositive ? '+' : ''}{returnPct.toFixed(2)}%
+                                </span>
+                              ) : (
+                                <span className="text-secondary/50">-</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold ${
+                                row.status === 'BENAR'
+                                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                                  : row.status === 'SALAH'
+                                  ? 'border-rose-500/30 bg-rose-500/10 text-rose-400'
+                                  : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                              }`}>
+                                {row.status === 'BENAR' ? 'Benar ✅' : row.status === 'SALAH' ? 'Salah ❌' : 'Pending ⏳'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
                       {paginatedMlRows.length === 0 && (
                         <tr>
-                          <td colSpan={7} className="px-6 py-12 text-center text-secondary font-sans">
+                          <td colSpan={9} className="px-6 py-12 text-center text-secondary font-sans">
                             Tidak ada prediksi saham yang cocok untuk kriteria ini. Silakan ganti Horizon, Tanggal, atau Filter Arah.
                           </td>
                         </tr>

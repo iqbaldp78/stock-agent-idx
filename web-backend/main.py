@@ -371,11 +371,16 @@ def get_ml_predictions(
                 sql_where += " AND UPPER(m.predicted_direction) = :dir"
                 params["dir"] = direction.upper()
                 
+            # Probabilitas: prefer pred_prob (rumah barunya); baris legacy jatuh
+            # ke pred_return_pct era-lama yang berisi probabilitas [0,1].
+            # Ranking DESC by probabilitas dipertahankan.
+            prob_expr = ("COALESCE(m.pred_prob, CASE WHEN m.pred_return_pct <= 1.0 "
+                         "THEN m.pred_return_pct ELSE m.pred_return_pct / 100.0 END)")
             query = text(f"""
-                SELECT 
+                SELECT
                     m.ticker,
                     m.predicted_direction,
-                    m.pred_return_pct,
+                    {prob_expr} AS prob,
                     m.pred_price,
                     m.actual_close_price,
                     m.actual_return_pct,
@@ -385,27 +390,25 @@ def get_ml_predictions(
                     m.entry_price
                 FROM ml_prediction_log m
                 {sql_where}
-                ORDER BY m.pred_return_pct DESC
+                ORDER BY {prob_expr} DESC
             """)
             rows = conn.execute(query, params).fetchall()
-            
+
             predictions = []
             for r in rows:
                 ticker = r[0]
                 pred_dir = r[1] or "NAIK"
-                prob_pct = float(r[2]) * 100.0 if r[2] is not None and float(r[2]) <= 1.0 else float(r[2] or 0.0)
+                prob_pct = float(r[2]) * 100.0 if r[2] is not None else 0.0
                 pred_price = float(r[3]) if r[3] is not None else None
                 actual_close = float(r[4]) if r[4] is not None else None
                 actual_return = float(r[5]) if r[5] is not None else None
                 is_correct = r[6]
                 entry_price = float(r[9]) if len(r) > 9 and r[9] is not None else None
-                
-                # Fallback calculation jika entry_price null namun pred_price ada
-                if entry_price is None and pred_price is not None:
-                    target_pct = (prob_pct / 100.0 - 0.50) * 0.05
-                    if target_pct != -1:
-                        entry_price = round(pred_price / (1.0 + target_pct), 2)
-                
+
+                # Baris legacy tanpa entry_price dibiarkan null — back-solve lama
+                # membalik rumus squash (p-0.5)*0.05 yang memang fiktif, jadi
+                # angka hasil baliknya ikut fiktif.
+
                 # Fallback calculation actual_return jika actual_close dan entry_price ada
                 if actual_return is None and actual_close is not None and entry_price is not None and entry_price > 0:
                     actual_return = ((actual_close - entry_price) / entry_price) * 100.0
@@ -795,7 +798,10 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                     if ticker:
                         try:
                             log_res = conn.execute(text("""
-                                SELECT predicted_direction, pred_return_pct
+                                SELECT predicted_direction,
+                                       COALESCE(pred_prob,
+                                                CASE WHEN pred_return_pct <= 1.0 THEN pred_return_pct
+                                                     ELSE pred_return_pct / 100.0 END) AS prob
                                 FROM ml_prediction_log
                                 WHERE ticker = :ticker
                                   AND LOWER(horizon) = :hz
@@ -804,12 +810,10 @@ def get_top_picks(type: str = Query("regular"), current_user: dict = Depends(get
                                 LIMIT 1
                             """), {"ticker": ticker, "hz": ML_DISPLAY_HORIZON}).fetchone()
                             if log_res:
-                                p_dir = (log_res[0] or "").upper()
-                                p_ret = float(log_res[1] or 0)
-                                if p_dir == "NAIK":
-                                    # pred_return_pct disimpan sebagai probabilitas [0,1]
-                                    return "STRONG BUY" if p_ret >= 0.60 else "BUY"
-                                return "HOLD"
+                                from services.ml_signal import buy_label
+                                label = buy_label((log_res[0] or "").upper(),
+                                                  float(log_res[1] or 0))
+                                return label if label in ("BUY", "STRONG BUY") else "HOLD"
                         except Exception:
                             pass
 
@@ -884,26 +888,38 @@ def get_bandarmologi_details(
         # But even better: if date_from == date_to, we do it.
         bandarm_res = analyze(ticker, date_from, date_to)
         
-        # Fallback logic for latest/single-day queries
-        if date_from and date_from == date_to and bandarm_res.get("custom_window"):
+        # Fallback logic for single-day/latest queries if custom_window has no data
+        if bandarm_res.get("custom_window"):
             cw = bandarm_res["custom_window"]
             if not cw.get("top_accumulators") and not cw.get("top_distributors"):
-                # No data for today, let's try yesterday (only if it's today or a single day)
                 try:
-                    q_date = datetime.strptime(date_from, "%Y-%m-%d")
-                    # simple fallback: go back 1 day (up to 3 days to skip weekend if we want, but 1 day is start)
-                    # Let's loop up to 3 days back to find nearest trading day
-                    for i in range(1, 4):
-                        prev_date = (q_date - timedelta(days=i)).strftime("%Y-%m-%d")
-                        fallback_res = analyze(ticker, prev_date, prev_date)
-                        fw = fallback_res.get("custom_window")
-                        if fw and (fw.get("top_accumulators") or fw.get("top_distributors")):
-                            bandarm_res["custom_window"] = fw
-                            bandarm_res["custom_window"]["is_fallback"] = True
-                            bandarm_res["custom_window"]["fallback_date"] = prev_date
-                            break
-                except Exception as e:
-                    pass
+                    with engine.connect() as conn:
+                        max_date_row = conn.execute(
+                            text("SELECT MAX(trade_date) FROM broker_accumulation WHERE ticker = :ticker"),
+                            {"ticker": ticker}
+                        ).fetchone()
+                        fallback_date = max_date_row[0].strftime("%Y-%m-%d") if max_date_row and max_date_row[0] else None
+
+                    if fallback_date:
+                        from data.fetcher_stockbit import get_broker_accumulation
+                        from agents.bandarmologi import _format_broker_detail, _format_distribution_detail
+                        cw_fallback = get_broker_accumulation(ticker, date_from=fallback_date, date_to=fallback_date)
+                        current_p = bandarm_res.get("price_analysis", {}).get("current_price", 0)
+                        top_acc = [_format_broker_detail(c, d, 1, current_p) for c, d in cw_fallback.get("top_accumulators", [])[:10]]
+                        top_dist = [_format_distribution_detail(c, d, 1) for c, d in cw_fallback.get("top_distributors", [])[:10]]
+                        if top_acc or top_dist:
+                            bandarm_res["custom_window"] = {
+                                "period": f"{fallback_date} s/d {fallback_date}",
+                                "window_days": 1,
+                                "top_accumulators": top_acc,
+                                "top_distributors": top_dist,
+                                "distribution_top3_value": cw_fallback.get("distribution_top3_value", 0),
+                                "foreign_net": cw_fallback.get("foreign_net", 0),
+                                "is_fallback": True,
+                                "fallback_date": fallback_date,
+                            }
+                except Exception as ex:
+                    print(f"Fallback DB error for {ticker}: {ex}")
 
         with engine.connect() as conn:
             tickers_res = conn.execute(text("SELECT DISTINCT ticker FROM broker_accumulation ORDER BY ticker")).fetchall()

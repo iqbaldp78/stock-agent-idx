@@ -7,9 +7,9 @@ const formatValue = (val: number) => { if (!val) return "0"; if (val >= 1e9) ret
 
 const getBrokerColorClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
-  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO", "BB"];
   
   if (foreign.includes(code)) return "text-red-400 font-extrabold";
   if (retail.includes(code)) return "text-green-400 font-extrabold";
@@ -19,9 +19,9 @@ const getBrokerColorClass = (brokerCode: string) => {
 
 const getBrokerBgClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
-  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO", "BB"];
 
   if (foreign.includes(code)) return "bg-red-500/10 text-red-400 border-red-500/25";
   if (retail.includes(code)) return "bg-green-500/10 text-green-400 border-green-500/25";
@@ -31,9 +31,9 @@ const getBrokerBgClass = (brokerCode: string) => {
 
 const getBrokerTitle = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
-  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO", "BB"];
   
   if (foreign.includes(code)) return "Broker Asing (Foreign)";
   if (retail.includes(code)) return "Broker Ritel (Retail)";
@@ -91,10 +91,6 @@ export default function BandarmologiPage() {
       let queryParams = "";
       if (dateFrom && dateTo) {
         queryParams = `?date_from=${dateFrom}&date_to=${dateTo}`;
-      } else {
-        // Default to today
-        const dateStr = new Date().toISOString().split('T')[0];
-        queryParams = `?date_from=${dateStr}&date_to=${dateStr}`;
       }
       const res = await fetch(`/api/bandarmologi/${ticker}${queryParams}`);
       const data = await res.json();
@@ -312,7 +308,7 @@ export default function BandarmologiPage() {
             {/* Accumulators Table */}
             <div className="bg-profit/[0.02] hover:bg-profit/[0.04] border border-profit/20 rounded-2xl p-6 transition duration-300">
             <h3 className="text-lg font-bold text-profit mb-4 flex items-center gap-2">
-              <span>🏛️</span> Top Broker Akumulasi ({bandarTimeframe.toUpperCase()})
+              <span>🏛️</span> Top Broker Akumulasi ({bandarTimeframe === 'latest' ? 'LATEST' : bandarTimeframe.toUpperCase()}{bandarTimeframe === 'latest' && bandarmologiData?.custom_window?.period ? ` — ${bandarmologiData.custom_window.period.split(' s/d ')[0]}` : ''})
             </h3>
             <div className="overflow-x-auto rounded-xl border border-profit/10 bg-background/40">
               <table className="w-full text-left border-collapse text-sm">
@@ -321,8 +317,8 @@ export default function BandarmologiPage() {
                     <th className="py-3 px-4 whitespace-nowrap">Broker</th>
                     {bandarTimeframe !== 'latest' && <th className="py-3 px-4 whitespace-nowrap">Keaktifan</th>}
                     <th className="py-3 px-4 whitespace-nowrap">Avg Price</th>
-                    <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
                     <th className="py-3 px-4 whitespace-nowrap">Value</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
                     <th className="py-3 px-4 whitespace-nowrap">Harga vs Cost</th>
                   </tr>
                 </thead>
@@ -335,8 +331,8 @@ export default function BandarmologiPage() {
                           <td className={`py-3 px-4 whitespace-nowrap ${getBrokerColorClass(row.broker)}`} title={getBrokerTitle(row.broker)}>{row.broker}</td>
                           {bandarTimeframe !== 'latest' && <td className="py-3 px-4 whitespace-nowrap text-secondary font-medium">{row.active_days || '-'}</td>}
                           <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_buy_lot)}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_buy_value)}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_buy_lot)}</td>
                           <td className={`py-3 px-4 font-bold whitespace-nowrap ${distancePct === null ? 'text-secondary' : distancePct >= 0 ? 'text-profit' : 'text-loss'}`}>
                             {distancePct !== null ? `${distancePct >= 0 ? '+' : ''}${distancePct.toFixed(2)}%` : '-'}
                           </td>
@@ -355,7 +351,7 @@ export default function BandarmologiPage() {
           {/* Distributors Table */}
           <div className="bg-loss/[0.02] hover:bg-loss/[0.04] border border-loss/20 rounded-2xl p-6 transition duration-300">
             <h3 className="text-lg font-bold text-loss mb-4 flex items-center gap-2">
-              <span>📉</span> Top Broker Distribusi ({bandarTimeframe.toUpperCase()})
+              <span>📉</span> Top Broker Distribusi ({bandarTimeframe === 'latest' ? 'LATEST' : bandarTimeframe.toUpperCase()}{bandarTimeframe === 'latest' && bandarmologiData?.custom_window?.period ? ` — ${bandarmologiData.custom_window.period.split(' s/d ')[0]}` : ''})
             </h3>
             <div className="overflow-x-auto rounded-xl border border-loss/10 bg-background/40">
               <table className="w-full text-left border-collapse text-sm">
@@ -364,8 +360,8 @@ export default function BandarmologiPage() {
                     <th className="py-3 px-4 whitespace-nowrap">Broker</th>
                     {bandarTimeframe !== 'latest' && <th className="py-3 px-4 whitespace-nowrap">Keaktifan</th>}
                     <th className="py-3 px-4 whitespace-nowrap">Avg Sell</th>
-                    <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
                     <th className="py-3 px-4 whitespace-nowrap">Value</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Volume (Lot)</th>
                     <th className="py-3 px-4 whitespace-nowrap">Harga vs Avg</th>
                   </tr>
                 </thead>
@@ -378,8 +374,8 @@ export default function BandarmologiPage() {
                           <td className={`py-3 px-4 whitespace-nowrap ${getBrokerColorClass(row.broker)}`} title={getBrokerTitle(row.broker)}>{row.broker}</td>
                           {bandarTimeframe !== 'latest' && <td className="py-3 px-4 whitespace-nowrap text-secondary font-medium">{row.active_days || '-'}</td>}
                           <td className="py-3 px-4 whitespace-nowrap">Rp {row.avg_price.toLocaleString('id-ID')}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_sell_lot)}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{formatValue(row.total_sell_value)}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{formatLot(row.total_sell_lot)}</td>
                           <td className={`py-3 px-4 font-bold whitespace-nowrap ${distancePct === null ? 'text-secondary' : distancePct >= 0 ? 'text-profit' : 'text-loss'}`}>
                             {distancePct !== null ? `${distancePct >= 0 ? '+' : ''}${distancePct.toFixed(2)}%` : '-'}
                           </td>

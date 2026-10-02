@@ -230,10 +230,13 @@ def run_ml_prediction(state: AgentState) -> dict:
 
             # 3. Predict Multi-Day
             predictor = MultiDayPredictor(ticker=ticker)
-            preds = predictor.predict(feature_row)
+            details = predictor.predict_detail(feature_row)
+            preds = {h: d["prob"] for h, d in details.items()}
 
             # Format predictions to percentages
             pred_pcts = {h: round(val * 100, 2) for h, val in preds.items()}
+            # Expected return terkalibrasi per horizon, dalam poin persen.
+            exp_ret_pcts = {h: round(d["expected_return"] * 100, 2) for h, d in details.items()}
 
             # Use 1d prediction for the main signal/direction
             signal = predictor.get_signal(preds.get('1d', 0.5))
@@ -259,7 +262,12 @@ def run_ml_prediction(state: AgentState) -> dict:
             ml_results[ticker] = {
                 "pred_prob": pred_pcts.get('1d', 0),
                 "max_pred_prob": max(pred_pcts.values()) if pred_pcts else 0,
-                "predictions_multiday": pred_pcts,       # 1d, 3d, 5d, 7d
+                "predictions_multiday": pred_pcts,       # 1d, 3d, 5d, 7d (probabilitas %)
+                # pred_return: expected return 1d dalam POIN PERSEN (mis. 0.8 = +0.8%),
+                # sesuai kontrak _decision_label() di investment_manager. Key ini
+                # dulu tidak pernah ditulis sehingga sisi ML debate selalu 0.0/HOLD.
+                "pred_return": exp_ret_pcts.get('1d', 0.0),
+                "expected_returns_multiday": exp_ret_pcts,  # poin persen per horizon
                 "signal": signal,
                 "confidence": "MEDIUM" # Default for now
             }

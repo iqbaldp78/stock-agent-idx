@@ -422,7 +422,12 @@ export default function TradingPage() {
         const positions = summary?.positions || [];
         const activePositions = positions.filter((p: any) => p.status === 'OPEN') || [];
         const pendingOrders = positions.filter((p: any) => p.status?.startsWith('PENDING')) || [];
-        const closedTrades = history.filter((t: any) => t.status !== 'OPEN' && !t.status?.startsWith('PENDING') && t.status !== 'CANCELLED') || [];
+        const closedTrades = (history.filter((t: any) => t.status !== 'OPEN' && !t.status?.startsWith('PENDING') && t.status !== 'CANCELLED') || [])
+          .sort((a: any, b: any) => {
+            const dateA = new Date(a.closed_at || a.opened_at || 0).getTime();
+            const dateB = new Date(b.closed_at || b.opened_at || 0).getTime();
+            return dateB - dateA; // DESC: newest first
+          });
         const itemsPerPage = 10;
         const totalPages = Math.ceil(closedTrades.length / itemsPerPage) || 1;
         const activePage = currentPage > totalPages ? 1 : currentPage;

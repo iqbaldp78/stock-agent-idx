@@ -72,7 +72,11 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
             preds = model.predict(aligned[selected_cols].fillna(0.0))
 
         thr = predictor.thresholds.get(h, 0.50)
-        binary_preds = (preds >= thr).astype(int)
+        no_trade = bool(predictor.no_trade.get(h, False))
+        # Model NO-TRADE tidak pernah memberi sinyal BUY di produksi — evaluasi
+        # harus mencerminkan itu, bukan mengarang precision dari threshold
+        # yang tidak akan dipakai.
+        binary_preds = np.zeros(len(preds), dtype=int) if no_trade else (preds >= thr).astype(int)
         y_true_int = y_true.astype(int)
 
         acc = np.mean(binary_preds == y_true_int)
@@ -97,6 +101,28 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
         # mengambil keputusan; accuracy-nya cuma memantulkan class prior.
         degenerate = bool(rec < 0.05 or rec > 0.95)
 
+        # ── Kualitas kalibrasi probabilitas ──────────────────────────────
+        # Brier = mean (prob - label)^2. Skill dibandingkan klimatologi
+        # (selalu jawab base_rate): <= 0 berarti probabilitasnya tidak lebih
+        # informatif daripada konstanta — sinyal harus dicari di fitur, bukan
+        # di threshold. Reliability bins: [mean_pred, obs_freq, n] per bin
+        # 0.1 untuk melihat DI MANA miskalibrasinya (sweep log live
+        # menunjukkan ekor atas anti-prediktif).
+        brier = float(np.mean((preds - y_true_int) ** 2))
+        brier_clim = base_rate * (1.0 - base_rate)
+        brier_skill = (1.0 - brier / brier_clim) if brier_clim > 0 else 0.0
+        reliability_bins = []
+        bin_ids = np.clip((preds * 10).astype(int), 0, 9)
+        for b in range(10):
+            mask = bin_ids == b
+            nb = int(mask.sum())
+            if nb:
+                reliability_bins.append([
+                    round(float(preds[mask].mean()), 4),
+                    round(float(y_true_int[mask].mean()), 4),
+                    nb,
+                ])
+
         results[h] = {
             "test_rows": int(n),
             "accuracy": round(acc * 100, 2),
@@ -109,6 +135,10 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
             "lift": round(lift, 3),
             "n_predicted_positive": int(predicted_positives),
             "degenerate": degenerate,
+            "no_trade": no_trade,
+            "brier": round(brier, 5),
+            "brier_skill": round(brier_skill, 4),
+            "reliability_bins": reliability_bins,
         }
     return results
 
@@ -119,6 +149,7 @@ def evaluate_multiday_model(predictor, X_test: pd.DataFrame, Y_test: pd.DataFram
 AVG_METRIC_KEYS = [
     "accuracy", "buy_precision", "buy_recall",
     "base_rate", "majority_baseline", "lift",
+    "brier", "brier_skill",
 ]
 
 
@@ -173,8 +204,15 @@ def aggregate_metrics(items):
             "p10_lift": round(np.percentile(lift_vals, 10), 3) if lift_vals else 0.0,
             "p50_lift": round(np.percentile(lift_vals, 50), 3) if lift_vals else 0.0,
             "p90_lift": round(np.percentile(lift_vals, 90), 3) if lift_vals else 0.0,
+            # ── Kalibrasi probabilitas (lihat evaluate_multiday_model) ──
+            "brier": mean("brier"),
+            "brier_skill": mean("brier_skill"),
             "n_usable": len(usable),
             "n_degenerate": len(h_all) - len(usable),
+            # Model yang divonis NO-TRADE (tidak ada threshold dengan precision
+            # di atas base rate di validasi). Subset dari degenerate karena
+            # recall-nya 0, tapi dilaporkan terpisah supaya kelihatan.
+            "n_no_trade": sum(1 for m in h_all if m.get("no_trade")),
             # Nilai inklusif-semua-model, disimpan sebagai jembatan ke run historis
             # yang belum memisahkan model degenerate.
             "accuracy_all_models": round(sum(m["accuracy"] for m in h_all) / len(h_all), 2),
@@ -236,7 +274,7 @@ def find_constant_features(X: pd.DataFrame) -> list:
     return constant
 
 
-def fit_final_model(predictor, X, Y, min_rows):
+def fit_final_model(predictor, X, Y, min_rows, precision_margin=0.05):
     """
     Latih model produksi dengan val terpisah yang TIDAK ikut dilatih, supaya
     threshold & kalibrasi yang tersimpan tidak in-sample.
@@ -246,22 +284,23 @@ def fit_final_model(predictor, X, Y, min_rows):
     split = make_purged_split(len(X), min_rows, val_size, trailing_gap=0)
     if split is None:
         # Data minim: latih apa adanya, train_incremental akan fallback ke threshold in-sample.
-        predictor.train_incremental(X, Y)
+        predictor.train_incremental(X, Y, precision_margin=precision_margin)
         return
     train_stop, val_start, val_end = split
     predictor.train_incremental(
         X.iloc[:train_stop], Y.iloc[:train_stop],
         X_val=X.iloc[val_start:val_end], Y_targets_val=Y.iloc[val_start:val_end],
+        precision_margin=precision_margin,
     )
 
 
-def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, final_dir, validate_only=False, purge_days=7):
+def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, final_dir, validate_only=False, purge_days=7, precision_margin=0.05):
     """Walk-forward validation dengan expanding train window."""
     from data.ml_features import prepare_training_data
     from models.multiday_predictor import MultiDayPredictor
 
     try:
-        X, Y = prepare_training_data(ohlcv, ticker=ticker)
+        X, Y = prepare_training_data(ohlcv, ticker=ticker, include_returns=True)
     except Exception as e:
         return None, {"ticker": ticker, "error": f"prepare_training_data failed: {e}"}
 
@@ -309,7 +348,8 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
         )
 
         fold_predictor = MultiDayPredictor(ticker=f"{ticker}_wf_f{fold_idx}", checkpoints_dir=holdout_dir)
-        fold_predictor.train_incremental(X_train, Y_train, X_val=X_val, Y_targets_val=Y_val)
+        fold_predictor.train_incremental(X_train, Y_train, X_val=X_val, Y_targets_val=Y_val,
+                                         precision_margin=precision_margin)
         fold_metrics = evaluate_multiday_model(fold_predictor, X_test, Y_test)
         fold_row_counts.append({"train": len(X_train), "val": len(X_val), "test": len(X_test)})
         for h in ["1d", "3d", "5d", "7d"]:
@@ -333,15 +373,20 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
             }
             for key in AVG_METRIC_KEYS:
                 vals = [m[key] for m in fold_data if key in m]
-                merged[key] = round(float(np.mean(vals)), 3 if key == "lift" else 2) if vals else 0.0
+                ndp = 4 if key in ("brier", "brier_skill") else (3 if key == "lift" else 2)
+                merged[key] = round(float(np.mean(vals)), ndp) if vals else 0.0
             # Degenerate ditentukan dari recall rata-rata lintas fold, bukan per fold,
             # supaya satu fold aneh tidak mencoret ticker yang secara keseluruhan sehat.
             merged["degenerate"] = bool(merged["buy_recall"] < 5.0 or merged["buy_recall"] > 95.0)
+            # NO-TRADE kalau mayoritas fold memvonisnya begitu.
+            n_nt = sum(1 for m in fold_data if m.get("no_trade"))
+            merged["no_trade"] = bool(n_nt * 2 >= len(fold_data))
+            merged["n_no_trade_folds"] = n_nt
             horizons_avg[h] = merged
 
     if not validate_only:
         final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
-        fit_final_model(final_predictor, X, Y, min_rows)
+        fit_final_model(final_predictor, X, Y, min_rows, precision_margin=precision_margin)
 
     summary = {
         "ticker": ticker,
@@ -360,12 +405,12 @@ def walk_forward_evaluate_ticker(ticker, ohlcv, min_rows, n_folds, holdout_dir, 
     return summary, None
 
 
-def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, final_dir, validate_only=False):
+def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, final_dir, validate_only=False, precision_margin=0.05):
     from data.ml_features import prepare_training_data
     from models.multiday_predictor import MultiDayPredictor
-    
+
     try:
-        X, Y = prepare_training_data(ohlcv, ticker=ticker)
+        X, Y = prepare_training_data(ohlcv, ticker=ticker, include_returns=True)
     except Exception as e:
         return None, {"ticker": ticker, "error": f"prepare_training_data failed: {e}"}
 
@@ -403,13 +448,14 @@ def train_and_evaluate_ticker(ticker, ohlcv, min_rows, test_size, holdout_dir, f
 
     # Train Holdout (for evaluation)
     holdout_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=holdout_dir)
-    holdout_predictor.train_incremental(X_train, Y_train, X_val=X_val, Y_targets_val=Y_val)
+    holdout_predictor.train_incremental(X_train, Y_train, X_val=X_val, Y_targets_val=Y_val,
+                                        precision_margin=precision_margin)
     holdout_metrics = evaluate_multiday_model(holdout_predictor, X_test, Y_test)
 
     if not validate_only:
         # Train Final
         final_predictor = MultiDayPredictor(ticker=ticker, checkpoints_dir=final_dir)
-        fit_final_model(final_predictor, X, Y, min_rows)
+        fit_final_model(final_predictor, X, Y, min_rows, precision_margin=precision_margin)
 
     summary = {
         "ticker": ticker,
@@ -444,6 +490,9 @@ def main():
                         help="Expanding walk-forward validation dengan purge gap (default: aktif)")
     parser.add_argument("--n-folds", type=int, default=4, help="Number of walk-forward folds")
     parser.add_argument("--purge-days", type=int, default=7, help="Purge gap days between train/val/test (default: 7)")
+    parser.add_argument("--precision-margin", type=float, default=0.05,
+                        help="Threshold BUY hanya dianggap layak kalau precision val >= base_rate + margin ini; "
+                             "kalau tidak ada, model divonis NO-TRADE (default: 0.05)")
     parser.add_argument("--exclude-tickers", nargs="*", default=[], help="Ticker(s) to exclude from per-ticker training/validation")
     args = parser.parse_args()
 
@@ -455,6 +504,9 @@ def main():
         logger.info(f"Excluded {before_count - len(tickers)} ticker(s): {', '.join(sorted(excluded))}")
     logger.info(f"Training universe: {len(tickers)} ticker(s): {', '.join(tickers)}")
     logger.info(f"Purge gap: {args.purge_days} days")
+
+    import time
+    train_start_ts = time.time()
 
     summaries = []
     errors = []
@@ -470,12 +522,14 @@ def main():
 
         if args.walk_forward:
             summary, err = walk_forward_evaluate_ticker(
-                ticker, ohlcv, args.min_rows, args.n_folds, holdout_dir, args.checkpoints_dir, 
-                validate_only=args.validate_only, purge_days=args.purge_days
+                ticker, ohlcv, args.min_rows, args.n_folds, holdout_dir, args.checkpoints_dir,
+                validate_only=args.validate_only, purge_days=args.purge_days,
+                precision_margin=args.precision_margin
             )
         else:
             summary, err = train_and_evaluate_ticker(
-                ticker, ohlcv, args.min_rows, args.test_size, holdout_dir, args.checkpoints_dir, validate_only=args.validate_only
+                ticker, ohlcv, args.min_rows, args.test_size, holdout_dir, args.checkpoints_dir,
+                validate_only=args.validate_only, precision_margin=args.precision_margin
             )
 
         if err:
@@ -499,6 +553,7 @@ def main():
 
     metadata = {
         "run_date": datetime.now().isoformat(),
+        "train_duration_seconds": round(time.time() - train_start_ts, 1),
         "checkpoints_dir": args.checkpoints_dir,
         "config": {
             "period": args.period,
@@ -506,6 +561,7 @@ def main():
             "test_size": args.test_size,
             "walk_forward": args.walk_forward,
             "n_folds": args.n_folds,
+            "precision_margin": args.precision_margin,
         },
         "rows": {
             "tickers_requested": len(tickers),
@@ -571,7 +627,12 @@ def main():
         print(f"  Accuracy          : {acc:.2f}%  ({acc - base:+.2f} pp -> {acc_verdict})")
         print(f"  Buy Precision     : {metrics['buy_precision']:.2f}%")
         print(f"  Lift              : {lift:.3f}  ({lift_verdict})")
-        print(f"  Model usable      : {metrics.get('n_usable', 0)} (degenerate: {metrics.get('n_degenerate', 0)})")
+        bsk = metrics.get("brier_skill", 0.0)
+        bsk_verdict = ("probabilitas informatif" if bsk > 0.02
+                       else "probabilitas tidak lebih baik dari konstanta base rate")
+        print(f"  Brier skill       : {bsk:+.4f}  ({bsk_verdict})")
+        print(f"  Model usable      : {metrics.get('n_usable', 0)} "
+              f"(degenerate: {metrics.get('n_degenerate', 0)}, no-trade: {metrics.get('n_no_trade', 0)})")
     print("=" * 72)
 
 if __name__ == "__main__":

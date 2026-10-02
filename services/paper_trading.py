@@ -698,6 +698,7 @@ class PaperTradingService:
         if self.user_id:
             query = query.filter(PaperTrade.user_id == self.user_id)
         trades = query.order_by(
+            PaperTrade.closed_at.desc().nullslast(),
             PaperTrade.opened_at.desc()
         ).limit(limit).all()
         return [

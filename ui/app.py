@@ -3314,10 +3314,12 @@ elif page == "🤖 ML Validation":
                 st.warning("⚠️ Tidak ada log prediksi ML yang ditemukan dengan filter saat ini.")
             else:
                 # Convert logs to DataFrame
+                from services.ml_signal import prob_from_log
+
                 records = []
                 for l in all_logs:
-                    raw_prob = float(l.pred_return_pct) if l.pred_return_pct is not None else 0.0
-                    prob_pct = raw_prob * 100.0 if raw_prob <= 1.0 else raw_prob
+                    prob = prob_from_log(l)
+                    prob_pct = (prob or 0.0) * 100.0
                     act_ret = float(l.actual_return_pct) if l.actual_return_pct is not None else None
                     act_close = float(l.actual_close_price) if l.actual_close_price is not None else None
                     
@@ -3569,17 +3571,21 @@ elif page == "🤖 ML Validation":
                             "Target Price (1D)": "-"
                         }
                     
-                    raw_prob = float(l.pred_return_pct) if l.pred_return_pct is not None else 0.0
-                    prob_pct = raw_prob * 100.0 if raw_prob <= 1.0 else raw_prob
+                    from services.ml_signal import prob_from_log, buy_label
+
+                    prob = prob_from_log(l) or 0.0
+                    prob_pct = prob * 100.0
                     prob_str = f"{prob_pct:.2f}%"
-                    
-                    is_horizon_buy = (prob_pct >= min_prob_filter)
-                    
+
+                    # Keputusan BUY dibaca dari predicted_direction tersimpan
+                    # (ditulis dengan threshold per-ticker saat prediksi dibuat),
+                    # bukan diturunkan ulang dengan cutoff hardcode. min_prob_filter
+                    # murni filter display.
+                    label = buy_label(l.predicted_direction, prob)
+                    is_horizon_buy = label in ("BUY", "STRONG BUY") and prob_pct >= min_prob_filter
+
                     if is_horizon_buy:
-                        if prob_pct >= 55.0:
-                            sig_label = "🔥 STRONG BUY"
-                        else:
-                            sig_label = "🟢 BUY"
+                        sig_label = "🔥 STRONG BUY" if label == "STRONG BUY" else "🟢 BUY"
                     else:
                         sig_label = "-"
                     
@@ -3697,15 +3703,20 @@ elif page == "🤖 ML Validation":
                             "Val 7D": "-"
                         }
                     
-                    raw_pred = float(l.pred_return_pct) if l.pred_return_pct is not None else 0.0
-                    prob_pct = raw_pred * 100.0 if raw_pred <= 1.0 else raw_pred
+                    from services.ml_signal import prob_from_log
+
+                    prob = prob_from_log(l) or 0.0
+                    prob_pct = prob * 100.0
                     prob_str = f"{prob_pct:.2f}%"
                     status_icon = "⏳"
                     if l.is_correct is not None:
                         status_icon = "✅" if l.is_correct else "❌"
-                    
-                    # Threshold dinaikkan jadi 54.0% agar tidak banyak "False Positive" di masa sideways
-                    is_horizon_naik = (raw_pred >= 0.54 or prob_pct >= 54.0)
+
+                    # NAIK = keputusan yang tercatat saat prediksi dibuat (threshold
+                    # per-ticker), bukan cutoff 0.54 hardcode yang dulu di sini —
+                    # cutoff itu tidak konsisten dengan is_correct yang divalidasi
+                    # terhadap predicted_direction tersimpan.
+                    is_horizon_naik = (l.predicted_direction == "NAIK")
                     
                     if l.horizon == "1d":
                         pivot_dict[key]["Pred 1D"] = "📈 NAIK" if is_horizon_naik else "-"
@@ -3787,7 +3798,9 @@ elif page == "🤖 ML Validation":
             with open(meta_path, 'r') as f:
                 meta = json.load(f)
             
-            st.success(f"✅ Data model berhasil di-*load* (Trained at: {meta.get('run_date', 'Unknown')})")
+            _dur = meta.get("train_duration_seconds")
+            _dur_txt = f" — Durasi training: {_dur/60:.1f} menit" if isinstance(_dur, (int, float)) else ""
+            st.success(f"✅ Data model berhasil di-*load* (Trained at: {meta.get('run_date', 'Unknown')}{_dur_txt})")
             
             config = meta.get("config", {})
             rows = meta.get("rows", {})

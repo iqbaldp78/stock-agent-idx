@@ -180,12 +180,19 @@ def calculate_base_prediction(
 
     # If we have real Multi-Day ML predictions from workflow, use them instead of linear fallback!
     multiday_pcts = {}
+    multiday_exp_ret = {}
     if ml_prediction and "predictions_multiday" in ml_prediction:
         multiday_pcts = ml_prediction["predictions_multiday"]
+        # Expected return terkalibrasi (poin persen) dari predict_detail() —
+        # dipakai langsung, tanpa squash probabilitas -> harga versi lokal yang
+        # dulu tidak konsisten dengan rumus di cron_ml_predict.
+        multiday_exp_ret = ml_prediction.get("expected_returns_multiday", {})
 
     for day, factor in COMPOUND_FACTORS.items():
-        if f"{day}d" in multiday_pcts:
-            # Real ML Prediction (probability 0-100)
+        if f"{day}d" in multiday_exp_ret:
+            day_pct = float(multiday_exp_ret[f"{day}d"])
+        elif f"{day}d" in multiday_pcts:
+            # Payload lama yang hanya membawa probabilitas (0-100): squash legacy.
             prob = multiday_pcts[f"{day}d"] / 100.0
             day_pct = (prob - 0.5) * 2 * (MAX_DAILY_MOVE_PCT * factor)
         else:

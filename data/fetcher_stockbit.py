@@ -15,7 +15,7 @@ import logging
 import os
 import random
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from typing import Optional
 
@@ -324,10 +324,18 @@ _BASE_PRICES = {
 
 
 def _get_trading_days(days: int, include_today: bool = True) -> list[str]:
-    """Hitung N hari trading ke belakang (skip weekend)."""
+    """Hitung N hari trading ke belakang (skip weekend dan jam pre-market)."""
+    now_utc = datetime.now(timezone.utc)
+    wib_tz = timezone(timedelta(hours=7))
+    now_wib = now_utc.astimezone(wib_tz)
+
+    is_weekday = now_wib.weekday() < 5
+    # Market di BEI hanya aktif dan memiliki data broker setelah pukul 09:00 WIB
+    is_market_active_or_done = now_wib.hour >= 9
+
     result = []
-    current = datetime.now().date()
-    if include_today and current.weekday() < 5:
+    current = now_wib.date()
+    if include_today and is_weekday and is_market_active_or_done:
         result.append(current.strftime("%Y-%m-%d"))
     while len(result) < days:
         current -= timedelta(days=1)
@@ -830,6 +838,93 @@ def get_broker_accumulation(
             "type": entry.get("type"),
         }
 
+    # Calculate foreign net from bandar_detector if available
+    bandar_detector = api_data.get("bandar_detector", {})
+    foreign_net = 0
+    if bandar_detector:
+        foreign_buy = _parse_number(bandar_detector.get("foreign_buy", 0))
+        foreign_sell = _parse_number(bandar_detector.get("foreign_sell", 0))
+        foreign_net = int(foreign_buy - foreign_sell) if foreign_buy or foreign_sell else 0
+
+    # === FALLBACK DARI DATABASE JIKA RESPONSE API KOSONG ATAU THROTTLED ===
+    if not broker_totals and not distribution_totals:
+        logger.info(f"API data empty for {ticker} ({date_from}..{date_to}). Falling back to local DB cache.")
+        if date_from == date_to:
+            single_day = get_cached_broker_daily(ticker, date_from)
+            if single_day:
+                for b in single_day.get("buy", []):
+                    code = b.get("broker")
+                    if code:
+                        broker_totals[code] = {
+                            "broker_name": b.get("broker_name", _get_broker_name(code)),
+                            "total_buy_lot": b.get("lot", 0),
+                            "total_buy_value": b.get("value", 0),
+                            "active_days": 1,
+                            "daily": {},
+                            "avg_price": b.get("avg_price", 0),
+                        }
+                for s in single_day.get("sell", []):
+                    code = s.get("broker")
+                    if code:
+                        distribution_totals[code] = {
+                            "broker_name": s.get("broker_name", _get_broker_name(code)),
+                            "total_sell_lot": s.get("lot", 0),
+                            "total_sell_value": s.get("value", 0),
+                            "active_days": 1,
+                            "daily": {},
+                            "avg_price": s.get("avg_price", 0),
+                            "type": s.get("type"),
+                        }
+                if foreign_net == 0:
+                    foreign_net = single_day.get("foreign_net", 0)
+        else:
+            buy_agg = {}
+            sell_agg = {}
+            for d in trading_days:
+                cached_d = get_cached_broker_daily(ticker, d)
+                if not cached_d:
+                    continue
+                for b in cached_d.get("buy", []):
+                    code = b.get("broker")
+                    if not code:
+                        continue
+                    if code not in buy_agg:
+                        buy_agg[code] = {"lot": 0, "val": 0, "name": b.get("broker_name", _get_broker_name(code)), "days": set()}
+                    buy_agg[code]["lot"] += b.get("lot", 0)
+                    buy_agg[code]["val"] += b.get("value", 0)
+                    buy_agg[code]["days"].add(d)
+                for s in cached_d.get("sell", []):
+                    code = s.get("broker")
+                    if not code:
+                        continue
+                    if code not in sell_agg:
+                        sell_agg[code] = {"lot": 0, "val": 0, "name": s.get("broker_name", _get_broker_name(code)), "days": set(), "type": s.get("type")}
+                    sell_agg[code]["lot"] += s.get("lot", 0)
+                    sell_agg[code]["val"] += s.get("value", 0)
+                    sell_agg[code]["days"].add(d)
+
+            for code, agg in buy_agg.items():
+                avg_p = int(round(agg["val"] / (agg["lot"] * 100))) if agg["lot"] > 0 else 0
+                broker_totals[code] = {
+                    "broker_name": agg["name"],
+                    "total_buy_lot": agg["lot"],
+                    "total_buy_value": agg["val"],
+                    "active_days": len(agg["days"]),
+                    "daily": {},
+                    "avg_price": avg_p,
+                }
+            for code, agg in sell_agg.items():
+                avg_p = int(round(agg["val"] / (agg["lot"] * 100))) if agg["lot"] > 0 else 0
+                distribution_totals[code] = {
+                    "broker_name": agg["name"],
+                    "total_sell_lot": agg["lot"],
+                    "total_sell_value": agg["val"],
+                    "active_days": len(agg["days"]),
+                    "daily": {},
+                    "avg_price": avg_p,
+                    "type": agg.get("type"),
+                }
+
     # === MUTUAL EXCLUSIVITY: Broker hanya bisa accumulator ATAU distributor, tidak keduanya ===
     # Jika broker ada di kedua list, tentukan based on mana yang lebih signifikan (value lebih besar)
     overlapping_brokers = set(broker_totals.keys()) & set(distribution_totals.keys())
@@ -857,15 +952,6 @@ def get_broker_accumulation(
 
     top3_sell_total = sum(d[1]["total_sell_value"] for d in sorted_distributors[:3])
 
-    # Calculate foreign net from bandar_detector if available
-    bandar_detector = api_data.get("bandar_detector", {})
-    foreign_net = 0
-    if bandar_detector:
-        # Foreign net might be in bandar_detector data
-        foreign_buy = _parse_number(bandar_detector.get("foreign_buy", 0))
-        foreign_sell = _parse_number(bandar_detector.get("foreign_sell", 0))
-        foreign_net = int(foreign_buy - foreign_sell) if foreign_buy or foreign_sell else 0
-
     return {
         "ticker": ticker,
         "window_days": days,
@@ -892,6 +978,10 @@ def get_full_bandarm_data(
     }
     if date_from and date_to:
         res["custom_window"] = get_broker_accumulation(ticker, date_from=date_from, date_to=date_to)
+    else:
+        # Default custom_window to the latest trading day
+        latest_day = _get_trading_days(1)[0]
+        res["custom_window"] = get_broker_accumulation(ticker, date_from=latest_day, date_to=latest_day)
     return res
 
 

@@ -118,20 +118,28 @@ def run_ml_prediction(target_date: date = None, tickers: list = None) -> int:
 
             last_close = float(raw['Close'].iloc[-1])
             predictor = MultiDayPredictor(ticker=ticker)
-            predictions = predictor.predict(latest_feature)
+            details = predictor.predict_detail(latest_feature)
 
-            for horizon, pred_pct in predictions.items():
-                # pred_pct bertipe float probabilitas [0.0, 1.0] (atau persentase > 1)
-                prob_val = float(pred_pct)
+            for horizon, detail in details.items():
+                prob_val = float(detail["prob"])
                 if prob_val > 1.0:
                     prob_val = prob_val / 100.0
 
-                # Estimasi target price sederhana berdasarkan horizon & probabilitas
-                target_pct = (prob_val - 0.50) * 0.05
-                pred_price = last_close * (1 + target_pct)
+                # Expected return terkalibrasi: p*E[r|naik] + (1-p)*E[r|tidak],
+                # dari data training ticker+horizon ini sendiri. Menggantikan
+                # squash lama (p-0.5)*0.05 yang buta volatilitas & horizon.
+                exp_ret = float(detail["expected_return"])
+                pred_price = last_close * (1 + exp_ret)
 
-                # FIXED (Fase 0.3): Baca threshold dari predictor, bukan hardcode 0.55
-                buy_threshold = predictor.thresholds.get(horizon, 0.55)
+                buy_threshold = detail["buy_threshold"]
+                if detail["no_trade"]:
+                    # Training tidak menemukan threshold dengan precision di atas
+                    # base rate untuk model ini -> jangan pernah bilang NAIK.
+                    direction = "NO_TRADE"
+                elif prob_val >= buy_threshold:
+                    direction = "NAIK"
+                else:
+                    direction = "TURUN"
 
                 existing = session.query(MlPredictionLog).filter_by(
                     trade_date=target_date, ticker=ticker, horizon=horizon
@@ -142,17 +150,19 @@ def run_ml_prediction(target_date: date = None, tickers: list = None) -> int:
                         trade_date=target_date,
                         ticker=ticker,
                         horizon=horizon,
-                        pred_return_pct=prob_val,
+                        pred_return_pct=round(exp_ret * 100, 4),
+                        pred_prob=prob_val,
                         entry_price=last_close,
                         pred_price=pred_price,
-                        predicted_direction="NAIK" if prob_val >= buy_threshold else "TURUN"
+                        predicted_direction=direction
                     )
                     session.add(new_log)
                 else:
-                    existing.pred_return_pct = prob_val
+                    existing.pred_return_pct = round(exp_ret * 100, 4)
+                    existing.pred_prob = prob_val
                     existing.entry_price = last_close
                     existing.pred_price = pred_price
-                    existing.predicted_direction = "NAIK" if prob_val >= buy_threshold else "TURUN"
+                    existing.predicted_direction = direction
 
             session.commit()
             count += 1

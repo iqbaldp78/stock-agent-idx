@@ -410,11 +410,11 @@ def main():
         name="Train & Validate ML Models",
     )
     
-    # Daily Analysis: Monday to Friday at 07:00 AM (Market Open Days)
+    # Daily Analysis: Monday to Friday at 08:00 AM WIB (Market Open Days)
     # Note: Holidays will still run if on a weekday, but skipped on weekends.
     scheduler.add_job(
         run_daily_analysis,
-        CronTrigger(day_of_week="mon-fri", hour=7, minute=0, timezone="Asia/Jakarta"),
+        CronTrigger(day_of_week="mon-fri", hour=8, minute=0, timezone="Asia/Jakarta"),
         id="combined_daily_analysis",
         name="Combined Daily AI + Konglo Analysis",
     )

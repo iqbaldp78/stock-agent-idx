@@ -1207,11 +1207,16 @@ def compute_ohlcv_features(ohlcv: pd.DataFrame, ihsg: pd.DataFrame | None = None
     return out[OHLCV_DERIVED_FEATURES]
 
 
-def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlcv: dict[str, pd.DataFrame] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlcv: dict[str, pd.DataFrame] | None = None, include_returns: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Generate historical features and targets from OHLCV for training.
     If ticker is provided, retrieves historical Bandarmologi and Agent scores from DB.
     Returns (features_df, targets_df) where targets_df contains columns for 1d, 3d, 5d, and 7d horizons.
+
+    include_returns=True menambahkan kolom float fwd_ret_{h} (return maju mentah,
+    fraksi) ke targets_df — dipakai training untuk mengestimasi E[r|naik]/E[r|tidak]
+    per horizon (expected return terkalibrasi). Default False agar pemanggil lama
+    tidak berubah bentuk output-nya.
     """
     df = ohlcv.copy()
     
@@ -1235,6 +1240,9 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
         df[f'target_{_hz}'] = (
             (_future > df['Close'] * (1 + _thr)).astype(float).where(_future.notna())
         )
+        if include_returns:
+            # Return maju mentah (fraksi), NaN discipline sama dengan target.
+            df[f'fwd_ret_{_hz}'] = (_future / df['Close'] - 1).where(_future.notna())
 
     # Seluruh fitur turunan data pasar dihitung oleh SATU fungsi yang dipakai
     # bersama dengan extract_features() — lihat compute_ohlcv_features().
@@ -1364,4 +1372,7 @@ def prepare_training_data(ohlcv: pd.DataFrame, ticker: str = None, universe_ohlc
             df[col] = 0.0
 
     targets = df[['target_1d', 'target_3d', 'target_5d', 'target_7d']].astype(int)
+    if include_returns:
+        ret_cols = [f'fwd_ret_{h}' for h in TARGET_HORIZON_DAYS]
+        targets = pd.concat([targets, df[ret_cols]], axis=1)
     return df[FEATURE_COLUMNS], targets

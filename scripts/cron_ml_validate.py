@@ -79,7 +79,11 @@ def was_buy_signal(log, buy_threshold):
     """
     if log.predicted_direction:
         return log.predicted_direction.upper() == "NAIK"
-    pred_val = float(log.pred_return_pct) if log.pred_return_pct is not None else 0.0
+    # Baris tanpa direction hanya ada di era-lama, saat pred_return_pct masih
+    # berisi probabilitas. Prefer pred_prob (hasil backfill migrasi mlpredprob01)
+    # supaya fallback ini tidak ikut berubah makna setelah cutover pred_return_pct.
+    pred_val = (float(log.pred_prob) if getattr(log, "pred_prob", None) is not None
+                else float(log.pred_return_pct) if log.pred_return_pct is not None else 0.0)
     return pred_val >= buy_threshold
 
 

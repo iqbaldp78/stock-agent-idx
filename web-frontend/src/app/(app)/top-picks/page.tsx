@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
 import authenticatedFetch from '@/lib/apiClient';
@@ -72,9 +72,9 @@ const formatPercentage = (pct: number) => { if (pct === undefined || pct === nul
 
 const getBrokerColorClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
-  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO", "BB"];
 
   if (foreign.includes(code)) return "text-red-400 font-extrabold";
   if (retail.includes(code)) return "text-green-400 font-extrabold";
@@ -84,9 +84,9 @@ const getBrokerColorClass = (brokerCode: string) => {
 
 const getBrokerBgClass = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
-  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO", "BB"];
 
   if (foreign.includes(code)) return "bg-red-500/10 text-red-400 border-red-500/25";
   if (retail.includes(code)) return "bg-green-500/10 text-green-400 border-green-500/25";
@@ -96,9 +96,9 @@ const getBrokerBgClass = (brokerCode: string) => {
 
 const getBrokerTitle = (brokerCode: string) => {
   const code = brokerCode.toUpperCase().trim();
-  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "BB", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
+  const foreign = ["AK", "BK", "KZ", "RX", "ZP", "YU", "DP", "TP", "AI", "KK", "XA", "AG", "DR", "FS", "HD"];
   const retail = ["XL", "XC", "PD", "YP", "AZ", "AT"];
-  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO"];
+  const institusi = ["CC", "OD", "NI", "DX", "SQ", "LG", "DH", "MG", "CP", "YJ", "HP", "CD", "KI", "BQ", "RF", "SS", "EP", "BS", "OK", "EL", "GR", "IF", "YB", "PO", "BB"];
 
   if (foreign.includes(code)) return "Broker Asing (Foreign)";
   if (retail.includes(code)) return "Broker Ritel (Retail)";
@@ -172,6 +172,127 @@ export default function TopPicksPage() {
   const [mlMeta, setMlMeta] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedStock, setSelectedStock] = useState<any | null>(null);
+  const detailTopRef = useRef<HTMLDivElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showScrollBottom, setShowScrollBottom] = useState(true);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    document.body.scrollTo({ top: 0, behavior: 'smooth' });
+    const containers = document.querySelectorAll('.overflow-y-auto');
+    containers.forEach((el) => el.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
+
+  const scrollToBottom = () => {
+    const targetY = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight,
+      10000
+    );
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+    document.documentElement.scrollTo({ top: targetY, behavior: 'smooth' });
+    document.body.scrollTo({ top: targetY, behavior: 'smooth' });
+    const containers = document.querySelectorAll('.overflow-y-auto');
+    containers.forEach((el) => el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }));
+  };
+
+  const handleSelectStock = (stock: any) => {
+    setSelectedStock(stock);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const containers = document.querySelectorAll('.overflow-y-auto');
+    containers.forEach((el) => { el.scrollTop = 0; });
+  };
+
+  useEffect(() => {
+    if (selectedStock) {
+      // Pastikan posisi scroll langsung menuju section paling atas saat membuka detail
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      const containers = document.querySelectorAll('.overflow-y-auto');
+      containers.forEach((el) => { el.scrollTop = 0; });
+
+      // Dobel cek setelah detail section selesai ter-mount
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        const cList = document.querySelectorAll('.overflow-y-auto');
+        cList.forEach((el) => { el.scrollTop = 0; });
+        detailTopRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+      });
+    }
+  }, [selectedStock]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const winScrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      const winHeight = window.innerHeight;
+      const docHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+
+      const container = document.querySelector('.overflow-y-auto');
+      const contScrollTop = container ? container.scrollTop : 0;
+      const contHeight = container ? container.clientHeight : 0;
+      const contScrollHeight = container ? container.scrollHeight : 0;
+
+      const scrollTop = Math.max(winScrollTop, contScrollTop);
+      const visibleHeight = contHeight > 0 ? contHeight : winHeight;
+      const totalHeight = Math.max(docHeight, contScrollHeight);
+
+      setShowScrollTop(scrollTop > 200);
+      setShowScrollBottom(scrollTop + visibleHeight < totalHeight - 100);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    const container = document.querySelector('.overflow-y-auto');
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    handleScroll();
+    const timer = setTimeout(handleScroll, 100);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+      clearTimeout(timer);
+    };
+  }, [selectedStock]);
+
+  const renderScrollButtons = () => (
+    <div className="fixed bottom-16 sm:bottom-20 right-4 sm:right-6 z-[9999] flex flex-col gap-2.5 pointer-events-auto">
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-accent/90 hover:bg-accent text-white shadow-2xl shadow-accent/40 backdrop-blur-md flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 border border-white/20 cursor-pointer"
+          aria-label="Scroll ke atas"
+          title="Scroll ke atas"
+        >
+          <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
+      )}
+      {showScrollBottom && (
+        <button
+          onClick={scrollToBottom}
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-accent/90 hover:bg-accent text-white shadow-2xl shadow-accent/40 backdrop-blur-md flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 border border-white/20 cursor-pointer"
+          aria-label="Scroll ke bawah"
+          title="Scroll ke bawah"
+        >
+          <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+
   const [showFairValueDetails, setShowFairValueDetails] = useState(false);
   const [showTrueCostDetails, setShowTrueCostDetails] = useState(true);
   const [showDistDetails, setShowDistDetails] = useState(true);
@@ -221,10 +342,13 @@ export default function TopPicksPage() {
 
   if (selectedStock) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div ref={detailTopRef} className="space-y-6 animate-fade-in">
         <button
-          onClick={() => setSelectedStock(null)}
-          className="flex items-center gap-2 text-secondary hover:text-text transition group mb-4"
+          onClick={() => {
+            setSelectedStock(null);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="flex items-center gap-2 text-secondary hover:text-text transition group mb-4 cursor-pointer"
         >
           <span className="w-8 h-8 rounded-full bg-white/5 group-hover:bg-white/10 flex items-center justify-center transition">←</span>
           <span className="text-sm font-semibold">Kembali ke Daftar</span>
@@ -689,6 +813,9 @@ export default function TopPicksPage() {
             )}
           </div>
         </div>
+
+        {/* Scroll Buttons for Detail View */}
+        {renderScrollButtons()}
       </div>
     );
   }
@@ -778,7 +905,7 @@ export default function TopPicksPage() {
             <div className="bg-background/80 backdrop-blur-xl rounded-[23px] p-4 sm:p-8 h-full flex flex-col relative z-10">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                  <h4 className="text-2xl sm:text-3xl font-black text-text hover:text-accent cursor-pointer transition-colors mb-1" onClick={() => setSelectedStock(picks[0])}>
+                  <h4 className="text-2xl sm:text-3xl font-black text-text hover:text-accent cursor-pointer transition-colors mb-1" onClick={() => handleSelectStock(picks[0])}>
                     {picks[0].ticker}
                   </h4>
                   <p className="text-secondary font-medium text-xs sm:text-sm mb-3">Saham Tbk.</p>
@@ -830,7 +957,7 @@ export default function TopPicksPage() {
               </div>
               <div className="mt-auto">
                 <p className="text-xs sm:text-sm text-secondary mb-4 sm:mb-6 line-clamp-2">{picks[0].reasoning}</p>
-                <button onClick={() => setSelectedStock(picks[0])} className="w-full py-3.5 sm:py-4 rounded-xl font-bold text-text bg-accent hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20 text-base sm:text-lg">
+                <button onClick={() => handleSelectStock(picks[0])} className="w-full py-3.5 sm:py-4 rounded-xl font-bold text-text bg-accent hover:bg-indigo-600 transition shadow-lg shadow-indigo-500/20 text-base sm:text-lg cursor-pointer">
                   Lihat Detail & Analisis
                 </button>
               </div>
@@ -843,7 +970,7 @@ export default function TopPicksPage() {
               <div key={i} className="bg-card backdrop-blur-md border border-border rounded-3xl p-4 sm:p-6 flex flex-col hover:bg-white/5 transition duration-300">
                 <div className="flex justify-between items-start gap-2 mb-4">
                   <div className="min-w-0 flex-1">
-                    <h4 className="text-xl sm:text-2xl font-black text-text mb-1 hover:text-accent cursor-pointer transition-colors truncate" onClick={() => setSelectedStock(pick)}>{pick.ticker}</h4>
+                    <h4 className="text-xl sm:text-2xl font-black text-text mb-1 hover:text-accent cursor-pointer transition-colors truncate" onClick={() => handleSelectStock(pick)}>{pick.ticker}</h4>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className={`px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${pick.action === 'BUY' ? 'bg-profit/10 text-profit border-profit/20' : pick.action === 'SELL' ? 'bg-loss/10 text-loss border-loss/20' : 'bg-slate-500/10 text-secondary border-slate-500/20'}`}>{pick.action}</span>
                       {(() => {
@@ -877,7 +1004,7 @@ export default function TopPicksPage() {
                 </div>
                 <div className="mt-auto">
                   <p className="text-xs sm:text-sm text-secondary mb-4 sm:mb-6 line-clamp-2">{pick.reasoning}</p>
-                  <button onClick={() => setSelectedStock(pick)} className="w-full py-3 rounded-xl font-bold text-text bg-accent hover:bg-indigo-600 transition text-sm shadow-lg shadow-indigo-500/20">
+                  <button onClick={() => handleSelectStock(pick)} className="w-full py-3 rounded-xl font-bold text-text bg-accent hover:bg-indigo-600 transition text-sm shadow-lg shadow-indigo-500/20 cursor-pointer">
                     Lihat Detail & Analisis
                   </button>
                 </div>
@@ -992,6 +1119,9 @@ export default function TopPicksPage() {
           )}
         </div>
       )}
+
+      {/* Scroll Buttons */}
+      {renderScrollButtons()}
     </div>
   );
 }

@@ -395,7 +395,11 @@ class MlPredictionLog(Base):
     trade_date = Column(Date, nullable=False)
     ticker = Column(String(10), nullable=False)
     horizon = Column(String(5), nullable=False)  # e.g., '1d', '3d', '5d', '7d'
+    # Era lama (< 2026-09-12): berisi probabilitas mentah [0,1] (salah nama).
+    # Era baru: expected return terkalibrasi dalam persen; probabilitas pindah
+    # ke pred_prob. Baris era-baru: pred_prob IS NOT NULL AND pred_return_pct <> pred_prob.
     pred_return_pct = Column(Numeric(8, 4), nullable=False)
+    pred_prob = Column(Numeric(6, 4), nullable=True)  # probabilitas klasifier [0,1]
     entry_price = Column(Float, nullable=True)
     pred_price = Column(Float, nullable=True)
     predicted_direction = Column(String(10), nullable=True)

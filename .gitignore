@@ -44,3 +44,7 @@ data/*.json
 # termasuk panel parquet puluhan MB. Kalau ada laporan yang mau disimpan permanen,
 # pindahkan ke readme/ atau docs/ — jangan di-track dari sini.
 scratch/
+
+# Model checkpoints backup
+models/checkpoints_new/
+models/checkpoints_backup_*/

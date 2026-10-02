@@ -26,7 +26,9 @@ import os
 import json
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.calibration import CalibratedClassifierCV
-from data.ml_features import ML_TRAIN_FEATURES
+from sklearn.metrics import brier_score_loss
+from scipy.stats import mstats
+from data.ml_features import ML_TRAIN_FEATURES, TARGET_THRESHOLDS
 
 logger = logging.getLogger(__name__)
 
@@ -55,62 +57,63 @@ class PurgedTimeSeriesSplit:
                 yield train_indices, val_indices
 
 
-def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, min_precision: float = 0.50, default: float = 0.50) -> float:
+def pick_optimal_threshold(y_true: np.ndarray, y_prob: np.ndarray, margin: float = 0.05, default: float = 0.50) -> dict:
     """
-    Pick threshold in [0.35, 0.70] that maximizes combined Accuracy and F1 score with min_precision >= 50%.
-    """
-    def _warn_if_pinned(thr: float, context: str = "") -> float:
-        if thr <= 0.3501 or thr >= 0.6999:
-            ctx = f" ({context})" if context else ""
-            logger.warning("Optimal threshold mentok di batas rentang: %.2f%s", thr, ctx)
-        return thr
+    Pilih threshold BUY di [0.35, 0.85] pada fold validasi.
 
+    Feasible = precision >= base_rate + margin DAN n_signals >= 5 (precision dari
+    1-2 sampel cuma keberuntungan). Di dalam set feasible, maksimalkan recall;
+    seri dipecah dengan precision lebih tinggi. Kalau set feasible kosong,
+    kembalikan no_trade=True — TIDAK ada lagi fallback tanpa floor: sinyal BUY
+    dengan precision di bawah base rate lebih buruk daripada tidak ada sinyal
+    (versi lama memakai 0.3*acc+0.7*f1 dan menghasilkan buy_precision di bawah
+    base rate pada semua horizon).
+
+    Return dict: {threshold, no_trade, val_precision, val_base_rate, val_recall,
+    n_val, n_signals} — semuanya di-persist ke sidecar *_threshold.json untuk audit.
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_prob = np.asarray(y_prob, dtype=float)
+    result = {
+        "threshold": default, "no_trade": True,
+        "val_precision": None, "val_base_rate": None, "val_recall": None,
+        "n_val": int(len(y_true)), "n_signals": 0,
+    }
     if len(y_true) == 0 or len(y_prob) == 0:
-        return default
+        return result
 
-    candidates = []
-    for thr in np.linspace(0.35, 0.70, 36):
-        pred_buy = (y_prob >= thr).astype(int)
-        acc = np.mean(pred_buy == y_true)
-        tp = np.sum((pred_buy == 1) & (y_true == 1))
-        fp = np.sum((pred_buy == 1) & (y_true == 0))
-        fn = np.sum((pred_buy == 0) & (y_true == 1))
+    base_rate = float(y_true.mean())
+    result["val_base_rate"] = base_rate
 
-        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
+    best = None  # (recall, precision, thr, n_signals)
+    for thr in np.linspace(0.35, 0.85, 51):
+        pred_buy = y_prob >= thr
+        n_sig = int(pred_buy.sum())
+        if n_sig < 5:
+            continue
+        tp = float(np.sum(pred_buy & (y_true == 1)))
+        prec = tp / n_sig
+        rec = tp / y_true.sum() if y_true.sum() > 0 else 0.0
+        if prec >= base_rate + margin:
+            cand = (rec, prec, float(thr), n_sig)
+            if best is None or cand[:2] > best[:2]:
+                best = cand
 
-        combined_score = 0.3 * acc + 0.7 * f1
-        if prec >= min_precision:
-            candidates.append((combined_score, acc, prec, rec, thr))
+    if best is None:
+        logger.warning(
+            "Tidak ada threshold dengan precision >= base_rate(%.2f) + %.2f dan "
+            "n>=5 -> NO-TRADE untuk model ini.", base_rate, margin,
+        )
+        return result
 
-    if candidates:
-        candidates.sort(reverse=True)
-        return _warn_if_pinned(float(candidates[0][4]))
-
-    # Tidak ada threshold yang memenuhi min_precision — longgarkan syaratnya.
-    # Ini sendiri sudah pertanda model lemah, jadi dicatat.
-    logger.warning(
-        "Tidak ada threshold dengan precision >= %.2f; jatuh ke pemilihan tanpa "
-        "batas precision. Model kemungkinan tidak punya daya separasi.", min_precision,
-    )
-    best_score = -1.0
-    best_thr = default
-    for thr in np.linspace(0.35, 0.70, 36):
-        pred_buy = (y_prob >= thr).astype(int)
-        acc = np.mean(pred_buy == y_true)
-        tp = np.sum((pred_buy == 1) & (y_true == 1))
-        fp = np.sum((pred_buy == 1) & (y_true == 0))
-        fn = np.sum((pred_buy == 0) & (y_true == 1))
-        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
-        combined_score = 0.3 * acc + 0.7 * f1
-        if combined_score > best_score:
-            best_score = combined_score
-            best_thr = float(thr)
-
-    return _warn_if_pinned(float(best_thr), "fallback tanpa batas precision")
+    rec, prec, thr, n_sig = best
+    if thr <= 0.3501 or thr >= 0.8499:
+        logger.warning("Optimal threshold mentok di batas rentang: %.2f", thr)
+    result.update({
+        "threshold": thr, "no_trade": False,
+        "val_precision": prec, "val_recall": rec, "n_signals": n_sig,
+    })
+    return result
 
 
 class MultiDayPredictor:
@@ -123,6 +126,16 @@ class MultiDayPredictor:
         self.models = {h: None for h in self.horizons}
         self.thresholds = {h: 0.50 for h in self.horizons}
         self.selected_features = {h: ML_TRAIN_FEATURES for h in self.horizons}
+        # no_trade: model tidak punya threshold dengan precision > base rate di
+        # validasi -> jangan pernah keluarkan sinyal NAIK. Default False untuk
+        # sidecar lama yang belum punya field ini.
+        self.no_trade = {h: False for h in self.horizons}
+        # (er_up, er_down): E[return | label naik/tidak] dari train fold, fraksi.
+        # Dipakai predict_detail() untuk expected return terkalibrasi. Fallback
+        # prior kasar untuk sidecar lama: (threshold label, -threshold/2).
+        self.expected_returns = {
+            h: (TARGET_THRESHOLDS[h], -TARGET_THRESHOLDS[h] / 2) for h in self.horizons
+        }
 
         self._load_models()
 
@@ -161,6 +174,11 @@ class MultiDayPredictor:
                     with open(thr_path, "r") as f:
                         data = json.load(f)
                         self.thresholds[h] = float(data.get("buy_threshold", 0.50))
+                        self.no_trade[h] = bool(data.get("no_trade", False))
+                        if data.get("er_up") is not None and data.get("er_down") is not None:
+                            self.expected_returns[h] = (
+                                float(data["er_up"]), float(data["er_down"])
+                            )
                 except Exception as e:
                     logger.debug(f"Failed to load threshold for {h}: {e}")
 
@@ -200,7 +218,8 @@ class MultiDayPredictor:
         X_train: pd.DataFrame,
         Y_targets_train: pd.DataFrame,
         X_val: pd.DataFrame = None,
-        Y_targets_val: pd.DataFrame = None
+        Y_targets_val: pd.DataFrame = None,
+        precision_margin: float = 0.05,
     ):
         """
         Train 4 independent models for 1d, 3d, 5d, and 7d horizons.
@@ -299,7 +318,13 @@ class MultiDayPredictor:
 
             # ── 3. Probability Calibration & Optimal Threshold Selection ─
             final_model = best_model
-            opt_thr = 0.50
+            calibration_method = "none"
+            val_brier = None
+            thr_info = {
+                "threshold": 0.50, "no_trade": True,
+                "val_precision": None, "val_base_rate": None, "val_recall": None,
+                "n_val": 0, "n_signals": 0,
+            }
 
             if X_val_aligned is not None and col_name in Y_targets_val.columns:
                 y_val_raw = Y_targets_val[col_name]
@@ -309,27 +334,68 @@ class MultiDayPredictor:
                     y_v = y_val_raw[val_idx].astype(int)
 
                     if len(y_v) >= 10 and y_v.nunique() > 1:
-                        # Calibrate model using validation fold
-                        try:
-                            calibrator = CalibratedClassifierCV(best_model, cv='prefit', method='sigmoid')
-                            calibrator.fit(X_v_sel, y_v)
-                            final_model = calibrator
-                        except Exception as e:
-                            logger.debug(f"Calibration failed for {h}: {e}")
+                        # Kalibrasi di fold validasi. Fold besar: adu sigmoid vs
+                        # isotonic, pilih Brier val terendah — sweep di log live
+                        # menunjukkan ekor atas probabilitas justru anti-prediktif
+                        # (miskalibrasi yang sigmoid monotonik-parametrik tidak
+                        # selalu bisa perbaiki). Fold kecil: sigmoid saja,
+                        # isotonic gampang overfit di bawah ~50 sampel.
+                        methods = ["sigmoid", "isotonic"] if len(y_v) >= 50 else ["sigmoid"]
+                        best_brier = None
+                        for method in methods:
+                            try:
+                                # sklearn >= 1.8 menghapus cv='prefit' — dan karena
+                                # kegagalannya dulu hanya di-logger.debug, kalibrasi
+                                # diam-diam mati total di environment sklearn baru:
+                                # model produksi jalan TANPA kalibrasi sama sekali.
+                                try:
+                                    from sklearn.frozen import FrozenEstimator
+                                    cal = CalibratedClassifierCV(FrozenEstimator(best_model), method=method)
+                                except ImportError:
+                                    cal = CalibratedClassifierCV(best_model, cv='prefit', method=method)
+                                cal.fit(X_v_sel, y_v)
+                                b = brier_score_loss(y_v, cal.predict_proba(X_v_sel)[:, 1])
+                                if best_brier is None or b < best_brier:
+                                    best_brier = b
+                                    final_model = cal
+                                    calibration_method = method
+                            except Exception as e:
+                                logger.warning(f"Calibration ({method}) failed for {self.ticker} [{h}]: {e}")
+                        val_brier = best_brier
 
                     # Predict probabilities on validation set for threshold tuning
                     val_probs = final_model.predict_proba(X_v_sel)[:, 1]
-                    opt_thr = pick_optimal_threshold(y_v.values, val_probs)
+                    thr_info = pick_optimal_threshold(y_v.values, val_probs, margin=precision_margin)
             else:
-                # OOF predictions on train set for threshold tuning fallback
+                # In-sample fallback untuk threshold — probabilitas train terlalu
+                # optimis, jadi hasilnya hanya dipakai kalau feasible di sana pun.
                 try:
                     train_probs = best_model.predict_proba(X_tr_sel)[:, 1]
-                    opt_thr = pick_optimal_threshold(y_tr.values, train_probs)
+                    thr_info = pick_optimal_threshold(y_tr.values, train_probs, margin=precision_margin)
                 except Exception:
-                    opt_thr = 0.50
+                    pass
 
+            opt_thr = float(thr_info["threshold"])
             self.models[h] = final_model
             self.thresholds[h] = opt_thr
+            self.no_trade[h] = bool(thr_info["no_trade"])
+
+            # ── 3b. Conditional expected returns (untuk kalibrasi pred_return) ─
+            # E[r | label naik] dan E[r | label tidak] dari train fold, winsorized
+            # 10% per sisi — ekor ARA/ARB saham lapis bawah menyeret mean mentah.
+            er_up = er_down = None
+            n_up = n_down = 0
+            ret_col = f'fwd_ret_{h}'
+            if ret_col in Y_targets_train.columns:
+                fwd = Y_targets_train[ret_col][valid_idx]
+                ok = ~fwd.isna()
+                up_rets = fwd[ok & (y_tr == 1)].to_numpy(dtype=float)
+                down_rets = fwd[ok & (y_tr == 0)].to_numpy(dtype=float)
+                n_up, n_down = len(up_rets), len(down_rets)
+                if n_up >= 20 and n_down >= 20:
+                    er_up = float(mstats.winsorize(up_rets, limits=[0.10, 0.10]).mean())
+                    er_down = float(mstats.winsorize(down_rets, limits=[0.10, 0.10]).mean())
+                    self.expected_returns[h] = (er_up, er_down)
 
             # ── 4. Save Model & Sidecar Metadata ─────────────────────────
             model_path = self._get_model_path(h)
@@ -337,7 +403,21 @@ class MultiDayPredictor:
 
             thr_path = self._get_threshold_path(h)
             with open(thr_path, "w") as f:
-                json.dump({"buy_threshold": float(opt_thr)}, f)
+                json.dump({
+                    "buy_threshold": opt_thr,
+                    "no_trade": bool(thr_info["no_trade"]),
+                    "val_precision": thr_info["val_precision"],
+                    "val_base_rate": thr_info["val_base_rate"],
+                    "val_recall": thr_info["val_recall"],
+                    "n_val": thr_info["n_val"],
+                    "n_signals": thr_info["n_signals"],
+                    "er_up": er_up,
+                    "er_down": er_down,
+                    "n_up": n_up,
+                    "n_down": n_down,
+                    "calibration_method": calibration_method,
+                    "val_brier": val_brier,
+                }, f)
 
             feat_path = self._get_features_path(h)
             with open(feat_path, "w") as f:
@@ -353,34 +433,53 @@ class MultiDayPredictor:
         Predict probability of positive price movement for 1d, 3d, 5d, 7d horizons.
         Returns dictionary with predicted probabilities.
         """
-        predictions = {}
+        return {h: d["prob"] for h, d in self.predict_detail(feature_row).items()}
+
+    def predict_detail(self, feature_row: pd.DataFrame) -> dict:
+        """
+        Prediksi lengkap per horizon:
+        {prob, expected_return, buy_threshold, no_trade, from_model}
+
+        expected_return = p*E[r|naik] + (1-p)*E[r|tidak] (fraksi, bisa negatif) —
+        konversi probabilitas -> return yang terkalibrasi ke data training,
+        menggantikan squash (p-0.5)*0.05 yang buta volatilitas & horizon.
+        """
+        detail = {}
 
         for h in self.horizons:
             model = self.models[h]
+            from_model = model is not None
             if model is None:
-                predictions[h] = self._rule_based_prediction(feature_row, h)
-                continue
+                prob = self._rule_based_prediction(feature_row, h)
+            else:
+                try:
+                    selected_cols = self.selected_features.get(h, self.feature_cols)
+                    aligned = feature_row.copy()
+                    for col in selected_cols:
+                        if col not in aligned.columns:
+                            aligned[col] = 0.0
 
-            try:
-                selected_cols = self.selected_features.get(h, self.feature_cols)
-                aligned = feature_row.copy()
-                for col in selected_cols:
-                    if col not in aligned.columns:
-                        aligned[col] = 0.0
+                    input_data = aligned[selected_cols].fillna(0.0)
 
-                input_data = aligned[selected_cols].fillna(0.0)
+                    if hasattr(model, "predict_proba"):
+                        prob = float(model.predict_proba(input_data)[0, 1])
+                    else:
+                        prob = float(model.predict(input_data)[0])
+                except Exception as e:
+                    logger.warning(f"Model predict failed for {h} ({e}), fallback to rule-based.")
+                    prob = self._rule_based_prediction(feature_row, h)
+                    from_model = False
 
-                if hasattr(model, "predict_proba"):
-                    probs = model.predict_proba(input_data)
-                    predictions[h] = float(probs[0, 1])
-                else:
-                    preds = model.predict(input_data)
-                    predictions[h] = float(preds[0])
-            except Exception as e:
-                logger.warning(f"Model predict failed for {h} ({e}), fallback to rule-based.")
-                predictions[h] = self._rule_based_prediction(feature_row, h)
+            er_up, er_down = self.expected_returns[h]
+            detail[h] = {
+                "prob": prob,
+                "expected_return": prob * er_up + (1 - prob) * er_down,
+                "buy_threshold": self.thresholds.get(h, 0.50),
+                "no_trade": self.no_trade.get(h, False),
+                "from_model": from_model,
+            }
 
-        return predictions
+        return detail
 
     def _align_feature_frame(self, frame: pd.DataFrame) -> pd.DataFrame:
         aligned = frame.copy()
@@ -406,6 +505,9 @@ class MultiDayPredictor:
         """
         Convert predicted probability to signal string using per-ticker optimal threshold.
         """
+        if self.no_trade.get(horizon, False):
+            return "HOLD"
+
         thr = self.thresholds.get(horizon, 0.50)
 
         if pred_prob_1d >= thr * 1.10:

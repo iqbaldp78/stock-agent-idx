@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(docker compose *)",
-      "Bash(python -m py_compile data/fetcher_stockbit.py)"
+      "Bash(python -m py_compile data/fetcher_stockbit.py)",
+      "Bash(POSTGRES_HOST=localhost POSTGRES_PORT=5121 venv/bin/python scripts/ml_log_threshold_sweep.py --days 120)",
+      "Bash(docker exec *)"
     ]
   }
 }
