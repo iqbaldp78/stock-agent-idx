@@ -34,6 +34,7 @@ reload-env: ## Recreate containers to apply updated .env variables (docker compo
 		sudo iptables -C INPUT -i br-$$NET_ID -p tcp --dport 20128 -j ACCEPT 2>/dev/null || \
 		sudo iptables -A INPUT -i br-$$NET_ID -p tcp --dport 20128 -j ACCEPT; \
 	fi
+	@docker exec vps-gw-nginx nginx -s reload 2>/dev/null && echo "Nginx upstream reloaded." || true
 
 .PHONY: restart-env
 restart-env: reload-env ## Alias for reload-env

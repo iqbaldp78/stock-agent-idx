@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS universe (
     ticker     VARCHAR(10) NOT NULL UNIQUE,
     is_lq45    BOOLEAN DEFAULT TRUE,
     is_custom  BOOLEAN DEFAULT FALSE,
+    is_konglo  BOOLEAN DEFAULT FALSE,
     active     BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -128,6 +129,9 @@ CREATE TABLE IF NOT EXISTS signals (
     risk_reward_tp1  VARCHAR(20),
     risk_reward_tp2  VARCHAR(20),
     risk_reward_tp3  VARCHAR(20),
+    fair_value       JSONB,
+    batch_id         VARCHAR(36),
+    is_konglo        BOOLEAN DEFAULT FALSE,
     created_at       TIMESTAMP DEFAULT NOW()
 );
 
@@ -188,8 +192,12 @@ CREATE TABLE IF NOT EXISTS ohlcv_prices (
     high       NUMERIC(12,2),
     low        NUMERIC(12,2),
     close      NUMERIC(12,2),
-    volume     BIGINT,
-    source     VARCHAR(20) DEFAULT 'stockbit',
+    volume            BIGINT,
+    frequency         INTEGER DEFAULT 0,
+    net_foreign       BIGINT DEFAULT 0,
+    average_price     NUMERIC(12,2) DEFAULT 0,
+    change_percentage NUMERIC(12,2) DEFAULT 0,
+    source            VARCHAR(20) DEFAULT 'stockbit',
     created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(ticker, trade_date)
 );
@@ -202,8 +210,12 @@ CREATE TABLE IF NOT EXISTS ihsg_ohlcv (
     high       NUMERIC(12,2),
     low        NUMERIC(12,2),
     close      NUMERIC(12,2),
-    volume     BIGINT,
-    created_at TIMESTAMP DEFAULT NOW()
+    volume            BIGINT,
+    frequency         INTEGER DEFAULT 0,
+    net_foreign       BIGINT DEFAULT 0,
+    average_price     NUMERIC(12,2) DEFAULT 0,
+    change_percentage NUMERIC(12,2) DEFAULT 0,
+    created_at        TIMESTAMP DEFAULT NOW()
 );
 
 -- Cache: Fundamental snapshot harian per ticker

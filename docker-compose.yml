@@ -56,6 +56,7 @@ services:
       - .:/app
     networks:
       - stock_net
+      - gw-net
     command: python scheduler.py
 
   streamlit:
@@ -79,6 +80,7 @@ services:
       - .:/app
     networks:
       - stock_net
+      - gw-net
     command: streamlit run ui/app.py --server.port=8501 --server.address=0.0.0.0
 
   web_api:
@@ -100,6 +102,7 @@ services:
       - TZ=Asia/Jakarta
     networks:
       - stock_net
+      - gw-net
     volumes:
       - ./.env:/app/.env
       - ./web-backend/main.py:/app/main.py
@@ -148,3 +151,5 @@ volumes:
 networks:
   stock_net:
     driver: bridge
+  gw-net:
+    external: true

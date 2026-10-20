@@ -155,7 +155,7 @@ def main():
 | **F1 Score** | {avg_f1_before:.2f}% | **{avg_f1_after:.2f}%** | {avg_f1_after - avg_f1_before:+.2f}% |
 """
 
-    report_path = "/home/hamboo/.gemini/antigravity-ide/brain/72f2aba7-5cf1-42cd-9e54-93c8049039f9/model_comparison_report.md"
+    report_path = "/home/ubuntu/.gemini/antigravity-ide/brain/72f2aba7-5cf1-42cd-9e54-93c8049039f9/model_comparison_report.md"
     with open(report_path, "w") as f:
         f.write(report)
 
