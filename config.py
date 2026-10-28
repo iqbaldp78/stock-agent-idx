@@ -51,7 +51,18 @@ if _env_allowed:
     ALLOWED_LLM_MODELS = set(m.strip() for m in _env_allowed.split(",") if m.strip())
 else:
     # Minimal safe defaults so the app works without an env var set.
-    ALLOWED_LLM_MODELS = {"free", "kr/claude-haiku-4.5", "kr/claude-sonnet-4.5"}
+    ALLOWED_LLM_MODELS = {
+        "free",
+        "freeTiers",
+        "coding",
+        "gemini/gemini-2.5-flash",
+        "gemini/gemini-2.5-pro",
+        "gemini/gemini-3.8-flash",
+        "gemini/gemini-3.7-flash",
+        "cf/@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+        "kr/claude-haiku-4.5",
+        "kr/claude-sonnet-4.5",
+    }
 
 LLM_ENABLED = os.getenv("LLM_ENABLED", "true").lower() in ("true", "1", "yes")
 LLM_DEBATE_MAX_TICKERS = int(os.getenv("LLM_DEBATE_MAX_TICKERS", "12"))

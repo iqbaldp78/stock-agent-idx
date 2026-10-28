@@ -512,6 +512,14 @@ db-backup: ## Backup database to backup.sql
 	docker compose exec postgres pg_dump -U stockuser stockagent > backup.sql
 	@echo "Database backed up to backup.sql"
 
+.PHONY: backup-gdrive
+backup-gdrive: ## Backup all databases, .env, ML models, and 9router to Google Drive
+	@bash ./scripts/backup_to_gdrive.sh
+
+.PHONY: restore-gdrive
+restore-gdrive: ## Restore from Google Drive (Usage: make restore-gdrive FILE=stockagent_backup_XXXX.tar.gz)
+	@bash ./scripts/restore_from_backup.sh $(FILE)
+
 .PHONY: reset-dev-data
 reset-dev-data: ## Reset development/operational data but keep portfolio and cache
 	docker compose exec app python scripts/reset_dev_data.py

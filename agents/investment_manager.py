@@ -47,7 +47,10 @@ def synthesize(state: dict) -> dict:
 
     if LLM_ENABLED and health_check():
         try:
-            return _synthesize_llm(state, global_news)
+            res = _synthesize_llm(state, global_news)
+            if res and res.get("top_picks"):
+                return res
+            logger.warning("LLM IM returned empty response or no top_picks, falling back to rule-based.")
         except Exception as e:
             logger.error("LLM IM synthesis failed, falling back to rule-based: %s", e)
             
@@ -126,7 +129,10 @@ def synthesize_konglo(state: dict) -> dict:
 
     if LLM_ENABLED and health_check():
         try:
-            return _synthesize_llm_konglo(state, global_news)
+            res = _synthesize_llm_konglo(state, global_news)
+            if res and res.get("top_picks"):
+                return res
+            logger.warning("Konglo LLM IM returned empty response or no top_picks, falling back to rule-based.")
         except Exception as e:
             logger.error("LLM IM synthesis failed, falling back to rule-based: %s", e)
             
