@@ -19,8 +19,16 @@ import httpx
 logger = logging.getLogger(__name__)
 
 # Constants for router API & Vector DB
-ROUTER_CHAT_URL = "https://router.hamboo.me/v1/chat/completions"
-ROUTER_EMBED_URL = "https://router.hamboo.me/v1/embeddings"
+ROUTER_BASE_URL = os.getenv("ROUTER_BASE_URL", "https://router.hamboo.me/v1").rstrip("/")
+ROUTER_CHAT_URL = f"{ROUTER_BASE_URL}/chat/completions"
+ROUTER_EMBED_URL = f"{ROUTER_BASE_URL}/embeddings"
+
+FALLBACK_BASE_URL = os.getenv("LLM_FALLBACK_BASE_URL", "https://9router.zlink.my.id/v1").rstrip("/")
+FALLBACK_CHAT_URL = f"{FALLBACK_BASE_URL}/chat/completions"
+FALLBACK_EMBED_URL = f"{FALLBACK_BASE_URL}/embeddings"
+FALLBACK_API_KEY = os.getenv("LLM_FALLBACK_API_KEY", "sk-9r-InOwTZQOjhza2eZMH6Mxa8tCzluWd-xBm3nH_xCfZzs")
+FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "tier-freebies")
+
 DB_URI = os.getenv("VECTOR_DB_URI", "postgresql://vectoruser:vectorpassword@vector_postgres:5432/vectoragent")
 
 
@@ -54,6 +62,23 @@ def fetch_news_stream(limit: int = 10):
         response = client.post(url, headers=headers)
         response.raise_for_status()
         return response.json()
+
+
+def _parse_chat_response(res_text: str, res_json: dict | None = None) -> str:
+    if res_text.startswith("data:"):
+        full_content = ""
+        for line in res_text.splitlines():
+            if line.startswith("data: ") and line.strip() != "data: [DONE]":
+                try:
+                    chunk = json.loads(line[6:])
+                    if chunk.get("choices") and chunk["choices"][0].get("delta"):
+                        full_content += chunk["choices"][0]["delta"].get("content", "")
+                except Exception:
+                    pass
+        return full_content
+    elif res_json and "choices" in res_json:
+        return res_json["choices"][0]["message"]["content"]
+    return ""
 
 
 def analyze_and_embed(content: str, is_report: bool = False):
@@ -94,27 +119,16 @@ def analyze_and_embed(content: str, is_report: bool = False):
         "stream": False
     }
 
+    analysis = None
+    # 1. Try Primary Chat
     try:
         api_key = os.getenv("NINEROUTER_API_KEY", "")
         headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
         res = requests.post(ROUTER_CHAT_URL, json=chat_payload, headers=headers, timeout=15)
         res.raise_for_status()
         
-        res_text = res.text
-        if res_text.startswith("data:"):
-            full_content = ""
-            for line in res_text.splitlines():
-                if line.startswith("data: ") and line.strip() != "data: [DONE]":
-                    try:
-                        chunk = json.loads(line[6:])
-                        if chunk.get("choices") and chunk["choices"][0].get("delta"):
-                            full_content += chunk["choices"][0]["delta"].get("content", "")
-                    except Exception:
-                        pass
-            analysis_str = full_content
-        else:
-            analysis_str = res.json()["choices"][0]["message"]["content"]
-
+        res_json = res.json() if not res.text.startswith("data:") else None
+        analysis_str = _parse_chat_response(res.text, res_json)
         if analysis_str.startswith("```json"):
             analysis_str = analysis_str[7:-3].strip()
         elif analysis_str.startswith("```"):
@@ -122,8 +136,33 @@ def analyze_and_embed(content: str, is_report: bool = False):
             
         analysis = json.loads(analysis_str)
     except Exception as e:
-        logger.error(f"Failed to analyze text: {e}")
-        analysis = {"summary": content[:300], "sentiment": "Neutral", "sentiment_score": 5, "impact_scope": "Micro", "tickers": []}
+        logger.warning(f"[NEWS CHAT] Primary chat failed ({e}). Switching to fallback: {FALLBACK_CHAT_URL} model={FALLBACK_MODEL}")
+        # Try Fallback Chat
+        try:
+            fb_payload = {
+                "model": FALLBACK_MODEL,
+                "messages": [
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": content}
+                ],
+                "stream": False
+            }
+            fb_headers = {"Authorization": f"Bearer {FALLBACK_API_KEY}"} if FALLBACK_API_KEY else {}
+            res = requests.post(FALLBACK_CHAT_URL, json=fb_payload, headers=fb_headers, timeout=15)
+            res.raise_for_status()
+            
+            res_json = res.json() if not res.text.startswith("data:") else None
+            analysis_str = _parse_chat_response(res.text, res_json)
+            if analysis_str.startswith("```json"):
+                analysis_str = analysis_str[7:-3].strip()
+            elif analysis_str.startswith("```"):
+                analysis_str = analysis_str[3:-3].strip()
+                
+            analysis = json.loads(analysis_str)
+            logger.info(f"[NEWS CHAT] Fallback chat successful with model {FALLBACK_MODEL}")
+        except Exception as fb_err:
+            logger.error(f"[NEWS CHAT] Fallback chat failed as well: {fb_err}")
+            analysis = {"summary": content[:300], "sentiment": "Neutral", "sentiment_score": 5, "impact_scope": "Micro", "tickers": []}
 
     # Ensure sentiment_score exists in analysis dict
     if "sentiment_score" not in analysis or not isinstance(analysis.get("sentiment_score"), int):
@@ -135,6 +174,8 @@ def analyze_and_embed(content: str, is_report: bool = False):
         "model": "gemini/gemini-embedding-2-preview",
         "input": analysis.get("summary", content)
     }
+    embedding = None
+    # 2a. Try Primary Embed
     try:
         api_key = os.getenv("OPENAI_API_KEY", os.getenv("NINEROUTER_API_KEY", ""))
         headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
@@ -142,8 +183,17 @@ def analyze_and_embed(content: str, is_report: bool = False):
         res.raise_for_status()
         embedding = res.json()["data"][0]["embedding"]
     except Exception as e:
-        logger.error(f"Failed to get embedding: {e}")
-        embedding = [0.0] * 3072  # Match dimension for gemini-embedding-2-preview
+        logger.warning(f"[NEWS EMBED] Primary embed failed ({e}). Switching to fallback: {FALLBACK_EMBED_URL}")
+        # 2b. Try Fallback Embed
+        try:
+            fb_headers = {"Authorization": f"Bearer {FALLBACK_API_KEY}"} if FALLBACK_API_KEY else {}
+            res = requests.post(FALLBACK_EMBED_URL, json=embed_payload, headers=fb_headers, timeout=10)
+            res.raise_for_status()
+            embedding = res.json()["data"][0]["embedding"]
+            logger.info("[NEWS EMBED] Fallback embed successful")
+        except Exception as fb_err:
+            logger.error(f"[NEWS EMBED] Fallback embed also failed: {fb_err}")
+            embedding = [0.0] * 3072  # Match dimension for gemini-embedding-2-preview
         
     return analysis, embedding
 

@@ -115,6 +115,11 @@ LLM_MODEL_AGENT_R2: dict[str, str] = {
 # Ensure any models configured via env vars are included in the allowed set.
 # This avoids raising validation errors for models explicitly set in the env
 # (e.g. LLM_MODEL_DEBATE_R1, per-agent overrides, or round-robin list).
+LLM_FALLBACK_BASE_URL = os.getenv("LLM_FALLBACK_BASE_URL", "https://9router.zlink.my.id/v1").rstrip("/")
+LLM_FALLBACK_API_KEY = os.getenv("LLM_FALLBACK_API_KEY", "sk-9r-InOwTZQOjhza2eZMH6Mxa8tCzluWd-xBm3nH_xCfZzs")
+LLM_FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "tier-freebies")
+ROUTER_BASE_URL = os.getenv("ROUTER_BASE_URL", "https://router.hamboo.me/v1").rstrip("/")
+
 _referenced_models = set()
 _referenced_models.update([
     os.getenv("LLM_MODEL_DEBATE_R1", "kr/claude-haiku-4.5"),
@@ -123,6 +128,7 @@ _referenced_models.update([
     os.getenv("LLM_MODEL_DEBATE_FALLBACK", "kr/claude-haiku-4.5"),
     os.getenv("LLM_MODEL_IM_FALLBACK", "kr/claude-sonnet-4.5"),
     os.getenv("LLM_MODEL_DEBATE_R2_FALLBACK", "kr/claude-haiku-4.5"),
+    LLM_FALLBACK_MODEL,
 ])
 _referenced_models.update(LLM_MODEL_AGENT.values())
 _referenced_models.update(LLM_MODEL_AGENT_R2.values())
@@ -219,6 +225,7 @@ def get_configured_llm_models() -> dict[str, str]:
         "debate_fallback": LLM_MODEL_DEBATE_FALLBACK,
         "im_fallback": LLM_MODEL_IM_FALLBACK,
         "debate_r2_fallback": LLM_MODEL_DEBATE_R2_FALLBACK,
+        "fallback_model": LLM_FALLBACK_MODEL,
     }
     for agent, model in LLM_MODEL_AGENT.items():
         models[f"agent_r1_{agent}"] = model

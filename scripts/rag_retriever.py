@@ -9,7 +9,11 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 DB_URI = os.getenv("VECTOR_DB_URI", "postgresql://vectoruser:vectorpassword@vector_postgres:5432/vectoragent")
-ROUTER_EMBED_URL = "https://router.hamboo.me/v1/embeddings"
+ROUTER_BASE_URL = os.getenv("ROUTER_BASE_URL", "https://router.hamboo.me/v1").rstrip("/")
+ROUTER_EMBED_URL = f"{ROUTER_BASE_URL}/embeddings"
+FALLBACK_BASE_URL = os.getenv("LLM_FALLBACK_BASE_URL", "https://9router.zlink.my.id/v1").rstrip("/")
+FALLBACK_EMBED_URL = f"{FALLBACK_BASE_URL}/embeddings"
+FALLBACK_API_KEY = os.getenv("LLM_FALLBACK_API_KEY", "sk-9r-InOwTZQOjhza2eZMH6Mxa8tCzluWd-xBm3nH_xCfZzs")
 EMBED_MODEL = "gemini/gemini-embedding-2-preview"
 
 def _get_db_connection():
@@ -22,7 +26,7 @@ def _get_db_connection():
         raise e
 
 def _get_embedding(text: str) -> Optional[List[float]]:
-    """Gets 3072-dim embedding for a query string via 9router."""
+    """Gets 3072-dim embedding for a query string via 9router with fallback."""
     payload = {
         "model": EMBED_MODEL,
         "input": text
@@ -30,12 +34,23 @@ def _get_embedding(text: str) -> Optional[List[float]]:
     api_key = os.getenv("OPENAI_API_KEY", os.getenv("NINEROUTER_API_KEY", ""))
     headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
     
+    # 1. Try Primary
     try:
         res = requests.post(ROUTER_EMBED_URL, json=payload, headers=headers, timeout=5)
         res.raise_for_status()
         return res.json()["data"][0]["embedding"]
     except Exception as e:
-        logger.error(f"Error embedding query '{text[:30]}...': {e}")
+        logger.warning(f"[RAG EMBED] Primary embed failed ({e}). Switching to fallback: {FALLBACK_EMBED_URL}")
+
+    # 2. Try Fallback
+    try:
+        fb_headers = {"Authorization": f"Bearer {FALLBACK_API_KEY}"} if FALLBACK_API_KEY else {}
+        res = requests.post(FALLBACK_EMBED_URL, json=payload, headers=fb_headers, timeout=5)
+        res.raise_for_status()
+        logger.info("[RAG EMBED] Fallback embed successful")
+        return res.json()["data"][0]["embedding"]
+    except Exception as fb_err:
+        logger.error(f"[RAG EMBED] Fallback embed also failed for query '{text[:30]}...': {fb_err}")
         return None
 
 def _execute_query(query: str, params: tuple = ()) -> List[Dict]:

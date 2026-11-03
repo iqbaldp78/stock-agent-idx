@@ -88,10 +88,12 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
             ).first()
             
             if existing_signal:
-                logger.info(f"Skipping insert for {ticker} on {run_date_only} (is_konglo={is_konglo}): already exists.")
-                continue
-            
-            logger.info(f"DEBUG: Inserting new signal for {ticker} | is_konglo={is_konglo}")
+                logger.info(f"DEBUG: Updating existing signal for {ticker} | run_date_only={run_date_only} | is_konglo={is_konglo}")
+                record = existing_signal
+            else:
+                logger.info(f"DEBUG: Inserting new signal for {ticker} | is_konglo={is_konglo}")
+                record = Signal(run_date=run_date, ticker=ticker, is_konglo=is_konglo)
+                db.add(record)
                 
             ticker_scores = scores.get(ticker, {})
             bandarm = ticker_scores.get("bandarm", {})
@@ -112,40 +114,36 @@ def save_signals(run_date: datetime, top_picks: list, scores: dict, batch_id: st
                 except (ValueError, IndexError):
                     pass
 
-            record = Signal(
-                run_date=run_date,  # already datetime
-                ticker=ticker,
-                rank=pick.get("rank"),
-                signal=db_signal,
-                entry_low=entry_low,
-                entry_high=entry_high,
-                max_entry=_parse_number(pick.get("max_entry")),
-                target_1=_parse_number(pick.get("target_1")),
-                target_2=_parse_number(pick.get("target_2")),
-                target_3=_parse_number(pick.get("target_3")),
-                stop_loss=_parse_number(pick.get("stop_loss")),
-                risk_reward=_parse_risk_reward(pick.get("risk_reward")),
-                conviction=pick.get("conviction"),
-                thesis=pick.get("thesis") or (
-                    f"{pick.get('bandarm_signal', '')} — composite {pick.get('composite_score', '')}"
-                    f" — decision {decision_label} — pred {pick.get('pred_return', 0)}%"
-                ),
-                entry_reasoning=pick.get("entry_reasoning") or "Entry berdasarkan avg cost bandar",
-                bandar_avg_7d=price_analysis.get("bandar_avg_7d"),
-                bandar_avg_1m=price_analysis.get("bandar_avg_1m"),
-                broker_utama=", ".join(pick.get("broker_to_watch", [])),
-                time_horizon=pick.get("time_horizon") or "Positional (4-6 minggu)",
-                weight_mode=pick.get("weight_mode"),
-                composite_score=pick.get("composite_score"),
-                ml_prediction=pick.get("ml_prediction"),
-                price_prediction=pick.get("price_prediction"),
-                broker_true_costs=pick.get("broker_true_costs"),
-                broker_distributors=pick.get("broker_distributors"),
-                fair_value=pick.get("fair_value"),
-                batch_id=batch_id,
-                is_konglo=is_konglo,
+            record.run_date = run_date
+            record.rank = pick.get("rank")
+            record.signal = db_signal
+            record.entry_low = entry_low
+            record.entry_high = entry_high
+            record.max_entry = _parse_number(pick.get("max_entry"))
+            record.target_1 = _parse_number(pick.get("target_1"))
+            record.target_2 = _parse_number(pick.get("target_2"))
+            record.target_3 = _parse_number(pick.get("target_3"))
+            record.stop_loss = _parse_number(pick.get("stop_loss"))
+            record.risk_reward = _parse_risk_reward(pick.get("risk_reward"))
+            record.conviction = pick.get("conviction")
+            record.thesis = pick.get("thesis") or (
+                f"{pick.get('bandarm_signal', '')} — composite {pick.get('composite_score', '')}"
+                f" — decision {decision_label} — pred {pick.get('pred_return', 0)}%"
             )
-            db.add(record)
+            record.entry_reasoning = pick.get("entry_reasoning") or "Entry berdasarkan avg cost bandar"
+            record.bandar_avg_7d = price_analysis.get("bandar_avg_7d")
+            record.bandar_avg_1m = price_analysis.get("bandar_avg_1m")
+            record.broker_utama = ", ".join(pick.get("broker_to_watch", []))
+            record.time_horizon = pick.get("time_horizon") or "Positional (4-6 minggu)"
+            record.weight_mode = pick.get("weight_mode")
+            record.composite_score = pick.get("composite_score")
+            record.ml_prediction = pick.get("ml_prediction")
+            record.price_prediction = pick.get("price_prediction")
+            record.broker_true_costs = pick.get("broker_true_costs")
+            record.broker_distributors = pick.get("broker_distributors")
+            record.fair_value = pick.get("fair_value")
+            record.batch_id = batch_id
+            record.is_konglo = is_konglo
 
         db.commit()
     except Exception as e:
